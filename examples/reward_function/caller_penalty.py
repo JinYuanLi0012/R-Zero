@@ -77,30 +77,30 @@ def split_list(lst, n=4):
 
 os.environ["NO_PROXY"] = "0.0.0.0,127.0.0.1"
 
-def fetch(index,i):
-    response = requests.get(f"http://0.0.0.0:{5000+index}/hello?name={i}")
+def fetch(index,i, port_base=5000):
+    response = requests.get(f"http://0.0.0.0:{port_base+index}/hello?name={i}")
     print(response)
     return True
 
-def generate_results(data):
-    datas = split_list(data,4)
-    random_names = [generate_temp_filename(prefix=f"temp_{i}", suffix=".json") for i in range(4)]
-    for i in range(4):
+def generate_results(data, num_services=2, port_base=5000):
+    datas = split_list(data,num_services)
+    random_names = [generate_temp_filename(prefix=f"temp_{i}", suffix=".json") for i in range(num_services)]
+    for i in range(num_services):
         with open(random_names[i],'w') as f:
             json.dump(datas[i],f,indent=4)
 
     final_results = []
-    with ThreadPoolExecutor(max_workers=4) as executor:
-        futures = [executor.submit(fetch, i,random_names[i]) for i in range(4)]
+    with ThreadPoolExecutor(max_workers=num_services) as executor:
+        futures = [executor.submit(fetch, i,random_names[i], port_base) for i in range(num_services)]
 
         for future in as_completed(futures):
             print(future.result())
 
-    for i in range(4):
+    for i in range(num_services):
         with open(random_names[i].replace('.json','_results.json'),'r') as f:
             final_results.extend(json.load(f))
         # os.remove(random_names[i].replace('.json','_results.json'))
-    for i in range(4):
+    for i in range(num_services):
         os.remove(random_names[i].replace('.json','_results.json'))
     return final_results
 
@@ -115,7 +115,7 @@ def accuracy_reward(predict: str, ground_truth: str) -> float:
     return 1.0 if grade_answer(answer, ground_truth) else 0.0
 
 
-def compute_score(predicts: List[str], ground_truths: List[str], format_weight: float = 0.1, file_path: str = "") -> List[Dict[str, float]]:
+def compute_score(predicts: List[str], ground_truths: List[str], format_weight: float = 0.1, file_path: str = "", num_services: int = 2, port_base: int = 5000) -> List[Dict[str, float]]:
     results = []
     with open('test.json','w') as f:
         json.dump(predicts,f,indent=4)
@@ -132,7 +132,7 @@ def compute_score(predicts: List[str], ground_truths: List[str], format_weight: 
         else:
             results.append({"question": "", "answer": ""})
 
-    final_results = generate_results(results)
+    final_results = generate_results(results, num_services=num_services, port_base=port_base)
     penalty = cluster_share_per_problem([result['question'] for result in final_results], distance_threshold=0.5)
     # print(penalty)
     assert len(penalty) == len(final_results)

@@ -3,8 +3,18 @@ import json
 import re
 import random
 import argparse
+import os
 from transformers import AutoTokenizer
 from vllm import LLM, SamplingParams
+
+def batched_generate(llm, prompts, sampling_params, chunk_size):
+    outputs = []
+    total = len(prompts)
+    for start in range(0, total, chunk_size):
+        end = min(start + chunk_size, total)
+        print(f"Generating prompts {start}-{end}/{total}", flush=True)
+        outputs.extend(llm.generate(prompts[start:end], sampling_params))
+    return outputs
 
 def extract_last_boxed(text):
     pattern = r'\\boxed\{((?:[^{}]|\{(?:[^{}]|\{[^{}]*\})*\})*)\}'
@@ -136,7 +146,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
     tokenizer = AutoTokenizer.from_pretrained(args.model_path)
-    llm = LLM(model=args.model_path, tensor_parallel_size=4,gpu_memory_utilization=0.85)
+    llm = LLM(model=args.model_path, tensor_parallel_size=int(os.getenv("EVAL_TENSOR_PARALLEL_SIZE", "4")), gpu_memory_utilization=float(os.getenv("EVAL_GPU_MEMORY_UTILIZATION", "0.85")))
     dataset = datasets.load_dataset('MrLight/bbeh-eval')
     categories = sorted(list(set(dataset['train']['task'])))
     print("Categories:", categories)
@@ -161,8 +171,8 @@ if __name__ == "__main__":
                 prompt = "user: " + query + '\nPlease reason step by step, and put your final answer option within \\boxed{}. Only put the letter in the box, e.g. \\boxed{A}. There is only one correct answer.'
             prompts.append(prompt)
         
-        sampling_params = SamplingParams(temperature=0, top_p=1, max_tokens=8192)
-        outputs = llm.generate(prompts, sampling_params)
+        sampling_params = SamplingParams(temperature=0, top_p=1, max_tokens=int(os.getenv("EVAL_MAX_TOKENS", "8192")))
+        outputs = batched_generate(llm, prompts, sampling_params, int(os.getenv("EVAL_CHUNK_SIZE", "512")))
         
         for entry, output in zip(category_entries, outputs):
             answer = output.outputs[0].text

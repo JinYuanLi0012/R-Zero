@@ -16,10 +16,11 @@ parser.add_argument("--repo_name", type=str, default="")
 parser.add_argument("--max_score", type=float, default=0.7)
 parser.add_argument("--min_score", type=float, default=0.3)
 parser.add_argument("--experiment_name", type=str, default="Qwen_Qwen3-4B-Base_all")
+parser.add_argument("--num_shards", type=int, default=int(os.getenv("QUESTION_NUM_SHARDS", "4")))
 args = parser.parse_args()
 
 datas= []
-for i in range(8):
+for i in range(args.num_shards):
     try:
         with open(f'{STORAGE_PATH}/generated_question/{args.experiment_name}_{i}_results.json', 'r') as f:
             data = json.load(f)
@@ -29,7 +30,7 @@ for i in range(8):
         continue
 
 
-for i in range(8):
+for i in range(args.num_shards):
     try:
         os.remove(f'{STORAGE_PATH}/generated_question/{args.experiment_name}_{i}_results.json')
     except:

@@ -1,0 +1,136 @@
+{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v1/global_step_15/actor/huggingface", "dataset": "math", "score": 64.8}
+{
+  "dataset": "bbeh",
+  "model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v1/global_step_15/actor/huggingface",
+  "accuracy": 9.62
+}{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v1/global_step_15/actor/huggingface", "dataset": "math", "score": 64.8}
+{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v1/global_step_15/actor/huggingface", "dataset": "math", "score": 79.4}
+{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v1/global_step_15/actor/huggingface", "dataset": "gsm8k", "score": 92.12}
+{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v1/global_step_15/actor/huggingface", "dataset": "amc", "score": 57.42}
+{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v1/global_step_15/actor/huggingface", "dataset": "minerva", "score": 54.04}
+{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v1/global_step_15/actor/huggingface", "dataset": "olympiad", "score": 44.89}
+{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v1/global_step_15/actor/huggingface", "dataset": "aime2024", "score": 16.46}
+{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v1/global_step_15/actor/huggingface", "dataset": "aime2025", "score": 9.9}
+{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v1/global_step_15/actor/huggingface", "dataset": "math", "score": 80.6}
+{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v1/global_step_15/actor/huggingface", "dataset": "gsm8k", "score": 91.36}
+{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v1/global_step_15/actor/huggingface", "dataset": "amc", "score": 57.19}
+{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v1/global_step_15/actor/huggingface", "dataset": "minerva", "score": 52.94}
+{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v1/global_step_15/actor/huggingface", "dataset": "olympiad", "score": 45.78}
+{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v1/global_step_15/actor/huggingface", "dataset": "aime2024", "score": 17.08}
+{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v1/global_step_15/actor/huggingface", "dataset": "aime2025", "score": 9.79}
+{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v1/global_step_15/actor/huggingface", "dataset": "math", "score": 79.6}
+{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v1/global_step_15/actor/huggingface", "dataset": "gsm8k", "score": 91.28}
+{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v1/global_step_15/actor/huggingface", "dataset": "amc", "score": 58.2}
+{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v1/global_step_15/actor/huggingface", "dataset": "minerva", "score": 52.94}
+{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v1/global_step_15/actor/huggingface", "dataset": "olympiad", "score": 44.3}
+{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v1/global_step_15/actor/huggingface", "dataset": "aime2024", "score": 17.81}
+{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v1/global_step_15/actor/huggingface", "dataset": "aime2025", "score": 12.29}
+{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v1/global_step_15/actor/huggingface", "dataset": "math", "score": 80.8}
+{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v1/global_step_15/actor/huggingface", "dataset": "gsm8k", "score": 91.05}
+{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v1/global_step_15/actor/huggingface", "dataset": "amc", "score": 56.41}
+{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v1/global_step_15/actor/huggingface", "dataset": "minerva", "score": 54.04}
+{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v1/global_step_15/actor/huggingface", "dataset": "olympiad", "score": 44.0}
+{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v1/global_step_15/actor/huggingface", "dataset": "aime2024", "score": 16.98}
+{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v1/global_step_15/actor/huggingface", "dataset": "aime2025", "score": 9.58}
+{
+  "dataset": "supergpqa",
+  "model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v1/global_step_15/actor/huggingface",
+  "accuracy": 28.55
+}{
+  "dataset": "bbeh",
+  "model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v1/global_step_15/actor/huggingface",
+  "accuracy": 9.51
+}{
+  "dataset": "mmlupro",
+  "model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v1/global_step_15/actor/huggingface",
+  "accuracy": 55.0
+}{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v2/global_step_15/actor/huggingface", "dataset": "math", "score": 79.2}
+{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v2/global_step_15/actor/huggingface", "dataset": "gsm8k", "score": 92.65}
+{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v2/global_step_15/actor/huggingface", "dataset": "amc", "score": 55.39}
+{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v2/global_step_15/actor/huggingface", "dataset": "minerva", "score": 55.51}
+{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v2/global_step_15/actor/huggingface", "dataset": "olympiad", "score": 45.04}
+{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v2/global_step_15/actor/huggingface", "dataset": "aime2024", "score": 16.04}
+{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v2/global_step_15/actor/huggingface", "dataset": "aime2025", "score": 3.96}
+{
+  "dataset": "supergpqa",
+  "model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v2/global_step_15/actor/huggingface",
+  "accuracy": 28.84
+}{
+  "dataset": "bbeh",
+  "model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v2/global_step_15/actor/huggingface",
+  "accuracy": 10.11
+}{
+  "dataset": "mmlupro",
+  "model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v2/global_step_15/actor/huggingface",
+  "accuracy": 54.57
+}{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v3/global_step_15/actor/huggingface", "dataset": "math", "score": 77.8}
+{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v3/global_step_15/actor/huggingface", "dataset": "gsm8k", "score": 92.04}
+{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v3/global_step_15/actor/huggingface", "dataset": "amc", "score": 52.34}
+{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v3/global_step_15/actor/huggingface", "dataset": "minerva", "score": 53.68}
+{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v3/global_step_15/actor/huggingface", "dataset": "olympiad", "score": 44.15}
+{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v3/global_step_15/actor/huggingface", "dataset": "aime2024", "score": 16.15}
+{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v3/global_step_15/actor/huggingface", "dataset": "aime2025", "score": 3.54}
+{
+  "dataset": "supergpqa",
+  "model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v3/global_step_15/actor/huggingface",
+  "accuracy": 28.86
+}{
+  "dataset": "bbeh",
+  "model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v3/global_step_15/actor/huggingface",
+  "accuracy": 10.69
+}{
+  "dataset": "mmlupro",
+  "model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v3/global_step_15/actor/huggingface",
+  "accuracy": 55.25
+}{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v4/global_step_15/actor/huggingface", "dataset": "math", "score": 75.8}
+{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v4/global_step_15/actor/huggingface", "dataset": "gsm8k", "score": 91.74}
+{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v4/global_step_15/actor/huggingface", "dataset": "amc", "score": 45.31}
+{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v4/global_step_15/actor/huggingface", "dataset": "minerva", "score": 53.31}
+{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v4/global_step_15/actor/huggingface", "dataset": "olympiad", "score": 42.81}
+{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v4/global_step_15/actor/huggingface", "dataset": "aime2024", "score": 13.96}
+{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v4/global_step_15/actor/huggingface", "dataset": "aime2025", "score": 4.79}
+{
+  "dataset": "supergpqa",
+  "model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v4/global_step_15/actor/huggingface",
+  "accuracy": 28.66
+}{
+  "dataset": "bbeh",
+  "model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v4/global_step_15/actor/huggingface",
+  "accuracy": 11.86
+}{
+  "dataset": "mmlupro",
+  "model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v4/global_step_15/actor/huggingface",
+  "accuracy": 54.68
+}{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v5/global_step_15/actor/huggingface", "dataset": "math", "score": 73.4}
+{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v5/global_step_15/actor/huggingface", "dataset": "gsm8k", "score": 91.51}
+{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v5/global_step_15/actor/huggingface", "dataset": "amc", "score": 46.25}
+{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v5/global_step_15/actor/huggingface", "dataset": "minerva", "score": 52.94}
+{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v5/global_step_15/actor/huggingface", "dataset": "olympiad", "score": 39.11}
+{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v5/global_step_15/actor/huggingface", "dataset": "aime2024", "score": 15.62}
+{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v5/global_step_15/actor/huggingface", "dataset": "aime2025", "score": 4.9}
+{
+  "dataset": "supergpqa",
+  "model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v5/global_step_15/actor/huggingface",
+  "accuracy": 28.89
+}{
+  "dataset": "bbeh",
+  "model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v5/global_step_15/actor/huggingface",
+  "accuracy": 11.62
+}{
+  "dataset": "mmlupro",
+  "model": "/data/jinyuan/rzero_storage/models/qwen3_4b_fullrun_authorsettings_solver_v5/global_step_15/actor/huggingface",
+  "accuracy": 54.31
+}{"model": "Qwen/Qwen3-4B-Base", "dataset": "math", "score": 76.4}
+{"model": "Qwen/Qwen3-4B-Base", "dataset": "gsm8k", "score": 90.37}
+{"model": "Qwen/Qwen3-4B-Base", "dataset": "amc", "score": 47.58}
+{"model": "Qwen/Qwen3-4B-Base", "dataset": "minerva", "score": 50.0}
+{"model": "Qwen/Qwen3-4B-Base", "dataset": "olympiad", "score": 42.81}
+{"model": "Qwen/Qwen3-4B-Base", "dataset": "aime2024", "score": 13.12}
+{"model": "Qwen/Qwen3-4B-Base", "dataset": "aime2025", "score": 12.5}
+{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_ablation_basegen_baselabel_solver_v1_s1800/global_step_15/actor/huggingface", "dataset": "math", "score": 79.2}
+{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_ablation_basegen_baselabel_solver_v1_s1800/global_step_15/actor/huggingface", "dataset": "gsm8k", "score": 92.04}
+{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_ablation_basegen_baselabel_solver_v1_s1800/global_step_15/actor/huggingface", "dataset": "amc", "score": 54.45}
+{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_ablation_basegen_baselabel_solver_v1_s1800/global_step_15/actor/huggingface", "dataset": "minerva", "score": 51.84}
+{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_ablation_basegen_baselabel_solver_v1_s1800/global_step_15/actor/huggingface", "dataset": "olympiad", "score": 45.48}
+{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_ablation_basegen_baselabel_solver_v1_s1800/global_step_15/actor/huggingface", "dataset": "aime2024", "score": 13.75}
+{"model": "/data/jinyuan/rzero_storage/models/qwen3_4b_ablation_basegen_baselabel_solver_v1_s1800/global_step_15/actor/huggingface", "dataset": "aime2025", "score": 10.0}

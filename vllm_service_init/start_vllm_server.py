@@ -47,12 +47,12 @@ model = vllm.LLM(
 )
 
 sample_params = vllm.SamplingParams(
-    max_tokens=4096,
+    max_tokens=int(os.getenv("VLLM_SERVER_MAX_TOKENS", "4096")),
     temperature=1.0,
     top_p=1.0,
     top_k=40,
     stop_token_ids=[tokenizer.eos_token_id],
-    n=10, # Generate 10 candidate answers for each question
+    n=int(os.getenv("VLLM_SERVER_N", "10")),
 )
 
 # ---------------------- GPU Idle Utilization Thread ---------------------- #
@@ -107,6 +107,10 @@ def grade_answer_with_timeout(res1, res2):
 # ---------------------------- Flask Application --------------------------- #
 app = Flask(__name__)
 
+@app.route('/health', methods=['GET'])
+def health():
+    return jsonify({"status": "ok"})
+
 @app.route('/hello', methods=['GET'])
 def hello():
     '''The main processing endpoint: reads a task file, invokes vLLM, consolidates answers, and writes results.'''
@@ -153,7 +157,13 @@ def hello():
                 'system: ' + chat[0]['content'] + '\n' + 'user: ' + chat[1]['content']
                 for chat in valid_chats
             ]
-        responses = model.generate(prompts, sampling_params=sample_params, use_tqdm=True)
+        chunk_size = int(os.getenv("VLLM_SERVER_BATCH_SIZE", "0"))
+        if chunk_size > 0:
+            responses = []
+            for start in range(0, len(prompts), chunk_size):
+                responses.extend(model.generate(prompts[start:start + chunk_size], sampling_params=sample_params, use_tqdm=True))
+        else:
+            responses = model.generate(prompts, sampling_params=sample_params, use_tqdm=True)
     else:
         responses = []
     print('[server] Generation completed.')

@@ -1,0 +1,8 @@
+tokens.json
+*.pem
+*.key
+.env
+logs/
+wandb/
+__pycache__/
+*.pyc

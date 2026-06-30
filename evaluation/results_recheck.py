@@ -13,9 +13,19 @@ args = parser.parse_args()
 
 STORAGE_PATH = os.getenv("STORAGE_PATH")
 api_urls = []
-api_keys=[]
+api_keys = []
 
-
+openai_key = os.getenv("OPENAI_API_KEY")
+if not openai_key:
+    try:
+        with open('tokens.json', 'r') as f:
+            openai_key = json.load(f).get('openai')
+    except Exception:
+        openai_key = None
+if openai_key:
+    api_base = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1").rstrip('/')
+    api_urls.append(f"{api_base}/chat/completions")
+    api_keys.append(openai_key)
 
 def process_example(answer, response):
     try:
@@ -30,7 +40,12 @@ def process_example(answer, response):
         api_index = random.randint(0, len(api_urls)-1)
         api_url = api_urls[api_index]
         api_key = api_keys[api_index]
-        response = requests.post(api_url, headers={"api-key": api_key,"Content-Type": "application/json"}, json=example, timeout=20)
+        if "api.openai.com" in api_url or api_url.rstrip('/').endswith('/chat/completions'):
+            headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+        else:
+            headers = {"api-key": api_key, "Content-Type": "application/json"}
+        response = requests.post(api_url, headers=headers, json=example, timeout=20)
+        response.raise_for_status()
         return response.json()['choices'][0]['message']['content']
     except Exception as e:
         print(e)
@@ -49,11 +64,14 @@ for model_name in [args.model_name]:
         with open(f'{STORAGE_PATH}/evaluation/{model_name.replace("/","_")}/results_{dataset}.json', 'r') as f:
             results = json.load(f)
 
-        for i in tqdm(range(len(results)-1)):
-                if results[i]['score'] < 0.5:
-                    gpt_check = process_example(results[i]['answer'],results[i]['response'])
-                    if "yes" in gpt_check.lower():
-                        results[i]['score']=1
+        if api_urls and api_keys:
+            for i in tqdm(range(len(results)-1)):
+                    if results[i]['score'] < 0.5:
+                        gpt_check = process_example(results[i]['answer'],results[i]['response'])
+                        if "yes" in gpt_check.lower():
+                            results[i]['score']=1
+        else:
+            print("No API urls configured; skipping GPT recheck and using local scores.")
         new_results.append({
             'model': model_name,
             'dataset': dataset,

@@ -1,0 +1,212 @@
+{
+  "round1_questioner_v1_for_solver_v1": {
+    "repo": "jinyuan222/qwen3_4b_fullrun_authorsettings_solver_v1",
+    "count": 1816,
+    "score_min": 0.3333333333333333,
+    "score_max": 0.7777777777777778,
+    "score_mean": 0.521053597650514,
+    "score_median": 0.5,
+    "score_values": {
+      "0.333": 461,
+      "0.375": 63,
+      "0.4": 1,
+      "0.429": 10,
+      "0.444": 340,
+      "0.5": 58,
+      "0.556": 284,
+      "0.571": 5,
+      "0.625": 31,
+      "0.667": 295,
+      "0.714": 4,
+      "0.75": 26,
+      "0.778": 238
+    },
+    "topic_counts": {
+      "geometry": 701,
+      "number_theory": 638,
+      "algebra": 222,
+      "combinatorics": 115,
+      "other": 108,
+      "logic_puzzle": 22,
+      "sequence": 10
+    },
+    "chars_mean": 241.46751101321587,
+    "chars_median": 219.0,
+    "examples": [
+      {
+        "id": 0,
+        "score": 0.6666666666666666,
+        "topic": "geometry",
+        "answer": "5",
+        "problem": "A right triangle has a hypotenuse of length 10 and one of its acute angles is twice the size of the other. What is the length of the shorter leg of the triangle?"
+      },
+      {
+        "id": 1,
+        "score": 0.3333333333333333,
+        "topic": "number_theory",
+        "answer": "1",
+        "problem": "In a small village, there are 20 houses, each with a unique number from 1 to 20. One day, the village decides to paint each house a color based on the sum of its house number's digits. If the sum is even, the house is painted blue; if odd, it's painted red. A..."
+      },
+      {
+        "id": 2,
+        "score": 0.5555555555555556,
+        "topic": "geometry",
+        "answer": "96 - 25\\pi",
+        "problem": "A circle with radius 5 cm is inscribed in a right-angled triangle with legs of lengths 12 cm and 16 cm. What is the area of the region inside the triangle but outside the circle? Express your answer in terms of \\(\\pi\\)."
+      },
+      {
+        "id": 3,
+        "score": 0.5555555555555556,
+        "topic": "number_theory",
+        "answer": "3",
+        "problem": "Find the smallest positive integer \\( n \\) such that the polynomial \\( P(x) = x^n + x^{n-1} + \\cdots + x + 1 \\) is divisible by the polynomial \\( Q(x) = x^2 - x + 1 \\)."
+      },
+      {
+        "id": 4,
+        "score": 0.6666666666666666,
+        "topic": "number_theory",
+        "answer": "1",
+        "problem": "** What is the smallest positive integer \\( n \\) such that \\( 2^n + 3^n \\) is divisible by 5?"
+      },
+      {
+        "id": 5,
+        "score": 0.3333333333333333,
+        "topic": "combinatorics",
+        "answer": "7560",
+        "problem": "How many distinct arrangements of the letters in the word \"MATHEMATICS\" are there such that all vowels (A, E, A, I) appear consecutively and the two 'M's are not next to each other?"
+      },
+      {
+        "id": 6,
+        "score": 0.7777777777777778,
+        "topic": "number_theory",
+        "answer": "1525",
+        "problem": "Let \\( f \\) be a function defined on the set of integers such that \\( f(1) = 1 \\) and for all integers \\( n \\geq 1 \\), \\[ f(n+1) = 2f(n) + n. \\] Find the value of \\( f(10) \\)."
+      },
+      {
+        "id": 7,
+        "score": 0.6666666666666666,
+        "topic": "number_theory",
+        "answer": "16",
+        "problem": "Let \\( S \\) be the set of all positive integers \\( n \\) such that \\( n \\) can be expressed as the sum of two distinct positive integers, each of which is a product of two distinct primes. For example, \\( 10 = 2 \\times 3 + 1 \\times 5 \\). Find the smallest elem..."
+      },
+      {
+        "id": 8,
+        "score": 0.3333333333333333,
+        "topic": "number_theory",
+        "answer": "13",
+        "problem": "Given the sequence \\( a_1, a_2, a_3, \\ldots \\) defined by \\( a_1 = 1 \\) and \\( a_{n+1} = a_n + \\frac{1}{a_n} \\) for \\( n \\geq 1 \\), find the smallest integer \\( k \\) such that \\( a_k > 5 \\)."
+      },
+      {
+        "id": 9,
+        "score": 0.3333333333333333,
+        "topic": "geometry",
+        "answer": "\\frac{1}{3}",
+        "problem": "In the complex plane, consider the points $A$, $B$, and $C$ representing the complex numbers $1+2i$, $-1+i$, and $2+3i$ respectively. Let $O$ be the origin. A complex number $z$ is chosen at random such that $|z| = 1$. Find the probability that the angle betw..."
+      }
+    ]
+  },
+  "round2_questioner_v2_for_solver_v2": {
+    "repo": "jinyuan222/qwen3_4b_fullrun_authorsettings_solver_v2",
+    "count": 2039,
+    "score_min": 0.3333333333333333,
+    "score_max": 0.7777777777777778,
+    "score_mean": 0.5177024218220884,
+    "score_median": 0.4444444444444444,
+    "score_values": {
+      "0.333": 524,
+      "0.375": 9,
+      "0.429": 1,
+      "0.444": 498,
+      "0.5": 9,
+      "0.556": 395,
+      "0.625": 3,
+      "0.667": 329,
+      "0.75": 5,
+      "0.778": 266
+    },
+    "topic_counts": {
+      "number_theory": 1051,
+      "geometry": 644,
+      "algebra": 197,
+      "other": 67,
+      "combinatorics": 66,
+      "logic_puzzle": 8,
+      "sequence": 4,
+      "calculus": 2
+    },
+    "chars_mean": 263.9460519862678,
+    "chars_median": 246,
+    "examples": [
+      {
+        "id": 0,
+        "score": 0.3333333333333333,
+        "topic": "number_theory",
+        "answer": "15",
+        "problem": "Find the smallest positive integer \\( n \\) such that the number of ordered triples \\((a, b, c)\\) where \\(a, b,\\) and \\(c\\) are integers satisfying \\(1 \\leq a, b, c \\leq n\\) and \\(a + b + c\\) is a multiple of 3 is exactly 1000."
+      },
+      {
+        "id": 1,
+        "score": 0.4444444444444444,
+        "topic": "number_theory",
+        "answer": "2",
+        "problem": "Find the smallest positive integer \\( n \\) such that the polynomial \\( P(x) = x^n + x^{n-1} + \\cdots + x + 1 \\) has a root modulo any prime \\( p \\)."
+      },
+      {
+        "id": 2,
+        "score": 0.4444444444444444,
+        "topic": "geometry",
+        "answer": "0",
+        "problem": "Find all positive integers \\( n \\) such that \\( n^2 + 3n + 2 \\) is a perfect square."
+      },
+      {
+        "id": 3,
+        "score": 0.3333333333333333,
+        "topic": "number_theory",
+        "answer": "675",
+        "problem": "Find the smallest positive integer \\( n \\) such that there exist positive integers \\( a_1, a_2, \\ldots, a_n \\) satisfying the following conditions: 1. \\( a_1 + a_2 + \\cdots + a_n = 2023 \\), 2. Each \\( a_i \\) is divisible by \\( 3 \\) but not by \\( 9 \\), 3. For ..."
+      },
+      {
+        "id": 4,
+        "score": 0.3333333333333333,
+        "topic": "geometry",
+        "answer": "20",
+        "problem": "In the complex plane, the vertices of a regular icosagon (20-sided polygon) are located at the 20th roots of unity. Let \\( P \\) be a point inside the icosagon such that the sum of the distances from \\( P \\) to each vertex is minimized. Determine the coordinat..."
+      },
+      {
+        "id": 5,
+        "score": 0.7777777777777778,
+        "topic": "geometry",
+        "answer": "2\\sqrt{2} r^2",
+        "problem": "Consider a regular octagon $ABCDEFGH$ inscribed in a circle of radius $r$. Let $P$ be a point inside the octagon such that $PA = PB = PC = PD = PE = PF = PG = PH$. Determine the area of the octagon as a function of $r$ and $P$’s coordinates. Specifically, if ..."
+      },
+      {
+        "id": 6,
+        "score": 0.5555555555555556,
+        "topic": "geometry",
+        "answer": "1000000",
+        "problem": "In the complex plane, let $P$ be a point with coordinates $(a, b)$, where $a$ and $b$ are positive integers. Define a sequence of complex numbers $\\{z_n\\}_{n \\geq 0}$ as follows: - $z_0 = P$. - For each $n \\geq 1$, $z_n$ is the midpoint of the line segment jo..."
+      },
+      {
+        "id": 7,
+        "score": 0.4444444444444444,
+        "topic": "number_theory",
+        "answer": "29",
+        "problem": "In the complex plane, let \\( z_1 \\) and \\( z_2 \\) be the roots of the polynomial \\( x^2 - 2x + 13 \\). Define a sequence \\( \\{a_n\\} \\) such that \\( a_1 = 2 \\), \\( a_2 = 3 \\), and for \\( n \\geq 3 \\), \\( a_n \\) is the smallest positive integer such that \\( a_n \\..."
+      },
+      {
+        "id": 8,
+        "score": 0.4444444444444444,
+        "topic": "number_theory",
+        "answer": "3",
+        "problem": "Find all positive integers \\( n \\) such that \\( n^2 + n + 1 \\) divides \\( 2019^n + 1 \\)."
+      },
+      {
+        "id": 9,
+        "score": 0.4444444444444444,
+        "topic": "number_theory",
+        "answer": "2",
+        "problem": "Let \\( S \\) be a set of \\( n \\) distinct integers. Define a function \\( f: S \\to S \\) such that for any two distinct elements \\( a, b \\in S \\), the value \\( f(a) - f(b) \\) divides \\( a - b \\). Find the maximum possible value of \\( n \\) for which such a functi..."
+      }
+    ]
+  }
+}
