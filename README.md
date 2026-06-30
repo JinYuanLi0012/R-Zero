@@ -85,6 +85,51 @@ You can replicate all of our experimental results with a single script.
 bash scripts/main.sh Qwen/Qwen3-4B-Base qwen3-4b
 ```
 
+### 4. Run Evaluation Only
+
+If you already have a Hugging Face model path and only want to run evaluation, use:
+
+```bash
+cd R-Zero
+source env_rzero.sh  # or export STORAGE_PATH=/path/to/your/storage manually
+
+bash evaluation/evaluate.bash Qwen/Qwen3-4B-Base
+```
+
+For a local checkpoint produced by this repo, pass the merged Hugging Face checkpoint directory:
+
+```bash
+bash evaluation/evaluate.bash \
+  "$STORAGE_PATH/models/qwen3-4b_solver_v1/global_step_15/actor/huggingface"
+```
+
+By default, `evaluation/evaluate.bash` uses all GPUs reported by `nvidia-smi`. To restrict evaluation to specific GPUs:
+
+```bash
+EVAL_GPU_IDS=4,5,6,7 \
+bash evaluation/evaluate.bash Qwen/Qwen3-4B-Base
+```
+
+Useful evaluation environment variables:
+
+| Variable | Default | Description |
+|:---|:---:|:---|
+| `EVAL_GPU_IDS` | all visible GPUs | Comma-separated GPU ids used by evaluation, e.g. `4,5,6,7`. |
+| `EVAL_TASKS` | all seven math tasks | Optional comma-separated subset of math tasks, e.g. `math,gsm8k,aime2025`. |
+| `EVAL_CHUNK_SIZE` | `512` | Chunk size used by SuperGPQA/BBEH/MMLU-Pro generation. Lower it if vLLM is unstable. |
+| `EVAL_GPU_MEMORY_UTILIZATION` | `0.85` | vLLM GPU memory utilization for the large evaluation tasks. |
+| `EVAL_TENSOR_PARALLEL_SIZE` | number of eval GPUs | Tensor parallel size for SuperGPQA/BBEH/MMLU-Pro. |
+
+The seven math-task raw outputs are written to:
+
+```bash
+$STORAGE_PATH/evaluation/<model_name_with_slashes_replaced>/
+```
+
+The summary is appended to `final_results.jsonl` in the current working directory.
+
+Note: `evaluation/results_recheck.py` can use an OpenAI-compatible judge to recheck locally incorrect math answers. Recheck scores may differ from raw `results_*.json` scores. For clean bookkeeping, run evaluation or recheck from a dedicated output directory if you do not want to append to the repository-root `final_results.jsonl`.
+
 ## 📊 Impressive Results
 
 The table below compares the performance of the Base Model, a Zero-Shot Challenger baseline, and our iterative R-Zero framework. Peak performance for each model is highlighted in **bold**.

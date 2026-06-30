@@ -29,11 +29,13 @@ if openai_key:
 
 def process_example(answer, response):
     try:
+        gold_answer = answer
+        model_response = response
         example = {
             "model": "gpt-4o",
             "messages": [
                 {"role": "system", "content": "You are a math answer checker."},
-                {"role": "user", "content": f"Hi, there is a answer: {answer}\n\n, and the ground truth answer is: {response}\n\n, please check whether the answer is correct or not, and return the **only** Yes or No."}
+                {"role": "user", "content": f"Hi, there is a model response: {model_response}\n\n, and the ground truth answer is: {gold_answer}\n\n, please check whether the model response is correct or not, and return the **only** Yes or No."}
             ],
             "temperature": 0.1
         }
