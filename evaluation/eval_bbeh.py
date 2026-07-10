@@ -190,6 +190,6 @@ if __name__ == "__main__":
     
     with open(args.output_file, 'w') as f:
         json.dump(answers, f, indent=2)
-    with open('final_results.jsonl', 'a') as f:
+    with open(os.getenv('FINAL_RESULTS_FILE', 'final_results.jsonl'), 'a') as f:
         json.dump({"dataset": "bbeh", "model": args.model_path, "accuracy": round(success / (success + fail)*100, 2)}, f, indent=2)
     print("Overall Accuracy:", success / (success + fail))

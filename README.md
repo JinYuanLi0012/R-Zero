@@ -48,7 +48,7 @@ This process creates a perfectly tailored, adaptive curriculum. The Challenger l
 Getting started is easy! Just follow these steps.
 ### 1. Configure Environment and Prepare Dirs
 ```bash
-git clone https://github.com/Chengsong-Huang/R-Zero.git
+git clone https://github.com/JinYuanLi0012/R-Zero.git
 
 # Navigate into the new directory
 cd R-Zero
@@ -129,6 +129,30 @@ $STORAGE_PATH/evaluation/<model_name_with_slashes_replaced>/
 The summary is appended to `final_results.jsonl` in the current working directory.
 
 Note: `evaluation/results_recheck.py` can use an OpenAI-compatible judge to recheck locally incorrect math answers. Recheck scores may differ from raw `results_*.json` scores. For clean bookkeeping, run evaluation or recheck from a dedicated output directory if you do not want to append to the repository-root `final_results.jsonl`.
+
+### 5. Task-Vector R-Zero (experimental)
+
+This fork also provides an isolated five-round method in which every Solver
+update is trained from the immutable Base and then accumulated as a task vector.
+The original `scripts/main.sh` behavior is unchanged.
+
+Full-delta chain:
+
+```bash
+bash methods/task_vector_rzero/run_full_delta.sh \
+  --config methods/task_vector_rzero/config.sh
+```
+
+Independent RELEX per-tensor rank-1 chain:
+
+```bash
+bash methods/task_vector_rzero/run_rank1.sh \
+  --config methods/task_vector_rzero/config.sh
+```
+
+See [algorithm and implementation overview](methods/task_vector_rzero/README.md)
+and [usage/runbook](methods/task_vector_rzero/README_USAGE.md) for the algorithm,
+commands, artifact layout, resume behavior and troubleshooting.
 
 ## 📊 Impressive Results
 

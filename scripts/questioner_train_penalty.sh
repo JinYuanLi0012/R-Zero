@@ -4,11 +4,13 @@ set -e
 solver_model_path=$1
 questioner_model_path=$2
 save_path=$3
+QUESTIONER_OUTPUT_DIR=${QUESTIONER_OUTPUT_DIR:-${STORAGE_PATH}/models/$save_path}
 mkdir -p logs
 QUESTIONER_LOG_FILE=${QUESTIONER_LOG_FILE:-logs/questioner_${save_path}_$(date +%Y%m%d_%H%M%S).log}
 exec > >(tee -a "$QUESTIONER_LOG_FILE") 2>&1
 echo "logging to $QUESTIONER_LOG_FILE"
 echo "save_path: $save_path"
+echo "questioner output directory: $QUESTIONER_OUTPUT_DIR"
 # 生成唯一 RUN_ID
 RUN_ID=$(date +%s%N)
 export RUN_ID
@@ -76,7 +78,7 @@ CUDA_VISIBLE_DEVICES=${QUESTIONER_TRAIN_GPU_IDS} python3 -m verl.trainer.main \
     worker.actor.model.model_path=$questioner_model_path \
     trainer.experiment_name=$save_path \
     trainer.logger="$QUESTIONER_LOGGER" \
-    trainer.save_checkpoint_path=${STORAGE_PATH}/models/$save_path \
+    trainer.save_checkpoint_path=$QUESTIONER_OUTPUT_DIR \
     trainer.total_epochs=1000 \
     worker.reward.reward_function=./examples/reward_function/caller_penalty.py:compute_score \
     worker.reward.reward_function_kwargs.num_services=$VLLM_SERVICE_COUNT \
@@ -97,7 +99,7 @@ sleep 5
 if [ "${QUESTIONER_SKIP_MERGE:-0}" != "1" ]; then
     # 合并模型
     echo "merging model"
-    python scripts/model_merger.py --local_dir ${STORAGE_PATH}/models/$save_path/global_step_${QUESTIONER_MERGE_STEP:-5}/actor
+    python scripts/model_merger.py --local_dir ${QUESTIONER_OUTPUT_DIR}/global_step_${QUESTIONER_MERGE_STEP:-5}/actor
 fi
 
 sleep 10

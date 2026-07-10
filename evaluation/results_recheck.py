@@ -12,6 +12,7 @@ parser.add_argument("--model_name", type=str, default="Qwen/Qwen2.5-7B-Instruct"
 args = parser.parse_args()
 
 STORAGE_PATH = os.getenv("STORAGE_PATH")
+FINAL_RESULTS_FILE = os.getenv("FINAL_RESULTS_FILE", "final_results.jsonl")
 api_urls = []
 api_keys = []
 
@@ -80,14 +81,13 @@ for model_name in [args.model_name]:
             'score': round(sum([result['score'] for result in results[:-1]])/len(results[:-1])*100, 2)
         })
         print(new_results)
-        with open(f'final_results.jsonl', 'a') as f:
+        with open(FINAL_RESULTS_FILE, 'a') as f:
             json.dump({
                 'model': model_name,
                 'dataset': dataset,
                 'score': round(sum([result['score'] for result in results[:-1]])/len(results[:-1])*100, 2)
             }, f)
             f.write('\n')
-
 
 
 
