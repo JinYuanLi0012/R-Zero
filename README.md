@@ -150,8 +150,9 @@ bash methods/task_vector_rzero/run_rank1.sh \
   --config methods/task_vector_rzero/config.sh
 ```
 
-See [methods/task_vector_rzero/README.md](methods/task_vector_rzero/README.md)
-for the algorithm, artifact layout, resume behavior and validation workflow.
+See [algorithm and implementation overview](methods/task_vector_rzero/README.md)
+and [usage/runbook](methods/task_vector_rzero/README_USAGE.md) for the algorithm,
+commands, artifact layout, resume behavior and troubleshooting.
 
 ## 📊 Impressive Results
 
