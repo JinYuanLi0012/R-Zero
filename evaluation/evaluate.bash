@@ -6,6 +6,20 @@ export PYTHONPATH="${REPO_ROOT}:${PYTHONPATH:-}"
 model_name=$1
 mkdir -p logs
 EVAL_RUN_ID=${EVAL_RUN_ID:-$(date +%Y%m%d_%H%M%S)}
+EVAL_LOG_DIR=${EVAL_LOG_DIR:-logs}
+mkdir -p "$EVAL_LOG_DIR"
+if [ -n "${EVAL_ARTIFACT_DIR:-}" ]; then
+  mkdir -p "$EVAL_ARTIFACT_DIR"
+  export FINAL_RESULTS_FILE=${FINAL_RESULTS_FILE:-${EVAL_ARTIFACT_DIR}/final_results.jsonl}
+  SUPERGPQA_OUTPUT_FILE="${EVAL_ARTIFACT_DIR}/supergpqa_outputs.json"
+  BBEH_OUTPUT_FILE="${EVAL_ARTIFACT_DIR}/bbeh_outputs.json"
+  MMLUPRO_OUTPUT_FILE="${EVAL_ARTIFACT_DIR}/mmlupro_outputs.json"
+else
+  export FINAL_RESULTS_FILE=${FINAL_RESULTS_FILE:-final_results.jsonl}
+  SUPERGPQA_OUTPUT_FILE=outputs.json
+  BBEH_OUTPUT_FILE=outputs.json
+  MMLUPRO_OUTPUT_FILE=outputs.json
+fi
 
 MODEL_NAMES=(
   $model_name
@@ -51,7 +65,7 @@ start_job() {
 
   echo "==> [$(date '+%Y-%m-%d %H:%M:%S')] Start task [${task}] with model [${model}] on GPU [${gpu_id}] ..."
 
-  local log_file="logs/eval_${EVAL_RUN_ID}_${task}_gpu${gpu_id}.log"
+  local log_file="${EVAL_LOG_DIR}/eval_${EVAL_RUN_ID}_${task}_gpu${gpu_id}.log"
 
   CUDA_VISIBLE_DEVICES="${gpu_id}" \
   python evaluation/generate.py --model "${model}" --dataset "${task}" > "${log_file}" 2>&1 &
@@ -118,9 +132,12 @@ if [ "${EVAL_MATH_ONLY:-0}" = "1" ]; then
   exit 0
 fi
 
-CUDA_VISIBLE_DEVICES="${EVAL_CUDA_VISIBLE_DEVICES}" python evaluation/eval_supergpqa.py --model_path $model_name
-CUDA_VISIBLE_DEVICES="${EVAL_CUDA_VISIBLE_DEVICES}" python evaluation/eval_bbeh.py --model_path $model_name
-CUDA_VISIBLE_DEVICES="${EVAL_CUDA_VISIBLE_DEVICES}" python evaluation/eval_mmlupro.py --model_path $model_name
+CUDA_VISIBLE_DEVICES="${EVAL_CUDA_VISIBLE_DEVICES}" python evaluation/eval_supergpqa.py \
+  --model_path "$model_name" --output_file "$SUPERGPQA_OUTPUT_FILE"
+CUDA_VISIBLE_DEVICES="${EVAL_CUDA_VISIBLE_DEVICES}" python evaluation/eval_bbeh.py \
+  --model_path "$model_name" --output_file "$BBEH_OUTPUT_FILE"
+CUDA_VISIBLE_DEVICES="${EVAL_CUDA_VISIBLE_DEVICES}" python evaluation/eval_mmlupro.py \
+  --model_path "$model_name" --output_file "$MMLUPRO_OUTPUT_FILE"
 
 
 echo "==> All tasks have finished!"

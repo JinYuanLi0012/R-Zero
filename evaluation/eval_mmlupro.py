@@ -145,7 +145,7 @@ if __name__ == "__main__":
     total_predictions = success + fail
     micro_avg = success / total_predictions if total_predictions > 0 else 0.0
     print(f"\nMicro Average Accuracy: {micro_avg*100:.2f}%")
-    with open('final_results.jsonl', 'a') as f:
+    with open(os.getenv('FINAL_RESULTS_FILE', 'final_results.jsonl'), 'a') as f:
         json.dump({"dataset": "mmlupro", "model": args.model_path, "accuracy": round(micro_avg*100, 2)}, f, indent=2)
     valid_categories = [cat for cat in categories if (per_category_accuracy[cat][0] + per_category_accuracy[cat][1] > 0)]
     if valid_categories:
