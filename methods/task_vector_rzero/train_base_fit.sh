@@ -22,6 +22,9 @@ export VLLM_DISABLE_COMPILE_CACHE=1
 : "${SOLVER_MAX_STEPS:=20}"
 : "${SOLVER_VAL_FREQ:=4}"
 : "${SOLVER_MERGE_STEP:=15}"
+: "${SOLVER_SAVE_FREQ:=5}"
+: "${SOLVER_SAVE_LIMIT:=3}"
+: "${BASE_FIT_MERGE_STEPS:=$SOLVER_MERGE_STEP}"
 : "${SOLVER_LOGGER:=[\"console\",\"wandb\"]}"
 
 IFS=',' read -r -a GPU_IDS <<< "$QUESTION_GPU_IDS"
@@ -45,18 +48,24 @@ CUDA_VISIBLE_DEVICES="$QUESTION_GPU_IDS" python3 -m verl.trainer.main \
     trainer.save_checkpoint_path="$OUTPUT_DIR" \
     trainer.total_epochs="$SOLVER_TOTAL_EPOCHS" \
     trainer.max_steps="$SOLVER_MAX_STEPS" \
+    trainer.save_freq="$SOLVER_SAVE_FREQ" \
+    trainer.save_limit="$SOLVER_SAVE_LIMIT" \
     data.format_prompt=./examples/format_prompt/solver.jinja \
     trainer.val_freq="$SOLVER_VAL_FREQ" \
     trainer.n_gpus_per_node="$GPU_COUNT" \
     worker.actor.micro_batch_size_per_device_for_update=1 \
     worker.actor.micro_batch_size_per_device_for_experience=1
 
-ACTOR_DIR="${OUTPUT_DIR}/global_step_${SOLVER_MERGE_STEP}/actor"
-if [ ! -d "$ACTOR_DIR" ]; then
-    echo "Expected merge checkpoint does not exist: $ACTOR_DIR" >&2
-    exit 1
-fi
+IFS=',' read -r -a MERGE_STEPS <<< "$BASE_FIT_MERGE_STEPS"
+for step in "${MERGE_STEPS[@]}"; do
+    ACTOR_DIR="${OUTPUT_DIR}/global_step_${step}/actor"
+    if [ ! -d "$ACTOR_DIR" ]; then
+        echo "Expected merge checkpoint does not exist: $ACTOR_DIR" >&2
+        exit 1
+    fi
+    python3 scripts/model_merger.py --local_dir "$ACTOR_DIR"
+    python3 methods/task_vector_rzero/validate_checkpoint.py "$ACTOR_DIR/huggingface"
+    echo "Merged Base-fit trajectory checkpoint: step $step"
+done
 
-python3 scripts/model_merger.py --local_dir "$ACTOR_DIR"
-python3 methods/task_vector_rzero/validate_checkpoint.py "$ACTOR_DIR/huggingface"
-echo "Base-fit training complete: $ACTOR_DIR/huggingface"
+echo "Base-fit training complete; merged steps: $BASE_FIT_MERGE_STEPS"

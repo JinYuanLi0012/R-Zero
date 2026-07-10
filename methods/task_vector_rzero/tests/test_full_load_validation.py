@@ -12,12 +12,14 @@ from tokenizers import Tokenizer, models, pre_tokenizers
 from transformers import PreTrainedTokenizerFast, Qwen3Config, Qwen3ForCausalLM
 
 from methods.task_vector_rzero.compose_task_vectors import ModelLayout, compose
+from methods.task_vector_rzero.relex_rank1 import reconstruct_rank1
 
 
 SCRIPT = Path(__file__).parents[1] / "validate_checkpoint.py"
 
 
 def save_tiny_qwen(root: Path, offset: float) -> None:
+    torch.manual_seed(0)
     config = Qwen3Config(
         vocab_size=16,
         hidden_size=8,
@@ -72,6 +74,32 @@ class FullLoadValidationTest(unittest.TestCase):
             report = json.loads(result.stdout)
             self.assertTrue(report["full_load"]["tied_embeddings"])
             self.assertEqual(report["full_load"]["model_class"], "Qwen3ForCausalLM")
+
+    def test_rank1_tiny_qwen_loads_and_remains_tied(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            save_tiny_qwen(root / "base", 0.0)
+            for step, offset in ((5, 0.005), (10, 0.01), (15, 0.02)):
+                save_tiny_qwen(root / f"step{step}", offset)
+            output = root / "rank1"
+            reconstruct_rank1(
+                ModelLayout.inspect(root / "base"),
+                [ModelLayout.inspect(root / f"step{step}") for step in (5, 10, 15)],
+                [5, 10, 15],
+                15,
+                output,
+                chunk_elements=16,
+                provenance={"base": {}, "trajectory": []},
+            )
+
+            result = subprocess.run(
+                [sys.executable, SCRIPT, output, "--full-load"],
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            report = json.loads(result.stdout)
+            self.assertTrue(report["full_load"]["tied_embeddings"])
 
 
 if __name__ == "__main__":

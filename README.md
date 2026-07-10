@@ -136,8 +136,17 @@ This fork also provides an isolated five-round method in which every Solver
 update is trained from the immutable Base and then accumulated as a task vector.
 The original `scripts/main.sh` behavior is unchanged.
 
+Full-delta chain:
+
 ```bash
-bash methods/task_vector_rzero/run.sh \
+bash methods/task_vector_rzero/run_full_delta.sh \
+  --config methods/task_vector_rzero/config.sh
+```
+
+Independent RELEX per-tensor rank-1 chain:
+
+```bash
+bash methods/task_vector_rzero/run_rank1.sh \
   --config methods/task_vector_rzero/config.sh
 ```
 

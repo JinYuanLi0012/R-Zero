@@ -20,20 +20,39 @@ a local Base is resolved to an absolute path. Config, tokenizer assets and all
 safetensors are hashed into `state/base_manifest.json`. Every round uses that
 same resolved directory, and resume fails if any tracked Base file changes.
 
-## One-command run
+## Two one-command experiment chains
 
-Prepare the normal R-Zero environment, edit `config.sh`, then run:
+Prepare the normal R-Zero environment and edit `config.sh`. Run the complete
+five-round full-delta experiment with:
 
 ```bash
 source env_rzero.sh
-bash methods/task_vector_rzero/run.sh \
+bash methods/task_vector_rzero/run_full_delta.sh \
   --config methods/task_vector_rzero/config.sh
 ```
+
+Run the independent five-round RELEX rank-1 experiment with:
+
+```bash
+bash methods/task_vector_rzero/run_rank1.sh \
+  --config methods/task_vector_rzero/config.sh
+```
+
+Both commands use the same orchestrator. The full chain always feeds its
+full-delta Solver into the next round; the rank-1 chain always feeds its RELEX
+rank-1 Solver into the next round. Their run roots and Hugging Face names are
+separate.
+
+Rank-1 mode preserves and merges Base-fit checkpoints at steps 5, 10 and 15.
+For every tensor it follows RELEX reconstruct mode: form FP16 absolute deltas
+relative to the immutable Base, build the FP32 Gram matrix, retain the leading
+singular direction, reconstruct the step-15 delta, and save `Base + delta_rank1`
+as BF16. The selected steps are configurable through `RANK1_HISTORY_STEPS`.
 
 Resume a run whose completed stages already have `_SUCCESS.json` markers:
 
 ```bash
-bash methods/task_vector_rzero/run.sh \
+bash methods/task_vector_rzero/run_full_delta.sh \
   --config methods/task_vector_rzero/config.sh \
   --resume
 ```
@@ -49,8 +68,10 @@ For round `i`:
 1. `Q_i` starts from `Q_(i-1)` and trains against composed `pi_(i-1)`.
 2. `Q_i` generates questions; composed `pi_(i-1)` labels and filters them.
 3. `A_i` always starts from `BASE_MODEL` and trains on local `D_i/train.parquet`.
-4. The composer rebuilds `pi_i` from Base and all `A_1...A_i`.
-5. `pi_i` is validated, optionally uploaded, evaluated, and passed to round `i+1`.
+4. Full mode uses `A_i - Base`; rank-1 mode reconstructs the step-15 delta from
+   the per-tensor SVD of step 5/10/15 and keeps only rank 1.
+5. The composer rebuilds `pi_i` from Base and all effective full/rank-1 deltas.
+6. `pi_i` is validated, optionally uploaded, evaluated, and passed to round `i+1`.
 
 The two Solver paths are deliberately separate in logs and state:
 `labeler_model` is the current composed Solver, and `train_init_model` is always
@@ -65,6 +86,7 @@ $STORAGE_PATH/task_vector_rzero/$RUN_NAME/
   questioners/q1...q5/
   datasets/d1...d5/
   base_fits/a1...a5/
+  rank1_fits/r1...r5/       # rank-1 mode
   composed_solvers/v1...v5/
   evaluations/v1...v5/
   state/run_state.json

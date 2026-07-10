@@ -60,6 +60,51 @@ export QUESTIONER_MICRO_BATCH_EXPERIENCE QUESTIONER_VAL_BEFORE_TRAIN
 export QUESTION_GPU_IDS SOLVER_MAX_RESPONSE_LENGTH SOLVER_TOTAL_EPOCHS
 export SOLVER_MAX_STEPS SOLVER_VAL_FREQ SOLVER_MERGE_STEP SOLVER_LOGGER
 
+case "$TASK_VECTOR_METHOD" in
+    full)
+        RUN_VARIANT=full_delta
+        BASE_FIT_MERGE_STEPS=$SOLVER_MERGE_STEP
+        ;;
+    relex_rank1)
+        RUN_VARIANT=relex_rank1
+        if ! [[ "$SOLVER_SAVE_FREQ" =~ ^[1-9][0-9]*$ ]]; then
+            echo "SOLVER_SAVE_FREQ must be a positive integer in rank-1 mode" >&2
+            exit 2
+        fi
+        if [ "${#RANK1_HISTORY_STEPS[@]}" -lt 2 ]; then
+            echo "RANK1_HISTORY_STEPS requires at least two checkpoints" >&2
+            exit 2
+        fi
+        RANK1_STEPS_CSV=$(IFS=,; echo "${RANK1_HISTORY_STEPS[*]}")
+        for step in "${RANK1_HISTORY_STEPS[@]}"; do
+            if ! [[ "$step" =~ ^[1-9][0-9]*$ ]] || [ "$step" -gt "$SOLVER_MAX_STEPS" ]; then
+                echo "Every RANK1_HISTORY_STEPS entry must be positive and <= SOLVER_MAX_STEPS" >&2
+                exit 2
+            fi
+            if [ $((step % SOLVER_SAVE_FREQ)) -ne 0 ]; then
+                echo "Rank-1 history step $step is not emitted by SOLVER_SAVE_FREQ=$SOLVER_SAVE_FREQ" >&2
+                exit 2
+            fi
+        done
+        if [[ ",${RANK1_STEPS_CSV}," != *",${RANK1_TARGET_STEP},"* ]]; then
+            echo "RANK1_TARGET_STEP must appear in RANK1_HISTORY_STEPS" >&2
+            exit 2
+        fi
+        if [ "$RANK1_TARGET_STEP" != "$SOLVER_MERGE_STEP" ]; then
+            echo "RANK1_TARGET_STEP must equal SOLVER_MERGE_STEP to preserve R-Zero's selected Solver" >&2
+            exit 2
+        fi
+        BASE_FIT_MERGE_STEPS=$RANK1_STEPS_CSV
+        # Keep every requested trajectory checkpoint until RELEX reconstruction finishes.
+        SOLVER_SAVE_LIMIT=-1
+        ;;
+    *)
+        echo "TASK_VECTOR_METHOD must be 'full' or 'relex_rank1'" >&2
+        exit 2
+        ;;
+esac
+export TASK_VECTOR_METHOD BASE_FIT_MERGE_STEPS SOLVER_SAVE_FREQ SOLVER_SAVE_LIMIT
+
 if ! [[ "$NUM_ROUNDS" =~ ^[1-9][0-9]*$ ]]; then
     echo "NUM_ROUNDS must be a positive integer" >&2
     exit 2
@@ -77,6 +122,8 @@ QUESTIONERS_DIR="$RUN_ROOT/questioners"
 DATASETS_DIR="$RUN_ROOT/datasets"
 BASE_FITS_DIR="$RUN_ROOT/base_fits"
 SOLVERS_DIR="$RUN_ROOT/composed_solvers"
+RANK1_FITS_DIR="$RUN_ROOT/rank1_fits"
+COMPARISONS_DIR="$RUN_ROOT/comparisons"
 EVALUATIONS_DIR="$RUN_ROOT/evaluations"
 STATE_DIR="$RUN_ROOT/state"
 LOG_DIR="$RUN_ROOT/logs"
@@ -88,7 +135,8 @@ if [ -e "$STATE_FILE" ] && [ "$RESUME" != "1" ]; then
     exit 2
 fi
 mkdir -p "$QUESTIONERS_DIR" "$DATASETS_DIR" "$BASE_FITS_DIR" \
-    "$SOLVERS_DIR" "$EVALUATIONS_DIR" "$STATE_DIR" "$LOG_DIR"
+    "$SOLVERS_DIR" "$RANK1_FITS_DIR" "$COMPARISONS_DIR" \
+    "$EVALUATIONS_DIR" "$STATE_DIR" "$LOG_DIR"
 
 BASE_MODEL_SOURCE=$BASE_MODEL
 BASE_RESOLVE_ARGS=(--model "$BASE_MODEL_SOURCE" --manifest "$BASE_MANIFEST")
@@ -119,6 +167,7 @@ RUN_FINGERPRINT=$(python3 "$METHOD_DIR/pipeline_state.py" init \
     --field "run_name=$RUN_NAME" \
     --field "num_rounds=$NUM_ROUNDS" \
     --field "task_vector_scales=$SCALES_CSV" \
+    --field "task_vector_method=$TASK_VECTOR_METHOD" \
     --field "questioner_max_steps=$QUESTIONER_MAX_STEPS" \
     --field "questioner_merge_step=$QUESTIONER_MERGE_STEP" \
     --field "questioner_save_freq=$QUESTIONER_SAVE_FREQ" \
@@ -136,6 +185,9 @@ RUN_FINGERPRINT=$(python3 "$METHOD_DIR/pipeline_state.py" init \
     --field "solver_max_steps=$SOLVER_MAX_STEPS" \
     --field "solver_val_freq=$SOLVER_VAL_FREQ" \
     --field "solver_merge_step=$SOLVER_MERGE_STEP" \
+    --field "solver_save_freq=$SOLVER_SAVE_FREQ" \
+    --field "solver_save_limit=$SOLVER_SAVE_LIMIT" \
+    --field "base_fit_merge_steps=$BASE_FIT_MERGE_STEPS" \
     --field "dataset_score_range=${DATASET_MIN_SCORE}:${DATASET_MAX_SCORE}")
 
 marker_path() {
@@ -250,6 +302,7 @@ echo "  Base source: $BASE_MODEL_SOURCE"
 echo "  Base revision: $BASE_RESOLVED_REVISION"
 echo "  Base identity: $BASE_IDENTITY"
 echo "  rounds: $NUM_ROUNDS"
+echo "  method: $TASK_VECTOR_METHOD"
 echo "  scales: $SCALES_CSV"
 echo "  dataset mirror: $MIRROR_DATASETS"
 echo "  model upload: $UPLOAD_MODELS"
@@ -262,10 +315,10 @@ AUXILIARY_MODELS=()
 for ((round=1; round<=NUM_ROUNDS; round++)); do
     echo
     echo "================ round $round / $NUM_ROUNDS ================"
-    QUESTIONER_NAME="${MODEL_ABBR}_taskvec_questioner_v${round}"
-    DATASET_NAME="${MODEL_ABBR}_taskvec_questions_v${round}"
-    BASE_FIT_NAME="${MODEL_ABBR}_taskvec_basefit_v${round}"
-    SOLVER_NAME="${MODEL_ABBR}_taskvec_solver_v${round}"
+    QUESTIONER_NAME="${MODEL_ABBR}_${RUN_VARIANT}_questioner_v${round}"
+    DATASET_NAME="${MODEL_ABBR}_${RUN_VARIANT}_questions_v${round}"
+    BASE_FIT_NAME="${MODEL_ABBR}_${RUN_VARIANT}_basefit_v${round}"
+    SOLVER_NAME="${MODEL_ABBR}_${RUN_VARIANT}_solver_v${round}"
 
     QUESTIONER_DIR="$QUESTIONERS_DIR/q${round}"
     QUESTIONER_HF="$QUESTIONER_DIR/global_step_${QUESTIONER_MERGE_STEP}/actor/huggingface"
@@ -357,7 +410,63 @@ for ((round=1; round<=NUM_ROUNDS; round++)); do
     fi
     ensure_model_upload "round_${round}/base_fit_hf_upload" "$BASE_FIT_HF" \
         "${HUGGINGFACENAME}/${BASE_FIT_NAME}"
-    AUXILIARY_MODELS+=("$BASE_FIT_HF")
+    if [ "$TASK_VECTOR_METHOD" = "relex_rank1" ]; then
+        RANK1_FIT_DIR="$RANK1_FITS_DIR/r${round}"
+        RANK1_STAGE="round_${round}/relex_rank1"
+        if guard_stage "$RANK1_STAGE" "$RANK1_FIT_DIR" composed; then
+            RANK1_ARGS=(
+                --base "$BASE_MODEL"
+                --base-provenance "$BASE_MANIFEST"
+                --target-step "$RANK1_TARGET_STEP"
+                --output "$RANK1_FIT_DIR"
+                --chunk-elements "$TASK_VECTOR_CHUNK_ELEMENTS"
+            )
+            for step in "${RANK1_HISTORY_STEPS[@]}"; do
+                RANK1_ARGS+=(
+                    --checkpoint
+                    "${step}=${BASE_FIT_DIR}/global_step_${step}/actor/huggingface"
+                )
+            done
+            python3 "$METHOD_DIR/relex_rank1.py" "${RANK1_ARGS[@]}" \
+                > >(tee -a "$LOG_DIR/relex_rank1_v${round}.log") 2>&1
+            if [ "$FULL_LOAD_VALIDATE" = "true" ]; then
+                python3 "$METHOD_DIR/validate_checkpoint.py" "$RANK1_FIT_DIR" --full-load
+            else
+                python3 "$METHOD_DIR/validate_checkpoint.py" "$RANK1_FIT_DIR"
+            fi
+            complete_stage "$RANK1_STAGE" "$RANK1_FIT_DIR" \
+                "history_steps=$RANK1_STEPS_CSV" \
+                "target_step=$RANK1_TARGET_STEP" \
+                "rank=1" \
+                "manifest=$RANK1_FIT_DIR/relex_rank1_manifest.json"
+        fi
+        ensure_model_upload "round_${round}/rank1_fit_hf_upload" "$RANK1_FIT_DIR" \
+            "${HUGGINGFACENAME}/${MODEL_ABBR}_${RUN_VARIANT}_rank1fit_v${round}"
+        AUXILIARY_MODELS+=("$RANK1_FIT_DIR")
+
+        if [ "$round" = "1" ] && [ "$RANK1_PRODUCE_FULL_V1_SIDECAR" = "true" ]; then
+            FULL_V1_SIDECAR="$COMPARISONS_DIR/full_delta_v1_same_data"
+            SIDECAR_STAGE="round_1/full_delta_v1_sidecar"
+            if guard_stage "$SIDECAR_STAGE" "$FULL_V1_SIDECAR" composed; then
+                python3 "$METHOD_DIR/compose_task_vectors.py" \
+                    --base "$BASE_MODEL" \
+                    --base-provenance "$BASE_MANIFEST" \
+                    --auxiliary "$BASE_FIT_HF" --scale "${TASK_VECTOR_SCALES[0]}" \
+                    --output "$FULL_V1_SIDECAR" \
+                    --chunk-elements "$TASK_VECTOR_CHUNK_ELEMENTS" \
+                    > >(tee -a "$LOG_DIR/full_delta_v1_sidecar.log") 2>&1
+                if [ "$FULL_LOAD_VALIDATE" = "true" ]; then
+                    python3 "$METHOD_DIR/validate_checkpoint.py" "$FULL_V1_SIDECAR" --full-load
+                else
+                    python3 "$METHOD_DIR/validate_checkpoint.py" "$FULL_V1_SIDECAR"
+                fi
+                complete_stage "$SIDECAR_STAGE" "$FULL_V1_SIDECAR" \
+                    "purpose=paired_full_delta_v1_from_rank1_run_data"
+            fi
+        fi
+    else
+        AUXILIARY_MODELS+=("$BASE_FIT_HF")
+    fi
 
     SOLVER_DIR="$SOLVERS_DIR/v${round}"
     COMPOSE_STAGE="round_${round}/compose"
