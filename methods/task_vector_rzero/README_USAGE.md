@@ -195,7 +195,8 @@ bash methods/task_vector_rzero/run_rank1.sh \
 
 - 只有配置 fingerprint 完全一致的 `_SUCCESS.json` 阶段会跳过。
 - Rank-1 Base-fit 若在 step 中断，会读取 `.aN.inprogress/latest_global_step.txt`，校验四卡模型、优化器、scheduler/RNG 和 dataloader 后，从最近完整 step 继续。
-- step 1–15 的模型权重全部保留；只有最新 step 保留 optimizer、extra state 和 dataloader，供断点续训。
+- Full-delta 同样从最近完整 step 恢复；新 step 原子提交后，旧 `global_step_N` 目录整体删除，只保留最新完整 checkpoint。
+- Rank-1 中 step 1–15 的模型权重全部保留；只有最新 step 保留 optimizer、extra state 和 dataloader，供断点续训。
 - tracker 缺失表示没有已提交 checkpoint，本轮安全重启；tracker 指向残缺 checkpoint 时拒绝恢复。
 - 正式 artifact 已原子移动但 marker 尚未来得及写入时，会重新验证并补写 marker。
 - Base revision、文件集合或 SHA256 改变时拒绝恢复。

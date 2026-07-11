@@ -307,6 +307,7 @@ $STORAGE_PATH/task_vector_rzero/$RUN_NAME/
 - 原始问题评估结果被保留，不再立即删除。
 - 增加阶段级 `_SUCCESS`、配置 fingerprint 和恢复。
 - Rank-1 Base-fit 支持从最近完整 optimizer step 恢复；所有 step 的模型轨迹保留，但旧 optimizer/extra/dataloader 状态会在新 checkpoint 原子提交后清理。
+- Full-delta Base-fit 使用相同恢复机制，但在新 checkpoint 原子提交后删除整个旧 checkpoint，只保留最新完整恢复点。
 - 模型默认保存在本地；只有显式开启才上传 HF。
 - 评估结果进入各自 run 目录，不污染仓库根目录。
 - 原始 R-Zero 最后重复评估 Base；新流程不重复做这次 Base 评估。
@@ -315,7 +316,7 @@ $STORAGE_PATH/task_vector_rzero/$RUN_NAME/
 
 ## 12. 当前验证状态
 
-自动测试套件包含原有 11 项、2 项 bootstrap artifact 测试和 3 项 Base-fit resume/retention 测试，覆盖：
+自动测试套件包含原有 11 项、2 项 bootstrap artifact 测试和 4 项 Base-fit resume/retention 测试，覆盖：
 
 - 多 shard Full-delta 组合。
 - 非整数向量系数。

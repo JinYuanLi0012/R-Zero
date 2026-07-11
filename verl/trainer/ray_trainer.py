@@ -402,9 +402,6 @@ class RayPPOTrainer:
 
     def _save_checkpoint(self) -> None:
         # path: {save_checkpoint_path}/global_step_{global_step}/{actor,critic}
-        remove_obsolete_ckpt(
-            self.config.trainer.save_checkpoint_path, self.global_step, self.config.trainer.save_limit
-        )
         folder_path = os.path.join(self.config.trainer.save_checkpoint_path, f"global_step_{self.global_step}")
         actor_path = os.path.join(folder_path, "actor")
         self.actor_rollout_wg.save_checkpoint(actor_path)
@@ -418,6 +415,11 @@ class RayPPOTrainer:
         torch.save(dataloader_state_dict, dataloader_path)
 
         atomic_write_checkpoint_tracker(self.config.trainer.save_checkpoint_path, self.global_step)
+        # Never delete the previous recovery point until the new model, optimizer,
+        # extra state, dataloader, and atomic tracker commit are all complete.
+        remove_obsolete_ckpt(
+            self.config.trainer.save_checkpoint_path, self.global_step, self.config.trainer.save_limit
+        )
         if self.config.trainer.keep_latest_resume_state_only:
             removed = prune_training_state_except_latest(
                 self.config.trainer.save_checkpoint_path, self.global_step

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import shutil
 import tempfile
 import unittest
 from pathlib import Path
@@ -8,6 +9,7 @@ from methods.task_vector_rzero.find_resume_checkpoint import find_complete_check
 from verl.utils.checkpoint.checkpoint_manager import (
     atomic_write_checkpoint_tracker,
     prune_training_state_except_latest,
+    remove_obsolete_ckpt,
 )
 
 
@@ -26,6 +28,28 @@ def write_checkpoint(root: Path, step: int, world_size: int = 2) -> Path:
 
 
 class ResumeCheckpointTest(unittest.TestCase):
+    def test_full_delta_deletes_old_checkpoint_only_after_new_commit(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            step1 = write_checkpoint(root, 1)
+            atomic_write_checkpoint_tracker(str(root), 1)
+
+            # A crash while step 2 is partial must leave step 1 resumable.
+            partial_step2 = root / "global_step_2/actor"
+            partial_step2.mkdir(parents=True)
+            (partial_step2 / "model_world_size_2_rank_0.pt").write_bytes(b"partial")
+            self.assertEqual(find_complete_checkpoint(root, 2), step1.resolve())
+            self.assertTrue(step1.is_dir())
+
+            # Once step 2 is complete and atomically committed, Full-delta may
+            # remove the whole older directory with save_limit=1.
+            shutil.rmtree(root / "global_step_2")
+            step2 = write_checkpoint(root, 2)
+            atomic_write_checkpoint_tracker(str(root), 2)
+            remove_obsolete_ckpt(str(root), 2, save_limit=1)
+            self.assertFalse(step1.exists())
+            self.assertEqual(find_complete_checkpoint(root, 2), step2.resolve())
+
     def test_all_models_remain_but_only_latest_training_state_remains(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
