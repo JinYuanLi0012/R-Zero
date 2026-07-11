@@ -25,6 +25,8 @@ export VLLM_DISABLE_COMPILE_CACHE=1
 : "${SOLVER_SAVE_FREQ:=5}"
 : "${SOLVER_SAVE_LIMIT:=3}"
 : "${BASE_FIT_MERGE_STEPS:=$SOLVER_MERGE_STEP}"
+: "${BASE_FIT_LOAD_CHECKPOINT:=}"
+: "${SOLVER_KEEP_LATEST_RESUME_STATE_ONLY:=false}"
 : "${SOLVER_LOGGER:=[\"console\",\"wandb\"]}"
 
 IFS=',' read -r -a GPU_IDS <<< "$QUESTION_GPU_IDS"
@@ -37,6 +39,13 @@ echo "  train_init_model: $BASE_MODEL"
 echo "  local_dataset: $DATASET_PARQUET"
 echo "  output: $OUTPUT_DIR"
 echo "  GPUs: $QUESTION_GPU_IDS"
+echo "  resume_checkpoint: ${BASE_FIT_LOAD_CHECKPOINT:-none}"
+echo "  keep_latest_resume_state_only: $SOLVER_KEEP_LATEST_RESUME_STATE_ONLY"
+
+RESUME_ARGS=()
+if [ -n "$BASE_FIT_LOAD_CHECKPOINT" ]; then
+    RESUME_ARGS+=(trainer.load_checkpoint_path="$BASE_FIT_LOAD_CHECKPOINT")
+fi
 
 CUDA_VISIBLE_DEVICES="$QUESTION_GPU_IDS" python3 -m verl.trainer.main \
     config=examples/config.yaml \
@@ -50,6 +59,8 @@ CUDA_VISIBLE_DEVICES="$QUESTION_GPU_IDS" python3 -m verl.trainer.main \
     trainer.max_steps="$SOLVER_MAX_STEPS" \
     trainer.save_freq="$SOLVER_SAVE_FREQ" \
     trainer.save_limit="$SOLVER_SAVE_LIMIT" \
+    trainer.keep_latest_resume_state_only="$SOLVER_KEEP_LATEST_RESUME_STATE_ONLY" \
+    "${RESUME_ARGS[@]}" \
     data.format_prompt=./examples/format_prompt/solver.jinja \
     trainer.val_freq="$SOLVER_VAL_FREQ" \
     trainer.n_gpus_per_node="$GPU_COUNT" \

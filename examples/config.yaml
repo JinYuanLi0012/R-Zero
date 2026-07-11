@@ -91,3 +91,4 @@ trainer:
   save_limit: 3  # -1 to disable
   save_checkpoint_path: your_checkpoint_path
   load_checkpoint_path: null
+  keep_latest_resume_state_only: false

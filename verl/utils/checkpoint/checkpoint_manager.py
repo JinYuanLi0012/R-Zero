@@ -18,6 +18,7 @@ import re
 import shutil
 import tempfile
 from abc import ABC, abstractmethod
+from pathlib import Path
 from typing import Any, Dict, Optional, Union
 
 import numpy as np
@@ -29,6 +30,10 @@ from transformers import PreTrainedTokenizer, ProcessorMixin
 
 
 CHECKPOINT_TRACKER = "latest_global_step.txt"
+TRAINING_STATE_PATTERNS = (
+    "optim_world_size_*_rank_*.pt",
+    "extra_state_world_size_*_rank_*.pt",
+)
 
 
 class BaseCheckpointManager(ABC):
@@ -133,6 +138,45 @@ def get_checkpoint_tracker_filename(root_path: str) -> str:
     Tracker file rescords the latest chckpoint during training to restart from.
     """
     return os.path.join(root_path, CHECKPOINT_TRACKER)
+
+
+def atomic_write_checkpoint_tracker(root_path: str, global_step: int) -> None:
+    """Commit a complete checkpoint as the latest resumable step atomically."""
+    os.makedirs(root_path, exist_ok=True)
+    tracker = get_checkpoint_tracker_filename(root_path)
+    temporary = f"{tracker}.tmp-{os.getpid()}"
+    with open(temporary, "w", encoding="utf-8") as handle:
+        handle.write(str(global_step))
+        handle.flush()
+        os.fsync(handle.fileno())
+    os.replace(temporary, tracker)
+
+
+def prune_training_state_except_latest(root_path: str, latest_step: int) -> list[str]:
+    """Keep all model trajectories but only the latest resumable training state."""
+    removed: list[str] = []
+    if not os.path.isdir(root_path):
+        return removed
+
+    for entry in os.scandir(root_path):
+        match = re.fullmatch(r"global_step_(\d+)", entry.name)
+        if not entry.is_dir() or not match or int(match.group(1)) == latest_step:
+            continue
+
+        dataloader = os.path.join(entry.path, "dataloader.pt")
+        if os.path.isfile(dataloader):
+            os.unlink(dataloader)
+            removed.append(dataloader)
+
+        for role in ("actor", "critic"):
+            role_path = os.path.join(entry.path, role)
+            if not os.path.isdir(role_path):
+                continue
+            for pattern in TRAINING_STATE_PATTERNS:
+                for filename in Path(role_path).glob(pattern):
+                    filename.unlink()
+                    removed.append(str(filename))
+    return removed
 
 
 def remove_obsolete_ckpt(path: str, global_step: int, save_limit: int = -1, directory_format: str = "global_step_{}"):

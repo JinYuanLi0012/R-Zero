@@ -90,6 +90,7 @@ class TrainerConfig:
     save_limit: int = -1
     save_checkpoint_path: Optional[str] = None
     load_checkpoint_path: Optional[str] = None
+    keep_latest_resume_state_only: bool = False
 
     def post_init(self):
         if self.save_checkpoint_path is None:

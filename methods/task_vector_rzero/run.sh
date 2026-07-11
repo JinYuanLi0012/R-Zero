@@ -90,6 +90,15 @@ case "$BOOTSTRAP_ROUND1" in
         ;;
 esac
 
+case "$SOLVER_KEEP_LATEST_RESUME_STATE_ONLY" in
+    true|false)
+        ;;
+    *)
+        echo "SOLVER_KEEP_LATEST_RESUME_STATE_ONLY must be true or false" >&2
+        exit 2
+        ;;
+esac
+
 case "$TASK_VECTOR_METHOD" in
     full)
         RUN_VARIANT=full_delta
@@ -134,6 +143,7 @@ case "$TASK_VECTOR_METHOD" in
         ;;
 esac
 export TASK_VECTOR_METHOD BASE_FIT_MERGE_STEPS SOLVER_SAVE_FREQ SOLVER_SAVE_LIMIT
+export SOLVER_KEEP_LATEST_RESUME_STATE_ONLY
 
 if ! [[ "$NUM_ROUNDS" =~ ^[1-9][0-9]*$ ]]; then
     echo "NUM_ROUNDS must be a positive integer" >&2
@@ -217,6 +227,7 @@ RUN_FINGERPRINT=$(python3 "$METHOD_DIR/pipeline_state.py" init \
     --field "solver_merge_step=$SOLVER_MERGE_STEP" \
     --field "solver_save_freq=$SOLVER_SAVE_FREQ" \
     --field "solver_save_limit=$SOLVER_SAVE_LIMIT" \
+    --field "solver_keep_latest_resume_state_only=$SOLVER_KEEP_LATEST_RESUME_STATE_ONLY" \
     --field "base_fit_merge_steps=$BASE_FIT_MERGE_STEPS" \
     --field "dataset_score_range=${DATASET_MIN_SCORE}:${DATASET_MAX_SCORE}" \
     --field "bootstrap_round1=$BOOTSTRAP_ROUND1" \
@@ -511,14 +522,39 @@ for ((round=1; round<=NUM_ROUNDS; round++)); do
     BASE_FIT_STAGE="round_${round}/base_fit"
     if guard_stage "$BASE_FIT_STAGE" "$BASE_FIT_HF" checkpoint; then
         BASE_FIT_TMP="$BASE_FITS_DIR/.a${round}.inprogress"
-        rm -rf "$BASE_FIT_TMP"
-        bash "$METHOD_DIR/train_base_fit.sh" \
+        BASE_FIT_LOAD_CHECKPOINT=""
+        if [ "$RESUME" = "1" ] && [ -d "$BASE_FIT_TMP" ]; then
+            set +e
+            BASE_FIT_LOAD_CHECKPOINT=$(python3 "$METHOD_DIR/find_resume_checkpoint.py" \
+                --root "$BASE_FIT_TMP" --world-size "$QUESTION_GPU_COUNT")
+            RESUME_CHECK_STATUS=$?
+            set -e
+            case "$RESUME_CHECK_STATUS" in
+                0)
+                    echo "[resume] Base-fit round $round from $BASE_FIT_LOAD_CHECKPOINT"
+                    ;;
+                1)
+                    echo "[resume] No committed Base-fit checkpoint; restarting round $round"
+                    rm -rf "$BASE_FIT_TMP"
+                    ;;
+                *)
+                    echo "Refusing to resume from an incomplete Base-fit checkpoint" >&2
+                    exit 2
+                    ;;
+            esac
+        else
+            rm -rf "$BASE_FIT_TMP"
+        fi
+        BASE_FIT_LOAD_CHECKPOINT="$BASE_FIT_LOAD_CHECKPOINT" \
+        SOLVER_KEEP_LATEST_RESUME_STATE_ONLY="$SOLVER_KEEP_LATEST_RESUME_STATE_ONLY" \
+            bash "$METHOD_DIR/train_base_fit.sh" \
             "$BASE_MODEL" "$DATASET_FILE" "$BASE_FIT_TMP" "$BASE_FIT_NAME" \
             > >(tee -a "$LOG_DIR/base_fit_v${round}.log") 2>&1
         mv "$BASE_FIT_TMP" "$BASE_FIT_DIR"
         complete_stage "$BASE_FIT_STAGE" "$BASE_FIT_HF" \
             "train_init_model=$BASE_MODEL" \
-            "dataset=$DATASET_FILE"
+            "dataset=$DATASET_FILE" \
+            "resumed_from=$BASE_FIT_LOAD_CHECKPOINT"
     fi
     ensure_model_upload "round_${round}/base_fit_hf_upload" "$BASE_FIT_HF" \
         "${HUGGINGFACENAME}/${BASE_FIT_NAME}"

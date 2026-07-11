@@ -36,7 +36,11 @@ from ..single_controller.base import Worker
 from ..single_controller.ray import RayClassWithInitArgs, RayResourcePool, RayWorkerGroup
 from ..single_controller.ray.base import create_colocated_worker_cls
 from ..utils import torch_functional as VF
-from ..utils.checkpoint import CHECKPOINT_TRACKER, remove_obsolete_ckpt
+from ..utils.checkpoint import (
+    atomic_write_checkpoint_tracker,
+    prune_training_state_except_latest,
+    remove_obsolete_ckpt,
+)
 from ..utils.logger import Tracker
 from ..utils.py_functional import convert_dict_to_str, timer
 from ..utils.seqlen_balancing import get_seqlen_balanced_partitions, log_seqlen_unbalance
@@ -413,9 +417,15 @@ class RayPPOTrainer:
         dataloader_state_dict = self.train_dataloader.state_dict()
         torch.save(dataloader_state_dict, dataloader_path)
 
-        last_global_step_path = os.path.join(self.config.trainer.save_checkpoint_path, CHECKPOINT_TRACKER)
-        with open(last_global_step_path, "w") as f:
-            f.write(str(self.global_step))
+        atomic_write_checkpoint_tracker(self.config.trainer.save_checkpoint_path, self.global_step)
+        if self.config.trainer.keep_latest_resume_state_only:
+            removed = prune_training_state_except_latest(
+                self.config.trainer.save_checkpoint_path, self.global_step
+            )
+            print(
+                f"Kept model trajectories for every step and pruned {len(removed)} "
+                f"old training-state files; latest resumable step is {self.global_step}."
+            )
 
     def _load_checkpoint(self) -> None:
         if self.config.trainer.load_checkpoint_path is None:
