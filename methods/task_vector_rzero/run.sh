@@ -49,6 +49,17 @@ fi
 
 # shellcheck source=config.sh
 source "$CONFIG_PATH"
+
+# Keep older copied experiment configs forward-compatible. These defaults match
+# config.sh, while explicitly exported/configured values still take precedence.
+: "${BOOTSTRAP_ROUND1:=true}"
+: "${BOOTSTRAP_QUESTIONER_MODEL:=jinyuan222/qwen3_4b_fullrun_authorsettings_questioner_v1}"
+: "${BOOTSTRAP_QUESTIONER_REVISION:=}"
+: "${BOOTSTRAP_DATASET:=jinyuan222/qwen3_4b_fullrun_authorsettings_solver_v1}"
+: "${BOOTSTRAP_DATASET_CONFIG:=qwen3_4b_fullrun_authorsettings_solver_v1}"
+: "${BOOTSTRAP_DATASET_SPLIT:=train}"
+: "${BOOTSTRAP_DATASET_REVISION:=}"
+
 cd "$REPO_ROOT"
 export PYTHONPATH="${REPO_ROOT}:${PYTHONPATH:-}"
 export STORAGE_PATH HUGGINGFACENAME
