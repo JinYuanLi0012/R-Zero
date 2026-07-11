@@ -9,15 +9,15 @@ export CUDA_HOME="${CONDA_PREFIX}"
 export PATH="${CUDA_HOME}/bin:${PATH}"
 
 # Keep source code on /storage1 and all large runtime artifacts on /engrfs.
-export RZERO_CODE_ROOT="${RZERO_CODE_ROOT:-/storage1/jiaxinh/Active/jinyuan/R-zero}"
-export STORAGE_PATH="${STORAGE_PATH:-/engrfs/project/jiaxinh/jinyuan/R-zero-storage}"
+export RZERO_CODE_ROOT="/storage1/jiaxinh/Active/jinyuan/R-zero"
+export STORAGE_PATH="/engrfs/project/jiaxinh/jinyuan/R-zero-storage"
 
 # Model/dataset downloads and local experiment metadata must not fill the code disk.
-export HF_HOME="${HF_HOME:-${STORAGE_PATH}/cache/huggingface}"
-export HF_HUB_CACHE="${HF_HUB_CACHE:-${HF_HOME}/hub}"
-export HF_DATASETS_CACHE="${HF_DATASETS_CACHE:-${HF_HOME}/datasets}"
-export WANDB_DIR="${WANDB_DIR:-${STORAGE_PATH}/wandb}"
-export TMPDIR="${TMPDIR:-${STORAGE_PATH}/tmp}"
+export HF_HOME="${STORAGE_PATH}/cache/huggingface"
+export HF_HUB_CACHE="${HF_HOME}/hub"
+export HF_DATASETS_CACHE="${HF_HOME}/datasets"
+export WANDB_DIR="${STORAGE_PATH}/wandb"
+export TMPDIR="${STORAGE_PATH}/tmp"
 
 mkdir -p \
   "${STORAGE_PATH}" \
