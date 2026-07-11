@@ -22,6 +22,17 @@ MIRROR_DATASETS=${MIRROR_DATASETS:-true}
 UPLOAD_MODELS=${UPLOAD_MODELS:-false}
 HF_MODELS_PRIVATE=${HF_MODELS_PRIVATE:-true}
 
+# Reuse the original R-Zero round-1 Questioner and its already labeled/filtered
+# Solver1 dataset. Both Full-delta and Rank-1 therefore start from exactly the
+# same Q1/D1; the task-vector experiment begins at Base-fit Solver1 training.
+BOOTSTRAP_ROUND1=${BOOTSTRAP_ROUND1:-true}
+BOOTSTRAP_QUESTIONER_MODEL=${BOOTSTRAP_QUESTIONER_MODEL:-jinyuan222/qwen3_4b_fullrun_authorsettings_questioner_v1}
+BOOTSTRAP_QUESTIONER_REVISION=${BOOTSTRAP_QUESTIONER_REVISION:-}
+BOOTSTRAP_DATASET=${BOOTSTRAP_DATASET:-jinyuan222/qwen3_4b_fullrun_authorsettings_solver_v1}
+BOOTSTRAP_DATASET_CONFIG=${BOOTSTRAP_DATASET_CONFIG:-qwen3_4b_fullrun_authorsettings_solver_v1}
+BOOTSTRAP_DATASET_SPLIT=${BOOTSTRAP_DATASET_SPLIT:-train}
+BOOTSTRAP_DATASET_REVISION=${BOOTSTRAP_DATASET_REVISION:-}
+
 # Evaluation can be disabled for smoke tests without changing training.
 EVALUATE_EACH_ROUND=${EVALUATE_EACH_ROUND:-true}
 

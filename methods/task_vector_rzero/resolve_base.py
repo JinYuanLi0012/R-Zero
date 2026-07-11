@@ -41,7 +41,17 @@ def atomic_json(path: Path, value: Any) -> None:
     os.replace(temporary, path)
 
 
-def build_manifest(source: str, revision: str | None) -> dict[str, Any]:
+def hf_token() -> str | None:
+    token = os.getenv("HF_TOKEN") or os.getenv("HUGGING_FACE_HUB_TOKEN")
+    token_file = Path("tokens.json")
+    if not token and token_file.is_file():
+        token = json.loads(token_file.read_text(encoding="utf-8")).get("huggingface")
+    return token
+
+
+def build_manifest(
+    source: str, revision: str | None, token: str | None = None
+) -> dict[str, Any]:
     candidate = Path(source).expanduser()
     if candidate.is_dir():
         root = candidate.resolve()
@@ -53,6 +63,7 @@ def build_manifest(source: str, revision: str | None) -> dict[str, Any]:
                 repo_id=source,
                 revision=revision,
                 allow_patterns=ALLOW_PATTERNS,
+                token=token,
             )
         ).resolve()
         resolved_revision = root.name if root.parent.name == "snapshots" else revision
@@ -114,7 +125,7 @@ def main() -> None:
         manifest = json.loads(args.manifest.read_text(encoding="utf-8"))
         verify_manifest(manifest, args.model, args.revision)
     else:
-        manifest = build_manifest(args.model, args.revision)
+        manifest = build_manifest(args.model, args.revision, hf_token())
         atomic_json(args.manifest, manifest)
     print(json.dumps(manifest, sort_keys=True))
 

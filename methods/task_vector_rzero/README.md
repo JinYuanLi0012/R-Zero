@@ -54,9 +54,9 @@ A_i=\operatorname{Tune}(Base,D_i)
 
 ## 3. R-Zero 中保持不变的部分
 
-每轮 `i` 的前半段仍然遵循原始 R-Zero：
+从第二轮开始，每轮 `i` 的前半段仍然遵循原始 R-Zero：
 
-1. `Q_i` 从 `Q_(i-1)` 初始化；第一轮从 Base 初始化。
+1. `Q_i` 从 `Q_(i-1)` 初始化。
 2. `Q_i` 针对当前链条的 `pi_(i-1)` 训练。
 3. `Q_i` 生成本轮问题。
 4. 当前链条的 `pi_(i-1)` 解题、进行多数投票、生成伪标签并筛选难度。
@@ -70,9 +70,31 @@ feedback_solver = labeler_model = 当前链条上一轮的组合 Solver
 train_init_model = 永远是同一个不可变 Base
 ```
 
+### 固定复用原始实验的第一轮起点
+
+当前 fork 默认不重新执行 `Q0 → Q1`，也不重新生成第一轮数据。两条任务向量实验共同复用原始 R-Zero 已上传到 Hugging Face 的：
+
+```text
+Q1 = jinyuan222/qwen3_4b_fullrun_authorsettings_questioner_v1
+D1 = jinyuan222/qwen3_4b_fullrun_authorsettings_solver_v1
+```
+
+其中 D1 的 dataset config 也是 `qwen3_4b_fullrun_authorsettings_solver_v1`。第一轮状态机变为：
+
+```text
+固定并校验已有 Q1 revision
+→ 下载已有、已标注和过滤的 D1 到本地 Parquet
+→ 跳过 Questioner 训练、重新出题和重新标注
+→ 直接从 Base 在 D1 上训练 Solver1
+```
+
+第二轮才恢复闭环：Q2 从已有 Q1 初始化，以新实验产生的组合 Solver V1 为对手；D2 由 Q2 生成，并由组合 Solver V1 标注。
+
+这样 Full-delta 与 Rank-1 的第一轮数据完全相同，算法差异只来自 Solver 权重处理。若确实要从 Base 重跑 Q1/D1，可显式设置 `BOOTSTRAP_ROUND1=false`。
+
 ## 4. Full-delta 五轮链
 
-第 `i` 轮：
+第一轮固定使用已有 Q1/D1；以下 Questioner 和数据公式适用于 `i >= 2`，Solver 公式适用于所有轮次：
 
 \[
 Q_i=\operatorname{TrainQuestioner}(Q_{i-1},\pi_{i-1}^{full})
@@ -292,7 +314,7 @@ $STORAGE_PATH/task_vector_rzero/$RUN_NAME/
 
 ## 12. 当前验证状态
 
-已通过 11 项自动测试，包括：
+自动测试套件现在包含原有 11 项测试和新增的 2 项 bootstrap artifact 测试，覆盖：
 
 - 多 shard Full-delta 组合。
 - 非整数向量系数。

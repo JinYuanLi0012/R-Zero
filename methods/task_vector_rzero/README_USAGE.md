@@ -74,6 +74,18 @@ RANK1_TARGET_STEP=15
 RANK1_PRODUCE_FULL_V1_SIDECAR=true
 ```
 
+第一轮 bootstrap 默认配置：
+
+```bash
+BOOTSTRAP_ROUND1=true
+BOOTSTRAP_QUESTIONER_MODEL=jinyuan222/qwen3_4b_fullrun_authorsettings_questioner_v1
+BOOTSTRAP_DATASET=jinyuan222/qwen3_4b_fullrun_authorsettings_solver_v1
+BOOTSTRAP_DATASET_CONFIG=qwen3_4b_fullrun_authorsettings_solver_v1
+BOOTSTRAP_DATASET_SPLIT=train
+```
+
+在这个模式下，第一轮不会训练 Q1、不会重新出题和标注，而是把已有 Q1 固定为具体 HF snapshot，把已有 D1 保存为本地 `datasets/d1/train.parquet`，然后直接从 Base 训练 Solver1。Rank-1 训练仍保存和合并 step 5/10/15。第二轮 Q2 从该 Q1 初始化，并以新 Rank-1/Full Solver V1 为对手。
+
 约束：
 
 - `RANK1_HISTORY_STEPS` 至少包含两个 step。
@@ -125,10 +137,10 @@ qwen3_4b_relex_rank1
 运行逻辑：
 
 ```text
-每轮从 Base 训练 step 5/10/15
+第一轮复用已有 Q1/D1，直接从 Base 训练 step 5/10/15
 → per-tensor RELEX rank-1 reconstruction
 → 累计 Rank-1 Solver
-→ Rank-1 Solver 进入下一轮
+→ 第二轮开始由 Rank-1 Solver 驱动 Questioner 和数据闭环
 ```
 
 第一轮还会生成同数据 Full-delta V1：

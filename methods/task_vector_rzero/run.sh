@@ -60,6 +60,24 @@ export QUESTIONER_MICRO_BATCH_EXPERIENCE QUESTIONER_VAL_BEFORE_TRAIN
 export QUESTION_GPU_IDS SOLVER_MAX_RESPONSE_LENGTH SOLVER_TOTAL_EPOCHS
 export SOLVER_MAX_STEPS SOLVER_VAL_FREQ SOLVER_MERGE_STEP SOLVER_LOGGER
 
+case "$BOOTSTRAP_ROUND1" in
+    true)
+        for value_name in BOOTSTRAP_QUESTIONER_MODEL BOOTSTRAP_DATASET \
+            BOOTSTRAP_DATASET_SPLIT; do
+            if [ -z "${!value_name}" ]; then
+                echo "$value_name is required when BOOTSTRAP_ROUND1=true" >&2
+                exit 2
+            fi
+        done
+        ;;
+    false)
+        ;;
+    *)
+        echo "BOOTSTRAP_ROUND1 must be true or false" >&2
+        exit 2
+        ;;
+esac
+
 case "$TASK_VECTOR_METHOD" in
     full)
         RUN_VARIANT=full_delta
@@ -188,7 +206,14 @@ RUN_FINGERPRINT=$(python3 "$METHOD_DIR/pipeline_state.py" init \
     --field "solver_save_freq=$SOLVER_SAVE_FREQ" \
     --field "solver_save_limit=$SOLVER_SAVE_LIMIT" \
     --field "base_fit_merge_steps=$BASE_FIT_MERGE_STEPS" \
-    --field "dataset_score_range=${DATASET_MIN_SCORE}:${DATASET_MAX_SCORE}")
+    --field "dataset_score_range=${DATASET_MIN_SCORE}:${DATASET_MAX_SCORE}" \
+    --field "bootstrap_round1=$BOOTSTRAP_ROUND1" \
+    --field "bootstrap_questioner_model=$BOOTSTRAP_QUESTIONER_MODEL" \
+    --field "bootstrap_questioner_revision=$BOOTSTRAP_QUESTIONER_REVISION" \
+    --field "bootstrap_dataset=$BOOTSTRAP_DATASET" \
+    --field "bootstrap_dataset_config=$BOOTSTRAP_DATASET_CONFIG" \
+    --field "bootstrap_dataset_split=$BOOTSTRAP_DATASET_SPLIT" \
+    --field "bootstrap_dataset_revision=$BOOTSTRAP_DATASET_REVISION")
 
 marker_path() {
     printf '%s/%s/_SUCCESS.json' "$STATE_DIR" "$1"
@@ -307,6 +332,11 @@ echo "  scales: $SCALES_CSV"
 echo "  dataset mirror: $MIRROR_DATASETS"
 echo "  model upload: $UPLOAD_MODELS"
 echo "  evaluate each round: $EVALUATE_EACH_ROUND"
+echo "  bootstrap existing Q1/D1: $BOOTSTRAP_ROUND1"
+if [ "$BOOTSTRAP_ROUND1" = "true" ]; then
+    echo "  bootstrap Q1: $BOOTSTRAP_QUESTIONER_MODEL"
+    echo "  bootstrap D1: $BOOTSTRAP_DATASET (config=$BOOTSTRAP_DATASET_CONFIG, split=$BOOTSTRAP_DATASET_SPLIT)"
+fi
 
 CURRENT_SOLVER=$BASE_MODEL
 PREVIOUS_QUESTIONER=$BASE_MODEL
@@ -321,60 +351,119 @@ for ((round=1; round<=NUM_ROUNDS; round++)); do
     SOLVER_NAME="${MODEL_ABBR}_${RUN_VARIANT}_solver_v${round}"
 
     QUESTIONER_DIR="$QUESTIONERS_DIR/q${round}"
-    QUESTIONER_HF="$QUESTIONER_DIR/global_step_${QUESTIONER_MERGE_STEP}/actor/huggingface"
     QUESTIONER_STAGE="round_${round}/questioner"
-    if guard_stage "$QUESTIONER_STAGE" "$QUESTIONER_HF" checkpoint; then
-        QUESTIONER_TMP="$QUESTIONERS_DIR/.q${round}.inprogress"
-        rm -rf "$QUESTIONER_TMP"
-        QUESTIONER_OUTPUT_DIR="$QUESTIONER_TMP" \
-        QUESTIONER_LOG_FILE="$LOG_DIR/questioner_v${round}.log" \
-            bash scripts/questioner_train_penalty.sh \
-                "$CURRENT_SOLVER" "$PREVIOUS_QUESTIONER" "$QUESTIONER_NAME"
-        python3 "$METHOD_DIR/validate_checkpoint.py" \
-            "$QUESTIONER_TMP/global_step_${QUESTIONER_MERGE_STEP}/actor/huggingface"
-        mv "$QUESTIONER_TMP" "$QUESTIONER_DIR"
-        complete_stage "$QUESTIONER_STAGE" "$QUESTIONER_HF" \
-            "feedback_solver=$CURRENT_SOLVER" \
-            "initial_questioner=$PREVIOUS_QUESTIONER"
+    IS_BOOTSTRAP_ROUND=0
+    if [ "$round" = "1" ] && [ "$BOOTSTRAP_ROUND1" = "true" ]; then
+        IS_BOOTSTRAP_ROUND=1
+        QUESTIONER_HF="$QUESTIONER_DIR/huggingface"
+        BOOTSTRAP_Q_MANIFEST="$QUESTIONER_DIR/bootstrap_questioner_manifest.json"
+        BOOTSTRAP_Q_ARGS=(model \
+            --source "$BOOTSTRAP_QUESTIONER_MODEL" \
+            --output "$QUESTIONER_HF" \
+            --manifest "$BOOTSTRAP_Q_MANIFEST")
+        if [ -n "$BOOTSTRAP_QUESTIONER_REVISION" ]; then
+            BOOTSTRAP_Q_ARGS+=(--revision "$BOOTSTRAP_QUESTIONER_REVISION")
+        fi
+        if [ -e "$(marker_path "$QUESTIONER_STAGE")" ]; then
+            python3 "$METHOD_DIR/materialize_bootstrap.py" "${BOOTSTRAP_Q_ARGS[@]}" >/dev/null
+        fi
+        if guard_stage "$QUESTIONER_STAGE" "$QUESTIONER_HF" checkpoint; then
+            python3 "$METHOD_DIR/materialize_bootstrap.py" "${BOOTSTRAP_Q_ARGS[@]}" \
+                > >(tee -a "$LOG_DIR/bootstrap_questioner_v1.log") 2>&1
+            python3 "$METHOD_DIR/validate_checkpoint.py" "$QUESTIONER_HF"
+            complete_stage "$QUESTIONER_STAGE" "$QUESTIONER_HF" \
+                "mode=bootstrap_existing_q1" \
+                "source=$BOOTSTRAP_QUESTIONER_MODEL" \
+                "requested_revision=$BOOTSTRAP_QUESTIONER_REVISION" \
+                "manifest=$BOOTSTRAP_Q_MANIFEST"
+        fi
+    else
+        QUESTIONER_HF="$QUESTIONER_DIR/global_step_${QUESTIONER_MERGE_STEP}/actor/huggingface"
+        if guard_stage "$QUESTIONER_STAGE" "$QUESTIONER_HF" checkpoint; then
+            QUESTIONER_TMP="$QUESTIONERS_DIR/.q${round}.inprogress"
+            rm -rf "$QUESTIONER_TMP"
+            QUESTIONER_OUTPUT_DIR="$QUESTIONER_TMP" \
+            QUESTIONER_LOG_FILE="$LOG_DIR/questioner_v${round}.log" \
+                bash scripts/questioner_train_penalty.sh \
+                    "$CURRENT_SOLVER" "$PREVIOUS_QUESTIONER" "$QUESTIONER_NAME"
+            python3 "$METHOD_DIR/validate_checkpoint.py" \
+                "$QUESTIONER_TMP/global_step_${QUESTIONER_MERGE_STEP}/actor/huggingface"
+            mv "$QUESTIONER_TMP" "$QUESTIONER_DIR"
+            complete_stage "$QUESTIONER_STAGE" "$QUESTIONER_HF" \
+                "feedback_solver=$CURRENT_SOLVER" \
+                "initial_questioner=$PREVIOUS_QUESTIONER"
+        fi
+        ensure_model_upload "round_${round}/questioner_hf_upload" "$QUESTIONER_HF" \
+            "${HUGGINGFACENAME}/${QUESTIONER_NAME}"
     fi
-    ensure_model_upload "round_${round}/questioner_hf_upload" "$QUESTIONER_HF" \
-        "${HUGGINGFACENAME}/${QUESTIONER_NAME}"
 
     DATASET_DIR="$DATASETS_DIR/d${round}"
     DATASET_FILE="$DATASET_DIR/train.parquet"
     DATASET_STAGE="round_${round}/dataset"
-    if guard_stage "$DATASET_STAGE" "$DATASET_FILE" dataset; then
-        DATASET_TMP="$DATASETS_DIR/.d${round}.inprogress"
-        rm -rf "$DATASET_TMP"
-        mkdir -p "$DATASET_TMP/generated_question"
-        IFS=',' read -r -a DATA_GPUS <<< "$QUESTION_GPU_IDS"
-        NUM_SHARDS=${#DATA_GPUS[@]}
-        echo "Generate with $QUESTIONER_HF; label with $CURRENT_SOLVER"
-        STORAGE_PATH="$DATASET_TMP" \
-            bash question_generate/question_generate.bash \
-                "$QUESTIONER_HF" "$SOLVER_GENERATE_SAMPLES" "$DATASET_NAME"
-        STORAGE_PATH="$DATASET_TMP" \
-            bash question_evaluate/evaluate.sh "$CURRENT_SOLVER" "$DATASET_NAME"
-        python3 "$METHOD_DIR/prepare_dataset.py" \
-            --generated-dir "$DATASET_TMP/generated_question" \
-            --experiment-name "$DATASET_NAME" \
-            --num-shards "$NUM_SHARDS" \
-            --output "$DATASET_TMP/train.parquet" \
-            --min-score "$DATASET_MIN_SCORE" \
-            --max-score "$DATASET_MAX_SCORE" \
-            --no-upload
-        mv "$DATASET_TMP" "$DATASET_DIR"
-        DATASET_COUNT=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["filtered_count"])' "$DATASET_DIR/dataset_manifest.json")
-        DATASET_SHA=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["parquet_sha256"])' "$DATASET_DIR/dataset_manifest.json")
-        complete_stage "$DATASET_STAGE" "$DATASET_FILE" \
-            "questioner=$QUESTIONER_HF" \
-            "labeler_model=$CURRENT_SOLVER" \
-            "manifest=$DATASET_DIR/dataset_manifest.json" \
-            "filtered_count=$DATASET_COUNT" \
-            "parquet_sha256=$DATASET_SHA"
+    if [ "$IS_BOOTSTRAP_ROUND" = "1" ]; then
+        BOOTSTRAP_D_MANIFEST="$DATASET_DIR/dataset_manifest.json"
+        BOOTSTRAP_D_ARGS=(dataset \
+            --source "$BOOTSTRAP_DATASET" \
+            --split "$BOOTSTRAP_DATASET_SPLIT" \
+            --output "$DATASET_FILE" \
+            --manifest "$BOOTSTRAP_D_MANIFEST")
+        if [ -n "$BOOTSTRAP_DATASET_CONFIG" ]; then
+            BOOTSTRAP_D_ARGS+=(--config "$BOOTSTRAP_DATASET_CONFIG")
+        fi
+        if [ -n "$BOOTSTRAP_DATASET_REVISION" ]; then
+            BOOTSTRAP_D_ARGS+=(--revision "$BOOTSTRAP_DATASET_REVISION")
+        fi
+        if [ -e "$(marker_path "$DATASET_STAGE")" ]; then
+            python3 "$METHOD_DIR/materialize_bootstrap.py" "${BOOTSTRAP_D_ARGS[@]}" >/dev/null
+        fi
+        if guard_stage "$DATASET_STAGE" "$DATASET_FILE" dataset; then
+            python3 "$METHOD_DIR/materialize_bootstrap.py" "${BOOTSTRAP_D_ARGS[@]}" \
+                > >(tee -a "$LOG_DIR/bootstrap_dataset_v1.log") 2>&1
+            DATASET_COUNT=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["filtered_count"])' "$BOOTSTRAP_D_MANIFEST")
+            DATASET_SHA=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["parquet_sha256"])' "$BOOTSTRAP_D_MANIFEST")
+            complete_stage "$DATASET_STAGE" "$DATASET_FILE" \
+                "mode=bootstrap_existing_d1" \
+                "source=$BOOTSTRAP_DATASET" \
+                "config=$BOOTSTRAP_DATASET_CONFIG" \
+                "split=$BOOTSTRAP_DATASET_SPLIT" \
+                "manifest=$BOOTSTRAP_D_MANIFEST" \
+                "filtered_count=$DATASET_COUNT" \
+                "parquet_sha256=$DATASET_SHA"
+        fi
+    else
+        if guard_stage "$DATASET_STAGE" "$DATASET_FILE" dataset; then
+            DATASET_TMP="$DATASETS_DIR/.d${round}.inprogress"
+            rm -rf "$DATASET_TMP"
+            mkdir -p "$DATASET_TMP/generated_question"
+            IFS=',' read -r -a DATA_GPUS <<< "$QUESTION_GPU_IDS"
+            NUM_SHARDS=${#DATA_GPUS[@]}
+            echo "Generate with $QUESTIONER_HF; label with $CURRENT_SOLVER"
+            STORAGE_PATH="$DATASET_TMP" \
+                bash question_generate/question_generate.bash \
+                    "$QUESTIONER_HF" "$SOLVER_GENERATE_SAMPLES" "$DATASET_NAME"
+            STORAGE_PATH="$DATASET_TMP" \
+                bash question_evaluate/evaluate.sh "$CURRENT_SOLVER" "$DATASET_NAME"
+            python3 "$METHOD_DIR/prepare_dataset.py" \
+                --generated-dir "$DATASET_TMP/generated_question" \
+                --experiment-name "$DATASET_NAME" \
+                --num-shards "$NUM_SHARDS" \
+                --output "$DATASET_TMP/train.parquet" \
+                --min-score "$DATASET_MIN_SCORE" \
+                --max-score "$DATASET_MAX_SCORE" \
+                --no-upload
+            mv "$DATASET_TMP" "$DATASET_DIR"
+            DATASET_COUNT=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["filtered_count"])' "$DATASET_DIR/dataset_manifest.json")
+            DATASET_SHA=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["parquet_sha256"])' "$DATASET_DIR/dataset_manifest.json")
+            complete_stage "$DATASET_STAGE" "$DATASET_FILE" \
+                "questioner=$QUESTIONER_HF" \
+                "labeler_model=$CURRENT_SOLVER" \
+                "manifest=$DATASET_DIR/dataset_manifest.json" \
+                "filtered_count=$DATASET_COUNT" \
+                "parquet_sha256=$DATASET_SHA"
+        fi
     fi
 
-    if [ "$MIRROR_DATASETS" = "true" ]; then
+    if [ "$MIRROR_DATASETS" = "true" ] && [ "$IS_BOOTSTRAP_ROUND" != "1" ]; then
         MIRROR_STAGE="round_${round}/dataset_hf_mirror"
         MIRROR_MARKER="$(marker_path "$MIRROR_STAGE")"
         if ! stage_is_complete "$MIRROR_STAGE" "$DATASET_FILE"; then
