@@ -26,6 +26,27 @@ from .data_loader import create_dataloader
 from .ray_trainer import RayPPOTrainer, ResourcePoolManager, Role
 
 
+def configure_auth_environment():
+    """Prefer existing environment credentials; use tokens.json only as fallback."""
+    tokens = {}
+    if os.path.isfile("tokens.json"):
+        with open("tokens.json", "r", encoding="utf-8") as handle:
+            tokens = json.load(handle)
+        if not isinstance(tokens, dict):
+            raise ValueError("tokens.json must contain a JSON object")
+
+    hf_token = (
+        os.environ.get("HF_TOKEN")
+        or os.environ.get("HUGGING_FACE_HUB_TOKEN")
+        or tokens.get("huggingface")
+    )
+    wandb_token = os.environ.get("WANDB_API_KEY") or tokens.get("wandb")
+    if hf_token:
+        os.environ["HF_TOKEN"] = hf_token
+    if wandb_token:
+        os.environ["WANDB_API_KEY"] = wandb_token
+
+
 # please make sure main_task is not scheduled on head
 @ray.remote(num_cpus=1)
 class Runner:
@@ -99,10 +120,7 @@ class Runner:
 def main():
     cli_args = OmegaConf.from_cli()
     default_config = OmegaConf.structured(PPOConfig())
-    with open('tokens.json', 'r') as f:
-        tokens = json.load(f)
-    os.environ['HF_TOKEN'] = tokens['huggingface']
-    os.environ['WANDB_API_KEY'] = tokens['wandb']
+    configure_auth_environment()
     if hasattr(cli_args, "config"):
         config_path = cli_args.pop("config", None)
         file_config = OmegaConf.load(config_path)
