@@ -28,24 +28,60 @@ def sha256(path: Path) -> str:
 
 
 def _build_model_manifest(
-    source: str, revision: str | None, token: str | None
+    source: str, revision: str | None, subpath: str | None, token: str | None
 ) -> dict[str, Any]:
     candidate = Path(source).expanduser()
     if candidate.is_dir():
-        root = candidate.resolve()
+        snapshot_root = candidate.resolve()
         resolved_revision = None
         source_type = "local"
     else:
-        root = Path(
+        recursive_patterns = [f"**/{pattern}" for pattern in ALLOW_PATTERNS]
+        snapshot_root = Path(
             snapshot_download(
                 repo_id=source,
                 revision=revision,
-                allow_patterns=[*ALLOW_PATTERNS, "pytorch_model*.bin"],
+                allow_patterns=[
+                    *ALLOW_PATTERNS,
+                    "pytorch_model*.bin",
+                    *recursive_patterns,
+                    "**/pytorch_model*.bin",
+                ],
                 token=token,
             )
         ).resolve()
-        resolved_revision = root.name if root.parent.name == "snapshots" else revision
+        resolved_revision = (
+            snapshot_root.name if snapshot_root.parent.name == "snapshots" else revision
+        )
         source_type = "huggingface"
+
+    candidates: list[Path] = []
+    for config_path in snapshot_root.rglob("config.json"):
+        candidate_root = config_path.parent
+        if list(candidate_root.glob("*.safetensors")) or list(
+            candidate_root.glob("pytorch_model*.bin")
+        ):
+            candidates.append(candidate_root)
+
+    if subpath:
+        normalized = Path(subpath).as_posix().strip("/")
+        exact = snapshot_root / normalized
+        matches = [
+            path for path in candidates if path == exact or path.as_posix().endswith(f"/{normalized}")
+        ]
+        if len(matches) != 1:
+            found = [str(path.relative_to(snapshot_root)) for path in candidates]
+            raise ValueError(
+                f"Expected one bootstrap Questioner at subpath {normalized!r}; found candidates {found}"
+            )
+        root = matches[0]
+    elif len(candidates) == 1:
+        root = candidates[0]
+    else:
+        found = [str(path.relative_to(snapshot_root)) for path in candidates]
+        raise ValueError(
+            f"Bootstrap Questioner subpath is ambiguous; specify --subpath from candidates {found}"
+        )
 
     if not (root / "config.json").is_file():
         raise ValueError(f"Bootstrap Questioner is missing config.json: {root}")
@@ -74,7 +110,9 @@ def _build_model_manifest(
         "source": source,
         "source_type": source_type,
         "requested_revision": revision,
+        "requested_subpath": subpath,
         "resolved_revision": resolved_revision,
+        "snapshot_root": str(snapshot_root),
         "resolved_path": str(root),
         "weight_format": weight_format,
         "weight_files": [path.name for path in weights],
@@ -84,9 +122,13 @@ def _build_model_manifest(
 
 
 def _verify_model_manifest(
-    manifest: dict[str, Any], source: str, revision: str | None
+    manifest: dict[str, Any], source: str, revision: str | None, subpath: str | None
 ) -> None:
-    if manifest.get("source") != source or manifest.get("requested_revision") != revision:
+    if (
+        manifest.get("source") != source
+        or manifest.get("requested_revision") != revision
+        or manifest.get("requested_subpath") != subpath
+    ):
         raise ValueError("Existing bootstrap Questioner manifest uses different inputs")
     root = Path(manifest["resolved_path"])
     tracked_suffixes = {".json", ".safetensors", ".bin", ".model", ".txt", ".jinja", ".py"}
@@ -109,9 +151,9 @@ def materialize_model(args: argparse.Namespace) -> None:
     token = hf_token()
     if manifest_path.exists():
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-        _verify_model_manifest(manifest, args.source, args.revision)
+        _verify_model_manifest(manifest, args.source, args.revision, args.subpath)
     else:
-        manifest = _build_model_manifest(args.source, args.revision, token)
+        manifest = _build_model_manifest(args.source, args.revision, args.subpath, token)
         atomic_json(manifest_path, manifest)
 
     resolved = Path(manifest["resolved_path"]).resolve()
@@ -217,6 +259,7 @@ def build_parser() -> argparse.ArgumentParser:
     model = subparsers.add_parser("model")
     model.add_argument("--source", required=True)
     model.add_argument("--revision")
+    model.add_argument("--subpath")
     model.add_argument("--output", required=True, type=Path)
     model.add_argument("--manifest", required=True, type=Path)
     model.set_defaults(function=materialize_model)

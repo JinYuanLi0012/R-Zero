@@ -55,6 +55,7 @@ source "$CONFIG_PATH"
 : "${BOOTSTRAP_ROUND1:=true}"
 : "${BOOTSTRAP_QUESTIONER_MODEL:=jinyuan222/qwen3_4b_fullrun_authorsettings_questioner_v1}"
 : "${BOOTSTRAP_QUESTIONER_REVISION:=}"
+: "${BOOTSTRAP_QUESTIONER_SUBPATH:=global_step_5/actor/huggingface}"
 : "${BOOTSTRAP_DATASET:=jinyuan222/qwen3_4b_fullrun_authorsettings_solver_v1}"
 : "${BOOTSTRAP_DATASET_CONFIG:=qwen3_4b_fullrun_authorsettings_solver_v1}"
 : "${BOOTSTRAP_DATASET_SPLIT:=train}"
@@ -372,6 +373,9 @@ for ((round=1; round<=NUM_ROUNDS; round++)); do
             --source "$BOOTSTRAP_QUESTIONER_MODEL" \
             --output "$QUESTIONER_HF" \
             --manifest "$BOOTSTRAP_Q_MANIFEST")
+        if [ -n "$BOOTSTRAP_QUESTIONER_SUBPATH" ]; then
+            BOOTSTRAP_Q_ARGS+=(--subpath "$BOOTSTRAP_QUESTIONER_SUBPATH")
+        fi
         if [ -n "$BOOTSTRAP_QUESTIONER_REVISION" ]; then
             BOOTSTRAP_Q_ARGS+=(--revision "$BOOTSTRAP_QUESTIONER_REVISION")
         fi
@@ -391,6 +395,7 @@ for ((round=1; round<=NUM_ROUNDS; round++)); do
             complete_stage "$QUESTIONER_STAGE" "$QUESTIONER_HF" \
                 "mode=bootstrap_existing_q1" \
                 "source=$BOOTSTRAP_QUESTIONER_MODEL" \
+                "subpath=$BOOTSTRAP_QUESTIONER_SUBPATH" \
                 "weight_format=$BOOTSTRAP_Q_FORMAT" \
                 "requested_revision=$BOOTSTRAP_QUESTIONER_REVISION" \
                 "manifest=$BOOTSTRAP_Q_MANIFEST"

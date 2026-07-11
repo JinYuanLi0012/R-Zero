@@ -29,7 +29,7 @@ class MaterializeBootstrapTest(unittest.TestCase):
             output = root / "run" / "q1" / "huggingface"
             manifest = root / "run" / "q1" / "bootstrap_questioner_manifest.json"
             args = argparse.Namespace(
-                source=str(source), revision=None, output=output, manifest=manifest
+                source=str(source), revision=None, subpath=None, output=output, manifest=manifest
             )
 
             materialize_model(args)
@@ -53,13 +53,42 @@ class MaterializeBootstrapTest(unittest.TestCase):
 
             materialize_model(
                 argparse.Namespace(
-                    source=str(source), revision=None, output=output, manifest=manifest
+                    source=str(source), revision=None, subpath=None, output=output, manifest=manifest
                 )
             )
 
             metadata = json.loads(manifest.read_text())
             self.assertEqual(metadata["weight_format"], "pytorch_bin")
             self.assertEqual(metadata["weight_files"], ["pytorch_model.bin"])
+
+    def test_nested_questioner_subpath_is_selected(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source = root / "repo"
+            checkpoint = source / "global_step_5" / "actor" / "huggingface"
+            checkpoint.mkdir(parents=True)
+            (checkpoint / "config.json").write_text(
+                json.dumps({"model_type": "tiny"}), encoding="utf-8"
+            )
+            save_file({"weight": torch.ones(2, 2)}, checkpoint / "model.safetensors")
+            output = root / "run" / "q1" / "huggingface"
+            manifest = root / "run" / "q1" / "bootstrap_questioner_manifest.json"
+
+            materialize_model(
+                argparse.Namespace(
+                    source=str(source),
+                    revision=None,
+                    subpath="global_step_5/actor/huggingface",
+                    output=output,
+                    manifest=manifest,
+                )
+            )
+
+            self.assertEqual(output.resolve(), checkpoint.resolve())
+            self.assertEqual(
+                json.loads(manifest.read_text())["requested_subpath"],
+                "global_step_5/actor/huggingface",
+            )
 
     def test_local_dataset_is_canonicalized_and_rechecked(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

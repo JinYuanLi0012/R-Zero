@@ -79,6 +79,7 @@ RANK1_PRODUCE_FULL_V1_SIDECAR=true
 ```bash
 BOOTSTRAP_ROUND1=true
 BOOTSTRAP_QUESTIONER_MODEL=jinyuan222/qwen3_4b_fullrun_authorsettings_questioner_v1
+BOOTSTRAP_QUESTIONER_SUBPATH=global_step_5/actor/huggingface
 BOOTSTRAP_DATASET=jinyuan222/qwen3_4b_fullrun_authorsettings_solver_v1
 BOOTSTRAP_DATASET_CONFIG=qwen3_4b_fullrun_authorsettings_solver_v1
 BOOTSTRAP_DATASET_SPLIT=train
