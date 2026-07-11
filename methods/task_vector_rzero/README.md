@@ -61,7 +61,7 @@ A_i=\operatorname{Tune}(Base,D_i)
 3. `Q_i` 生成本轮问题。
 4. 当前链条的 `pi_(i-1)` 解题、进行多数投票、生成伪标签并筛选难度。
 5. Questioner 的奖励、训练模板、GRPO 设置、GPU 服务方式保持原实现。
-6. Solver 的训练数据、模板、GRPO/KL 设置、训练步数和正式选择的 step 15 保持原实现。
+6. Solver 的训练数据、模板、GRPO/KL 设置和正式选择的 step 15 保持原实现；Rank-1 模式在 step 15 停止，因为之后的 step 不参与目标 checkpoint 重建。
 
 核心不变量是：
 
@@ -127,7 +127,7 @@ A_i=\operatorname{TrainSolver}(Base,D_i)
 Rank-1 模式同样先从 Base 独立训练当轮 Solver，但保留训练轨迹 checkpoint：
 
 ```text
-Base → step 5 → step 10 → step 15
+Base → step 1 → step 2 → ... → step 15
 ```
 
 对每个权重 tensor 独立计算绝对 delta：
@@ -206,7 +206,7 @@ Rank-1 实现专门复现了 RELEX 的 `rank=1 + reconstruct` 路径：
 1. RELEX 先将 FP16 delta 写入 mmap；这里按 tensor 分块即时计算相同的 FP16 delta，减少中间磁盘占用。
 2. RELEX 最后通过完整 model state dict 保存；这里流式写 safetensors，随后真实执行 `AutoModelForCausalLM` 和 tokenizer 完整加载验证。
 
-默认轨迹使用 step 5/10/15，是为了保持现有 R-Zero 每 5 步保存一次的节奏。若希望更密集的 RELEX 轨迹，可调整保存频率和 `RANK1_HISTORY_STEPS`，Rank-1 算法无需修改。
+默认轨迹使用连续 step 1–15，与 RELEX 使用每个 optimizer step 构造轨迹的方式一致。Rank-1 模式因此设置 `SOLVER_SAVE_FREQ=1`，并以 step 15 为目标 checkpoint。
 
 ## 7. 两条实验链如何隔离
 

@@ -32,7 +32,7 @@ export OPENAI_API_KEY=...   # 完整评估中的 GPT recheck 需要
 - 原 R-Zero 可用的 Python/verl/vLLM/CUDA 环境。
 - `torch`、`transformers`、`safetensors`、`datasets`、`huggingface_hub`。
 - 足够的 GPU 显存、CPU 内存和本地磁盘。
-- Rank-1 模式比 Full-delta 多保留并合并 step 5/10/15 checkpoint，需要更多磁盘和合并时间。
+- Rank-1 模式保留并合并 step 1–15 的全部 checkpoint，需要显著更多磁盘和合并时间。
 
 ## 2. 核心配置
 
@@ -66,10 +66,10 @@ FULL_LOAD_VALIDATE=true
 Rank-1 默认配置：
 
 ```bash
-SOLVER_MAX_STEPS=20
-SOLVER_SAVE_FREQ=5
+SOLVER_MAX_STEPS=15
+SOLVER_SAVE_FREQ=1
 SOLVER_MERGE_STEP=15
-RANK1_HISTORY_STEPS=(5 10 15)
+RANK1_HISTORY_STEPS=(1 2 3 4 5 6 7 8 9 10 11 12 13 14 15)
 RANK1_TARGET_STEP=15
 RANK1_PRODUCE_FULL_V1_SIDECAR=true
 ```
@@ -85,7 +85,7 @@ BOOTSTRAP_DATASET_CONFIG=qwen3_4b_fullrun_authorsettings_solver_v1
 BOOTSTRAP_DATASET_SPLIT=train
 ```
 
-在这个模式下，第一轮不会训练 Q1、不会重新出题和标注，而是把已有 Q1 固定为具体 HF snapshot，把已有 D1 保存为本地 `datasets/d1/train.parquet`，然后直接从 Base 训练 Solver1。Rank-1 训练仍保存和合并 step 5/10/15。第二轮 Q2 从该 Q1 初始化，并以新 Rank-1/Full Solver V1 为对手。
+在这个模式下，第一轮不会训练 Q1、不会重新出题和标注，而是把已有 Q1 固定为具体 HF snapshot，把已有 D1 保存为本地 `datasets/d1/train.parquet`，然后直接从 Base 训练 Solver1。Rank-1 训练保存并合并连续 step 1–15。第二轮 Q2 从该 Q1 初始化，并以新 Rank-1/Full Solver V1 为对手。
 
 约束：
 
@@ -138,7 +138,7 @@ qwen3_4b_relex_rank1
 运行逻辑：
 
 ```text
-第一轮复用已有 Q1/D1，直接从 Base 训练 step 5/10/15
+第一轮复用已有 Q1/D1，直接从 Base 训练并保存 step 1–15
 → per-tensor RELEX rank-1 reconstruction
 → 累计 Rank-1 Solver
 → 第二轮开始由 Rank-1 Solver 驱动 Questioner 和数据闭环
@@ -434,7 +434,7 @@ python3 methods/task_vector_rzero/validate_checkpoint.py \
 
 ### Rank-1 磁盘不足
 
-Rank-1 会保留更多 FSDP checkpoint，并额外产生 step 5/10/15 的 HF 合并模型。运行前确认磁盘；实验完成后再依据 manifest 进行有计划的清理，不要在运行中删除轨迹 checkpoint。
+Rank-1 会保留更多 FSDP checkpoint，并额外产生 step 1–15 的 HF 合并模型。运行前确认磁盘；实验完成后再依据 manifest 进行有计划的清理，不要在运行中删除轨迹 checkpoint。
 
 ## 14. 推荐正式实验顺序
 
