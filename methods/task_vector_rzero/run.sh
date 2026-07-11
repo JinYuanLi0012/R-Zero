@@ -375,16 +375,23 @@ for ((round=1; round<=NUM_ROUNDS; round++)); do
         if [ -n "$BOOTSTRAP_QUESTIONER_REVISION" ]; then
             BOOTSTRAP_Q_ARGS+=(--revision "$BOOTSTRAP_QUESTIONER_REVISION")
         fi
-        if [ -e "$(marker_path "$QUESTIONER_STAGE")" ]; then
+        if [ -e "$(marker_path "$QUESTIONER_STAGE")" ] || \
+            { [ "$RESUME" = "1" ] && [ -e "$QUESTIONER_HF" ]; }; then
             python3 "$METHOD_DIR/materialize_bootstrap.py" "${BOOTSTRAP_Q_ARGS[@]}" >/dev/null
         fi
-        if guard_stage "$QUESTIONER_STAGE" "$QUESTIONER_HF" checkpoint; then
+        if guard_stage "$QUESTIONER_STAGE" "$QUESTIONER_HF" generic; then
             python3 "$METHOD_DIR/materialize_bootstrap.py" "${BOOTSTRAP_Q_ARGS[@]}" \
                 > >(tee -a "$LOG_DIR/bootstrap_questioner_v1.log") 2>&1
-            python3 "$METHOD_DIR/validate_checkpoint.py" "$QUESTIONER_HF"
+            BOOTSTRAP_Q_FORMAT=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["weight_format"])' "$BOOTSTRAP_Q_MANIFEST")
+            if [ "$BOOTSTRAP_Q_FORMAT" = "safetensors" ]; then
+                python3 "$METHOD_DIR/validate_checkpoint.py" "$QUESTIONER_HF"
+            else
+                echo "Bootstrap Q1 validated as immutable PyTorch .bin checkpoint"
+            fi
             complete_stage "$QUESTIONER_STAGE" "$QUESTIONER_HF" \
                 "mode=bootstrap_existing_q1" \
                 "source=$BOOTSTRAP_QUESTIONER_MODEL" \
+                "weight_format=$BOOTSTRAP_Q_FORMAT" \
                 "requested_revision=$BOOTSTRAP_QUESTIONER_REVISION" \
                 "manifest=$BOOTSTRAP_Q_MANIFEST"
         fi

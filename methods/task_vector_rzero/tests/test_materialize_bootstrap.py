@@ -39,6 +39,28 @@ class MaterializeBootstrapTest(unittest.TestCase):
             self.assertEqual(output.resolve(), source.resolve())
             self.assertEqual(json.loads(manifest.read_text())["source"], str(source))
 
+    def test_legacy_pytorch_bin_questioner_is_supported(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source = root / "questioner"
+            source.mkdir()
+            (source / "config.json").write_text(
+                json.dumps({"model_type": "tiny"}), encoding="utf-8"
+            )
+            torch.save({"weight": torch.ones(2, 2)}, source / "pytorch_model.bin")
+            output = root / "run" / "q1" / "huggingface"
+            manifest = root / "run" / "q1" / "bootstrap_questioner_manifest.json"
+
+            materialize_model(
+                argparse.Namespace(
+                    source=str(source), revision=None, output=output, manifest=manifest
+                )
+            )
+
+            metadata = json.loads(manifest.read_text())
+            self.assertEqual(metadata["weight_format"], "pytorch_bin")
+            self.assertEqual(metadata["weight_files"], ["pytorch_model.bin"])
+
     def test_local_dataset_is_canonicalized_and_rechecked(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

@@ -11,12 +11,12 @@ from pathlib import Path
 from typing import Any
 
 from datasets import Dataset, load_dataset
-from huggingface_hub import HfApi
+from huggingface_hub import HfApi, snapshot_download
 
 try:
-    from .resolve_base import atomic_json, build_manifest, hf_token, verify_manifest
+    from .resolve_base import ALLOW_PATTERNS, atomic_json, hf_token
 except ImportError:
-    from resolve_base import atomic_json, build_manifest, hf_token, verify_manifest
+    from resolve_base import ALLOW_PATTERNS, atomic_json, hf_token
 
 
 def sha256(path: Path) -> str:
@@ -27,14 +27,91 @@ def sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def _build_model_manifest(
+    source: str, revision: str | None, token: str | None
+) -> dict[str, Any]:
+    candidate = Path(source).expanduser()
+    if candidate.is_dir():
+        root = candidate.resolve()
+        resolved_revision = None
+        source_type = "local"
+    else:
+        root = Path(
+            snapshot_download(
+                repo_id=source,
+                revision=revision,
+                allow_patterns=[*ALLOW_PATTERNS, "pytorch_model*.bin"],
+                token=token,
+            )
+        ).resolve()
+        resolved_revision = root.name if root.parent.name == "snapshots" else revision
+        source_type = "huggingface"
+
+    if not (root / "config.json").is_file():
+        raise ValueError(f"Bootstrap Questioner is missing config.json: {root}")
+    safetensors = sorted(root.glob("*.safetensors"))
+    pytorch_bins = sorted(root.glob("pytorch_model*.bin"))
+    if safetensors:
+        weight_format = "safetensors"
+        weights = safetensors
+    elif pytorch_bins:
+        weight_format = "pytorch_bin"
+        weights = pytorch_bins
+    else:
+        raise ValueError(f"Bootstrap Questioner has no safetensors or PyTorch .bin weights: {root}")
+
+    tracked_suffixes = {".json", ".safetensors", ".bin", ".model", ".txt", ".jinja", ".py"}
+    files = sorted(
+        path for path in root.iterdir() if path.is_file() and path.suffix in tracked_suffixes
+    )
+    file_manifest = [
+        {"name": path.name, "size": path.stat().st_size, "sha256": sha256(path)}
+        for path in files
+    ]
+    identity_payload = json.dumps(file_manifest, sort_keys=True, separators=(",", ":")).encode()
+    return {
+        "format_version": 1,
+        "source": source,
+        "source_type": source_type,
+        "requested_revision": revision,
+        "resolved_revision": resolved_revision,
+        "resolved_path": str(root),
+        "weight_format": weight_format,
+        "weight_files": [path.name for path in weights],
+        "files": file_manifest,
+        "identity_sha256": hashlib.sha256(identity_payload).hexdigest(),
+    }
+
+
+def _verify_model_manifest(
+    manifest: dict[str, Any], source: str, revision: str | None
+) -> None:
+    if manifest.get("source") != source or manifest.get("requested_revision") != revision:
+        raise ValueError("Existing bootstrap Questioner manifest uses different inputs")
+    root = Path(manifest["resolved_path"])
+    tracked_suffixes = {".json", ".safetensors", ".bin", ".model", ".txt", ".jinja", ".py"}
+    expected_names = {item["name"] for item in manifest.get("files", [])}
+    actual_names = {
+        path.name for path in root.iterdir() if path.is_file() and path.suffix in tracked_suffixes
+    }
+    if actual_names != expected_names:
+        raise ValueError("Immutable bootstrap Questioner file set changed")
+    for item in manifest.get("files", []):
+        path = root / item["name"]
+        if not path.is_file() or path.stat().st_size != item["size"] or sha256(path) != item["sha256"]:
+            raise ValueError(f"Immutable bootstrap Questioner file changed or is missing: {path}")
+    if not manifest.get("weight_files"):
+        raise ValueError("Bootstrap Questioner manifest has no weight files")
+
+
 def materialize_model(args: argparse.Namespace) -> None:
     manifest_path = args.manifest
     token = hf_token()
     if manifest_path.exists():
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-        verify_manifest(manifest, args.source, args.revision)
+        _verify_model_manifest(manifest, args.source, args.revision)
     else:
-        manifest = build_manifest(args.source, args.revision, token)
+        manifest = _build_model_manifest(args.source, args.revision, token)
         atomic_json(manifest_path, manifest)
 
     resolved = Path(manifest["resolved_path"]).resolve()
