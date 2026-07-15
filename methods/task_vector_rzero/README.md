@@ -260,6 +260,8 @@ methods/task_vector_rzero/
   train_base_fit.sh          # 永远从 Base 训练 Solver
   compose_task_vectors.py    # 累计完整/Rank-1 有效任务向量
   relex_rank1.py             # per-tensor SVD rank-1 reconstruction
+  extrapolate_rank1.py       # 第一轮 Rank-1 delta 的纯缩放外推
+  run_rank1_extrapolation.sh # Base + k * delta_1 一键入口
   prepare_dataset.py         # 生成本地 Parquet
   resolve_base.py            # 固定 Base revision 和哈希
   pipeline_state.py          # 阶段状态、fingerprint、恢复

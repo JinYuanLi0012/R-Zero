@@ -173,6 +173,54 @@ bash methods/task_vector_rzero/run_rank1.sh \
 
 已有 run 的算法或训练配置发生变化时，不要覆盖原目录；请使用新的 `RUN_NAME`。
 
+## 5.1 第一轮 Rank-1 delta 的纯外推
+
+已有 Rank-1 run 完成第一轮后，可以不训练后续 Questioner/Solver，直接构造：
+
+\[
+V_k=Base+k(R_1-Base),\qquad k=1,2,3,4,5
+\]
+
+其中 `R1` 是源 run 的 `rank1_fits/r1`。推荐使用独立后处理入口：
+
+```bash
+bash methods/task_vector_rzero/run_rank1_extrapolation.sh \
+  --config methods/task_vector_rzero/config.sh \
+  --source-run qwen3_4b_relex_rank1_5round_noeval \
+  --output-run qwen3_4b_rank1_r1_delta_scale1to5
+```
+
+中断后恢复：
+
+```bash
+bash methods/task_vector_rzero/run_rank1_extrapolation.sh \
+  --config methods/task_vector_rzero/config.sh \
+  --source-run qwen3_4b_relex_rank1_5round_noeval \
+  --output-run qwen3_4b_rank1_r1_delta_scale1to5 \
+  --resume
+```
+
+默认 scales 为 `1,2,3,4,5`，也可以显式设置：
+
+```bash
+--scales 0.5,1,1.5,2,3
+```
+
+输出位于：
+
+```text
+$STORAGE_PATH/task_vector_rzero_extrapolation/$OUTPUT_RUN/
+  composed_solvers/v1/   # 默认 scale=1
+  composed_solvers/v2/   # 默认 scale=2
+  composed_solvers/v3/   # 默认 scale=3
+  composed_solvers/v4/   # 默认 scale=4
+  composed_solvers/v5/   # 默认 scale=5
+  state/extrapolation_state.json
+  rank1_extrapolation_manifest.json
+```
+
+该入口只读取源 run，不训练、不生成数据、不修改源产物，也不自动运行 benchmark。每个输出只调用一次 composer，并直接使用一个缩放系数，避免重复 BF16 写入或递归相加。默认按照 `FULL_LOAD_VALIDATE` 对五个结果执行 Transformers 完整加载验证；可用 `--no-full-load-validate` 只做结构、manifest 和权重哈希验证。
+
 ## 6. 中断后恢复
 
 Full-delta：
