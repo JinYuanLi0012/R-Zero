@@ -48,6 +48,13 @@ def main() -> None:
         raise ValueError("SOLVER_EXPERT_SAMPLES must be 10 to match standard R-Zero")
     if integer("SOLVER_LABEL_SAMPLES", 2) != 9:
         raise ValueError("SOLVER_LABEL_SAMPLES must be 9 to match standard R-Zero")
+    solver_rollout_batch = integer("SOLVER_ROLLOUT_BATCH_SIZE")
+    solver_global_batch = integer("SOLVER_GLOBAL_BATCH_SIZE")
+    if solver_rollout_batch % solver_global_batch:
+        raise ValueError("SOLVER_ROLLOUT_BATCH_SIZE must be divisible by SOLVER_GLOBAL_BATCH_SIZE")
+    if integer("SOLVER_ROLLOUT_N", 2) < 2:
+        raise ValueError("SOLVER_ROLLOUT_N must be at least 2 for GRPO")
+    center_rollout_tp = integer("CENTER_ROLLOUT_TENSOR_PARALLEL_SIZE")
     if integer("SOLVER_EXPERT_RETRIES", 0) != 1:
         raise ValueError("SOLVER_EXPERT_RETRIES must be exactly 1")
     questioner_merge = integer("QUESTIONER_MERGE_STEP")
@@ -75,7 +82,9 @@ def main() -> None:
     sexpert = set(gpu_list("SOLVER_EXPERT_GPU_IDS"))
     if qtrain & sexpert:
         raise ValueError("Questioner training GPUs and Solver expert GPUs must be disjoint")
-    gpu_list("QUESTION_GENERATION_GPU_IDS")
+    generation_gpus = gpu_list("QUESTION_GENERATION_GPU_IDS")
+    if len(qtrain) % center_rollout_tp or len(generation_gpus) % center_rollout_tp:
+        raise ValueError("center rollout TP must divide both center-training GPU counts")
     print(
         f"validated rounds={rounds} Kq={questioners} Ks={solvers} B={budget} "
         f"sigma_q={os.environ['QUESTIONER_NOISE_SIGMA']} sigma_s={os.environ['SOLVER_NOISE_SIGMA']}"

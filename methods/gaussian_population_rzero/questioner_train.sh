@@ -86,6 +86,7 @@ CUDA_VISIBLE_DEVICES="$QUESTIONER_TRAIN_GPU_IDS" python3 -m verl.trainer.main \
   trainer.n_gpus_per_node="$QUESTIONER_GPU_COUNT" \
   data.format_prompt=./examples/format_prompt/questioner.jinja \
   worker.rollout.n="$QUESTIONER_ROLLOUT_N" \
+  worker.rollout.tensor_parallel_size="$CENTER_ROLLOUT_TENSOR_PARALLEL_SIZE" \
   worker.actor.global_batch_size="$QUESTIONER_GLOBAL_BATCH_SIZE" \
   worker.actor.micro_batch_size_per_device_for_update="$QUESTIONER_MICRO_BATCH_UPDATE" \
   worker.actor.micro_batch_size_per_device_for_experience="$QUESTIONER_MICRO_BATCH_EXPERIENCE" \

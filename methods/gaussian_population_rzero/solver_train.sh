@@ -21,6 +21,7 @@ mkdir -p "$OUTPUT_DIR"
 CUDA_VISIBLE_DEVICES="$QUESTION_GENERATION_GPU_IDS" python3 -m verl.trainer.main \
   config=examples/config.yaml \
   data.max_response_length="$SOLVER_MAX_RESPONSE_LENGTH" \
+  data.rollout_batch_size="$SOLVER_ROLLOUT_BATCH_SIZE" \
   data.train_files="$DATASET" \
   worker.actor.model.model_path="$SOLVER_CENTER" \
   trainer.experiment_name="$EXPERIMENT_NAME" \
@@ -31,6 +32,9 @@ CUDA_VISIBLE_DEVICES="$QUESTION_GENERATION_GPU_IDS" python3 -m verl.trainer.main
   trainer.save_freq="$SOLVER_SAVE_FREQ" \
   trainer.save_limit="$SOLVER_SAVE_LIMIT" \
   data.format_prompt=./examples/format_prompt/solver.jinja \
+  worker.rollout.n="$SOLVER_ROLLOUT_N" \
+  worker.rollout.tensor_parallel_size="$CENTER_ROLLOUT_TENSOR_PARALLEL_SIZE" \
+  worker.actor.global_batch_size="$SOLVER_GLOBAL_BATCH_SIZE" \
   trainer.val_freq="$SOLVER_VAL_FREQ" \
   trainer.n_gpus_per_node="$GPU_COUNT" \
   worker.actor.micro_batch_size_per_device_for_update=1 \

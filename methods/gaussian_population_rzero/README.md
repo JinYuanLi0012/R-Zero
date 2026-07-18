@@ -94,9 +94,10 @@ python3 -m unittest discover \
 
 CPU population/reward tests run in the normal R-Zero environment. The local
 checkout may skip dependency-backed tests when torch/mathruler are unavailable.
-The included one-round GPU acceptance profile uses `Kq=Ks=3`, `B=7`, and short
-training trajectories. Supply a small local Hugging Face checkpoint that is
-compatible with this repository:
+The included one-round GPU acceptance profile uses `Kq=Ks=3`, `B=7`, short
+training trajectories, and a one-GPU Solver rollout batch after the population
+feedback stage. Supply a small local Hugging Face checkpoint that is compatible
+with this repository:
 
 ```bash
 BASE_MODEL=/path/to/small-hf-model \
