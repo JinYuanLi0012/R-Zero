@@ -12,6 +12,7 @@ METHOD_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 : "${SOLVER_LABEL_MAX_TOKENS:=4096}"
 : "${SOLVER_LABEL_GPU_MEMORY_UTILIZATION:=0.85}"
 : "${SOLVER_LABEL_BATCH_SIZE:=0}"
+export VLLM_USE_V1=0
 
 if [ "$SOLVER_LABEL_SAMPLES" != "9" ]; then
   echo "SOLVER_LABEL_SAMPLES must remain 9 for standard R-Zero alignment" >&2

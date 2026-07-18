@@ -69,6 +69,10 @@ than the GPU count; experts are processed in deterministic waves. Each physical
 engine retains one CPU center anchor and reconstructs every expert directly
 from it, avoiding BF16 add/subtract drift.
 
+The method forces `VLLM_USE_V1=0`. In vLLM 0.9.1 the V1 frontend keeps model
+weights in a separate EngineCore process, while Gaussian expert switching
+requires direct access to the in-process V0 model parameters.
+
 Outputs are stored under:
 
 ```text

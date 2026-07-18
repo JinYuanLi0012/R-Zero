@@ -5,7 +5,10 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from pathlib import Path
+
+os.environ["VLLM_USE_V1"] = "0"
 
 import vllm
 from transformers import AutoTokenizer

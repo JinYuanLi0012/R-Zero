@@ -15,6 +15,7 @@ REPO_ROOT=$(cd "$METHOD_DIR/../.." && pwd)
 cd "$REPO_ROOT"
 export PYTHONPATH="$METHOD_DIR:$REPO_ROOT:${PYTHONPATH:-}"
 export VLLM_DISABLE_COMPILE_CACHE=1
+export VLLM_USE_V1=0
 
 IFS=',' read -r -a Q_GPUS <<< "$QUESTIONER_TRAIN_GPU_IDS"
 IFS=',' read -r -a S_GPUS <<< "$SOLVER_EXPERT_GPU_IDS"
@@ -51,11 +52,17 @@ trap cleanup EXIT
 bash "$METHOD_DIR/start_solver_population.sh" "$SOLVER_CENTER" "$ROUND_INDEX"
 for ((service=0; service<NUM_SERVICES; service++)); do
   port=$((SOLVER_EXPERT_PORT_BASE + service))
+  service_pid=$(sed -n "$((service + 1))p" "$SOLVER_EXPERT_PID_FILE")
   healthy=0
   for _ in $(seq 1 600); do
     if python3 -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:${port}/health', timeout=2).read()" >/dev/null 2>&1; then
       healthy=1
       break
+    fi
+    if ! kill -0 "$service_pid" 2>/dev/null; then
+      echo "Solver population service $service exited during startup" >&2
+      tail -80 "$RUN_LOG_DIR/solver_population_r${ROUND_INDEX}_worker${service}_gpu${S_GPUS[$service]}.log" >&2 || true
+      exit 1
     fi
     sleep 1
   done

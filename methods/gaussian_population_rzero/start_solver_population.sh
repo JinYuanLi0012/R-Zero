@@ -16,6 +16,7 @@ METHOD_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 : "${SOLVER_EXPERT_LOG_DIR:=logs}"
 : "${SOLVER_EXPERT_PID_FILE:=${SOLVER_EXPERT_LOG_DIR}/solver_population.pids}"
 : "${TENSOR_PARALLEL_SIZE:=1}"
+export VLLM_USE_V1=0
 
 if [ "$TENSOR_PARALLEL_SIZE" != "1" ]; then
   echo "Only TENSOR_PARALLEL_SIZE=1 is supported" >&2

@@ -10,6 +10,8 @@ import threading
 from pathlib import Path
 from typing import Any
 
+os.environ["VLLM_USE_V1"] = "0"
+
 import torch
 import vllm
 from flask import Flask, jsonify, request

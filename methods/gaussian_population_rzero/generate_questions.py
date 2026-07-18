@@ -8,6 +8,8 @@ import json
 import os
 from pathlib import Path
 
+os.environ["VLLM_USE_V1"] = "0"
+
 import regex as re
 import vllm
 from transformers import AutoTokenizer

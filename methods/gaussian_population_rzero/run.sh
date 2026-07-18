@@ -24,6 +24,10 @@ set -a
 # shellcheck disable=SC1090
 source "$CONFIG"
 set +a
+# Gaussian experts mutate the in-process model weights. vLLM V1 places the
+# model in a separate EngineCore process, so this experiment deliberately uses
+# the still-supported vLLM 0.9.1 V0 engine.
+export VLLM_USE_V1=0
 export PYTHONPATH="$METHOD_DIR:$REPO_ROOT:${PYTHONPATH:-}"
 python3 "$METHOD_DIR/validate_config.py"
 
@@ -67,6 +71,7 @@ FINGERPRINT=$(python3 "$METHOD_DIR/pipeline_state.py" init \
   --field "solver_expert_samples=$SOLVER_EXPERT_SAMPLES" \
   --field "solver_label_samples=$SOLVER_LABEL_SAMPLES" \
   --field "tensor_parallel_size=$TENSOR_PARALLEL_SIZE" \
+  --field "vllm_engine_mode=v0" \
   --field "questioner_train_gpu_ids=$QUESTIONER_TRAIN_GPU_IDS" \
   --field "solver_expert_gpu_ids=$SOLVER_EXPERT_GPU_IDS" \
   --field "question_generation_gpu_ids=$QUESTION_GENERATION_GPU_IDS" \
