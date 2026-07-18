@@ -87,6 +87,25 @@ class QuotaTests(unittest.TestCase):
             for population in range(1, total + 1):
                 self.assertEqual(sum(allocate_quotas(total, population)), total)
 
+    def test_attempt_seed_plan_is_deterministic_and_unique(self):
+        from population_spec import allocate_quotas, make_attempt_seed_plan, make_expert_specs
+
+        specs = make_expert_specs(
+            role="questioner", round_index=1, population_size=10, sigma=0.001, global_seed=42
+        )
+        quotas = allocate_quotas(4000, 10)
+        first = make_attempt_seed_plan(specs, quotas)
+        second = make_attempt_seed_plan(specs, quotas)
+        self.assertEqual(first, second)
+        seeds = [seed for expert_seeds in first.values() for seed in expert_seeds]
+        self.assertEqual(len(seeds), 4000)
+        self.assertEqual(len(set(seeds)), 4000)
+
+        next_round = make_expert_specs(
+            role="questioner", round_index=2, population_size=10, sigma=0.001, global_seed=42
+        )
+        self.assertNotEqual(first, make_attempt_seed_plan(next_round, quotas))
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -13,6 +13,8 @@ from pathlib import Path
 
 from datasets import Dataset
 
+from dataset_rules import is_solver_training_record
+
 
 def sha256(path: Path) -> str:
     digest = hashlib.sha256()
@@ -62,13 +64,15 @@ def main() -> None:
             "source_expert_seed": int(item["source_expert_seed"]),
             "source_sigma": float(item["source_sigma"]),
             "source_round": int(item["source_round"]),
+            "source_attempt_index": int(item["source_attempt_index"]),
+            "source_sampling_seed": int(item["source_sampling_seed"]),
             "labeler_role": "central_solver",
             "labeler_samples": int(item["labeler_samples"]),
         }
         for item in records
-        if args.min_score <= float(item.get("score", -1)) <= args.max_score
-        and str(item.get("question", "")).strip()
-        and str(item.get("answer", "")).strip() not in {"", "None"}
+        if is_solver_training_record(
+            item, min_score=args.min_score, max_score=args.max_score
+        )
     ]
     if not filtered:
         raise ValueError("filtering produced an empty Solver dataset")

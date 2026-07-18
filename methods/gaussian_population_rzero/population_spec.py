@@ -69,3 +69,37 @@ def assign_experts(population_size: int, worker_index: int, num_workers: int) ->
     if not 0 <= worker_index < num_workers:
         raise ValueError("worker_index is outside the worker range")
     return list(range(worker_index, population_size, num_workers))
+
+
+def make_attempt_seed_plan(
+    specs: list[ExpertSpec], quotas: list[int], *, namespace: str = "question_generation"
+) -> dict[int, list[int]]:
+    """Derive a deterministic, population-wide unique seed for every attempt."""
+    if len(specs) != len(quotas):
+        raise ValueError("specs and quotas must have the same length")
+    if not namespace:
+        raise ValueError("namespace cannot be empty")
+    used: set[int] = set()
+    plan: dict[int, list[int]] = {}
+    for spec, quota in zip(specs, quotas):
+        if quota < 0:
+            raise ValueError("attempt quota cannot be negative")
+        seeds = []
+        for attempt_index in range(quota):
+            collision_nonce = 0
+            while True:
+                seed = stable_seed(
+                    spec.expert_seed,
+                    namespace,
+                    attempt_index,
+                    collision_nonce,
+                )
+                if seed not in used:
+                    break
+                collision_nonce += 1
+            used.add(seed)
+            seeds.append(seed)
+        plan[spec.expert_index] = seeds
+    if sum(len(seeds) for seeds in plan.values()) != sum(quotas):
+        raise AssertionError("attempt seed plan did not preserve the total budget")
+    return plan

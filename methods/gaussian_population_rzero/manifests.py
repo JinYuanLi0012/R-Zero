@@ -12,7 +12,7 @@ import platform
 import subprocess
 from pathlib import Path
 
-from population_spec import allocate_quotas, make_expert_specs
+from population_spec import allocate_quotas, make_attempt_seed_plan, make_expert_specs
 
 
 def software_versions() -> dict[str, str]:
@@ -102,7 +102,18 @@ def population_manifest(args: argparse.Namespace) -> None:
 
 def verify_generation(args: argparse.Namespace) -> None:
     quotas = allocate_quotas(args.total_budget, args.population_size)
+    specs = make_expert_specs(
+        role="questioner",
+        round_index=args.round_index,
+        population_size=args.population_size,
+        sigma=args.sigma,
+        global_seed=args.global_seed,
+    )
+    expected_seed_plan = make_attempt_seed_plan(specs, quotas)
     observed = {index: 0 for index in range(args.population_size)}
+    observed_attempts: dict[int, dict[int, int]] = {
+        index: {} for index in range(args.population_size)
+    }
     shard_manifests = []
     for shard in range(args.num_shards):
         path = args.generated_dir / f"{args.save_name}_{shard}_generation_manifest.json"
@@ -110,9 +121,46 @@ def verify_generation(args: argparse.Namespace) -> None:
         shard_manifests.append(payload)
         for key, count in payload["expert_counts"].items():
             observed[int(key)] += int(count)
+        generated_path = args.generated_dir / f"{args.save_name}_{shard}.json"
+        generated = json.loads(generated_path.read_text(encoding="utf-8"))
+        if len(generated) != int(payload["generated_count"]):
+            raise RuntimeError(f"shard {shard} record count does not match its manifest")
+        for record in generated:
+            expert_index = int(record["source_expert_index"])
+            attempt_index = int(record["source_attempt_index"])
+            sampling_seed = int(record["source_sampling_seed"])
+            attempts = observed_attempts[expert_index]
+            if attempt_index in attempts:
+                raise RuntimeError(
+                    f"expert {expert_index} has duplicate attempt index {attempt_index}"
+                )
+            attempts[attempt_index] = sampling_seed
+        recorded_seed_plan = {
+            int(key): [int(seed) for seed in seeds]
+            for key, seeds in payload["expert_attempt_seeds"].items()
+        }
+        for expert_index, seeds in recorded_seed_plan.items():
+            if seeds != expected_seed_plan[expert_index]:
+                raise RuntimeError(
+                    f"expert {expert_index} shard manifest has an invalid attempt seed plan"
+                )
     expected = {index: quota for index, quota in enumerate(quotas)}
     if observed != expected:
         raise RuntimeError(f"generation quotas mismatch: observed={observed}, expected={expected}")
+    observed_seed_plan = {}
+    for expert_index, quota in expected.items():
+        attempts = observed_attempts[expert_index]
+        if set(attempts) != set(range(quota)):
+            raise RuntimeError(
+                f"expert {expert_index} attempt indices are incomplete: {sorted(attempts)}"
+            )
+        seeds = [attempts[index] for index in range(quota)]
+        if seeds != expected_seed_plan[expert_index]:
+            raise RuntimeError(f"expert {expert_index} generated with unexpected sampling seeds")
+        observed_seed_plan[expert_index] = seeds
+    all_seeds = [seed for seeds in observed_seed_plan.values() for seed in seeds]
+    if len(set(all_seeds)) != args.total_budget:
+        raise RuntimeError("Questioner generation sampling seeds are not globally unique")
     gpu_ids = [value.strip() for value in args.gpu_ids.split(",") if value.strip()]
     atomic_json(
         args.output,
@@ -125,6 +173,11 @@ def verify_generation(args: argparse.Namespace) -> None:
             "total_budget": args.total_budget,
             "expected_quotas": expected,
             "observed_quotas": observed,
+            "sampling_seed_derivation": (
+                "SHA256(expert_seed, question_generation, attempt_index, collision_nonce)"
+            ),
+            "expected_attempt_seeds": expected_seed_plan,
+            "observed_attempt_seeds": observed_seed_plan,
             "generated_count": sum(observed.values()),
             "num_physical_shards": args.num_shards,
             "physical_gpu_ids": gpu_ids[: args.num_shards],

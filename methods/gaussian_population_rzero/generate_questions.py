@@ -21,6 +21,7 @@ from population import (
     get_vllm_model,
     make_expert_specs,
 )
+from population_spec import make_attempt_seed_plan
 
 
 def extract_boxed(text: str) -> list[str]:
@@ -101,6 +102,7 @@ def main() -> None:
         sigma=args.sigma,
         global_seed=args.global_seed,
     )
+    attempt_seed_plan = make_attempt_seed_plan(specs, quotas)
 
     tokenizer = AutoTokenizer.from_pretrained(args.model)
     if tokenizer.pad_token_id is None:
@@ -116,22 +118,31 @@ def main() -> None:
     prompt = question_prompt(tokenizer)
     records = []
     expert_counts: dict[str, int] = {}
+    expert_attempt_seeds: dict[str, list[int]] = {}
     try:
         for expert_index in assigned:
             spec, quota = specs[expert_index], quotas[expert_index]
             population.apply(spec)
-            sampling = vllm.SamplingParams(
-                max_tokens=args.max_tokens,
-                temperature=1.0,
-                top_p=0.95,
-                n=1,
-                seed=spec.expert_seed % 2_147_483_647,
-                stop_token_ids=[tokenizer.eos_token_id],
+            attempt_seeds = attempt_seed_plan[expert_index]
+            sampling = [
+                vllm.SamplingParams(
+                    max_tokens=args.max_tokens,
+                    temperature=1.0,
+                    top_p=0.95,
+                    n=1,
+                    seed=attempt_seed,
+                    stop_token_ids=[tokenizer.eos_token_id],
+                )
+                for attempt_seed in attempt_seeds
+            ]
+            completions = llm.generate(
+                [prompt] * quota, sampling_params=sampling, use_tqdm=True
             )
-            completions = llm.generate([prompt] * quota, sampling_params=sampling, use_tqdm=True)
             if len(completions) != quota:
                 raise RuntimeError(f"expert {expert_index} generated {len(completions)} != {quota}")
-            for completion in completions:
+            for attempt_index, (attempt_seed, completion) in enumerate(
+                zip(attempt_seeds, completions)
+            ):
                 response = completion.outputs[0].text
                 questions = re.findall(r"<question>(.*?)</question>", response, re.DOTALL)
                 answers = extract_boxed(response)
@@ -146,9 +157,12 @@ def main() -> None:
                         "source_expert_index": expert_index,
                         "source_expert_seed": spec.expert_seed,
                         "source_sigma": spec.sigma,
+                        "source_attempt_index": attempt_index,
+                        "source_sampling_seed": attempt_seed,
                     }
                 )
             expert_counts[str(expert_index)] = len(completions)
+            expert_attempt_seeds[str(expert_index)] = attempt_seeds
     finally:
         population.restore()
 
@@ -161,6 +175,10 @@ def main() -> None:
                 "num_workers": args.num_workers,
                 "assigned_experts": assigned,
                 "expert_counts": expert_counts,
+                "expert_attempt_seeds": expert_attempt_seeds,
+                "sampling_seed_derivation": (
+                    "SHA256(expert_seed, question_generation, attempt_index, collision_nonce)"
+                ),
                 "generated_count": len(records),
                 "total_budget": args.total_budget,
                 "population_size": args.population_size,

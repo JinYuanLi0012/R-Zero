@@ -20,7 +20,8 @@ For round `t`:
 3. Standard Questioner GRPO plus the existing within-batch BLEU penalty creates
    `Q_(t+1)`.
 4. Logical Questioner experts are reconstructed around `Q_(t+1)` and split the
-   fixed 4000-attempt generation budget.
+   fixed 4000-attempt generation budget. Every attempt receives a distinct,
+   deterministic sampling seed derived from its expert seed and attempt index.
 5. The unperturbed central `S_t` alone labels all questions with 9 samples and
    the standard valid-answer denominator and score filter builds the Solver
    dataset. The fixed denominator of 10 is specific to Solver-expert feedback.

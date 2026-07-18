@@ -36,8 +36,32 @@ def main() -> None:
     assert questioner_population["total_budget"] == 7
     assert list(questioner_population["expected_quotas"].values()) == [3, 2, 2]
     assert questioner_population["generated_count"] == 7
+    attempt_seeds = [
+        seed
+        for seeds in questioner_population["observed_attempt_seeds"].values()
+        for seed in seeds
+    ]
+    assert len(attempt_seeds) == 7
+    assert len(set(attempt_seeds)) == 7
 
     generated_dir = root / "datasets/d1/generated_question"
+    generated = []
+    for path in generated_dir.glob("*.json"):
+        if path.name.endswith("_results.json") or path.name.endswith("_manifest.json"):
+            continue
+        generated.extend(load(path))
+    assert len(generated) == 7
+    assert len({item["source_sampling_seed"] for item in generated}) == 7
+    by_expert: dict[int, list[int]] = {}
+    for item in generated:
+        by_expert.setdefault(item["source_expert_index"], []).append(
+            item["source_attempt_index"]
+        )
+    assert {key: sorted(value) for key, value in by_expert.items()} == {
+        0: [0, 1, 2],
+        1: [0, 1],
+        2: [0, 1],
+    }
     labeled = []
     for path in generated_dir.glob("*_results.json"):
         labeled.extend(load(path))
