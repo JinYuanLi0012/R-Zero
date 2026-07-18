@@ -10,14 +10,8 @@ METHOD_DIR = Path(__file__).resolve().parents[1]
 
 
 class SmokeConfigTests(unittest.TestCase):
-    def test_smoke_uses_standard_4096_token_lengths(self):
-        variables = [
-            "QUESTIONER_MAX_RESPONSE_LENGTH",
-            "QUESTION_GENERATION_MAX_TOKENS",
-            "SOLVER_EXPERT_MAX_TOKENS",
-            "SOLVER_LABEL_MAX_TOKENS",
-            "SOLVER_MAX_RESPONSE_LENGTH",
-        ]
+    @staticmethod
+    def load_variables(variables: list[str]) -> list[str]:
         environment = os.environ.copy()
         for name in variables:
             environment.pop(name, None)
@@ -33,7 +27,32 @@ class SmokeConfigTests(unittest.TestCase):
             text=True,
             env=environment,
         )
-        self.assertEqual(completed.stdout.splitlines(), ["4096"] * len(variables))
+        return completed.stdout.splitlines()
+
+    def test_smoke_uses_standard_4096_token_lengths(self):
+        variables = [
+            "QUESTIONER_MAX_RESPONSE_LENGTH",
+            "QUESTION_GENERATION_MAX_TOKENS",
+            "SOLVER_EXPERT_MAX_TOKENS",
+            "SOLVER_LABEL_MAX_TOKENS",
+            "SOLVER_MAX_RESPONSE_LENGTH",
+        ]
+        self.assertEqual(self.load_variables(variables), ["4096"] * len(variables))
+
+    def test_smoke_preserves_standard_stage_gpu_layout(self):
+        variables = [
+            "QUESTIONER_TRAIN_GPU_IDS",
+            "SOLVER_EXPERT_GPU_IDS",
+            "QUESTION_GENERATION_GPU_IDS",
+            "CENTER_ROLLOUT_TENSOR_PARALLEL_SIZE",
+            "SOLVER_ROLLOUT_BATCH_SIZE",
+            "SOLVER_ROLLOUT_N",
+            "SOLVER_GLOBAL_BATCH_SIZE",
+        ]
+        self.assertEqual(
+            self.load_variables(variables),
+            ["0,1", "2,3", "0,1,2,3", "2", "1", "4", "1"],
+        )
 
 
 if __name__ == "__main__":
