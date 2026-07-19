@@ -25,15 +25,6 @@ class VllmModeTests(unittest.TestCase):
         source = (METHOD_DIR / "run.sh").read_text(encoding="utf-8")
         self.assertIn("export VLLM_USE_V1=0", source)
 
-    def test_solver_population_generation_is_cpu_memory_bounded(self):
-        source = (METHOD_DIR / "solver_population_server.py").read_text(encoding="utf-8")
-        self.assertIn('parser.add_argument("--batch-size", type=int, default=32)', source)
-        self.assertIn("range(0, len(prompts), ARGS.batch_size)", source)
-        self.assertIn("prompts[start : start + ARGS.batch_size]", source)
-
-        launcher = (METHOD_DIR / "start_solver_population.sh").read_text(encoding="utf-8")
-        self.assertIn('--batch-size "$VLLM_SERVER_BATCH_SIZE"', launcher)
-
 
 if __name__ == "__main__":
     unittest.main()

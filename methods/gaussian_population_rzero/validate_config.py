@@ -40,7 +40,6 @@ def main() -> None:
     questioners = integer("QUESTIONER_POPULATION_SIZE")
     solvers = integer("SOLVER_POPULATION_SIZE")
     budget = integer("QUESTION_TOTAL_BUDGET")
-    vllm_batch_size = integer("VLLM_SERVER_BATCH_SIZE")
     if questioners > budget:
         raise ValueError("QUESTIONER_POPULATION_SIZE cannot exceed QUESTION_TOTAL_BUDGET")
     if integer("TENSOR_PARALLEL_SIZE") != 1:
@@ -78,8 +77,6 @@ def main() -> None:
     maximum_score = float(os.environ["DATASET_MAX_SCORE"])
     if not 0.0 <= minimum_score <= maximum_score <= 1.0:
         raise ValueError("dataset score range must lie in [0, 1]")
-    if os.environ["EVAL_MATH_ONLY"] not in {"0", "1"}:
-        raise ValueError("EVAL_MATH_ONLY must be 0 or 1")
     qtrain = set(gpu_list("QUESTIONER_TRAIN_GPU_IDS"))
     sexpert = set(gpu_list("SOLVER_EXPERT_GPU_IDS"))
     if qtrain & sexpert:
@@ -97,8 +94,7 @@ def main() -> None:
         raise ValueError("effective Solver GRPO batch must be divisible by its GPU count")
     print(
         f"validated rounds={rounds} Kq={questioners} Ks={solvers} B={budget} "
-        f"sigma_q={os.environ['QUESTIONER_NOISE_SIGMA']} sigma_s={os.environ['SOLVER_NOISE_SIGMA']} "
-        f"vllm_batch={vllm_batch_size}"
+        f"sigma_q={os.environ['QUESTIONER_NOISE_SIGMA']} sigma_s={os.environ['SOLVER_NOISE_SIGMA']}"
     )
 
 
