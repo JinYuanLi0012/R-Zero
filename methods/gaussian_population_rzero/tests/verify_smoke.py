@@ -21,28 +21,29 @@ def main() -> None:
     root = args.run_root
 
     solver_population = load(root / "questioners/q1/solver_population_manifest.json")
-    assert solver_population["population_size"] == 3
+    assert solver_population["population_size"] == 4
     assert solver_population["samples_per_question"] == 10
     feedback_files = sorted((root / "questioners/q1/solver_population_feedback").glob("*.json"))
     assert feedback_files, "no Solver-population feedback audit was persisted"
     for path in feedback_files:
         audit = load(path)
-        assert audit["population_size"] == 3
+        assert audit["population_size"] == 4
         assert audit["samples_per_expert"] == 10
         assert audit["cross_expert_answer_vote"] is False
-        assert all(len(rates) == 3 for rates in audit["question_expert_majority_rates"].values())
+        assert all(len(rates) == 4 for rates in audit["question_expert_majority_rates"].values())
 
     questioner_population = load(root / "datasets/d1/questioner_population_manifest.json")
-    assert questioner_population["total_budget"] == 32
-    assert list(questioner_population["expected_quotas"].values()) == [11, 11, 10]
-    assert questioner_population["generated_count"] == 32
+    assert questioner_population["population_size"] == 4
+    assert questioner_population["total_budget"] == 4000
+    assert list(questioner_population["expected_quotas"].values()) == [1000] * 4
+    assert questioner_population["generated_count"] == 4000
     attempt_seeds = [
         seed
         for seeds in questioner_population["observed_attempt_seeds"].values()
         for seed in seeds
     ]
-    assert len(attempt_seeds) == 32
-    assert len(set(attempt_seeds)) == 32
+    assert len(attempt_seeds) == 4000
+    assert len(set(attempt_seeds)) == 4000
 
     generated_dir = root / "datasets/d1/generated_question"
     generated = []
@@ -50,29 +51,42 @@ def main() -> None:
         if path.name.endswith("_results.json") or path.name.endswith("_manifest.json"):
             continue
         generated.extend(load(path))
-    assert len(generated) == 32
-    assert len({item["source_sampling_seed"] for item in generated}) == 32
+    assert len(generated) == 4000
+    assert len({item["source_sampling_seed"] for item in generated}) == 4000
     by_expert: dict[int, list[int]] = {}
     for item in generated:
         by_expert.setdefault(item["source_expert_index"], []).append(
             item["source_attempt_index"]
         )
     assert {key: sorted(value) for key, value in by_expert.items()} == {
-        0: list(range(11)),
-        1: list(range(11)),
-        2: list(range(10)),
+        index: list(range(1000)) for index in range(4)
     }
     labeled = []
     for path in generated_dir.glob("*_results.json"):
         labeled.extend(load(path))
+    assert labeled, "central Solver produced no valid labels"
     assert all(item["labeler_role"] == "central_solver" for item in labeled)
     assert all(item["labeler_samples"] == 9 for item in labeled)
     assert all(len(item["results"]) == 9 for item in labeled)
 
+    dataset = load(root / "datasets/d1/dataset_manifest.json")
+    assert dataset["total_generation_budget"] == 4000
+    assert dataset["generated_count"] == 4000
+    assert dataset["filtered_count"] > 0
+    assert dataset["score_range"] == [0.3, 0.8]
+    assert dataset["labeler_role"] == "central_solver"
+    assert dataset["labeler_samples"] == 9
+
     assert (root / "questioners/q1/global_step_1/actor/huggingface").is_dir()
     assert (root / "solvers/s1/global_step_1/actor/huggingface").is_dir()
     assert not list(root.rglob("*expert*checkpoint*")), "expert checkpoints must never persist"
-    print("Gaussian-population one-round smoke artifacts verified")
+    assert (root / "state/round_1/questioner/_SUCCESS.json").is_file()
+    assert (root / "state/round_1/dataset/_SUCCESS.json").is_file()
+    assert (root / "state/round_1/solver/_SUCCESS.json").is_file()
+    summary = load(root / "summary.json")
+    assert summary["rounds"] == 1
+    assert summary["expert_checkpoints_persisted"] is False
+    print("Production-shaped Gaussian-population smoke artifacts verified")
 
 
 if __name__ == "__main__":

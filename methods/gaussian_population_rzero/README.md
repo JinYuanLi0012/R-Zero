@@ -99,13 +99,17 @@ python3 -m unittest discover \
 
 CPU population/reward tests run in the normal R-Zero environment. The local
 checkout may skip dependency-backed tests when torch/mathruler are unavailable.
-The included one-round GPU acceptance profile uses `Kq=Ks=3`, `B=7`, short
-training trajectories, and a one-GPU Solver rollout batch after the population
-feedback stage. Supply a small local Hugging Face checkpoint that is compatible
-with this repository:
+
+The GPU smoke profile is production-shaped: it uses the formal model, full
+`B=4000` budget, standard rollout batches, 10/9 feedback and labeling samples,
+standard score filtering, token limits, and four-GPU topology. It reduces only
+the temporary populations to `Kq=Ks=4` and runs one real update for each center
+in one round. This is therefore a shorter formal preflight, not a tiny or
+minutes-long test:
 
 ```bash
-BASE_MODEL=/path/to/small-hf-model \
+export STORAGE_PATH=/engrfs/project/jiaxinh/jinyuan/R-zero-storage
+export RUN_NAME=gaussian_population_smoke
 bash methods/gaussian_population_rzero/run.sh \
   --config methods/gaussian_population_rzero/tests/smoke_config.sh \
   --no-eval
@@ -114,6 +118,7 @@ python3 methods/gaussian_population_rzero/tests/verify_smoke.py \
   "$STORAGE_PATH/gaussian_population_rzero/gaussian_population_smoke"
 ```
 
-The verifier checks exact `3,2,2` quotas, all-expert feedback audits with 10
-samples, center-only labels with 9 samples, and that only `Q1` and `S1` are
-inheritable checkpoints.
+The verifier checks four exact 1000-attempt quotas, all-expert feedback audits
+with 10 samples, center-only labels with 9 samples, the formal score range,
+completed stage markers, and that only `Q1` and `S1` are inheritable
+checkpoints.

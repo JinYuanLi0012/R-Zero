@@ -60,7 +60,42 @@ class SmokeConfigTests(unittest.TestCase):
         ]
         self.assertEqual(
             self.load_variables(variables),
-            ["0,1", "2,3", "0,1,2,3", "2", "4", "5", "4", "32"],
+            ["0,1", "2,3", "0,1,2,3", "2", "512", "5", "128", "4000"],
+        )
+
+    def test_smoke_only_shortens_population_and_training_trajectory(self):
+        variables = [
+            "NUM_ROUNDS",
+            "QUESTIONER_POPULATION_SIZE",
+            "SOLVER_POPULATION_SIZE",
+            "QUESTIONER_MAX_STEPS",
+            "QUESTIONER_MERGE_STEP",
+            "QUESTIONER_SAVE_FREQ",
+            "SOLVER_MAX_STEPS",
+            "SOLVER_MERGE_STEP",
+            "SOLVER_SAVE_FREQ",
+        ]
+        self.assertEqual(self.load_variables(variables), ["1", "4", "4"] + ["1"] * 6)
+
+    def test_smoke_preserves_formal_algorithm_settings(self):
+        variables = [
+            "SOLVER_EXPERT_SAMPLES",
+            "SOLVER_LABEL_SAMPLES",
+            "QUESTIONER_ROLLOUT_BATCH_SIZE",
+            "QUESTIONER_ROLLOUT_N",
+            "QUESTIONER_GLOBAL_BATCH_SIZE",
+            "SOLVER_ROLLOUT_BATCH_SIZE",
+            "SOLVER_ROLLOUT_N",
+            "SOLVER_GLOBAL_BATCH_SIZE",
+            "DATASET_MIN_SCORE",
+            "DATASET_MAX_SCORE",
+            "QUESTIONER_NOISE_SIGMA",
+            "SOLVER_NOISE_SIGMA",
+            "POPULATION_SEED",
+        ]
+        self.assertEqual(
+            self.load_variables(variables),
+            ["10", "9", "512", "4", "4", "512", "5", "128", "0.3", "0.8", "0.001", "0.001", "42"],
         )
 
     def test_validation_rejects_a_rollout_batch_smaller_than_four_gpu_world(self):
