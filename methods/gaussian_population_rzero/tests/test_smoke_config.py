@@ -55,6 +55,7 @@ class SmokeConfigTests(unittest.TestCase):
             "QUESTIONER_NOISE_SIGMA",
             "SOLVER_NOISE_SIGMA",
             "VLLM_SERVER_BATCH_SIZE",
+            "EVALUATE_EACH_ROUND",
             "EVAL_MATH_ONLY",
             "STORAGE_PATH",
         ]
@@ -66,6 +67,7 @@ class SmokeConfigTests(unittest.TestCase):
                 "0.001",
                 "0.001",
                 "32",
+                "true",
                 "1",
                 "/engrfs/project/jiaxinh/jinyuan/R-zero-storage",
             ],
