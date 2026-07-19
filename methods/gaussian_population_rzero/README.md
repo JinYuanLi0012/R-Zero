@@ -57,6 +57,7 @@ change. The state fingerprint rejects incompatible resume attempts.
 ## Important defaults
 
 ```text
+run=qwen3_4b_gaussian_kq16_ks6_sq0p001_ss0p001_b4000_vb32_seed42_r5
 Kq=16, Ks=6
 sigma_q=1e-3, sigma_s=1e-3
 B=4000

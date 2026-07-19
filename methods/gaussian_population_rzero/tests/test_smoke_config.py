@@ -39,17 +39,24 @@ class SmokeConfigTests(unittest.TestCase):
 
     @staticmethod
     def load_formal_variables(variables: list[str]) -> list[str]:
+        environment = os.environ.copy()
+        environment["RUN_NAME"] = "gaussian_population_smoke_03"
         command = (
             f"source {shlex.quote(str(METHOD_DIR / 'config.sh'))}; "
             + "printf '%s\\n' "
             + " ".join(f'"${{{name}}}"' for name in variables)
         )
         return subprocess.run(
-            ["bash", "-c", command], check=True, capture_output=True, text=True
+            ["bash", "-c", command],
+            check=True,
+            capture_output=True,
+            text=True,
+            env=environment,
         ).stdout.splitlines()
 
     def test_formal_population_and_vllm_batch_are_committed_in_config(self):
         variables = [
+            "RUN_NAME",
             "QUESTIONER_POPULATION_SIZE",
             "SOLVER_POPULATION_SIZE",
             "QUESTIONER_NOISE_SIGMA",
@@ -58,7 +65,14 @@ class SmokeConfigTests(unittest.TestCase):
         ]
         self.assertEqual(
             self.load_formal_variables(variables),
-            ["16", "6", "0.001", "0.001", "32"],
+            [
+                "qwen3_4b_gaussian_kq16_ks6_sq0p001_ss0p001_b4000_vb32_seed42_r5",
+                "16",
+                "6",
+                "0.001",
+                "0.001",
+                "32",
+            ],
         )
 
     def test_smoke_uses_standard_4096_token_lengths(self):

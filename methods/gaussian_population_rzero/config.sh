@@ -4,7 +4,9 @@
 BASE_MODEL=${BASE_MODEL:-Qwen/Qwen3-4B-Base}
 BASE_REVISION=${BASE_REVISION:-}
 MODEL_ABBR=${MODEL_ABBR:-qwen3_4b}
-RUN_NAME=${RUN_NAME:-${MODEL_ABBR}_gaussian_population}
+# Formal run identity. Keep it literal so an exported smoke-test RUN_NAME
+# cannot silently redirect this configuration into an existing run directory.
+RUN_NAME=qwen3_4b_gaussian_kq16_ks6_sq0p001_ss0p001_b4000_vb32_seed42_r5
 NUM_ROUNDS=${NUM_ROUNDS:-5}
 
 # Formal-run population choices. Edit this file for a different experiment;
