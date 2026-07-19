@@ -44,6 +44,28 @@ bash methods/gaussian_population_rzero/run.sh \
   --config methods/gaussian_population_rzero/config.sh
 ```
 
+The four population hyperparameters, `VLLM_SERVER_BATCH_SIZE=32`, the storage
+path, and math-only evaluation are committed in `config.sh`; no per-run exports
+are needed. `env_rzero.sh` is still required to activate the environment and
+configure caches.
+
+For GPT rechecking of locally incorrect math answers, create the ignored
+repository-root file `tokens.json` with a newly issued key and restrict its
+permissions:
+
+```json
+{
+  "openai": "REPLACE_WITH_A_NEW_KEY"
+}
+```
+
+```bash
+chmod 600 tokens.json
+```
+
+Never commit `tokens.json`. The evaluation records local math scores even when
+the OpenAI key is absent; only the optional GPT recheck is skipped.
+
 Resume or skip benchmark evaluation:
 
 ```bash
@@ -51,17 +73,28 @@ bash methods/gaussian_population_rzero/run.sh --resume
 bash methods/gaussian_population_rzero/run.sh --resume --no-eval
 ```
 
+Resume is stage-granular. A completed Questioner marker skips Questioner
+training and continues with that round's dataset and Solver stages; a completed
+dataset marker continues directly with Solver training. An interruption inside
+an unfinished training stage preserves its partial directory as `.stale.*` and
+reruns that stage rather than resuming an individual optimizer checkpoint.
+
+After every completed Solver stage, evaluation runs automatically. With
+`EVAL_MATH_ONLY=1` in the formal config it runs the seven math benchmarks and
+the optional GPT recheck, then stops before SuperGPQA, BBEH, and MMLU-Pro.
+
 Use a new `RUN_NAME` whenever K, sigma, seed, budget, or training settings
 change. The state fingerprint rejects incompatible resume attempts.
 
 ## Important defaults
 
 ```text
-Kq=10, Ks=10
+Kq=16, Ks=6
 sigma_q=1e-3, sigma_s=1e-3
 B=4000
 Solver expert samples=10
 central Solver label samples=9
+vLLM request batch=32
 TP=1
 ```
 
