@@ -60,7 +60,7 @@ class SmokeConfigTests(unittest.TestCase):
         ]
         self.assertEqual(
             self.load_variables(variables),
-            ["0,1", "2,3", "0,1,2,3", "2", "512", "5", "128", "1024"],
+            ["0,1", "2,3", "0,1,2,3", "2", "512", "5", "128", "2048"],
         )
 
     def test_smoke_only_shortens_population_and_training_trajectory(self):

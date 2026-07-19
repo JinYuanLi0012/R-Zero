@@ -107,7 +107,7 @@ checkout may skip dependency-backed tests when torch/mathruler are unavailable.
 The GPU smoke profile uses the formal model, standard rollout batches, 10/9
 feedback and labeling samples, standard score filtering, token limits, and
 four-GPU topology. It reduces the temporary populations to `Kq=Ks=4`, the
-Questioner-population generation budget to `B=1024` (256 attempts per expert),
+Questioner-population generation budget to `B=2048` (512 attempts per expert),
 and runs one real update for each center in one round. This is therefore a
 shorter formal preflight, not a tiny or minutes-long test:
 
@@ -122,7 +122,7 @@ python3 methods/gaussian_population_rzero/tests/verify_smoke.py \
   "$STORAGE_PATH/gaussian_population_rzero/gaussian_population_smoke"
 ```
 
-The verifier checks four exact 256-attempt quotas, all-expert feedback audits
+The verifier checks four exact 512-attempt quotas, all-expert feedback audits
 with 10 samples, center-only labels with 9 samples, the formal score range,
 completed stage markers, and that only `Q1` and `S1` are inheritable
 checkpoints.
