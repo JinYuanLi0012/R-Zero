@@ -29,6 +29,14 @@ class SmokeConfigTests(unittest.TestCase):
         )
         return completed.stdout.splitlines()
 
+    @staticmethod
+    def validate_with(overrides: str) -> subprocess.CompletedProcess[str]:
+        command = (
+            f"set -a; source {shlex.quote(str(METHOD_DIR / 'tests/smoke_config.sh'))}; "
+            f"{overrides}; python3 {shlex.quote(str(METHOD_DIR / 'validate_config.py'))}"
+        )
+        return subprocess.run(["bash", "-c", command], capture_output=True, text=True)
+
     def test_smoke_uses_standard_4096_token_lengths(self):
         variables = [
             "QUESTIONER_MAX_RESPONSE_LENGTH",
@@ -48,11 +56,24 @@ class SmokeConfigTests(unittest.TestCase):
             "SOLVER_ROLLOUT_BATCH_SIZE",
             "SOLVER_ROLLOUT_N",
             "SOLVER_GLOBAL_BATCH_SIZE",
+            "QUESTION_TOTAL_BUDGET",
         ]
         self.assertEqual(
             self.load_variables(variables),
-            ["0,1", "2,3", "0,1,2,3", "2", "1", "4", "1"],
+            ["0,1", "2,3", "0,1,2,3", "2", "4", "5", "4", "32"],
         )
+
+    def test_validation_rejects_a_rollout_batch_smaller_than_four_gpu_world(self):
+        completed = self.validate_with(
+            "SOLVER_ROLLOUT_BATCH_SIZE=1; SOLVER_GLOBAL_BATCH_SIZE=1"
+        )
+        self.assertNotEqual(completed.returncode, 0)
+        self.assertIn("must be divisible by its GPU count", completed.stderr)
+
+    def test_validation_rejects_an_undersized_effective_grpo_batch(self):
+        completed = self.validate_with("SOLVER_GLOBAL_BATCH_SIZE=1; SOLVER_ROLLOUT_N=2")
+        self.assertNotEqual(completed.returncode, 0)
+        self.assertIn("effective Solver GRPO batch", completed.stderr)
 
 
 if __name__ == "__main__":

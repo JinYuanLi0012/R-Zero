@@ -8,7 +8,9 @@ source "$METHOD_DIR/config.sh"
 NUM_ROUNDS=1
 QUESTIONER_POPULATION_SIZE=3
 SOLVER_POPULATION_SIZE=3
-QUESTION_TOTAL_BUDGET=7
+# Keep this small, but large enough that standard filtering reliably leaves one
+# four-GPU Solver rollout batch.
+QUESTION_TOTAL_BUDGET=32
 
 # Preserve the formal experiment's stage layout: two center-Questioner GPUs,
 # two concurrent Solver-expert GPUs, then all four GPUs for generation/labeling
@@ -27,10 +29,9 @@ SOLVER_MAX_STEPS=2
 SOLVER_MERGE_STEP=1
 SOLVER_SAVE_FREQ=1
 SOLVER_SAVE_LIMIT=2
-SOLVER_ROLLOUT_BATCH_SIZE=1
-# Four samples make the effective GRPO batch one sample per standard Solver GPU.
-SOLVER_ROLLOUT_N=4
-SOLVER_GLOBAL_BATCH_SIZE=1
+SOLVER_ROLLOUT_BATCH_SIZE=4
+SOLVER_ROLLOUT_N=5
+SOLVER_GLOBAL_BATCH_SIZE=4
 DATASET_MIN_SCORE=0.0
 DATASET_MAX_SCORE=1.0
 EVALUATE_EACH_ROUND=false

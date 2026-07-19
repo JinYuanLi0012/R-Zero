@@ -52,7 +52,8 @@ def main() -> None:
     solver_global_batch = integer("SOLVER_GLOBAL_BATCH_SIZE")
     if solver_rollout_batch % solver_global_batch:
         raise ValueError("SOLVER_ROLLOUT_BATCH_SIZE must be divisible by SOLVER_GLOBAL_BATCH_SIZE")
-    if integer("SOLVER_ROLLOUT_N", 2) < 2:
+    solver_rollout_n = integer("SOLVER_ROLLOUT_N", 2)
+    if solver_rollout_n < 2:
         raise ValueError("SOLVER_ROLLOUT_N must be at least 2 for GRPO")
     center_rollout_tp = integer("CENTER_ROLLOUT_TENSOR_PARALLEL_SIZE")
     if integer("SOLVER_EXPERT_RETRIES", 0) != 1:
@@ -85,6 +86,14 @@ def main() -> None:
     generation_gpus = gpu_list("QUESTION_GENERATION_GPU_IDS")
     if len(qtrain) % center_rollout_tp or len(generation_gpus) % center_rollout_tp:
         raise ValueError("center rollout TP must divide both center-training GPU counts")
+    questioner_rollout_batch = integer("QUESTIONER_ROLLOUT_BATCH_SIZE")
+    if questioner_rollout_batch % len(qtrain):
+        raise ValueError("QUESTIONER_ROLLOUT_BATCH_SIZE must be divisible by its GPU count")
+    if solver_rollout_batch % len(generation_gpus):
+        raise ValueError("SOLVER_ROLLOUT_BATCH_SIZE must be divisible by its GPU count")
+    effective_solver_batch = solver_global_batch * solver_rollout_n
+    if effective_solver_batch % len(generation_gpus):
+        raise ValueError("effective Solver GRPO batch must be divisible by its GPU count")
     print(
         f"validated rounds={rounds} Kq={questioners} Ks={solvers} B={budget} "
         f"sigma_q={os.environ['QUESTIONER_NOISE_SIGMA']} sigma_s={os.environ['SOLVER_NOISE_SIGMA']}"

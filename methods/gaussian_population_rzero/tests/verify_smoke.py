@@ -33,16 +33,16 @@ def main() -> None:
         assert all(len(rates) == 3 for rates in audit["question_expert_majority_rates"].values())
 
     questioner_population = load(root / "datasets/d1/questioner_population_manifest.json")
-    assert questioner_population["total_budget"] == 7
-    assert list(questioner_population["expected_quotas"].values()) == [3, 2, 2]
-    assert questioner_population["generated_count"] == 7
+    assert questioner_population["total_budget"] == 32
+    assert list(questioner_population["expected_quotas"].values()) == [11, 11, 10]
+    assert questioner_population["generated_count"] == 32
     attempt_seeds = [
         seed
         for seeds in questioner_population["observed_attempt_seeds"].values()
         for seed in seeds
     ]
-    assert len(attempt_seeds) == 7
-    assert len(set(attempt_seeds)) == 7
+    assert len(attempt_seeds) == 32
+    assert len(set(attempt_seeds)) == 32
 
     generated_dir = root / "datasets/d1/generated_question"
     generated = []
@@ -50,17 +50,17 @@ def main() -> None:
         if path.name.endswith("_results.json") or path.name.endswith("_manifest.json"):
             continue
         generated.extend(load(path))
-    assert len(generated) == 7
-    assert len({item["source_sampling_seed"] for item in generated}) == 7
+    assert len(generated) == 32
+    assert len({item["source_sampling_seed"] for item in generated}) == 32
     by_expert: dict[int, list[int]] = {}
     for item in generated:
         by_expert.setdefault(item["source_expert_index"], []).append(
             item["source_attempt_index"]
         )
     assert {key: sorted(value) for key, value in by_expert.items()} == {
-        0: [0, 1, 2],
-        1: [0, 1],
-        2: [0, 1],
+        0: list(range(11)),
+        1: list(range(11)),
+        2: list(range(10)),
     }
     labeled = []
     for path in generated_dir.glob("*_results.json"):
