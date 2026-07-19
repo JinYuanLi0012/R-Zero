@@ -57,13 +57,21 @@ change. The state fingerprint rejects incompatible resume attempts.
 ## Important defaults
 
 ```text
-Kq=10, Ks=10
+Kq=16, Ks=6
 sigma_q=1e-3, sigma_s=1e-3
 B=4000
 Solver expert samples=10
 central Solver label samples=9
+vLLM generate batch=32
 TP=1
 ```
+
+The four population hyperparameters and `VLLM_SERVER_BATCH_SIZE=32` are fixed
+in `config.sh`, so a formal run does not depend on shell exports. Exactly as in
+the original R-Zero Solver-feedback server, this limits the number of candidate
+question prompts in each `vllm.LLM.generate()` call during Questioner training.
+It does not control Questioner-population generation, central Solver labeling,
+or any training batch, and it does not change the total questions or samples.
 
 `TP=1` means one complete inference model per physical GPU. K may be larger
 than the GPU count; experts are processed in deterministic waves. Each physical

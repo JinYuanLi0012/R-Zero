@@ -37,6 +37,30 @@ class SmokeConfigTests(unittest.TestCase):
         )
         return subprocess.run(["bash", "-c", command], capture_output=True, text=True)
 
+    @staticmethod
+    def load_formal_variables(variables: list[str]) -> list[str]:
+        command = (
+            f"source {shlex.quote(str(METHOD_DIR / 'config.sh'))}; "
+            + "printf '%s\\n' "
+            + " ".join(f'"${{{name}}}"' for name in variables)
+        )
+        return subprocess.run(
+            ["bash", "-c", command], check=True, capture_output=True, text=True
+        ).stdout.splitlines()
+
+    def test_formal_population_and_vllm_batch_are_committed_in_config(self):
+        variables = [
+            "QUESTIONER_POPULATION_SIZE",
+            "SOLVER_POPULATION_SIZE",
+            "QUESTIONER_NOISE_SIGMA",
+            "SOLVER_NOISE_SIGMA",
+            "VLLM_SERVER_BATCH_SIZE",
+        ]
+        self.assertEqual(
+            self.load_formal_variables(variables),
+            ["16", "6", "0.001", "0.001", "32"],
+        )
+
     def test_smoke_uses_standard_4096_token_lengths(self):
         variables = [
             "QUESTIONER_MAX_RESPONSE_LENGTH",
@@ -109,6 +133,11 @@ class SmokeConfigTests(unittest.TestCase):
         completed = self.validate_with("SOLVER_GLOBAL_BATCH_SIZE=1; SOLVER_ROLLOUT_N=2")
         self.assertNotEqual(completed.returncode, 0)
         self.assertIn("effective Solver GRPO batch", completed.stderr)
+
+    def test_validation_rejects_zero_vllm_batch_size(self):
+        completed = self.validate_with("VLLM_SERVER_BATCH_SIZE=0")
+        self.assertNotEqual(completed.returncode, 0)
+        self.assertIn("VLLM_SERVER_BATCH_SIZE must be >= 1", completed.stderr)
 
 
 if __name__ == "__main__":

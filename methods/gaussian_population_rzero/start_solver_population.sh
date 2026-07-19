@@ -13,6 +13,7 @@ METHOD_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 : "${SOLVER_EXPERT_PORT_BASE:=5000}"
 : "${SOLVER_EXPERT_GPU_MEMORY_UTILIZATION:=0.8}"
 : "${SOLVER_EXPERT_MAX_TOKENS:=4096}"
+: "${VLLM_SERVER_BATCH_SIZE:=32}"
 : "${SOLVER_EXPERT_LOG_DIR:=logs}"
 : "${SOLVER_EXPERT_PID_FILE:=${SOLVER_EXPERT_LOG_DIR}/solver_population.pids}"
 : "${TENSOR_PARALLEL_SIZE:=1}"
@@ -54,6 +55,7 @@ for ((worker=0; worker<NUM_WORKERS; worker++)); do
     --global-seed "$POPULATION_SEED" \
     --samples "$SOLVER_EXPERT_SAMPLES" \
     --max-tokens "$SOLVER_EXPERT_MAX_TOKENS" \
+    --batch-size "$VLLM_SERVER_BATCH_SIZE" \
     --gpu-memory-utilization "$SOLVER_EXPERT_GPU_MEMORY_UTILIZATION" \
     --tensor-parallel-size "$TENSOR_PARALLEL_SIZE" > "$log" 2>&1 &
   pid=$!

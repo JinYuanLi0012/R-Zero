@@ -33,6 +33,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--global-seed", type=int, required=True)
     parser.add_argument("--samples", type=int, default=10)
     parser.add_argument("--max-tokens", type=int, default=4096)
+    parser.add_argument("--batch-size", type=int, default=32)
     parser.add_argument("--gpu-memory-utilization", type=float, default=0.8)
     parser.add_argument("--tensor-parallel-size", type=int, default=1)
     return parser.parse_args()
@@ -43,6 +44,8 @@ if ARGS.tensor_parallel_size != 1:
     raise ValueError("Gaussian Population R-Zero currently requires tensor_parallel_size=1")
 if ARGS.samples < 2:
     raise ValueError("--samples must be at least 2")
+if ARGS.batch_size < 1:
+    raise ValueError("--batch-size must be at least 1")
 
 EXPERT_INDICES = [int(value) for value in ARGS.expert_indices.split(",") if value.strip()]
 if not EXPERT_INDICES:
@@ -96,6 +99,7 @@ def health():
             "round": ARGS.round_index,
             "experts": EXPERT_INDICES,
             "samples": ARGS.samples,
+            "batch_size": ARGS.batch_size,
             "tensor_parallel_size": 1,
         }
     )
@@ -127,7 +131,15 @@ def evaluate():
                     seed=spec.expert_seed % 2_147_483_647,
                     stop_token_ids=[TOKENIZER.eos_token_id],
                 )
-                outputs = LLM.generate(prompts, sampling_params=sampling, use_tqdm=True)
+                outputs = []
+                for start in range(0, len(prompts), ARGS.batch_size):
+                    outputs.extend(
+                        LLM.generate(
+                            prompts[start : start + ARGS.batch_size],
+                            sampling_params=sampling,
+                            use_tqdm=True,
+                        )
+                    )
                 if len(outputs) != len(valid):
                     raise RuntimeError("vLLM returned an unexpected number of questions")
                 for record, output in zip(valid, outputs):

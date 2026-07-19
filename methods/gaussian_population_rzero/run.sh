@@ -103,6 +103,7 @@ FINGERPRINT=$(python3 "$METHOD_DIR/pipeline_state.py" init \
   --field "question_generation_gpu_memory_utilization=$QUESTION_GENERATION_GPU_MEMORY_UTILIZATION" \
   --field "solver_label_gpu_memory_utilization=$SOLVER_LABEL_GPU_MEMORY_UTILIZATION" \
   --field "solver_label_batch_size=$SOLVER_LABEL_BATCH_SIZE" \
+  --field "vllm_server_batch_size=$VLLM_SERVER_BATCH_SIZE" \
   --field "dataset_score_range=${DATASET_MIN_SCORE}:${DATASET_MAX_SCORE}")
 
 marker() { printf '%s/%s/_SUCCESS.json' "$STATE_DIR" "$1"; }

@@ -40,6 +40,7 @@ def main() -> None:
     questioners = integer("QUESTIONER_POPULATION_SIZE")
     solvers = integer("SOLVER_POPULATION_SIZE")
     budget = integer("QUESTION_TOTAL_BUDGET")
+    vllm_batch_size = integer("VLLM_SERVER_BATCH_SIZE")
     if questioners > budget:
         raise ValueError("QUESTIONER_POPULATION_SIZE cannot exceed QUESTION_TOTAL_BUDGET")
     if integer("TENSOR_PARALLEL_SIZE") != 1:
@@ -94,7 +95,8 @@ def main() -> None:
         raise ValueError("effective Solver GRPO batch must be divisible by its GPU count")
     print(
         f"validated rounds={rounds} Kq={questioners} Ks={solvers} B={budget} "
-        f"sigma_q={os.environ['QUESTIONER_NOISE_SIGMA']} sigma_s={os.environ['SOLVER_NOISE_SIGMA']}"
+        f"sigma_q={os.environ['QUESTIONER_NOISE_SIGMA']} sigma_s={os.environ['SOLVER_NOISE_SIGMA']} "
+        f"vllm_batch={vllm_batch_size}"
     )
 
 
