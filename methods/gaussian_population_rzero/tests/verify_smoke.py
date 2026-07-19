@@ -34,16 +34,16 @@ def main() -> None:
 
     questioner_population = load(root / "datasets/d1/questioner_population_manifest.json")
     assert questioner_population["population_size"] == 4
-    assert questioner_population["total_budget"] == 4000
-    assert list(questioner_population["expected_quotas"].values()) == [1000] * 4
-    assert questioner_population["generated_count"] == 4000
+    assert questioner_population["total_budget"] == 1024
+    assert list(questioner_population["expected_quotas"].values()) == [256] * 4
+    assert questioner_population["generated_count"] == 1024
     attempt_seeds = [
         seed
         for seeds in questioner_population["observed_attempt_seeds"].values()
         for seed in seeds
     ]
-    assert len(attempt_seeds) == 4000
-    assert len(set(attempt_seeds)) == 4000
+    assert len(attempt_seeds) == 1024
+    assert len(set(attempt_seeds)) == 1024
 
     generated_dir = root / "datasets/d1/generated_question"
     generated = []
@@ -51,15 +51,15 @@ def main() -> None:
         if path.name.endswith("_results.json") or path.name.endswith("_manifest.json"):
             continue
         generated.extend(load(path))
-    assert len(generated) == 4000
-    assert len({item["source_sampling_seed"] for item in generated}) == 4000
+    assert len(generated) == 1024
+    assert len({item["source_sampling_seed"] for item in generated}) == 1024
     by_expert: dict[int, list[int]] = {}
     for item in generated:
         by_expert.setdefault(item["source_expert_index"], []).append(
             item["source_attempt_index"]
         )
     assert {key: sorted(value) for key, value in by_expert.items()} == {
-        index: list(range(1000)) for index in range(4)
+        index: list(range(256)) for index in range(4)
     }
     labeled = []
     for path in generated_dir.glob("*_results.json"):
@@ -70,8 +70,8 @@ def main() -> None:
     assert all(len(item["results"]) == 9 for item in labeled)
 
     dataset = load(root / "datasets/d1/dataset_manifest.json")
-    assert dataset["total_generation_budget"] == 4000
-    assert dataset["generated_count"] == 4000
+    assert dataset["total_generation_budget"] == 1024
+    assert dataset["generated_count"] == 1024
     assert dataset["filtered_count"] > 0
     assert dataset["score_range"] == [0.3, 0.8]
     assert dataset["labeler_role"] == "central_solver"

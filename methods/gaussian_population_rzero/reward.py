@@ -68,27 +68,21 @@ def _parsed_question(predict: str) -> tuple[str, str]:
     return (questions[-1].strip(), answer) if questions and answer else ("", "")
 
 
-def _request_one(
-    *, port: int, request_path: Path, timeout: float, retries: int
-) -> list[dict[str, Any]]:
+def _request_one(*, port: int, request_path: Path) -> list[dict[str, Any]]:
     output_path = request_path.with_name(request_path.stem + "_results.json")
-    for attempt in range(retries + 1):
-        try:
-            response = requests.get(
-                f"http://127.0.0.1:{port}/evaluate",
-                params={"name": str(request_path)},
-                timeout=timeout,
-            )
-            response.raise_for_status()
-            payload = json.loads(output_path.read_text(encoding="utf-8"))
-            output_path.unlink(missing_ok=True)
-            request_path.unlink(missing_ok=True)
-            return payload
-        except Exception:
-            if attempt >= retries:
-                raise
-            time.sleep(1.0)
-    raise AssertionError("unreachable")
+    # Match standard R-Zero's caller_penalty.py: a population evaluation is one
+    # blocking HTTP request with no client deadline and no automatic replay.
+    # A requests timeout cannot cancel the in-flight vLLM generation; retrying
+    # would only queue a complete duplicate evaluation behind MODEL_LOCK.
+    response = requests.get(
+        f"http://127.0.0.1:{port}/evaluate",
+        params={"name": str(request_path)},
+    )
+    response.raise_for_status()
+    payload = json.loads(output_path.read_text(encoding="utf-8"))
+    output_path.unlink(missing_ok=True)
+    request_path.unlink(missing_ok=True)
+    return payload
 
 
 def query_solver_population(
@@ -96,8 +90,6 @@ def query_solver_population(
     *,
     num_services: int,
     port_base: int,
-    timeout: float,
-    retries: int,
 ) -> list[list[dict[str, Any]]]:
     storage = Path(os.environ["STORAGE_PATH"]) / "temp_results"
     storage.mkdir(parents=True, exist_ok=True)
@@ -115,8 +107,6 @@ def query_solver_population(
                 _request_one,
                 port=port_base + service,
                 request_path=paths[service],
-                timeout=timeout,
-                retries=retries,
             ): service
             for service in range(num_services)
         }
@@ -166,8 +156,6 @@ def compute_score(
     port_base: int,
     population_size: int,
     expert_samples: int = 10,
-    request_timeout: float = 7200.0,
-    retries: int = 1,
     distance_threshold: float = 0.5,
     **_: Any,
 ) -> list[dict[str, float]]:
@@ -186,35 +174,17 @@ def compute_score(
             {"overall": -1.0, "format": 0.0, "difficulty": 0.0, "similarity": penalty}
             for penalty in penalties
         ]
-    # A retry is a complete population re-evaluation.  Every server handles a
-    # new /evaluate request by applying each expert from its immutable anchor,
-    # so the retry cannot continue from a partially perturbed model.
-    last_error: Exception | None = None
-    for attempt in range(retries + 1):
-        try:
-            payloads = query_solver_population(
-                records,
-                num_services=num_services,
-                port_base=port_base,
-                timeout=request_timeout,
-                retries=0,
-            )
-            rates = aggregate_population_payload(
-                payloads,
-                valid_indices=valid_indices,
-                population_size=population_size,
-                expected_samples=expert_samples,
-            )
-            break
-        except Exception as error:
-            last_error = error
-            if attempt >= retries:
-                raise RuntimeError(
-                    "solver population evaluation remained incomplete after a full retry"
-                ) from error
-            time.sleep(1.0)
-    else:  # pragma: no cover - the loop either breaks or raises.
-        raise RuntimeError("solver population evaluation failed") from last_error
+    payloads = query_solver_population(
+        records,
+        num_services=num_services,
+        port_base=port_base,
+    )
+    rates = aggregate_population_payload(
+        payloads,
+        valid_indices=valid_indices,
+        population_size=population_size,
+        expected_samples=expert_samples,
+    )
     _write_feedback_audit(
         rates, population_size=population_size, expert_samples=expert_samples
     )

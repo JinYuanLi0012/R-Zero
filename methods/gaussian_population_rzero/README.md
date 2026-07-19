@@ -74,6 +74,10 @@ The method forces `VLLM_USE_V1=0`. In vLLM 0.9.1 the V1 frontend keeps model
 weights in a separate EngineCore process, while Gaussian expert switching
 requires direct access to the in-process V0 model parameters.
 
+Solver-population feedback follows standard R-Zero's blocking request
+semantics: there is no whole-request HTTP timeout and no automatic population
+replay. Per-comparison math grading retains the standard 10-second guard.
+
 Outputs are stored under:
 
 ```text
@@ -100,12 +104,12 @@ python3 -m unittest discover \
 CPU population/reward tests run in the normal R-Zero environment. The local
 checkout may skip dependency-backed tests when torch/mathruler are unavailable.
 
-The GPU smoke profile is production-shaped: it uses the formal model, full
-`B=4000` budget, standard rollout batches, 10/9 feedback and labeling samples,
-standard score filtering, token limits, and four-GPU topology. It reduces only
-the temporary populations to `Kq=Ks=4` and runs one real update for each center
-in one round. This is therefore a shorter formal preflight, not a tiny or
-minutes-long test:
+The GPU smoke profile uses the formal model, standard rollout batches, 10/9
+feedback and labeling samples, standard score filtering, token limits, and
+four-GPU topology. It reduces the temporary populations to `Kq=Ks=4`, the
+Questioner-population generation budget to `B=1024` (256 attempts per expert),
+and runs one real update for each center in one round. This is therefore a
+shorter formal preflight, not a tiny or minutes-long test:
 
 ```bash
 export STORAGE_PATH=/engrfs/project/jiaxinh/jinyuan/R-zero-storage
@@ -118,7 +122,7 @@ python3 methods/gaussian_population_rzero/tests/verify_smoke.py \
   "$STORAGE_PATH/gaussian_population_rzero/gaussian_population_smoke"
 ```
 
-The verifier checks four exact 1000-attempt quotas, all-expert feedback audits
+The verifier checks four exact 256-attempt quotas, all-expert feedback audits
 with 10 samples, center-only labels with 9 samples, the formal score range,
 completed stage markers, and that only `Q1` and `S1` are inheritable
 checkpoints.

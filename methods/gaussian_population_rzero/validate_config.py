@@ -56,8 +56,6 @@ def main() -> None:
     if solver_rollout_n < 2:
         raise ValueError("SOLVER_ROLLOUT_N must be at least 2 for GRPO")
     center_rollout_tp = integer("CENTER_ROLLOUT_TENSOR_PARALLEL_SIZE")
-    if integer("SOLVER_EXPERT_RETRIES", 0) != 1:
-        raise ValueError("SOLVER_EXPERT_RETRIES must be exactly 1")
     questioner_merge = integer("QUESTIONER_MERGE_STEP")
     questioner_save = integer("QUESTIONER_SAVE_FREQ")
     if questioner_merge > integer("QUESTIONER_MAX_STEPS"):
