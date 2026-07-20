@@ -64,6 +64,7 @@ FINGERPRINT=$(python3 "$METHOD_DIR/pipeline_state.py" init \
   --field "num_rounds=$NUM_ROUNDS" \
   --field "questioner_population_size=$QUESTIONER_POPULATION_SIZE" \
   --field "solver_population_size=$SOLVER_POPULATION_SIZE" \
+  --field "solver_population_enabled=$SOLVER_POPULATION_ENABLED" \
   --field "questioner_sigma=$QUESTIONER_NOISE_SIGMA" \
   --field "solver_sigma=$SOLVER_NOISE_SIGMA" \
   --field "population_seed=$POPULATION_SEED" \
@@ -167,18 +168,31 @@ for ((round=1; round<=NUM_ROUNDS; round++)); do
 
   QUESTIONER_DIR="$QUESTIONERS_DIR/q${round}"
   QUESTIONER_HF="$QUESTIONER_DIR/global_step_${QUESTIONER_MERGE_STEP}/actor/huggingface"
-  SOLVER_POPULATION_MANIFEST="$QUESTIONER_DIR/solver_population_manifest.json"
+  if [ "$SOLVER_POPULATION_ENABLED" = "true" ]; then
+    SOLVER_FEEDBACK_MODE=population
+    SOLVER_FEEDBACK_MANIFEST="$QUESTIONER_DIR/solver_population_manifest.json"
+  else
+    SOLVER_FEEDBACK_MODE=central
+    SOLVER_FEEDBACK_MANIFEST="$QUESTIONER_DIR/solver_feedback_manifest.json"
+  fi
   QUESTIONER_STAGE="round_${round}/questioner"
-  if guard_stage "$QUESTIONER_STAGE" "$QUESTIONER_HF" "$SOLVER_POPULATION_MANIFEST"; then
+  if guard_stage "$QUESTIONER_STAGE" "$QUESTIONER_HF" "$SOLVER_FEEDBACK_MANIFEST"; then
     preserve_incomplete "$QUESTIONER_DIR"
     QUESTIONER_TMP="$QUESTIONERS_DIR/.q${round}.inprogress"
     prepare_tmp "$QUESTIONER_TMP"
-    python3 "$METHOD_DIR/manifests.py" population \
-      --center "$CURRENT_SOLVER" --role solver --round-index "$round" \
-      --population-size "$SOLVER_POPULATION_SIZE" --sigma "$SOLVER_NOISE_SIGMA" \
-      --global-seed "$POPULATION_SEED" --gpu-ids "$SOLVER_EXPERT_GPU_IDS" \
-      --samples "$SOLVER_EXPERT_SAMPLES" \
-      --output "$QUESTIONER_TMP/solver_population_manifest.json"
+    if [ "$SOLVER_FEEDBACK_MODE" = "population" ]; then
+      python3 "$METHOD_DIR/manifests.py" population \
+        --center "$CURRENT_SOLVER" --role solver --round-index "$round" \
+        --population-size "$SOLVER_POPULATION_SIZE" --sigma "$SOLVER_NOISE_SIGMA" \
+        --global-seed "$POPULATION_SEED" --gpu-ids "$SOLVER_EXPERT_GPU_IDS" \
+        --samples "$SOLVER_EXPERT_SAMPLES" \
+        --output "$QUESTIONER_TMP/solver_population_manifest.json"
+    else
+      python3 "$METHOD_DIR/manifests.py" central-feedback \
+        --center "$CURRENT_SOLVER" --round-index "$round" \
+        --gpu-ids "$SOLVER_EXPERT_GPU_IDS" --samples "$SOLVER_EXPERT_SAMPLES" \
+        --output "$QUESTIONER_TMP/solver_feedback_manifest.json"
+    fi
     QUESTIONER_LOG_FILE="$RUN_LOG_DIR/questioner_r${round}.log"
     bash "$METHOD_DIR/questioner_train.sh" \
       "$CURRENT_SOLVER" "$CURRENT_QUESTIONER" "$QUESTIONER_TMP" \
@@ -186,7 +200,8 @@ for ((round=1; round<=NUM_ROUNDS; round++)); do
       > >(tee -a "$QUESTIONER_LOG_FILE") 2>&1
     mv "$QUESTIONER_TMP" "$QUESTIONER_DIR"
     complete_stage "$QUESTIONER_STAGE" "$QUESTIONER_HF" \
-      "questioner_init=$CURRENT_QUESTIONER" "solver_population_center=$CURRENT_SOLVER" \
+      "questioner_init=$CURRENT_QUESTIONER" "solver_feedback_center=$CURRENT_SOLVER" \
+      "solver_feedback_mode=$SOLVER_FEEDBACK_MODE" \
       "solver_population_size=$SOLVER_POPULATION_SIZE" "solver_sigma=$SOLVER_NOISE_SIGMA"
   fi
   CURRENT_QUESTIONER=$QUESTIONER_HF

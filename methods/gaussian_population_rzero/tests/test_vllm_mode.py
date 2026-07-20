@@ -11,6 +11,7 @@ class VllmModeTests(unittest.TestCase):
     def test_direct_vllm_entrypoints_force_v0_before_import(self):
         for filename in (
             "solver_population_server.py",
+            "solver_center_server.py",
             "generate_questions.py",
             "evaluate_questions.py",
         ):
@@ -43,6 +44,13 @@ class VllmModeTests(unittest.TestCase):
         ):
             source = (METHOD_DIR / filename).read_text(encoding="utf-8")
             self.assertNotIn("VLLM_SERVER_BATCH_SIZE", source, filename)
+
+    def test_central_solver_server_never_imports_or_constructs_a_population(self):
+        source = (METHOD_DIR / "solver_center_server.py").read_text(encoding="utf-8")
+        self.assertNotIn("GaussianPopulation", source)
+        self.assertNotIn("make_expert_specs", source)
+        self.assertNotIn("expert_seed", source)
+        self.assertIn('"feedback_mode": "central"', source)
 
 
 if __name__ == "__main__":

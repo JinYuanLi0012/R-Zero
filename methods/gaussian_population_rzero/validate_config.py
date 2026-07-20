@@ -35,10 +35,18 @@ def bounded_float(name: str, *, low: float, high: float) -> float:
     return value
 
 
+def boolean(name: str) -> bool:
+    value = os.environ[name]
+    if value not in {"true", "false"}:
+        raise ValueError(f"{name} must be exactly true or false")
+    return value == "true"
+
+
 def main() -> None:
     rounds = integer("NUM_ROUNDS")
     questioners = integer("QUESTIONER_POPULATION_SIZE")
     solvers = integer("SOLVER_POPULATION_SIZE")
+    solver_population_enabled = boolean("SOLVER_POPULATION_ENABLED")
     budget = integer("QUESTION_TOTAL_BUDGET")
     vllm_batch_size = integer("VLLM_SERVER_BATCH_SIZE")
     if questioners > budget:
@@ -96,6 +104,7 @@ def main() -> None:
     print(
         f"validated rounds={rounds} Kq={questioners} Ks={solvers} B={budget} "
         f"sigma_q={os.environ['QUESTIONER_NOISE_SIGMA']} sigma_s={os.environ['SOLVER_NOISE_SIGMA']} "
+        f"solver_feedback={'population' if solver_population_enabled else 'central'} "
         f"vllm_batch={vllm_batch_size}"
     )
 

@@ -62,6 +62,7 @@ class SmokeConfigTests(unittest.TestCase):
             "QUESTIONER_NOISE_SIGMA",
             "SOLVER_NOISE_SIGMA",
             "VLLM_SERVER_BATCH_SIZE",
+            "SOLVER_POPULATION_ENABLED",
         ]
         self.assertEqual(
             self.load_formal_variables(variables),
@@ -72,6 +73,7 @@ class SmokeConfigTests(unittest.TestCase):
                 "0.001",
                 "0.001",
                 "32",
+                "true",
             ],
         )
 
@@ -152,6 +154,26 @@ class SmokeConfigTests(unittest.TestCase):
         completed = self.validate_with("VLLM_SERVER_BATCH_SIZE=0")
         self.assertNotEqual(completed.returncode, 0)
         self.assertIn("VLLM_SERVER_BATCH_SIZE must be >= 1", completed.stderr)
+
+    def test_validation_rejects_invalid_solver_population_switch(self):
+        completed = self.validate_with("SOLVER_POPULATION_ENABLED=maybe")
+        self.assertNotEqual(completed.returncode, 0)
+        self.assertIn("must be exactly true or false", completed.stderr)
+
+    def test_questioner_only_config_disables_solver_population_and_has_new_run_name(self):
+        command = (
+            f"source {shlex.quote(str(METHOD_DIR / 'config_questioner_only.sh'))}; "
+            'printf "%s\\n%s\\n" "$SOLVER_POPULATION_ENABLED" "$RUN_NAME"'
+        )
+        values = subprocess.run(
+            ["bash", "-c", command], check=True, capture_output=True, text=True
+        ).stdout.splitlines()
+        self.assertEqual(values[0], "false")
+        self.assertIn("questioner_only", values[1])
+
+    def test_run_fingerprint_includes_solver_population_switch(self):
+        source = (METHOD_DIR / "run.sh").read_text(encoding="utf-8")
+        self.assertIn('solver_population_enabled=$SOLVER_POPULATION_ENABLED', source)
 
 
 if __name__ == "__main__":

@@ -68,3 +68,46 @@ def aggregate_population_payload(
             )
         rates[question_index] = [expert_scores[index] for index in range(population_size)]
     return rates
+
+
+def split_records(records: Sequence[dict[str, Any]], num_services: int) -> list[list[dict[str, Any]]]:
+    """Split records contiguously so every question is handled by one center replica."""
+    if num_services < 1:
+        raise ValueError("num_services must be positive")
+    base, remainder = divmod(len(records), num_services)
+    shards = []
+    cursor = 0
+    for service in range(num_services):
+        size = base + (1 if service < remainder else 0)
+        shards.append(list(records[cursor : cursor + size]))
+        cursor += size
+    if cursor != len(records):
+        raise AssertionError("center Solver sharding did not preserve all records")
+    return shards
+
+
+def aggregate_center_payload(
+    payloads: Sequence[Sequence[dict[str, Any]]],
+    *,
+    valid_indices: set[int],
+    expected_samples: int,
+) -> dict[int, float]:
+    """Require one and only one unperturbed-center score for every valid question."""
+    rates: dict[int, float] = {}
+    for payload in payloads:
+        for item in payload:
+            question_index = int(item["question_index"])
+            if question_index not in valid_indices:
+                raise RuntimeError(f"central Solver returned unexpected question {question_index}")
+            if question_index in rates:
+                raise RuntimeError(f"central Solver evaluated question {question_index} more than once")
+            if int(item["num_samples"]) != expected_samples:
+                raise RuntimeError("central Solver returned an unexpected rollout count")
+            rate = float(item["majority_rate"])
+            if not 0.0 <= rate <= 1.0:
+                raise RuntimeError("central Solver returned a majority rate outside [0, 1]")
+            rates[question_index] = rate
+    if set(rates) != valid_indices:
+        missing = sorted(valid_indices - set(rates))
+        raise RuntimeError(f"central Solver feedback is incomplete; missing={missing}")
+    return rates

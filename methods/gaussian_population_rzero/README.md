@@ -1,6 +1,7 @@
 # Gaussian-Population R-Zero
 
-This is an isolated R-Zero experiment. It adds one operation only:
+This is an isolated R-Zero experiment. It can apply one operation to either
+population role:
 
 \[
 \theta_i=\theta+\sigma\epsilon_i,\qquad \epsilon_i\sim\mathcal N(0,I).
@@ -8,27 +9,32 @@ This is an isolated R-Zero experiment. It adds one operation only:
 
 It does **not** import RandOpt and does not implement selection, Top-K,
 cross-model voting, distillation, or an ES update. The only persistent models
-are the central Questioner and central Solver.
+are the central Questioner and central Solver. Set
+`SOLVER_POPULATION_ENABLED=false` to keep Gaussian Questioner generation while
+restoring standard R-Zero feedback from the unperturbed current Solver.
 
 ## Round semantics
 
 For round `t`:
 
-1. Logical Solver experts are reconstructed around central `S_t`.
-2. Every Solver expert answers every valid central-Questioner candidate 10
-   times. Majority rates are computed inside each expert and then averaged.
-3. Standard Questioner GRPO plus the existing within-batch BLEU penalty creates
+1. With Solver population enabled, logical Solver experts are reconstructed
+   around central `S_t`; every expert answers every valid candidate 10 times and
+   their within-expert majority rates are averaged. With it disabled, identical
+   physical replicas of unperturbed `S_t` split the candidates, so each question
+   is evaluated exactly once with the original fixed denominator of 10.
+2. Standard Questioner GRPO plus the existing within-batch BLEU penalty creates
    `Q_(t+1)`.
-4. Logical Questioner experts are reconstructed around `Q_(t+1)` and split the
+3. Logical Questioner experts are reconstructed around `Q_(t+1)` and split the
    fixed 4000-attempt generation budget. Every attempt receives a distinct,
    deterministic sampling seed derived from its expert seed and attempt index.
-5. The unperturbed central `S_t` alone labels all questions with 9 samples and
+4. The unperturbed central `S_t` alone labels all questions with 9 samples and
    the standard valid-answer denominator and score filter builds the Solver
-   dataset. The fixed denominator of 10 is specific to Solver-expert feedback.
-6. Standard Solver training creates `S_(t+1)` and selects step 15.
+   dataset. The fixed denominator of 10 is specific to Questioner feedback;
+   central dataset labeling continues to use the valid-answer denominator.
+5. Standard Solver training creates `S_(t+1)` and selects step 15.
 
-Experts are represented only by seeds and manifests. No expert checkpoint is
-written.
+Population experts are represented only by seeds and manifests. No expert
+checkpoint is written.
 
 On the first invocation, a Hub `BASE_MODEL` is resolved to one immutable local
 snapshot. Set `BASE_REVISION` to pin a specific revision; the complete base
@@ -42,6 +48,13 @@ From the repository root, in the existing R-Zero environment:
 source env_rzero.sh
 bash methods/gaussian_population_rzero/run.sh \
   --config methods/gaussian_population_rzero/config.sh
+```
+
+For the Questioner-population-only experiment:
+
+```bash
+bash methods/gaussian_population_rzero/run.sh \
+  --config methods/gaussian_population_rzero/config_questioner_only.sh
 ```
 
 Resume or skip benchmark evaluation:
@@ -59,6 +72,7 @@ change. The state fingerprint rejects incompatible resume attempts.
 ```text
 run=qwen3_4b_gaussian_kq16_ks6_sq0p001_ss0p001_b4000_vb32_seed42_r5
 Kq=16, Ks=6
+Solver population enabled=true
 sigma_q=1e-3, sigma_s=1e-3
 B=4000
 Solver expert samples=10
@@ -131,7 +145,19 @@ python3 methods/gaussian_population_rzero/tests/verify_smoke.py \
   "$STORAGE_PATH/gaussian_population_rzero/gaussian_population_smoke"
 ```
 
-The verifier checks four exact 512-attempt quotas, all-expert feedback audits
-with 10 samples, center-only labels with 9 samples, the formal score range,
-completed stage markers, and that only `Q1` and `S1` are inheritable
-checkpoints.
+The verifier checks four exact 512-attempt quotas, either all-expert or
+single-central-Solver feedback audits with 10 samples, center-only labels with
+9 samples, the formal score range, completed stage markers, and that only `Q1`
+and `S1` are inheritable checkpoints.
+
+To smoke-test the Questioner-only population mode, use the central-feedback
+profile; the same verifier automatically detects its manifest:
+
+```bash
+bash methods/gaussian_population_rzero/run.sh \
+  --config methods/gaussian_population_rzero/tests/smoke_questioner_only_config.sh \
+  --no-eval
+
+python3 methods/gaussian_population_rzero/tests/verify_smoke.py \
+  "$STORAGE_PATH/gaussian_population_rzero/gaussian_questioner_only_smoke"
+```

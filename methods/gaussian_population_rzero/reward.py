@@ -19,7 +19,13 @@ from mathruler.grader import extract_boxed_content
 from nltk.translate.bleu_score import SmoothingFunction, sentence_bleu
 from sklearn.cluster import AgglomerativeClustering
 
-from reward_math import aggregate_population_payload, difficulty_from_expert_rates, majority_rate
+from reward_math import (
+    aggregate_center_payload,
+    aggregate_population_payload,
+    difficulty_from_expert_rates,
+    majority_rate,
+    split_records,
+)
 
 
 def _bleu_distance_matrix(sentences: Sequence[str]) -> np.ndarray:
@@ -117,8 +123,43 @@ def query_solver_population(
     return [payload for payload in payloads if payload is not None]
 
 
+def query_solver_center(
+    records: list[dict[str, Any]],
+    *,
+    num_services: int,
+    port_base: int,
+) -> list[list[dict[str, Any]]]:
+    """Shard questions across identical unperturbed Solver replicas."""
+    storage = Path(os.environ["STORAGE_PATH"]) / "temp_results"
+    storage.mkdir(parents=True, exist_ok=True)
+    token = f"{time.time_ns()}_{os.getpid()}_{random.randint(0, 99999)}"
+    shards = split_records(records, num_services)
+    paths = []
+    for service, shard in enumerate(shards):
+        path = storage / f"central_solver_{token}_service{service}.json"
+        path.write_text(json.dumps(shard, indent=2) + "\n", encoding="utf-8")
+        paths.append(path)
+
+    payloads: list[list[dict[str, Any]] | None] = [None] * num_services
+    with ThreadPoolExecutor(max_workers=num_services) as executor:
+        futures = {
+            executor.submit(_request_one, port=port_base + service, request_path=paths[service]): service
+            for service in range(num_services)
+        }
+        for future in as_completed(futures):
+            payloads[futures[future]] = future.result()
+    if any(payload is None for payload in payloads):
+        raise RuntimeError("one or more central Solver services returned no payload")
+    return [payload for payload in payloads if payload is not None]
+
+
 def _write_feedback_audit(
-    rates: dict[int, list[float]], *, population_size: int, expert_samples: int
+    rates: dict[int, list[float]],
+    *,
+    feedback_mode: str,
+    population_size: int,
+    expert_samples: int,
+    num_services: int,
 ) -> None:
     configured = os.getenv("SOLVER_POPULATION_AUDIT_DIR")
     if not configured:
@@ -131,7 +172,9 @@ def _write_feedback_audit(
     temporary.write_text(
         json.dumps(
             {
+                "solver_feedback_mode": feedback_mode,
                 "population_size": population_size,
+                "physical_replicas": num_services,
                 "samples_per_expert": expert_samples,
                 "valid_question_count": len(rates),
                 "question_expert_majority_rates": {
@@ -156,6 +199,7 @@ def compute_score(
     port_base: int,
     population_size: int,
     expert_samples: int = 10,
+    feedback_mode: str = "population",
     distance_threshold: float = 0.5,
     **_: Any,
 ) -> list[dict[str, float]]:
@@ -174,19 +218,31 @@ def compute_score(
             {"overall": -1.0, "format": 0.0, "difficulty": 0.0, "similarity": penalty}
             for penalty in penalties
         ]
-    payloads = query_solver_population(
-        records,
-        num_services=num_services,
-        port_base=port_base,
-    )
-    rates = aggregate_population_payload(
-        payloads,
-        valid_indices=valid_indices,
-        population_size=population_size,
-        expected_samples=expert_samples,
-    )
+    if feedback_mode == "population":
+        payloads = query_solver_population(
+            records, num_services=num_services, port_base=port_base
+        )
+        rates = aggregate_population_payload(
+            payloads,
+            valid_indices=valid_indices,
+            population_size=population_size,
+            expected_samples=expert_samples,
+        )
+    elif feedback_mode == "central":
+        payloads = query_solver_center(records, num_services=num_services, port_base=port_base)
+        center_rates = aggregate_center_payload(
+            payloads, valid_indices=valid_indices, expected_samples=expert_samples
+        )
+        rates = {index: [rate] for index, rate in center_rates.items()}
+        population_size = 1
+    else:
+        raise ValueError(f"unsupported solver feedback mode: {feedback_mode!r}")
     _write_feedback_audit(
-        rates, population_size=population_size, expert_samples=expert_samples
+        rates,
+        feedback_mode=feedback_mode,
+        population_size=population_size,
+        expert_samples=expert_samples,
+        num_services=num_services,
     )
     penalties = cluster_share_per_problem(
         [question for question, _ in parsed], distance_threshold=distance_threshold

@@ -21,12 +21,19 @@ IFS=',' read -r -a Q_GPUS <<< "$QUESTIONER_TRAIN_GPU_IDS"
 IFS=',' read -r -a S_GPUS <<< "$SOLVER_EXPERT_GPU_IDS"
 QUESTIONER_GPU_COUNT=${#Q_GPUS[@]}
 NUM_SERVICES=${#S_GPUS[@]}
-if [ "$NUM_SERVICES" -gt "$SOLVER_POPULATION_SIZE" ]; then NUM_SERVICES=$SOLVER_POPULATION_SIZE; fi
+if [ "$SOLVER_POPULATION_ENABLED" = "true" ]; then
+  SOLVER_FEEDBACK_MODE=population
+  if [ "$NUM_SERVICES" -gt "$SOLVER_POPULATION_SIZE" ]; then NUM_SERVICES=$SOLVER_POPULATION_SIZE; fi
+  EFFECTIVE_POPULATION_SIZE=$SOLVER_POPULATION_SIZE
+else
+  SOLVER_FEEDBACK_MODE=central
+  EFFECTIVE_POPULATION_SIZE=1
+fi
 
 mkdir -p "$OUTPUT_DIR" "$RUN_LOG_DIR"
 export SOLVER_EXPERT_LOG_DIR="$RUN_LOG_DIR"
-export SOLVER_EXPERT_PID_FILE="$OUTPUT_DIR/solver_population.pids"
-export SOLVER_POPULATION_AUDIT_DIR="$OUTPUT_DIR/solver_population_feedback"
+export SOLVER_EXPERT_PID_FILE="$OUTPUT_DIR/solver_${SOLVER_FEEDBACK_MODE}.pids"
+export SOLVER_POPULATION_AUDIT_DIR="$OUTPUT_DIR/solver_${SOLVER_FEEDBACK_MODE}_feedback"
 mkdir -p "$SOLVER_POPULATION_AUDIT_DIR"
 
 cleanup() {
@@ -49,7 +56,11 @@ cleanup() {
 }
 trap cleanup EXIT
 
-bash "$METHOD_DIR/start_solver_population.sh" "$SOLVER_CENTER" "$ROUND_INDEX"
+if [ "$SOLVER_FEEDBACK_MODE" = "population" ]; then
+  bash "$METHOD_DIR/start_solver_population.sh" "$SOLVER_CENTER" "$ROUND_INDEX"
+else
+  bash "$METHOD_DIR/start_solver_center.sh" "$SOLVER_CENTER" "$ROUND_INDEX"
+fi
 for ((service=0; service<NUM_SERVICES; service++)); do
   port=$((SOLVER_EXPERT_PORT_BASE + service))
   service_pid=$(sed -n "$((service + 1))p" "$SOLVER_EXPERT_PID_FILE")
@@ -60,14 +71,14 @@ for ((service=0; service<NUM_SERVICES; service++)); do
       break
     fi
     if ! kill -0 "$service_pid" 2>/dev/null; then
-      echo "Solver population service $service exited during startup" >&2
-      tail -80 "$RUN_LOG_DIR/solver_population_r${ROUND_INDEX}_worker${service}_gpu${S_GPUS[$service]}.log" >&2 || true
+      echo "Solver $SOLVER_FEEDBACK_MODE service $service exited during startup" >&2
+      tail -80 "$RUN_LOG_DIR/solver_${SOLVER_FEEDBACK_MODE}_r${ROUND_INDEX}_worker${service}_gpu${S_GPUS[$service]}.log" >&2 || true
       exit 1
     fi
     sleep 1
   done
   if [ "$healthy" != "1" ]; then
-    echo "Solver population service on port $port failed health check" >&2
+    echo "Solver $SOLVER_FEEDBACK_MODE service on port $port failed health check" >&2
     exit 1
   fi
 done
@@ -84,8 +95,9 @@ CUDA_VISIBLE_DEVICES="$QUESTIONER_TRAIN_GPU_IDS" python3 -m verl.trainer.main \
   worker.reward.reward_function="$METHOD_DIR/reward.py:compute_score" \
   worker.reward.reward_function_kwargs.num_services="$NUM_SERVICES" \
   worker.reward.reward_function_kwargs.port_base="$SOLVER_EXPERT_PORT_BASE" \
-  worker.reward.reward_function_kwargs.population_size="$SOLVER_POPULATION_SIZE" \
+  worker.reward.reward_function_kwargs.population_size="$EFFECTIVE_POPULATION_SIZE" \
   worker.reward.reward_function_kwargs.expert_samples="$SOLVER_EXPERT_SAMPLES" \
+  worker.reward.reward_function_kwargs.feedback_mode="$SOLVER_FEEDBACK_MODE" \
   trainer.val_freq=-1 \
   trainer.val_before_train=false \
   trainer.n_gpus_per_node="$QUESTIONER_GPU_COUNT" \

@@ -82,6 +82,7 @@ def population_manifest(args: argparse.Namespace) -> None:
         {
             "center": checkpoint_identity(args.center),
             "role": args.role,
+            **({"solver_feedback_mode": "population"} if args.role == "solver" else {}),
             "round": args.round_index,
             "population_size": args.population_size,
             "sigma": args.sigma,
@@ -94,6 +95,30 @@ def population_manifest(args: argparse.Namespace) -> None:
                 for spec in specs
             },
             "experts": [spec.to_dict() for spec in specs],
+            "expert_checkpoints_persisted": False,
+            "software_versions": software_versions(),
+        },
+    )
+
+
+def central_feedback_manifest(args: argparse.Namespace) -> None:
+    gpu_ids = [value.strip() for value in args.gpu_ids.split(",") if value.strip()]
+    if not gpu_ids:
+        raise ValueError("central Solver feedback requires at least one GPU")
+    atomic_json(
+        args.output,
+        {
+            "center": checkpoint_identity(args.center),
+            "solver_feedback_mode": "central",
+            "round": args.round_index,
+            "logical_solver_count": 1,
+            "perturbed": False,
+            "samples_per_question": args.samples,
+            "tensor_parallel_size": 1,
+            "physical_gpu_ids": gpu_ids,
+            "physical_replicas": len(gpu_ids),
+            "question_assignment": "contiguous_disjoint_shards",
+            "each_question_evaluated_once": True,
             "expert_checkpoints_persisted": False,
             "software_versions": software_versions(),
         },
@@ -205,6 +230,12 @@ def main() -> None:
     population.add_argument("--samples", type=int, required=True)
     population.add_argument("--gpu-ids", required=True)
     population.add_argument("--output", type=Path, required=True)
+    central = commands.add_parser("central-feedback")
+    central.add_argument("--center", required=True)
+    central.add_argument("--round-index", type=int, required=True)
+    central.add_argument("--samples", type=int, required=True)
+    central.add_argument("--gpu-ids", required=True)
+    central.add_argument("--output", type=Path, required=True)
     generation = commands.add_parser("verify-generation")
     generation.add_argument("--center", required=True)
     generation.add_argument("--round-index", type=int, required=True)
@@ -218,7 +249,12 @@ def main() -> None:
     generation.add_argument("--gpu-ids", required=True)
     generation.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
-    population_manifest(args) if args.command == "population" else verify_generation(args)
+    if args.command == "population":
+        population_manifest(args)
+    elif args.command == "central-feedback":
+        central_feedback_manifest(args)
+    else:
+        verify_generation(args)
 
 
 if __name__ == "__main__":

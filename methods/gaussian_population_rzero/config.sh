@@ -15,6 +15,10 @@ QUESTIONER_POPULATION_SIZE=16
 SOLVER_POPULATION_SIZE=6
 QUESTIONER_NOISE_SIGMA=0.001
 SOLVER_NOISE_SIGMA=0.001
+# true: perturb the Solver into logical experts for Questioner feedback.
+# false: use only the unperturbed current Solver, with identical GPU replicas
+# splitting questions for throughput exactly as in standard R-Zero.
+SOLVER_POPULATION_ENABLED=${SOLVER_POPULATION_ENABLED:-true}
 POPULATION_SEED=${POPULATION_SEED:-42}
 TENSOR_PARALLEL_SIZE=${TENSOR_PARALLEL_SIZE:-1}
 

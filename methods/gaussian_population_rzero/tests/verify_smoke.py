@@ -20,17 +20,38 @@ def main() -> None:
     args = parser.parse_args()
     root = args.run_root
 
-    solver_population = load(root / "questioners/q1/solver_population_manifest.json")
-    assert solver_population["population_size"] == 4
-    assert solver_population["samples_per_question"] == 10
-    feedback_files = sorted((root / "questioners/q1/solver_population_feedback").glob("*.json"))
+    population_manifest = root / "questioners/q1/solver_population_manifest.json"
+    central_manifest = root / "questioners/q1/solver_feedback_manifest.json"
+    if population_manifest.is_file():
+        solver_feedback = load(population_manifest)
+        feedback_mode = "population"
+        assert solver_feedback["population_size"] == 4
+        assert solver_feedback["samples_per_question"] == 10
+    else:
+        solver_feedback = load(central_manifest)
+        feedback_mode = "central"
+        assert solver_feedback["solver_feedback_mode"] == "central"
+        assert solver_feedback["logical_solver_count"] == 1
+        assert solver_feedback["perturbed"] is False
+        assert solver_feedback["physical_replicas"] == 2
+        assert solver_feedback["each_question_evaluated_once"] is True
+        assert not population_manifest.exists()
+    feedback_files = sorted(
+        (root / f"questioners/q1/solver_{feedback_mode}_feedback").glob("*.json")
+    )
     assert feedback_files, "no Solver-population feedback audit was persisted"
     for path in feedback_files:
         audit = load(path)
-        assert audit["population_size"] == 4
+        assert audit["solver_feedback_mode"] == feedback_mode
+        assert audit["population_size"] == (4 if feedback_mode == "population" else 1)
+        assert audit["physical_replicas"] == 2
         assert audit["samples_per_expert"] == 10
         assert audit["cross_expert_answer_vote"] is False
-        assert all(len(rates) == 4 for rates in audit["question_expert_majority_rates"].values())
+        expected_rates = 4 if feedback_mode == "population" else 1
+        assert all(
+            len(rates) == expected_rates
+            for rates in audit["question_expert_majority_rates"].values()
+        )
 
     questioner_population = load(root / "datasets/d1/questioner_population_manifest.json")
     assert questioner_population["population_size"] == 4

@@ -7,7 +7,13 @@ from pathlib import Path
 METHOD_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(METHOD_DIR))
 
-from reward_math import aggregate_population_payload, difficulty_from_expert_rates, majority_rate
+from reward_math import (
+    aggregate_center_payload,
+    aggregate_population_payload,
+    difficulty_from_expert_rates,
+    majority_rate,
+    split_records,
+)
 
 
 class RewardTests(unittest.TestCase):
@@ -61,6 +67,41 @@ class RewardTests(unittest.TestCase):
             payloads, valid_indices={0}, population_size=2, expected_samples=10
         )
         self.assertEqual(rates[0], [0.9, 0.8])
+
+    def test_center_records_are_disjointly_sharded(self):
+        records = [{"question_index": index} for index in range(7)]
+        shards = split_records(records, 3)
+        self.assertEqual([len(shard) for shard in shards], [3, 2, 2])
+        self.assertEqual(
+            [item["question_index"] for shard in shards for item in shard], list(range(7))
+        )
+
+    def test_center_feedback_requires_exactly_one_result_per_question(self):
+        payloads = [
+            [{"question_index": 0, "num_samples": 10, "majority_rate": 0.6}],
+            [{"question_index": 1, "num_samples": 10, "majority_rate": 0.4}],
+        ]
+        self.assertEqual(
+            aggregate_center_payload(
+                payloads, valid_indices={0, 1}, expected_samples=10
+            ),
+            {0: 0.6, 1: 0.4},
+        )
+
+    def test_center_feedback_rejects_duplicate_or_missing_results(self):
+        duplicate = [[
+            {"question_index": 0, "num_samples": 10, "majority_rate": 0.5},
+            {"question_index": 0, "num_samples": 10, "majority_rate": 0.5},
+        ]]
+        with self.assertRaises(RuntimeError):
+            aggregate_center_payload(duplicate, valid_indices={0}, expected_samples=10)
+        with self.assertRaises(RuntimeError):
+            aggregate_center_payload([], valid_indices={0}, expected_samples=10)
+
+    def test_single_center_rate_uses_original_rzero_difficulty(self):
+        mean_rate, difficulty = difficulty_from_expert_rates([0.6])
+        self.assertAlmostEqual(mean_rate, 0.6)
+        self.assertAlmostEqual(difficulty, 0.4)
 
 
 if __name__ == "__main__":
