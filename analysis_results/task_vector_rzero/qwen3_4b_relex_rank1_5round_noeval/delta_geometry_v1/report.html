@@ -1,0 +1,165 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Delta Geometry Report</title>
+<style>
+body { max-width: 1180px; margin: 40px auto; padding: 0 24px; font-family: Arial, sans-serif; line-height: 1.5; color: #1a202c; }
+img { max-width: 100%; border: 1px solid #e2e8f0; }
+table { border-collapse: collapse; width: 100%; margin: 18px 0; font-size: 14px; }
+th, td { border: 1px solid #cbd5e0; padding: 6px 9px; text-align: right; }
+th:first-child, td:first-child { text-align: left; }
+h1, h2, h3 { color: #2d3748; }
+code { background: #edf2f7; padding: 2px 4px; }
+</style></head><body><h1>Task-Vector R-Zero Delta Geometry Report</h1>
+
+<h2>Scope and definitions</h2>
+
+<p>This report uses the run-faithful definitions:</p>
+
+<ul>
+<li>Questioner: `Q1 - Base`, then `Qi - Q(i-1)`.</li>
+<li>Solver primary: `RELEX_Ri - Base`.</li>
+<li>Solver control: `BaseFit_Ai_step15 - Base`.</li>
+</ul>
+
+<p>Input fingerprint: `90e17bae6930c296bea4b17ff93c954e9000c759b7a2a4d1e8c44a85d16f66ee`  </p>
+<p>Floating parameter count: `4022468096`  </p>
+<p>Compute device: `cuda:0`</p>
+
+<p>Q1 is a bootstrap Questioner. Since its pre-training checkpoint is unavailable locally, Base is used as its baseline.</p>
+
+<h2>A. Questioner: actual full-delta evolution</h2>
+
+<img src="figures/global_delta_norms.png" alt="Global and relative delta magnitudes.">
+
+<p><em>Global and relative delta magnitudes.</em></p>
+
+<img src="figures/questioner_full_cosine.png" alt="Pairwise Questioner full-delta cosine similarity.">
+
+<p><em>Pairwise Questioner full-delta cosine similarity.</em></p>
+
+<img src="figures/layer_norm_heatmap_questioner_full.png" alt="Questioner relative update by transformer layer.">
+
+<p><em>Questioner relative update by transformer layer.</em></p>
+
+<h2>B. Solver: actual rank1-delta evolution</h2>
+
+<img src="figures/solver_rank1_cosine.png" alt="Pairwise Solver rank1-delta cosine similarity.">
+
+<p><em>Pairwise Solver rank1-delta cosine similarity.</em></p>
+
+<img src="figures/direction_progression.png" alt="Adjacent-round turns and alignment with accumulated history.">
+
+<p><em>Adjacent-round turns and alignment with accumulated history.</em></p>
+
+<img src="figures/historical_alignment.png" alt="Fraction of each update orthogonal to accumulated history.">
+
+<p><em>Fraction of each update orthogonal to accumulated history.</em></p>
+
+<img src="figures/layer_norm_heatmap_solver_rank1.png" alt="Solver rank1 relative update by transformer layer.">
+
+<p><em>Solver rank1 relative update by transformer layer.</em></p>
+
+<h2>C. RELEX: full delta to rank1 delta</h2>
+
+<img src="figures/relex_retention.png" alt="RELEX magnitude, direction, and reconstruction retention.">
+
+<p><em>RELEX magnitude, direction, and reconstruction retention.</em></p>
+
+<img src="figures/rank1_vs_full_plane.png" alt="Paired full and rank1 directions in a shared exact SVD plane.">
+
+<p><em>Paired full and rank1 directions in a shared exact SVD plane.</em></p>
+
+<img src="figures/solver_full_cosine.png" alt="Pairwise Solver full-delta cosine similarity.">
+
+<p><em>Pairwise Solver full-delta cosine similarity.</em></p>
+
+<h3>RELEX summary</h3>
+
+<table>
+<tr><th>round</th><th>rank/full norm</th><th>cosine</th><th>angle</th><th>relative error</th></tr>
+<tr><td>1</td><td>0.91877</td><td>0.86587</td><td>30.02</td><td>0.50306</td></tr>
+<tr><td>2</td><td>0.9004</td><td>0.8374</td><td>33.13</td><td>0.55021</td></tr>
+<tr><td>3</td><td>0.89142</td><td>0.82628</td><td>34.28</td><td>0.56701</td></tr>
+<tr><td>4</td><td>0.88881</td><td>0.82747</td><td>34.16</td><td>0.56485</td></tr>
+<tr><td>5</td><td>0.89272</td><td>0.82071</td><td>34.84</td><td>0.57586</td></tr>
+</table>
+
+<h3>Composed Solver consistency</h3>
+
+<table>
+<tr><th>round</th><th>actual/intended cosine</th><th>relative residual</th></tr>
+<tr><td>1</td><td>1</td><td>0</td></tr>
+<tr><td>2</td><td>0.99978</td><td>0.02119</td></tr>
+<tr><td>3</td><td>0.99979</td><td>0.020527</td></tr>
+<tr><td>4</td><td>0.99979</td><td>0.020639</td></tr>
+<tr><td>5</td><td>0.9998</td><td>0.019794</td></tr>
+</table>
+
+<h2>D. Cross-family geometry</h2>
+
+<img src="figures/questioner_solver_cross_cosine.png" alt="Questioner full and Solver rank1 joint cosine matrix.">
+
+<p><em>Questioner full and Solver rank1 joint cosine matrix.</em></p>
+
+<img src="figures/direction_plane.png" alt="Joint unit-delta direction plane.">
+
+<p><em>Joint unit-delta direction plane.</em></p>
+
+<img src="figures/cumulative_trajectory.png" alt="Cumulative Questioner and Rank1 Solver trajectories.">
+
+<p><em>Cumulative Questioner and Rank1 Solver trajectories.</em></p>
+
+<h3>Alignment with accumulated history</h3>
+
+<table>
+<tr><th>family</th><th>round</th><th>history cosine</th><th>angle</th><th>orthogonal ratio</th></tr>
+<tr><td>questioner_full</td><td>2</td><td>0.014867</td><td>89.15</td><td>0.99989</td></tr>
+<tr><td>questioner_full</td><td>3</td><td>0.030129</td><td>88.27</td><td>0.99955</td></tr>
+<tr><td>questioner_full</td><td>4</td><td>0.044602</td><td>87.44</td><td>0.999</td></tr>
+<tr><td>questioner_full</td><td>5</td><td>0.033646</td><td>88.07</td><td>0.99943</td></tr>
+<tr><td>solver_rank1</td><td>2</td><td>0.28334</td><td>73.54</td><td>0.95902</td></tr>
+<tr><td>solver_rank1</td><td>3</td><td>0.33368</td><td>70.51</td><td>0.94269</td></tr>
+<tr><td>solver_rank1</td><td>4</td><td>0.31885</td><td>71.41</td><td>0.94781</td></tr>
+<tr><td>solver_rank1</td><td>5</td><td>0.35022</td><td>69.5</td><td>0.93667</td></tr>
+<tr><td>solver_full</td><td>2</td><td>0.24363</td><td>75.9</td><td>0.96987</td></tr>
+<tr><td>solver_full</td><td>3</td><td>0.28942</td><td>73.18</td><td>0.9572</td></tr>
+<tr><td>solver_full</td><td>4</td><td>0.28331</td><td>73.54</td><td>0.95903</td></tr>
+<tr><td>solver_full</td><td>5</td><td>0.29426</td><td>72.89</td><td>0.95572</td></tr>
+</table>
+
+<h2>E. Evaluation and geometry</h2>
+
+<img src="figures/evaluation_geometry.png" alt="Rank1 V1--V5 benchmark scores and changes from Base.">
+
+<p><em>Rank1 V1--V5 benchmark scores and changes from Base.</em></p>
+
+<p>The evaluation contains only five iterations. Any association with parameter geometry is descriptive, not causal or statistically conclusive.</p>
+
+<h2>Global norm table</h2>
+
+<table>
+<tr><th>family</th><th>round</th><th>L2</th><th>RMS</th><th>relative</th></tr>
+<tr><td>questioner_full</td><td>1</td><td>0.15771</td><td>2.4867e-06</td><td>9.7358e-05</td></tr>
+<tr><td>questioner_full</td><td>2</td><td>1.0205</td><td>1.6091e-05</td><td>0.00062999</td></tr>
+<tr><td>questioner_full</td><td>3</td><td>1.0363</td><td>1.6339e-05</td><td>0.00063969</td></tr>
+<tr><td>questioner_full</td><td>4</td><td>1.0452</td><td>1.648e-05</td><td>0.00064521</td></tr>
+<tr><td>questioner_full</td><td>5</td><td>1.0471</td><td>1.651e-05</td><td>0.00064638</td></tr>
+<tr><td>solver_rank1</td><td>1</td><td>0.23092</td><td>3.641e-06</td><td>0.00014255</td></tr>
+<tr><td>solver_rank1</td><td>2</td><td>0.23626</td><td>3.7252e-06</td><td>0.00014585</td></tr>
+<tr><td>solver_rank1</td><td>3</td><td>0.22726</td><td>3.5833e-06</td><td>0.00014029</td></tr>
+<tr><td>solver_rank1</td><td>4</td><td>0.21966</td><td>3.4634e-06</td><td>0.0001356</td></tr>
+<tr><td>solver_rank1</td><td>5</td><td>0.22219</td><td>3.5033e-06</td><td>0.00013716</td></tr>
+<tr><td>solver_full</td><td>1</td><td>0.25134</td><td>3.9629e-06</td><td>0.00015515</td></tr>
+<tr><td>solver_full</td><td>2</td><td>0.2624</td><td>4.1373e-06</td><td>0.00016198</td></tr>
+<tr><td>solver_full</td><td>3</td><td>0.25494</td><td>4.0197e-06</td><td>0.00015738</td></tr>
+<tr><td>solver_full</td><td>4</td><td>0.24714</td><td>3.8967e-06</td><td>0.00015256</td></tr>
+<tr><td>solver_full</td><td>5</td><td>0.24889</td><td>3.9244e-06</td><td>0.00015365</td></tr>
+</table>
+
+<h2>F. Numerical interpretation boundaries</h2>
+
+<ul>
+<li>RELEX is a per-tensor rank-1 trajectory reconstruction, not one global rank-1 SVD over the model.</li>
+<li>Two-dimensional SVD figures retain only the energy reported in `manifest.json`; cosine matrices remain the primary direction evidence.</li>
+<li>Global metrics weight every parameter element equally. Per-layer tables provide a complementary layer-balanced view.</li>
+<li>Full Solver deltas are controls. Rank1 Solver deltas are the vectors aligned with the evaluated Rank1 V1--V5 models.</li>
+</ul></body></html>

@@ -1,0 +1,23 @@
+{
+  "aggregate_checks": {
+    "layers": {
+      "gram_relative_error": 0.0,
+      "parameter_count": 4022468096
+    },
+    "modules": {
+      "gram_relative_error": 0.0,
+      "parameter_count": 4022468096
+    }
+  },
+  "cosine_diagonal_max_error": 2.220446049250313e-16,
+  "minimum_eigenvalue": 0.007631634177820187,
+  "minimum_eigenvalue_relative": 0.0065636451544339065,
+  "status": "passed",
+  "symmetry_relative_error": 0.0,
+  "tolerances": {
+    "aggregate_gram_relative_error": 1e-10,
+    "cosine_diagonal_max_error": 1e-10,
+    "minimum_eigenvalue_relative": -1e-05,
+    "symmetry_relative_error": 1e-12
+  }
+}
