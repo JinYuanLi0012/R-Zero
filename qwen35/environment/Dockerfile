@@ -11,11 +11,15 @@ RUN test ! -e /opt/verl \
     && git -C /opt/verl fetch --depth 1 origin "${VERL_REF}" \
     && git -C /opt/verl checkout --detach FETCH_HEAD
 WORKDIR /opt/verl
-RUN python3.12 -m pip install --no-deps -e . \
+RUN python3.12 -m pip install -r requirements.txt \
+    && python3.12 -m pip install --no-deps -e . \
     && python3.12 -m pip install --no-deps transformers==5.5.3
 
 COPY qwen35/environment/requirements.in /tmp/rzero-qwen35-requirements.in
-RUN python3.12 -m pip install -r /tmp/rzero-qwen35-requirements.in
+# Ubuntu's python3-blinker has no pip RECORD.  Overlay it first so Flask's
+# dependency resolver never attempts the unsupported Debian-package uninstall.
+RUN python3.12 -m pip install --ignore-installed blinker==1.9.0 \
+    && python3.12 -m pip install -r /tmp/rzero-qwen35-requirements.in
 
 WORKDIR /workspace/R-Zero
 ENV VERL_SOURCE_ROOT=/opt/verl
