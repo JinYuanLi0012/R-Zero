@@ -3,7 +3,7 @@
 # Source this from the R-Zero repo root:
 #   source env_rzero.sh
 
-conda activate rzero-py310
+conda activate /scratch/project/envs/rzero-py310
 
 export CUDA_HOME="${CONDA_PREFIX}"
 export PATH="${CUDA_HOME}/bin:${PATH}"
