@@ -13,6 +13,7 @@ args = parser.parse_args()
 
 STORAGE_PATH = os.getenv("STORAGE_PATH")
 FINAL_RESULTS_FILE = os.getenv("FINAL_RESULTS_FILE", "final_results.jsonl")
+RECHECK_JUDGE_MODEL = os.getenv("RECHECK_JUDGE_MODEL", "gpt-5-nano")
 api_urls = []
 api_keys = []
 
@@ -33,12 +34,11 @@ def process_example(answer, response):
         gold_answer = answer
         model_response = response
         example = {
-            "model": "gpt-4o",
+            "model": RECHECK_JUDGE_MODEL,
             "messages": [
                 {"role": "system", "content": "You are a math answer checker."},
                 {"role": "user", "content": f"Hi, there is a model response: {model_response}\n\n, and the ground truth answer is: {gold_answer}\n\n, please check whether the model response is correct or not, and return the **only** Yes or No."}
-            ],
-            "temperature": 0.1
+            ]
         }
         api_index = random.randint(0, len(api_urls)-1)
         api_url = api_urls[api_index]
@@ -88,7 +88,6 @@ for model_name in [args.model_name]:
                 'score': round(sum([result['score'] for result in results[:-1]])/len(results[:-1])*100, 2)
             }, f)
             f.write('\n')
-
 
 
 

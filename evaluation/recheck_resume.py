@@ -21,7 +21,7 @@ def load_openai_key(token_file: Path):
 
 def judge_model_response(api_url, api_key, gold_answer, model_response):
     payload = {
-        "model": os.getenv("RECHECK_JUDGE_MODEL", "gpt-4o"),
+        "model": os.getenv("RECHECK_JUDGE_MODEL", "gpt-5-nano"),
         "messages": [
             {"role": "system", "content": "You are a math answer checker."},
             {
@@ -34,7 +34,6 @@ def judge_model_response(api_url, api_key, gold_answer, model_response):
                 ),
             },
         ],
-        "temperature": 0.1,
     }
     if "api.openai.com" in api_url or api_url.rstrip("/").endswith("/chat/completions"):
         headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
