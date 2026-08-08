@@ -46,7 +46,9 @@ The image is derived from the official public
 `verlai/verl:vllm024.dev2@sha256:b867883b0dd011363e69ab2ab344922a28c5bd0409e2a324e3ee70fb27ca7543`
 application image. It pins the verl checkout at `/opt/verl` to
 `4a2cba76f7f605d2b9f56e640faaeaa71c2c7f71`; it does not run verl's legacy
-installer or replace the official CUDA/Torch/vLLM dependency stack. `run.sh` always places
+installer or replace the official CUDA/Torch/vLLM dependency stack. As in the
+official vLLM CI, it installs that exact verl commit's `requirements.txt`, then
+installs verl itself with `--no-deps`. `run.sh` always places
 `/opt/verl` before the repository on `PYTHONPATH`, while retaining the repository
 as the second entry so verl reward workers can import `qwen35`. Training and the
 environment smoke run with `/opt/verl` as their working directory. The smoke
