@@ -47,7 +47,7 @@ jobs:
           provenance: false
           sbom: false
           tags: |
-            ${{ env.IMAGE_NAME }}:verl-0.8.0
+            ${{ env.IMAGE_NAME }}:verl-main-vllm024
             ${{ env.IMAGE_NAME }}:commit-${{ github.sha }}
           labels: |
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
