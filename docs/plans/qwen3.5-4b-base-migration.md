@@ -31,7 +31,12 @@ qwen35/
 ## Qwen3.5 官方底座
 
 - 模型固定为 `Qwen/Qwen3.5-4B-Base`，正式运行前解析并锁定 Hugging Face revision。
-- 使用上游 `verl v0.8.0`、Python 3.12、CUDA 12.8、FSDP2 和配套 vLLM，不修改仓库内旧版 verl。
+- 使用上游 verl、Python 3.12、FSDP2 和配套 vLLM，不修改仓库内旧版 verl。
+- 2026-08-08 RIS 单卡 smoke 证明原定 `verl v0.8.0` 安装器固定的
+  vLLM 0.11 不支持 `language_model_only`，故正式运行时底座修订为官方
+  `verlai/verl:vllm024.dev2`（锁定 digest），并锁定已包含 Qwen3.5 FSDP2
+  recipes 的 verl main commit。最终矩阵为 CUDA 13.0.2、Torch 2.11.0、
+  vLLM 0.24.0、Transformers 5.5.3；RIS 580.105.08 驱动满足 CUDA 13.0。
 - 使用 verl 官方安装和 checkpoint/merger 接口，记录依赖锁、verl commit、模型 revision 和容器 digest。
 - 仅启用文本路径：vLLM 使用 `language-model-only`，沿用官方 tokenizer/chat template，禁用 packed/remove-padding 路径。
 - Challenger 接入 verl 官方 batch reward manager；Solver 接入官方逐样本 reward manager。

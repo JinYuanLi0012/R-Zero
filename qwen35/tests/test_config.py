@@ -29,6 +29,13 @@ class ConfigTests(unittest.TestCase):
         with self.assertRaises(ConfigError):
             validate_config(config)
 
+    def test_rejects_runtime_dependency_drift(self):
+        config = load_config(CONFIG)
+        config = copy.deepcopy({key: value for key, value in config.items() if not key.startswith("_")})
+        config["runtime"]["vllm"] = "0.11.0"
+        with self.assertRaises(ConfigError):
+            validate_config(config)
+
 
 if __name__ == "__main__":
     unittest.main()

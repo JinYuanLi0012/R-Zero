@@ -1,4 +1,4 @@
-# Installed after verl's official FSDP/vLLM installer.
+# Installed on top of verl's pinned official vLLM application image.
 datasets>=4.0,<5
 huggingface-hub>=0.34
 mathruler==0.1.0

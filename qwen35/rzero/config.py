@@ -40,10 +40,24 @@ def validate_config(config: dict[str, Any]) -> None:
         raise ConfigError("Qwen3.5 must use the text-only serving path")
 
     runtime = config["runtime"]
-    if runtime.get("verl_ref") != "v0.8.0" or runtime.get("training_backend") != "fsdp2":
-        raise ConfigError("formal profile requires verl v0.8.0 with FSDP2")
+    expected_runtime = {
+        "cuda": "13.0.2",
+        "torch": "2.11.0",
+        "vllm": "0.24.0",
+        "transformers": "5.5.3",
+        "verl_ref": "4a2cba76f7f605d2b9f56e640faaeaa71c2c7f71",
+        "base_image": "verlai/verl:vllm024.dev2",
+        "base_image_digest": "sha256:b867883b0dd011363e69ab2ab344922a28c5bd0409e2a324e3ee70fb27ca7543",
+        "training_backend": "fsdp2",
+        "rollout_backend": "vllm",
+    }
+    runtime_mismatches = {
+        key: (runtime.get(key), value) for key, value in expected_runtime.items() if runtime.get(key) != value
+    }
+    if runtime_mismatches:
+        raise ConfigError(f"formal runtime profile changed: {runtime_mismatches}")
     if runtime.get("verl_source_root") != "/opt/verl":
-        raise ConfigError("official verl v0.8.0 source root must be /opt/verl")
+        raise ConfigError("official verl source root must be /opt/verl")
 
     hardware = config["hardware"]
     if hardware.get("gpus") != [0, 1, 2, 3]:

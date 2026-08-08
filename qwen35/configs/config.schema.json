@@ -28,9 +28,26 @@
     },
     "runtime": {
       "type": "object",
-      "required": ["verl_ref", "verl_source_root", "training_backend", "rollout_backend"],
+      "required": [
+        "cuda",
+        "torch",
+        "vllm",
+        "transformers",
+        "verl_ref",
+        "base_image",
+        "base_image_digest",
+        "verl_source_root",
+        "training_backend",
+        "rollout_backend"
+      ],
       "properties": {
-        "verl_ref": {"const": "v0.8.0"},
+        "cuda": {"const": "13.0.2"},
+        "torch": {"const": "2.11.0"},
+        "vllm": {"const": "0.24.0"},
+        "transformers": {"const": "5.5.3"},
+        "verl_ref": {"const": "4a2cba76f7f605d2b9f56e640faaeaa71c2c7f71"},
+        "base_image": {"const": "verlai/verl:vllm024.dev2"},
+        "base_image_digest": {"const": "sha256:b867883b0dd011363e69ab2ab344922a28c5bd0409e2a324e3ee70fb27ca7543"},
         "verl_source_root": {"const": "/opt/verl"},
         "training_backend": {"const": "fsdp2"},
         "rollout_backend": {"const": "vllm"}
