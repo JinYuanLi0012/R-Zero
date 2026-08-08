@@ -57,6 +57,19 @@ runtime version and the verl Git commit, composes `verl.trainer.main_ppo`
 through Hydra, checks `qwen3_5`, the official chat template, four visible GPUs,
 and a real vLLM `language_model_only` load-and-generate cycle.
 
+The published RIS runtime image is
+`ghcr.io/jinyuanli0012/rzero-qwen35:verl-main-vllm024@sha256:bdc8b2c299813f958489686e0e5a2b9d97dcc94b66af81069b7db88aa040cfb7`.
+On 2026-08-08 it completed a one-H100 text-only load-and-generate smoke using
+the pinned local Qwen3.5 model. The first request compiled the expected Gated
+DeltaNet Triton kernel and then generated successfully.
+
+`run.sh` redirects XDG, Triton, TorchInductor, CUDA, vLLM and FlashInfer caches
+to `RZERO_NODE_CACHE_ROOT`. Under Slurm the default is the job-isolated local
+path `/tmp/rzero-qwen35-$UID/$SLURM_JOB_ID`; this prevents compiler caches from
+filling a small quota-backed home directory. Set `RZERO_NODE_CACHE_ROOT` only
+when a cluster provides a different node-local executable filesystem. Model,
+dataset, checkpoint and manifest outputs remain under `--run-dir`, not `/tmp`.
+
 ## Dry-run and smoke Round 0
 
 Dry-run does not download models or create a run manifest:

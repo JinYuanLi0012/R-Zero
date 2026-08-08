@@ -6,4 +6,26 @@ export VERL_SOURCE_ROOT=${VERL_SOURCE_ROOT:-/opt/verl}
 export PYTHONPATH="${VERL_SOURCE_ROOT}:${repo_root}${PYTHONPATH:+:${PYTHONPATH}}"
 export VLLM_USE_V1=${VLLM_USE_V1:-1}
 
+# GPU nodes commonly expose a small quota-backed $HOME. Keep compiler and
+# rollout caches on node-local storage so Triton/FlashInfer JIT compilation
+# cannot exhaust that quota during a long run. A scheduler wrapper may set
+# RZERO_NODE_CACHE_ROOT explicitly; otherwise each Slurm job gets an isolated
+# directory and non-Slurm runs share an interactive directory.
+cache_scope=${SLURM_JOB_ID:-interactive}
+export RZERO_NODE_CACHE_ROOT=${RZERO_NODE_CACHE_ROOT:-/tmp/rzero-qwen35-${UID}/${cache_scope}}
+export XDG_CACHE_HOME=${XDG_CACHE_HOME:-${RZERO_NODE_CACHE_ROOT}/xdg}
+export TRITON_CACHE_DIR=${TRITON_CACHE_DIR:-${RZERO_NODE_CACHE_ROOT}/triton}
+export TORCHINDUCTOR_CACHE_DIR=${TORCHINDUCTOR_CACHE_DIR:-${RZERO_NODE_CACHE_ROOT}/torchinductor}
+export CUDA_CACHE_PATH=${CUDA_CACHE_PATH:-${RZERO_NODE_CACHE_ROOT}/cuda}
+export VLLM_CACHE_ROOT=${VLLM_CACHE_ROOT:-${RZERO_NODE_CACHE_ROOT}/vllm}
+export FLASHINFER_WORKSPACE_BASE=${FLASHINFER_WORKSPACE_BASE:-${RZERO_NODE_CACHE_ROOT}/flashinfer}
+
+mkdir -p \
+  "${XDG_CACHE_HOME}" \
+  "${TRITON_CACHE_DIR}" \
+  "${TORCHINDUCTOR_CACHE_DIR}" \
+  "${CUDA_CACHE_PATH}" \
+  "${VLLM_CACHE_ROOT}" \
+  "${FLASHINFER_WORKSPACE_BASE}"
+
 exec python3.12 -m qwen35.rzero.pipeline.orchestrator "$@"

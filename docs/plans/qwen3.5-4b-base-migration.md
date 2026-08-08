@@ -39,6 +39,9 @@ qwen35/
   vLLM 0.24.0、Transformers 5.5.3；RIS 580.105.08 驱动满足 CUDA 13.0。
 - 使用 verl 官方安装和 checkpoint/merger 接口，记录依赖锁、verl commit、模型 revision 和容器 digest。
 - 仅启用文本路径：vLLM 使用 `language-model-only`，沿用官方 tokenizer/chat template，禁用 packed/remove-padding 路径。
+- XDG、Triton、TorchInductor、CUDA、vLLM 和 FlashInfer 编译缓存统一写入
+  计算节点本地临时目录；模型、数据、checkpoint 和 manifest 仍写入持久化
+  run directory，禁止大缓存占用配额较小的 Home。
 - Challenger 接入 verl 官方 batch reward manager；Solver 接入官方逐样本 reward manager。
 
 ## R-Zero 算法与五轮流程
