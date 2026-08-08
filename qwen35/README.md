@@ -9,7 +9,8 @@ adaptation and fault-tolerant orchestration.
 ## Fixed formal profile
 
 - Model: `Qwen/Qwen3.5-4B-Base`, revision `1001bb4`
-- Runtime: Python 3.12, CUDA 12.8, verl `v0.8.0`, FSDP2, vLLM text-only
+- Runtime: Python 3.12, CUDA 13.0.2, Torch 2.11.0, vLLM 0.24.0,
+  Transformers 5.5.3 and verl commit `4a2cba76`; FSDP2 and vLLM text-only
 - Hardware: one node with 4×A100 80GB
 - Five rounds; Questioner step 5 and Solver step 15
 - Released-code voting: online Challenger Solver `n=10`, candidate curation `m=9`
@@ -25,29 +26,34 @@ two frozen Solver services. Solver GRPO and benchmarks use all four GPUs.
 Build from the repository root:
 
 ```bash
-docker build -f qwen35/environment/Dockerfile -t rzero-qwen35:verl-0.8.0 .
+docker build -f qwen35/environment/Dockerfile -t rzero-qwen35:vllm024 .
 docker run --gpus all --ipc=host --shm-size=64g \
   -v "$PWD:/workspace/R-Zero" \
   -v /path/to/runs:/runs \
   -v /path/to/hf-cache:/root/.cache/huggingface \
   -e HF_TOKEN \
-  -it rzero-qwen35:verl-0.8.0 bash
+  -it rzero-qwen35:vllm024 bash
 ```
 
 On the target GPU host, capture the fully resolved environment after the
-official verl installer succeeds:
+pinned official-image smoke succeeds:
 
 ```bash
 bash qwen35/environment/capture_lock.sh /runs/environment/requirements.lock
 ```
 
-The image keeps the official checkout at `/opt/verl`. `run.sh` always places
+The image is derived from the official public
+`verlai/verl:vllm024.dev2@sha256:b867883b0dd011363e69ab2ab344922a28c5bd0409e2a324e3ee70fb27ca7543`
+application image. It pins the verl checkout at `/opt/verl` to
+`4a2cba76f7f605d2b9f56e640faaeaa71c2c7f71`; it does not run verl's legacy
+installer or replace the official CUDA/Torch/vLLM dependency stack. `run.sh` always places
 `/opt/verl` before the repository on `PYTHONPATH`, while retaining the repository
 as the second entry so verl reward workers can import `qwen35`. Training and the
 environment smoke run with `/opt/verl` as their working directory. The smoke
-stage rejects any `verl.__file__` outside `/opt/verl`, composes
-`verl.trainer.main_ppo` through Hydra, checks `qwen3_5`, the official chat
-template, four visible GPUs and a vLLM `language_model_only` load.
+stage rejects any `verl.__file__` outside `/opt/verl`, verifies every pinned
+runtime version and the verl Git commit, composes `verl.trainer.main_ppo`
+through Hydra, checks `qwen3_5`, the official chat template, four visible GPUs,
+and a real vLLM `language_model_only` load-and-generate cycle.
 
 ## Dry-run and smoke Round 0
 

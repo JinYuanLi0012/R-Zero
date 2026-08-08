@@ -9,8 +9,13 @@
   },
   "runtime": {
     "python": "3.12",
-    "cuda": "12.8",
-    "verl_ref": "v0.8.0",
+    "cuda": "13.0.2",
+    "torch": "2.11.0",
+    "vllm": "0.24.0",
+    "transformers": "5.5.3",
+    "verl_ref": "4a2cba76f7f605d2b9f56e640faaeaa71c2c7f71",
+    "base_image": "verlai/verl:vllm024.dev2",
+    "base_image_digest": "sha256:b867883b0dd011363e69ab2ab344922a28c5bd0409e2a324e3ee70fb27ca7543",
     "verl_source_root": "/opt/verl",
     "training_backend": "fsdp2",
     "rollout_backend": "vllm"

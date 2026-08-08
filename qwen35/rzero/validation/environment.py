@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import gc
 import json
 import os
 import platform
@@ -22,6 +23,11 @@ def main() -> None:
     parser.add_argument("--model", required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--expected-verl-root", type=Path, required=True)
+    parser.add_argument("--expected-verl-ref", required=True)
+    parser.add_argument("--expected-vllm-version", required=True)
+    parser.add_argument("--expected-transformers-version", required=True)
+    parser.add_argument("--expected-torch-version", required=True)
+    parser.add_argument("--expected-cuda-version", required=True)
     parser.add_argument("--load-vllm", action="store_true")
     args = parser.parse_args()
 
@@ -32,6 +38,23 @@ def main() -> None:
     from transformers import AutoConfig, AutoTokenizer
 
     verl_file = assert_official_verl(verl.__file__, args.expected_verl_root)
+    verl_ref = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=args.expected_verl_root,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    versions = {
+        "verl_ref": (verl_ref, args.expected_verl_ref),
+        "vllm": (vllm.__version__, args.expected_vllm_version),
+        "transformers": (transformers.__version__, args.expected_transformers_version),
+        "torch": (torch.__version__.split("+", 1)[0], args.expected_torch_version),
+        "cuda": (torch.version.cuda, args.expected_cuda_version),
+    }
+    mismatches = {name: pair for name, pair in versions.items() if pair[0] != pair[1]}
+    if mismatches:
+        raise RuntimeError(f"runtime version mismatch: {mismatches}")
     repo_root = Path(__file__).resolve().parents[3]
     compose_env = os.environ.copy()
     compose_env["PYTHONPATH"] = build_pythonpath(args.expected_verl_root, repo_root, compose_env.get("PYTHONPATH"))
@@ -60,6 +83,7 @@ def main() -> None:
         "transformers": transformers.__version__,
         "vllm": vllm.__version__,
         "verl": getattr(verl, "__version__", "unknown"),
+        "verl_ref": verl_ref,
         "verl_file": str(verl_file),
         "verl_hydra_compose": "ok",
         "model_type": config.model_type,
@@ -67,9 +91,28 @@ def main() -> None:
         "gpu_names": [torch.cuda.get_device_name(index) for index in range(torch.cuda.device_count())],
     }
     if args.load_vllm:
-        engine = vllm.LLM(model=args.model, tokenizer=args.model, language_model_only=True, gpu_memory_utilization=0.2)
+        engine = vllm.LLM(
+            model=args.model,
+            tokenizer=args.model,
+            language_model_only=True,
+            gpu_memory_utilization=0.2,
+            max_model_len=4096,
+            enforce_eager=True,
+            enable_chunked_prefill=False,
+        )
+        outputs = engine.generate(
+            ["Return exactly the number 2."],
+            vllm.SamplingParams(temperature=0.0, max_tokens=8),
+            use_tqdm=False,
+        )
+        generated = outputs[0].outputs[0].text
+        if not generated:
+            raise RuntimeError("vLLM loaded Qwen3.5 but generated no text")
         del engine
-        result["vllm_model_load"] = "ok"
+        gc.collect()
+        torch.cuda.empty_cache()
+        result["vllm_model_load_generate"] = "ok"
+        result["vllm_smoke_text"] = generated
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
 
