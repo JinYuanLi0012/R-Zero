@@ -42,6 +42,8 @@ def validate_config(config: dict[str, Any]) -> None:
     runtime = config["runtime"]
     if runtime.get("verl_ref") != "v0.8.0" or runtime.get("training_backend") != "fsdp2":
         raise ConfigError("formal profile requires verl v0.8.0 with FSDP2")
+    if runtime.get("verl_source_root") != "/opt/verl":
+        raise ConfigError("official verl v0.8.0 source root must be /opt/verl")
 
     hardware = config["hardware"]
     if hardware.get("gpus") != [0, 1, 2, 3]:

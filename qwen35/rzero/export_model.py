@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 import argparse
+import os
 import subprocess
 import sys
 from pathlib import Path
+
+from qwen35.rzero.official_verl import build_pythonpath, verl_source_root
 
 
 def checkpoint_actor(checkpoint_root: Path, step: int) -> Path:
@@ -27,6 +30,10 @@ def main() -> None:
     args = parser.parse_args()
     actor = checkpoint_actor(args.checkpoint_root, args.step)
     args.target_dir.parent.mkdir(parents=True, exist_ok=True)
+    official_root = verl_source_root()
+    repo_root = Path(__file__).resolve().parents[2]
+    env = os.environ.copy()
+    env["PYTHONPATH"] = build_pythonpath(official_root, repo_root, env.get("PYTHONPATH"))
     subprocess.run(
         [
             sys.executable,
@@ -41,6 +48,8 @@ def main() -> None:
             str(args.target_dir),
         ],
         check=True,
+        cwd=official_root,
+        env=env,
     )
 
 

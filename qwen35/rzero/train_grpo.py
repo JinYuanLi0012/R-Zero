@@ -13,7 +13,9 @@ import sys
 from pathlib import Path
 
 from qwen35.rzero.config import load_config
+from qwen35.rzero.official_verl import build_pythonpath, verl_source_root
 from qwen35.rzero.pipeline.checkpoint_recovery import recover_tracker
+from qwen35.rzero.pipeline.training_lineage import build_training_lineage, ensure_training_lineage
 
 
 def _override(name: str, value: object) -> str:
@@ -117,12 +119,25 @@ def main() -> None:
     if args.print_command:
         print(" ".join(command))
         return
-    args.output_dir.mkdir(parents=True, exist_ok=True)
+    config = load_config(args.config)
+    steps = config["algorithm"]["questioner_steps" if args.role == "questioner" else "solver_steps"]
+    lineage = build_training_lineage(
+        role=args.role,
+        model=args.model,
+        train_file=args.train_file,
+        val_file=args.val_file,
+        config_snapshot=config,
+        total_steps=steps,
+    )
+    ensure_training_lineage(args.output_dir, lineage, resume=args.resume)
     if args.resume:
         recover_tracker(args.output_dir)
     env = os.environ.copy()
     env.setdefault("VLLM_USE_V1", "1")
-    subprocess.run(command, check=True, env=env)
+    repo_root = Path(__file__).resolve().parents[2]
+    official_root = verl_source_root(config["runtime"]["verl_source_root"])
+    env["PYTHONPATH"] = build_pythonpath(official_root, repo_root, env.get("PYTHONPATH"))
+    subprocess.run(command, check=True, env=env, cwd=official_root)
 
 
 if __name__ == "__main__":

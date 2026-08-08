@@ -17,5 +17,6 @@ COPY qwen35/environment/requirements.in /tmp/rzero-qwen35-requirements.in
 RUN python3.12 -m pip install -r /tmp/rzero-qwen35-requirements.in
 
 WORKDIR /workspace/R-Zero
-ENV PYTHONPATH=/workspace/R-Zero
+ENV VERL_SOURCE_ROOT=/opt/verl
+ENV PYTHONPATH=/opt/verl:/workspace/R-Zero
 ENV VLLM_USE_V1=1

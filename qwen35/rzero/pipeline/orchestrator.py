@@ -12,11 +12,13 @@ import time
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable
 
 from qwen35.rzero.config import load_config
-from qwen35.rzero.pipeline.state import Artifact, RunState, StateError, canonical_hash, validate_artifact
+from qwen35.rzero.official_verl import build_pythonpath, verl_source_root
+from qwen35.rzero.pipeline.state import Artifact, RunState, StateError, atomic_write_json, canonical_hash, validate_artifact
 
 
 @dataclass
@@ -36,21 +38,31 @@ class Pipeline:
         self.fingerprint = canonical_hash(snapshot)
         self.run_dir = args.run_dir.expanduser().resolve()
         self.repo_root = Path(__file__).resolve().parents[3]
+        self.verl_root = verl_source_root(self.config["runtime"]["verl_source_root"])
         self.state = RunState(self.run_dir, self.fingerprint)
+        self.force_fresh_stages: set[str] = set()
+        self.resume_existing = bool(args.resume or args.from_stage)
         self.python = sys.executable
         self.base_model = self.run_dir / "models" / "base"
         self.seed_data = self.run_dir / "data" / "seed"
 
-    def _run(self, command: list[str], log_path: Path, env: dict[str, str] | None = None) -> None:
+    def _run(
+        self,
+        command: list[str],
+        log_path: Path,
+        env: dict[str, str] | None = None,
+        cwd: Path | None = None,
+    ) -> None:
         log_path.parent.mkdir(parents=True, exist_ok=True)
         merged_env = os.environ.copy()
         if env:
             merged_env.update(env)
-        merged_env.setdefault("PYTHONPATH", str(self.repo_root))
+        merged_env["VERL_SOURCE_ROOT"] = str(self.verl_root)
+        merged_env["PYTHONPATH"] = build_pythonpath(self.verl_root, self.repo_root, merged_env.get("PYTHONPATH"))
         with log_path.open("a", encoding="utf-8") as log:
             log.write(f"$ {' '.join(command)}\n")
             log.flush()
-            subprocess.run(command, cwd=self.repo_root, env=merged_env, stdout=log, stderr=subprocess.STDOUT, check=True)
+            subprocess.run(command, cwd=cwd or self.repo_root, env=merged_env, stdout=log, stderr=subprocess.STDOUT, check=True)
 
     def _round_dir(self, round_number: int) -> Path:
         return self.run_dir / f"round_{round_number:02d}"
@@ -82,7 +94,9 @@ class Pipeline:
                 time.sleep(2)
         raise TimeoutError(f"Solver service did not become healthy: {endpoint}")
 
-    def _train_questioner(self, round_number: int, questioner_model: Path, solver_model: Path) -> None:
+    def _train_questioner(
+        self, round_number: int, questioner_model: Path, solver_model: Path, stage_key: str
+    ) -> None:
         round_dir = self._round_dir(round_number)
         hardware = self.config["hardware"]
         samples = self.config["algorithm"]["questioner_solver_samples"]
@@ -96,7 +110,13 @@ class Pipeline:
                 log_path.parent.mkdir(parents=True, exist_ok=True)
                 handle = log_path.open("a", encoding="utf-8")
                 env = os.environ.copy()
-                env.update({"CUDA_VISIBLE_DEVICES": str(gpu), "PYTHONPATH": str(self.repo_root), "VLLM_USE_V1": "1"})
+                env.update(
+                    {
+                        "CUDA_VISIBLE_DEVICES": str(gpu),
+                        "PYTHONPATH": build_pythonpath(self.verl_root, self.repo_root, env.get("PYTHONPATH")),
+                        "VLLM_USE_V1": "1",
+                    }
+                )
                 process = subprocess.Popen(
                     [
                         self.python,
@@ -109,7 +129,7 @@ class Pipeline:
                         "--samples",
                         str(samples),
                     ],
-                    cwd=self.repo_root,
+                    cwd=self.verl_root,
                     env=env,
                     stdout=handle,
                     stderr=subprocess.STDOUT,
@@ -135,8 +155,9 @@ class Pipeline:
                 str(round_dir / "questioner" / "checkpoints"),
                 "--experiment-name",
                 f"round_{round_number:02d}_questioner",
-                "--resume",
             ]
+            if self.resume_existing and stage_key not in self.force_fresh_stages:
+                command.append("--resume")
             self._run(
                 command,
                 round_dir / "logs" / "questioner_train.log",
@@ -145,6 +166,7 @@ class Pipeline:
                     "RZERO_SOLVER_ENDPOINTS": ",".join(endpoints),
                     "VLLM_USE_V1": "1",
                 },
+                cwd=self.verl_root,
             )
         finally:
             for process, _ in processes:
@@ -158,7 +180,7 @@ class Pipeline:
                     process.wait()
                 handle.close()
 
-    def _train_solver(self, round_number: int, solver_model: Path) -> None:
+    def _train_solver(self, round_number: int, solver_model: Path, stage_key: str) -> None:
         round_dir = self._round_dir(round_number)
         command = [
             self.python,
@@ -178,12 +200,14 @@ class Pipeline:
             str(round_dir / "solver" / "checkpoints"),
             "--experiment-name",
             f"round_{round_number:02d}_solver",
-            "--resume",
         ]
+        if self.resume_existing and stage_key not in self.force_fresh_stages:
+            command.append("--resume")
         self._run(
             command,
             round_dir / "logs" / "solver_train.log",
             env={"CUDA_VISIBLE_DEVICES": "0,1,2,3", "VLLM_USE_V1": "1"},
+            cwd=self.verl_root,
         )
 
     def _export(self, checkpoint_root: Path, step: int, target: Path, log: Path) -> None:
@@ -201,7 +225,7 @@ class Pipeline:
             "--target-dir",
             str(temporary),
         ]
-        self._run(command, log)
+        self._run(command, log, cwd=self.verl_root)
         backup = target.with_name(f".{target.name}.previous")
         if backup.exists():
             shutil.rmtree(backup)
@@ -285,10 +309,13 @@ class Pipeline:
                         str(self.base_model),
                         "--output",
                         str(smoke_output),
+                        "--expected-verl-root",
+                        str(self.verl_root),
                         "--load-vllm",
                     ],
                     self.run_dir / "logs" / "environment_smoke.log",
                     env={"CUDA_VISIBLE_DEVICES": "0,1,2,3"},
+                    cwd=self.verl_root,
                 ),
                 "validate qwen3_5, four GPUs and vLLM text-only load",
                 [Artifact(self.base_model, "model")],
@@ -306,7 +333,8 @@ class Pipeline:
             s_export = round_dir / "solver" / "export"
             prefix = f"round_{round_number:02d}"
 
-            stages.append(Stage(f"{prefix}.questioner_train", [Artifact(q_actor, "checkpoint")], lambda n=round_number, q=questioner_model, s=solver_model: self._train_questioner(n, q, s), "train Questioner with 2+2 GPU topology", [Artifact(questioner_model, "model"), Artifact(solver_model, "model"), Artifact(self.seed_data / "questioner_train.parquet")]))
+            q_stage_key = f"{prefix}.questioner_train"
+            stages.append(Stage(q_stage_key, [Artifact(q_actor, "checkpoint")], lambda n=round_number, q=questioner_model, s=solver_model, key=q_stage_key: self._train_questioner(n, q, s, key), "train Questioner with 2+2 GPU topology", [Artifact(questioner_model, "model"), Artifact(solver_model, "model"), Artifact(self.seed_data / "questioner_train.parquet")]))
             stages.append(Stage(f"{prefix}.questioner_export", [Artifact(q_export, "model")], lambda root=q_checkpoints, target=q_export, rd=round_dir: self._export(root, cfg["algorithm"]["questioner_steps"], target, rd / "logs" / "questioner_export.log"), "merge Questioner FSDP checkpoint", [Artifact(q_actor, "checkpoint")]))
 
             for shard in range(cfg["generation"]["shards"]):
@@ -368,7 +396,8 @@ class Pipeline:
                 curate_command.extend(["--fallback", str(self.seed_data / "solver_val.parquet")])
             scored_inputs = [Artifact(round_dir / "scored" / f"shard_{shard}.json", "json") for shard in range(cfg["generation"]["shards"])]
             stages.append(Stage(f"{prefix}.curate", [Artifact(dataset), Artifact(metadata, "json")], lambda command=curate_command, rd=round_dir: self._run(command, rd / "logs" / "curate.log"), "merge, filter and deduplicate local Parquet", scored_inputs))
-            stages.append(Stage(f"{prefix}.solver_train", [Artifact(s_actor, "checkpoint")], lambda n=round_number, model=solver_model: self._train_solver(n, model), "train Solver on all four GPUs", [Artifact(dataset), Artifact(solver_model, "model"), Artifact(self.seed_data / "solver_val.parquet")]))
+            s_stage_key = f"{prefix}.solver_train"
+            stages.append(Stage(s_stage_key, [Artifact(s_actor, "checkpoint")], lambda n=round_number, model=solver_model, key=s_stage_key: self._train_solver(n, model, key), "train Solver on all four GPUs", [Artifact(dataset), Artifact(solver_model, "model"), Artifact(self.seed_data / "solver_val.parquet")]))
             stages.append(Stage(f"{prefix}.solver_export", [Artifact(s_export, "model")], lambda root=s_checkpoints, target=s_export, rd=round_dir: self._export(root, cfg["algorithm"]["solver_steps"], target, rd / "logs" / "solver_export.log"), "merge Solver FSDP checkpoint", [Artifact(s_actor, "checkpoint")]))
             benchmark = round_dir / "evaluation"
             benchmark_action = (
@@ -379,22 +408,62 @@ class Pipeline:
             stages.append(Stage(f"{prefix}.benchmark", [Artifact(benchmark, "directory")], benchmark_action, "run unchanged upstream evaluation in isolated directory", [Artifact(s_export, "model")]))
         return stages
 
+    def _prepare_recompute(self, stages: list[Stage], first_key: str) -> None:
+        keys = [stage.key for stage in stages]
+        if first_key not in keys:
+            raise StateError(f"unknown --from-stage {first_key!r}")
+        affected = stages[keys.index(first_key) :]
+        training_stages = [stage for stage in affected if stage.key.endswith((".questioner_train", ".solver_train"))]
+        self.force_fresh_stages = {stage.key for stage in training_stages}
+
+        event_id = f"{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}-{time.time_ns()}"
+        backup_root = self.run_dir / "recompute_backups" / event_id
+        moved: list[dict[str, str]] = []
+        for stage in training_stages:
+            checkpoint_artifact = next((item for item in stage.artifacts if item.kind == "checkpoint"), None)
+            if checkpoint_artifact is None:
+                raise StateError(f"training stage has no checkpoint artifact: {stage.key}")
+            checkpoint_root = checkpoint_artifact.path.parents[1]
+            if not checkpoint_root.exists():
+                continue
+            destination = backup_root / stage.key / "checkpoints"
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            os.replace(checkpoint_root, destination)
+            moved.append({"stage": stage.key, "source": str(checkpoint_root), "backup": str(destination)})
+
+        atomic_write_json(
+            self.run_dir / "manifests" / "recomputations" / f"{event_id}.json",
+            {
+                "schema_version": 1,
+                "requested_from_stage": first_key,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "forced_fresh_training_stages": sorted(self.force_fresh_stages),
+                "moved_checkpoint_roots": moved,
+            },
+        )
+
     def run(self) -> None:
         stages = self.stages()
         selected_round = self.args.round
+        if selected_round and self.args.from_stage:
+            raise StateError("--round cannot be combined with --from-stage because downstream lineage would be stale")
         if selected_round:
             allowed_prefix = f"round_{selected_round:02d}."
             stages = [stage for stage in stages if not stage.key.startswith("round_") or stage.key.startswith(allowed_prefix)]
         keys = [stage.key for stage in stages]
 
         if self.args.dry_run:
+            forced = set(keys[keys.index(self.args.from_stage) :]) if self.args.from_stage in keys else set()
+            if self.args.from_stage and not forced:
+                raise StateError(f"unknown --from-stage {self.args.from_stage!r}")
             for stage in stages:
-                status = "SKIP" if self.state.is_complete(stage.key, stage.artifacts, stage.inputs) else "RUN "
+                status = "SKIP" if stage.key not in forced and self.state.is_complete(stage.key, stage.artifacts, stage.inputs) else "RUN "
                 print(f"{status} {stage.key:32} {stage.description}")
             return
 
         self.state.initialize({key: value for key, value in self.config.items() if not key.startswith("_")})
         if self.args.from_stage:
+            self._prepare_recompute(stages, self.args.from_stage)
             self.state.invalidate_from(keys, self.args.from_stage)
         elif not self.args.resume and any(self.state.stage_manifest(key).exists() for key in keys):
             raise StateError("existing stage manifests found; pass --resume or use a new --run-dir")
@@ -411,7 +480,7 @@ class Pipeline:
                     index += 1
                 pending = []
                 for item in group:
-                    if self.args.resume and self.state.is_complete(item.key, item.artifacts, item.inputs):
+                    if self.resume_existing and self.state.is_complete(item.key, item.artifacts, item.inputs):
                         print(f"[skip] {item.key}")
                     else:
                         pending.append(item)
@@ -435,7 +504,7 @@ class Pipeline:
                 continue
 
             complete = self.state.is_complete(stage.key, stage.artifacts, stage.inputs)
-            if complete and self.args.resume:
+            if complete and self.resume_existing:
                 print(f"[skip] {stage.key}")
                 index += 1
                 continue

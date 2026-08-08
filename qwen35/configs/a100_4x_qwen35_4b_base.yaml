@@ -11,6 +11,7 @@
     "python": "3.12",
     "cuda": "12.8",
     "verl_ref": "v0.8.0",
+    "verl_source_root": "/opt/verl",
     "training_backend": "fsdp2",
     "rollout_backend": "vllm"
   },

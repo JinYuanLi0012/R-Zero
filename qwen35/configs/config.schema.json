@@ -28,9 +28,10 @@
     },
     "runtime": {
       "type": "object",
-      "required": ["verl_ref", "training_backend", "rollout_backend"],
+      "required": ["verl_ref", "verl_source_root", "training_backend", "rollout_backend"],
       "properties": {
         "verl_ref": {"const": "v0.8.0"},
+        "verl_source_root": {"const": "/opt/verl"},
         "training_backend": {"const": "fsdp2"},
         "rollout_backend": {"const": "vllm"}
       }

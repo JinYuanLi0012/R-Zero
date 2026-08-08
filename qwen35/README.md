@@ -41,8 +41,13 @@ official verl installer succeeds:
 bash qwen35/environment/capture_lock.sh /runs/environment/requirements.lock
 ```
 
-The formal pipeline performs a fail-fast smoke stage that checks `qwen3_5`, the
-official chat template, four visible GPUs and a vLLM `language_model_only` load.
+The image keeps the official checkout at `/opt/verl`. `run.sh` always places
+`/opt/verl` before the repository on `PYTHONPATH`, while retaining the repository
+as the second entry so verl reward workers can import `qwen35`. Training and the
+environment smoke run with `/opt/verl` as their working directory. The smoke
+stage rejects any `verl.__file__` outside `/opt/verl`, composes
+`verl.trainer.main_ppo` through Hydra, checks `qwen3_5`, the official chat
+template, four visible GPUs and a vLLM `language_model_only` load.
 
 ## Dry-run and smoke Round 0
 
@@ -92,11 +97,25 @@ model, optimizer and extra-state rank shard exists. If the official tracker
 points at a partial checkpoint, it is atomically rewound to the newest complete
 step; checkpoint contents themselves are never rewritten.
 
+Every checkpoint root also contains `RZERO_TRAINING_LINEAGE.json`, binding it to
+the role, parent model artifact, training/validation data hashes, total steps and
+run configuration fingerprint. Ordinary `--resume` is refused if any of those
+inputs differs, or if pre-existing checkpoint state has no lineage file.
+
 To invalidate a stage and every later manifest in the selected graph:
 
 ```bash
 qwen35/scripts/run.sh ... --resume --from-stage round_02.evaluate.3
 ```
+
+`--from-stage` is an explicit recomputation, not a failure resume. Before
+invalidating manifests, every affected Questioner/Solver checkpoint root is
+atomically moved under `RUN_DIR/recompute_backups/<event>/`; affected training
+stages then start with verl resume disabled. The move is recorded under
+`manifests/recomputations/`. If that fresh training is later interrupted, restart
+with plain `--resume` (without repeating `--from-stage`) to resume its latest
+complete, lineage-matching step. `--round` and `--from-stage` cannot be combined,
+because doing so would leave later-round model lineage stale.
 
 To operate on one round whose dependencies already exist:
 
