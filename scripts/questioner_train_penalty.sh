@@ -30,6 +30,16 @@ bash vllm_service_init/start.sh $solver_model_path $RUN_ID
 echo "vLLM services started with RUN_ID=$RUN_ID on GPUs $VLLM_GPU_IDS and ports starting at $VLLM_PORT_BASE"
 echo "Questioner training will use GPUs $QUESTIONER_TRAIN_GPU_IDS"
 QUESTIONER_LOGGER=${QUESTIONER_LOGGER:-'["console","wandb"]'}
+QUESTIONER_SAVE_FREQ=${QUESTIONER_SAVE_FREQ:-5}
+QUESTIONER_SAVE_LIMIT=${QUESTIONER_SAVE_LIMIT:-3}
+QUESTIONER_KEEP_LATEST_RESUME_STATE_ONLY=${QUESTIONER_KEEP_LATEST_RESUME_STATE_ONLY:-false}
+QUESTIONER_LOAD_CHECKPOINT=${QUESTIONER_LOAD_CHECKPOINT:-}
+
+RESUME_ARGS=()
+if [ -n "$QUESTIONER_LOAD_CHECKPOINT" ]; then
+    echo "resuming questioner training from $QUESTIONER_LOAD_CHECKPOINT"
+    RESUME_ARGS+=(trainer.load_checkpoint_path="$QUESTIONER_LOAD_CHECKPOINT")
+fi
 
 cleanup_vllm() {
     if [ -f "$QUESTIONER_VLLM_PID_FILE" ]; then
@@ -92,7 +102,10 @@ CUDA_VISIBLE_DEVICES=${QUESTIONER_TRAIN_GPU_IDS} python3 -m verl.trainer.main \
     worker.actor.micro_batch_size_per_device_for_update=${QUESTIONER_MICRO_BATCH_UPDATE:-2} \
     worker.actor.micro_batch_size_per_device_for_experience=${QUESTIONER_MICRO_BATCH_EXPERIENCE:-8} \
     trainer.max_steps=${QUESTIONER_MAX_STEPS:-6} \
-    trainer.save_freq=${QUESTIONER_SAVE_FREQ:-5}
+    trainer.save_freq=${QUESTIONER_SAVE_FREQ} \
+    trainer.save_limit=${QUESTIONER_SAVE_LIMIT} \
+    trainer.keep_latest_resume_state_only=${QUESTIONER_KEEP_LATEST_RESUME_STATE_ONLY} \
+    "${RESUME_ARGS[@]}"
 
 sleep 5
 

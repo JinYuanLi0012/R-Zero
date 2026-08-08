@@ -85,6 +85,37 @@ You can replicate all of our experimental results with a single script.
 bash scripts/main.sh Qwen/Qwen3-4B-Base qwen3-4b
 ```
 
+The base pipeline records atomic stage markers and saves a resumable training
+checkpoint after every completed GRPO step. If a run is interrupted, restart it
+with the same configuration and add `--resume`:
+
+```bash
+bash scripts/main.sh --resume Qwen/Qwen3-4B-Base qwen3-4b
+```
+
+Completed stages are skipped. An interrupted Challenger or Solver training
+stage loads the step referenced by its atomic `latest_global_step.txt`; for
+example, a fully saved step 7 resumes with step 8. If step 7 was only partially
+written, the tracker still points to step 6 and step 7 is recomputed safely.
+State is stored under `$STORAGE_PATH/rzero_runs/<model_abbr>/state`. Resume is
+rejected when the run configuration changes; use a new model abbreviation for
+a different experiment.
+
+Solver question labeling has a four-hour timeout by default. It can be changed
+without changing the experiment identity, for example
+`QUESTION_EVAL_TIMEOUT_SECONDS=21600` for six hours.
+
+On four GPUs, generate the paper-scale pool of 8,000 raw candidates per round
+as 2,000 candidates per GPU:
+
+```bash
+QUESTIONER_TRAIN_GPU_IDS=0,1 \
+VLLM_GPU_IDS=2,3 \
+QUESTION_GPU_IDS=0,1,2,3 \
+SOLVER_GENERATE_SAMPLES=2000 \
+bash scripts/main.sh Qwen/Qwen3-4B-Base qwen3-4b-8k
+```
+
 ### 4. Run Evaluation Only
 
 If you already have a Hugging Face model path and only want to run evaluation, use:

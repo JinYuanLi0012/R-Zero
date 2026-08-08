@@ -5,6 +5,7 @@ from huggingface_hub import login
 import argparse
 import json
 import os
+from pathlib import Path
 STORAGE_PATH = os.getenv("STORAGE_PATH")
 HUGGINGFACENAME = os.getenv("HUGGINGFACENAME")
 print(STORAGE_PATH)
@@ -17,6 +18,7 @@ parser.add_argument("--max_score", type=float, default=0.7)
 parser.add_argument("--min_score", type=float, default=0.3)
 parser.add_argument("--experiment_name", type=str, default="Qwen_Qwen3-4B-Base_all")
 parser.add_argument("--num_shards", type=int, default=int(os.getenv("QUESTION_NUM_SHARDS", "4")))
+parser.add_argument("--receipt", type=Path, default=None)
 args = parser.parse_args()
 
 datas= []
@@ -51,8 +53,20 @@ if not args.repo_name == "":
     dataset_dict = {"train": train_dataset}
     config_name = f"{args.experiment_name}"
     dataset = DatasetDict(dataset_dict)
-    dataset.push_to_hub(f"{HUGGINGFACENAME}/{args.repo_name}",private=True,config_name=config_name)
-
+    dataset_id = f"{HUGGINGFACENAME}/{args.repo_name}"
+    dataset.push_to_hub(dataset_id,private=True,config_name=config_name)
+    if args.receipt is not None:
+        args.receipt.parent.mkdir(parents=True, exist_ok=True)
+        temporary = args.receipt.with_name(f"{args.receipt.name}.tmp-{os.getpid()}")
+        temporary.write_text(json.dumps({
+            "dataset_id": dataset_id,
+            "config_name": config_name,
+            "filtered_count": len(filtered_datas),
+            "num_shards": args.num_shards,
+            "min_score": args.min_score,
+            "max_score": args.max_score,
+        }, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        os.replace(temporary, args.receipt)
 
 
 

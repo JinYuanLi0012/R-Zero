@@ -23,6 +23,8 @@ QUESTION_NUM_SHARDS=$(echo "$QUESTION_GPU_IDS" | awk -F',' '{print NF}')
 export QUESTION_NUM_SHARDS
 echo "using QUESTION_GPU_IDS=$QUESTION_GPU_IDS, QUESTION_NUM_SHARDS=$QUESTION_NUM_SHARDS"
 SOLVER_GENERATE_SAMPLES=${SOLVER_GENERATE_SAMPLES:-1000}
+QUESTION_EVAL_TIMEOUT_SECONDS=${QUESTION_EVAL_TIMEOUT_SECONDS:-14400}
+export QUESTION_EVAL_TIMEOUT_SECONDS
 SOLVER_MAX_RESPONSE_LENGTH=${SOLVER_MAX_RESPONSE_LENGTH:-4096}
 SOLVER_TOTAL_EPOCHS=${SOLVER_TOTAL_EPOCHS:-100}
 SOLVER_MAX_STEPS=${SOLVER_MAX_STEPS:-20}
@@ -32,14 +34,41 @@ SOLVER_UPLOAD_MAX_SCORE=${SOLVER_UPLOAD_MAX_SCORE:-0.8}
 SOLVER_UPLOAD_MIN_SCORE=${SOLVER_UPLOAD_MIN_SCORE:-0.3}
 SOLVER_SKIP_MERGE=${SOLVER_SKIP_MERGE:-0}
 SOLVER_SKIP_FINAL_EVAL=${SOLVER_SKIP_FINAL_EVAL:-0}
-echo "solver config: samples=$SOLVER_GENERATE_SAMPLES max_steps=$SOLVER_MAX_STEPS val_freq=$SOLVER_VAL_FREQ merge_step=$SOLVER_MERGE_STEP"
-echo 'start generate question'
-bash question_generate/question_generate.bash $questioner_model_path $SOLVER_GENERATE_SAMPLES $experiment_name
-echo 'start evaluate generated question'
-bash question_evaluate/evaluate.sh $solver_model_path $experiment_name
-echo 'start upload'
-python question_evaluate/upload.py --repo_name ${experiment_name} --max_score ${SOLVER_UPLOAD_MAX_SCORE} --min_score ${SOLVER_UPLOAD_MIN_SCORE} --experiment_name ${experiment_name} --num_shards ${QUESTION_NUM_SHARDS}
+SOLVER_PREPARE_ONLY=${SOLVER_PREPARE_ONLY:-0}
+SOLVER_DATASET_READY=${SOLVER_DATASET_READY:-0}
+SOLVER_SAVE_FREQ=${SOLVER_SAVE_FREQ:-5}
+SOLVER_SAVE_LIMIT=${SOLVER_SAVE_LIMIT:-3}
+SOLVER_KEEP_LATEST_RESUME_STATE_ONLY=${SOLVER_KEEP_LATEST_RESUME_STATE_ONLY:-false}
+SOLVER_LOAD_CHECKPOINT=${SOLVER_LOAD_CHECKPOINT:-}
+SOLVER_DATASET_RECEIPT=${SOLVER_DATASET_RECEIPT:-}
+echo "solver config: samples=$SOLVER_GENERATE_SAMPLES label_timeout=${QUESTION_EVAL_TIMEOUT_SECONDS}s max_steps=$SOLVER_MAX_STEPS val_freq=$SOLVER_VAL_FREQ merge_step=$SOLVER_MERGE_STEP"
+if [ "$SOLVER_DATASET_READY" != "1" ]; then
+    echo 'start generate question'
+    bash question_generate/question_generate.bash $questioner_model_path $SOLVER_GENERATE_SAMPLES $experiment_name
+    echo 'start evaluate generated question'
+    bash question_evaluate/evaluate.sh $solver_model_path $experiment_name
+    echo 'start upload'
+    UPLOAD_ARGS=(--repo_name "${experiment_name}" --max_score "${SOLVER_UPLOAD_MAX_SCORE}" --min_score "${SOLVER_UPLOAD_MIN_SCORE}" --experiment_name "${experiment_name}" --num_shards "${QUESTION_NUM_SHARDS}")
+    if [ -n "$SOLVER_DATASET_RECEIPT" ]; then
+        UPLOAD_ARGS+=(--receipt "$SOLVER_DATASET_RECEIPT")
+    fi
+    python question_evaluate/upload.py "${UPLOAD_ARGS[@]}"
+else
+    echo "dataset already prepared: ${HUGGINGFACENAME}/${experiment_name}"
+fi
+
+if [ "$SOLVER_PREPARE_ONLY" = "1" ]; then
+    echo "solver dataset preparation finished"
+    exit 0
+fi
+
 echo 'start train'
+
+RESUME_ARGS=()
+if [ -n "$SOLVER_LOAD_CHECKPOINT" ]; then
+    echo "resuming solver training from $SOLVER_LOAD_CHECKPOINT"
+    RESUME_ARGS+=(trainer.load_checkpoint_path="$SOLVER_LOAD_CHECKPOINT")
+fi
 
 CUDA_VISIBLE_DEVICES=${QUESTION_GPU_IDS} python3 -m verl.trainer.main \
     config=examples/config.yaml \
@@ -50,6 +79,10 @@ CUDA_VISIBLE_DEVICES=${QUESTION_GPU_IDS} python3 -m verl.trainer.main \
     data.train_files=${HUGGINGFACENAME}/${experiment_name}@train \
     trainer.total_epochs=${SOLVER_TOTAL_EPOCHS} \
     trainer.max_steps=${SOLVER_MAX_STEPS} \
+    trainer.save_freq=${SOLVER_SAVE_FREQ} \
+    trainer.save_limit=${SOLVER_SAVE_LIMIT} \
+    trainer.keep_latest_resume_state_only=${SOLVER_KEEP_LATEST_RESUME_STATE_ONLY} \
+    "${RESUME_ARGS[@]}" \
     data.format_prompt=./examples/format_prompt/solver.jinja \
     trainer.val_freq=${SOLVER_VAL_FREQ} \
     trainer.n_gpus_per_node=${QUESTION_NUM_SHARDS} \
