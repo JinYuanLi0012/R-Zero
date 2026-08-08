@@ -13,6 +13,7 @@ import sys
 from pathlib import Path
 
 from qwen35.rzero.config import load_config
+from qwen35.rzero.pipeline.checkpoint_recovery import recover_tracker
 
 
 def _override(name: str, value: object) -> str:
@@ -34,8 +35,14 @@ def build_command(args: argparse.Namespace) -> list[str]:
     rollouts = algorithm["questioner_rollouts"] if is_questioner else algorithm["solver_rollouts"]
     reward_path = Path(__file__).parent / "rewards" / ("challenger.py" if is_questioner else "solver.py")
     reward_manager = "batch" if is_questioner else "naive"
-    train_batch_size = 4 if is_questioner else 128
-    mini_batch_size = 16 if is_questioner else 128
+    # Formal values map released EasyR1's rollout_batch_size and actor global
+    # batch size; the smoke profile scales them down explicitly.
+    train_batch_size = algorithm[
+        "questioner_prompt_batch_size" if is_questioner else "solver_prompt_batch_size"
+    ]
+    mini_batch_size = algorithm[
+        "questioner_update_batch_size" if is_questioner else "solver_update_batch_size"
+    ]
     micro_batch_size = 1
 
     overrides = {
@@ -55,6 +62,8 @@ def build_command(args: argparse.Namespace) -> list[str]:
         "actor_rollout_ref.model.enable_gradient_checkpointing": True,
         "actor_rollout_ref.actor.strategy": "fsdp2",
         "actor_rollout_ref.ref.strategy": "fsdp2",
+        "actor_rollout_ref.actor.freeze_vision_tower": True,
+        "actor_rollout_ref.actor.use_torch_compile": False,
         "actor_rollout_ref.actor.optim.lr": algorithm["learning_rate"],
         "actor_rollout_ref.actor.ppo_mini_batch_size": mini_batch_size,
         "actor_rollout_ref.actor.ppo_micro_batch_size_per_gpu": micro_batch_size,
@@ -69,9 +78,13 @@ def build_command(args: argparse.Namespace) -> list[str]:
         "actor_rollout_ref.rollout.gpu_memory_utilization": 0.45,
         "actor_rollout_ref.rollout.enforce_eager": True,
         "actor_rollout_ref.rollout.enable_chunked_prefill": False,
+        "actor_rollout_ref.rollout.engine_kwargs.vllm.language_model_only": True,
         "reward.custom_reward_function.path": str(reward_path.resolve()),
         "reward.custom_reward_function.name": "compute_score",
         "reward.reward_manager.name": reward_manager,
+        # Challenger diversity is defined over the complete rollout population;
+        # splitting it across reward workers would change BLEU cluster shares.
+        "reward.num_workers": 1 if is_questioner else 8,
         "trainer.project_name": "rzero_qwen35",
         "trainer.experiment_name": args.experiment_name,
         "trainer.logger": "[console]",
@@ -105,6 +118,8 @@ def main() -> None:
         print(" ".join(command))
         return
     args.output_dir.mkdir(parents=True, exist_ok=True)
+    if args.resume:
+        recover_tracker(args.output_dir)
     env = os.environ.copy()
     env.setdefault("VLLM_USE_V1", "1")
     subprocess.run(command, check=True, env=env)

@@ -364,6 +364,8 @@ class Pipeline:
                 "--min-score", str(cfg["algorithm"]["difficulty_min"]),
                 "--max-score", str(cfg["algorithm"]["difficulty_max"]),
             ])
+            if cfg.get("curation", {}).get("allow_smoke_fallback", False):
+                curate_command.extend(["--fallback", str(self.seed_data / "solver_val.parquet")])
             scored_inputs = [Artifact(round_dir / "scored" / f"shard_{shard}.json", "json") for shard in range(cfg["generation"]["shards"])]
             stages.append(Stage(f"{prefix}.curate", [Artifact(dataset), Artifact(metadata, "json")], lambda command=curate_command, rd=round_dir: self._run(command, rd / "logs" / "curate.log"), "merge, filter and deduplicate local Parquet", scored_inputs))
             stages.append(Stage(f"{prefix}.solver_train", [Artifact(s_actor, "checkpoint")], lambda n=round_number, model=solver_model: self._train_solver(n, model), "train Solver on all four GPUs", [Artifact(dataset), Artifact(solver_model, "model"), Artifact(self.seed_data / "solver_val.parquet")]))

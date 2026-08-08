@@ -30,6 +30,10 @@
     "solver_steps": 1,
     "questioner_rollouts": 4,
     "solver_rollouts": 5,
+    "questioner_prompt_batch_size": 4,
+    "solver_prompt_batch_size": 4,
+    "questioner_update_batch_size": 16,
+    "solver_update_batch_size": 8,
     "questioner_solver_samples": 2,
     "candidate_vote_samples": 2,
     "difficulty_min": 0.0,
@@ -49,6 +53,9 @@
     "temperature": 1.0,
     "top_p": 0.95,
     "max_tokens": 512
+  },
+  "curation": {
+    "allow_smoke_fallback": true
   },
   "checkpoint": {
     "save_freq": 1,

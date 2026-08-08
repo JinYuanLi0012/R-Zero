@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/JinYuanLi0012/R-Zero/qwen35/config.schema.json",
+  "title": "R-Zero Qwen3.5 pipeline configuration",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "profile",
+    "model",
+    "runtime",
+    "hardware",
+    "algorithm",
+    "data",
+    "generation",
+    "checkpoint"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "profile": {"enum": ["formal", "smoke"]},
+    "model": {
+      "type": "object",
+      "required": ["id", "revision", "language_model_only"],
+      "properties": {
+        "id": {"const": "Qwen/Qwen3.5-4B-Base"},
+        "revision": {"type": "string", "minLength": 7},
+        "language_model_only": {"const": true}
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "required": ["verl_ref", "training_backend", "rollout_backend"],
+      "properties": {
+        "verl_ref": {"const": "v0.8.0"},
+        "training_backend": {"const": "fsdp2"},
+        "rollout_backend": {"const": "vllm"}
+      }
+    },
+    "hardware": {
+      "type": "object",
+      "required": ["gpus", "questioner_training_gpus", "questioner_solver_gpus"],
+      "properties": {
+        "gpus": {"const": [0, 1, 2, 3]},
+        "questioner_training_gpus": {"const": [0, 1]},
+        "questioner_solver_gpus": {"const": [2, 3]}
+      }
+    },
+    "algorithm": {"type": "object"},
+    "data": {"type": "object"},
+    "generation": {"type": "object"},
+    "checkpoint": {"type": "object"}
+  },
+  "additionalProperties": true
+}

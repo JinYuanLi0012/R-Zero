@@ -10,7 +10,13 @@ from pathlib import Path
 from qwen35.rzero.data import solver_record
 
 
-def curate(inputs: list[Path], output: Path, minimum: float, maximum: float) -> dict[str, int]:
+def curate(
+    inputs: list[Path],
+    output: Path,
+    minimum: float,
+    maximum: float,
+    fallback: Path | None = None,
+) -> dict[str, int | bool]:
     rows = []
     for path in inputs:
         rows.extend(json.loads(path.read_text(encoding="utf-8")))
@@ -30,16 +36,26 @@ def curate(inputs: list[Path], output: Path, minimum: float, maximum: float) -> 
         solver_record(item["question"], item["answer"], float(item["score"]), index)
         for index, item in enumerate(unique.values())
     ]
+    from datasets import Dataset, load_dataset
+
+    used_fallback = False
+    if not records and fallback:
+        fallback_dataset = load_dataset("parquet", data_files=str(fallback), split="train")
+        records = [dict(fallback_dataset[index]) for index in range(min(8, len(fallback_dataset)))]
+        used_fallback = True
     if not records:
         raise RuntimeError("difficulty filtering produced an empty Solver dataset")
-
-    from datasets import Dataset
 
     output.parent.mkdir(parents=True, exist_ok=True)
     temporary = output.with_name(f".{output.name}.tmp-{os.getpid()}")
     Dataset.from_list(records).to_parquet(temporary)
     os.replace(temporary, output)
-    return {"scored": len(rows), "accepted": len(accepted), "deduplicated": len(records)}
+    return {
+        "scored": len(rows),
+        "accepted": len(accepted),
+        "deduplicated": len(records),
+        "used_smoke_fallback": used_fallback,
+    }
 
 
 def main() -> None:
@@ -49,8 +65,9 @@ def main() -> None:
     parser.add_argument("--min-score", type=float, default=0.3)
     parser.add_argument("--max-score", type=float, default=0.8)
     parser.add_argument("--metadata", type=Path)
+    parser.add_argument("--fallback", type=Path)
     args = parser.parse_args()
-    metadata = curate(args.input, args.output, args.min_score, args.max_score)
+    metadata = curate(args.input, args.output, args.min_score, args.max_score, args.fallback)
     if args.metadata:
         args.metadata.parent.mkdir(parents=True, exist_ok=True)
         args.metadata.write_text(json.dumps(metadata, indent=2) + "\n", encoding="utf-8")

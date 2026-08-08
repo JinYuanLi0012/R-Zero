@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -65,11 +66,27 @@ def validate_artifact(artifact: Artifact) -> dict[str, Any]:
             raise StateError(f"incomplete FSDP checkpoint: {path}")
         required_patterns = ["model_world_size_*_rank_*.pt", "optim_world_size_*_rank_*.pt", "extra_state_world_size_*_rank_*.pt"]
         files = []
+        rank_sets: list[set[int]] = []
+        world_sizes: set[int] = set()
         for pattern in required_patterns:
             matches = list(path.glob(pattern))
             if not matches:
                 raise StateError(f"checkpoint {path} has no {pattern}")
             files.extend(matches)
+            ranks = set()
+            for match in matches:
+                parsed = re.search(r"world_size_(\d+)_rank_(\d+)\.pt$", match.name)
+                if not parsed:
+                    raise StateError(f"unrecognized checkpoint shard name: {match}")
+                world_sizes.add(int(parsed.group(1)))
+                ranks.add(int(parsed.group(2)))
+            rank_sets.append(ranks)
+        if len(world_sizes) != 1:
+            raise StateError(f"checkpoint {path} mixes world sizes: {world_sizes}")
+        world_size = next(iter(world_sizes))
+        expected_ranks = set(range(world_size))
+        if any(ranks != expected_ranks for ranks in rank_sets):
+            raise StateError(f"checkpoint {path} is missing rank shards for world size {world_size}")
         return {
             "path": str(path),
             "kind": artifact.kind,

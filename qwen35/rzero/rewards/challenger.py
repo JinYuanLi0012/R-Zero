@@ -36,7 +36,7 @@ def _score_partition(endpoint: str, items: list[dict[str, str]], timeout: float)
 
 
 def call_solver_pool(
-    items: list[dict[str, str]], endpoints: list[str], timeout: float = 1800
+    items: list[dict[str, str]], endpoints: list[str], timeout: float = 7200
 ) -> list[dict[str, Any]]:
     if not endpoints:
         raise RuntimeError("RZERO_SOLVER_ENDPOINTS is empty")

@@ -4,9 +4,44 @@ import unittest
 from pathlib import Path
 
 from qwen35.rzero.pipeline.state import Artifact, RunState, StateError, canonical_hash, validate_artifact
+from qwen35.rzero.pipeline.checkpoint_recovery import recover_tracker
 
 
 class StateTests(unittest.TestCase):
+    @staticmethod
+    def make_checkpoint(root: Path, step: int, complete: bool = True):
+        actor = root / f"global_step_{step}" / "actor"
+        actor.mkdir(parents=True)
+        (actor / "fsdp_config.json").write_text("{}")
+        for rank in range(2):
+            (actor / f"model_world_size_2_rank_{rank}.pt").write_bytes(b"model")
+        if complete:
+            for rank in range(2):
+                (actor / f"optim_world_size_2_rank_{rank}.pt").write_bytes(b"optim")
+                (actor / f"extra_state_world_size_2_rank_{rank}.pt").write_bytes(b"extra")
+
+    def test_rewinds_corrupt_latest_checkpoint(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self.make_checkpoint(root, 2, complete=True)
+            self.make_checkpoint(root, 3, complete=False)
+            (root / "latest_checkpointed_iteration.txt").write_text("3\n")
+            self.assertEqual(recover_tracker(root), 2)
+            self.assertEqual((root / "latest_checkpointed_iteration.txt").read_text().strip(), "2")
+
+    def test_from_stage_invalidates_only_suffix(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            state = RunState(Path(temporary), "fingerprint")
+            keys = ["a", "b", "c"]
+            for key in keys:
+                path = state.stage_manifest(key)
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text("{}")
+            state.invalidate_from(keys, "b")
+            self.assertTrue(state.stage_manifest("a").exists())
+            self.assertFalse(state.stage_manifest("b").exists())
+            self.assertFalse(state.stage_manifest("c").exists())
+
     def test_input_change_invalidates_only_dependent_stage(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -41,11 +76,13 @@ class StateTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             (root / "fsdp_config.json").write_text("{}")
-            (root / "model_world_size_2_rank_0.pt").write_bytes(b"model")
+            for rank in range(2):
+                (root / f"model_world_size_2_rank_{rank}.pt").write_bytes(b"model")
             with self.assertRaises(StateError):
                 validate_artifact(Artifact(root, "checkpoint"))
-            (root / "optim_world_size_2_rank_0.pt").write_bytes(b"optim")
-            (root / "extra_state_world_size_2_rank_0.pt").write_bytes(b"extra")
+            for rank in range(2):
+                (root / f"optim_world_size_2_rank_{rank}.pt").write_bytes(b"optim")
+                (root / f"extra_state_world_size_2_rank_{rank}.pt").write_bytes(b"extra")
             self.assertEqual(validate_artifact(Artifact(root, "checkpoint"))["kind"], "checkpoint")
 
 
