@@ -78,7 +78,7 @@ def build_command(args: argparse.Namespace) -> list[str]:
         "actor_rollout_ref.rollout.gpu_memory_utilization": 0.45,
         "actor_rollout_ref.rollout.enforce_eager": True,
         "actor_rollout_ref.rollout.enable_chunked_prefill": False,
-        "actor_rollout_ref.rollout.engine_kwargs.vllm.language_model_only": True,
+        "+actor_rollout_ref.rollout.engine_kwargs.vllm.language_model_only": True,
         "reward.custom_reward_function.path": str(reward_path.resolve()),
         "reward.custom_reward_function.name": "compute_score",
         "reward.reward_manager.name": reward_manager,

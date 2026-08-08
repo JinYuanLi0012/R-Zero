@@ -32,7 +32,7 @@ class TrainCommandTests(unittest.TestCase):
         self.assertIn("reward.num_workers=1", rendered)
         self.assertIn("actor_rollout_ref.actor.strategy=fsdp2", rendered)
         self.assertIn("actor_rollout_ref.model.use_remove_padding=false", rendered)
-        self.assertIn("actor_rollout_ref.rollout.engine_kwargs.vllm.language_model_only=true", rendered)
+        self.assertIn("+actor_rollout_ref.rollout.engine_kwargs.vllm.language_model_only=true", rendered)
 
     def test_solver_uses_naive_manager_and_four_gpus(self):
         rendered = "\n".join(build_command(self.args("solver")))
