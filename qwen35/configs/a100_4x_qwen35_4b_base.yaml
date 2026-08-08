@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "profile": "formal",
+  "model": {
+    "id": "Qwen/Qwen3.5-4B-Base",
+    "revision": "1001bb4",
+    "trust_remote_code": false,
+    "language_model_only": true
+  },
+  "runtime": {
+    "python": "3.12",
+    "cuda": "12.8",
+    "verl_ref": "v0.8.0",
+    "training_backend": "fsdp2",
+    "rollout_backend": "vllm"
+  },
+  "hardware": {
+    "gpus": [0, 1, 2, 3],
+    "questioner_training_gpus": [0, 1],
+    "questioner_solver_gpus": [2, 3],
+    "solver_training_gpus": [0, 1, 2, 3],
+    "solver_service_ports": [5000, 5001]
+  },
+  "algorithm": {
+    "rounds": 5,
+    "seed": 1,
+    "kl_coef": 0.01,
+    "learning_rate": 0.000001,
+    "questioner_steps": 5,
+    "solver_steps": 15,
+    "questioner_rollouts": 4,
+    "solver_rollouts": 5,
+    "questioner_solver_samples": 10,
+    "candidate_vote_samples": 9,
+    "difficulty_min": 0.3,
+    "difficulty_max": 0.8,
+    "bleu_distance_threshold": 0.5
+  },
+  "data": {
+    "seed_dataset": "hiyouga/math12k",
+    "seed_train_split": "train",
+    "seed_val_split": "test",
+    "max_prompt_length": 2048,
+    "max_response_length": 4096
+  },
+  "generation": {
+    "shards": 4,
+    "samples_per_shard": 2000,
+    "temperature": 1.0,
+    "top_p": 0.95,
+    "max_tokens": 4096
+  },
+  "checkpoint": {
+    "save_freq": 1,
+    "keep": 2,
+    "resume_mode": "auto"
+  },
+  "benchmark": {
+    "enabled": true
+  },
+  "publishing": {
+    "enabled": false,
+    "repo_id": ""
+  }
+}

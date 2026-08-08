@@ -1,0 +1,10 @@
+# Installed after verl's official FSDP/vLLM installer.
+datasets>=4.0,<5
+huggingface-hub>=0.34
+mathruler==0.1.0
+nltk==3.9.1
+scikit-learn>=1.7,<2
+stopit==1.1.2
+flask>=3,<4
+requests>=2.32,<3
+regex>=2024.11
