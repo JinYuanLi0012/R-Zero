@@ -29,7 +29,7 @@ mkdir -p "${IMAGE_DIR}" "${ENROOT_CACHE_PATH}" "${ENROOT_DATA_PATH}" "${ENROOT_T
 
 if [[ -s "${IMAGE_PATH}" ]]; then
   echo "image already prepared: ${IMAGE_PATH}"
-  sha256sum "${IMAGE_PATH}"
+  sha256sum "${IMAGE_PATH}" | tee "${IMAGE_PATH}.sha256"
   exit 0
 fi
 
@@ -44,4 +44,4 @@ enroot import --output "${TEMP_IMAGE}" "${IMAGE_URI}"
 test -s "${TEMP_IMAGE}"
 mv "${TEMP_IMAGE}" "${IMAGE_PATH}"
 trap - EXIT
-sha256sum "${IMAGE_PATH}"
+sha256sum "${IMAGE_PATH}" | tee "${IMAGE_PATH}.sha256"

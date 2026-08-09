@@ -17,6 +17,7 @@ PROJECT=${PROJECT:-/storage1/fs1/jiaxinh/Active/jinyuan/R-Zero-Qwen3.5}
 RUN_DIR=${PROJECT}/runs/rzero-qwen35-smoke
 HF_CACHE=${HF_CACHE:-/scratch2/fs1/jiaxinh/${USER}/hf-cache}
 IMAGE=${IMAGE:-/scratch2/fs1/jiaxinh/${USER}/images/rzero-qwen35-bdc8b2c29981.sqsh}
+EXPECTED_IMAGE_SHA256=${EXPECTED_IMAGE_SHA256:-26e47958e9b689f21eb63b730fff88c5d13854d407fff592cdddcda87f329ec5}
 
 PYXIS_XDG_CACHE_HOME=/scratch2/fs1/jiaxinh/${USER}/pyxis-cache
 PYXIS_XDG_DATA_HOME=/tmp/${USER}/pyxis-data-${SLURM_JOB_ID}
@@ -37,11 +38,19 @@ if [[ ! -s "${IMAGE}" ]]; then
   exit 2
 fi
 
+image_checksum=$(sha256sum "${IMAGE}")
+image_checksum=${image_checksum%% *}
+if [[ "${image_checksum}" != "${EXPECTED_IMAGE_SHA256}" ]]; then
+  echo "prepared image checksum mismatch: got ${image_checksum}, expected ${EXPECTED_IMAGE_SHA256}" >&2
+  exit 2
+fi
+
 echo "job_id=${SLURM_JOB_ID}"
 echo "node=${SLURMD_NODENAME:-unknown}"
 echo "project=${PROJECT}"
 echo "run_dir=${RUN_DIR}"
 echo "image=${IMAGE}"
+echo "image_sha256=${image_checksum}"
 nvidia-smi --query-gpu=index,name,memory.total,driver_version --format=csv,noheader
 
 srun \

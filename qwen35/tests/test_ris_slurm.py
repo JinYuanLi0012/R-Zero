@@ -12,6 +12,8 @@ class RisSlurmScriptTests(unittest.TestCase):
         self.assertIn("#SBATCH --mem=512G", script)
         self.assertIn("#SBATCH --time=08:00:00", script)
         self.assertIn("rzero-qwen35-bdc8b2c29981.sqsh", script)
+        self.assertIn("26e47958e9b689f21eb63b730fff88c5d13854d407fff592cdddcda87f329ec5", script)
+        self.assertIn("prepared image checksum mismatch", script)
         self.assertIn("export SLURM_EXPORT_ENV=ALL", script)
         self.assertEqual(script.count('--export="ALL,XDG_CACHE_HOME='), 2)
         self.assertNotIn("ENROOT_CACHE_PATH", script)
@@ -28,6 +30,7 @@ class RisSlurmScriptTests(unittest.TestCase):
         self.assertIn("docker://ghcr.io#jinyuanli0012/rzero-qwen35:commit-81d554f1", script)
         self.assertIn("/rzero-qwen35-bdc8b2c29981.sqsh", script)
         self.assertIn("mv \"${TEMP_IMAGE}\" \"${IMAGE_PATH}\"", script)
+        self.assertIn('tee "${IMAGE_PATH}.sha256"', script)
 
 
 if __name__ == "__main__":

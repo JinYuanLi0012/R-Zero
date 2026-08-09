@@ -36,6 +36,17 @@ dry-run、模型解析和 seed data 准备，但 environment smoke 在真正加�
 导入 scratch 上的 SquashFS，再让 Pyxis 直接加载该文件，彻底移除正式作业的
 registry/token 步骤。参见 [Pyxis `enroot_deny_env`](https://github.com/NVIDIA/pyxis/blob/main/pyxis_slurmstepd.c#L360-L388)。
 
+作业 `2696377` 随后成功生成 24.1 GB SquashFS：
+
+```text
+/scratch2/fs1/jiaxinh/ljinyuan/images/rzero-qwen35-bdc8b2c29981.sqsh
+sha256:26e47958e9b689f21eb63b730fff88c5d13854d407fff592cdddcda87f329ec5
+```
+
+该文件已在 `general-short` 的一张 H100 上由 Pyxis 直接启动，容器确认导入
+`/opt/verl/verl/__init__.py` 并打印 `PYXIS_SQSH_OK`。四卡脚本会在启动容器前
+重新计算并核对上述 SHA256。
+
 ## 固定资源和路径
 
 ```bash
