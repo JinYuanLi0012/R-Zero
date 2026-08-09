@@ -2,9 +2,9 @@ import argparse
 import json
 import os
 from pathlib import Path
-import random
-import requests
 from tqdm import tqdm
+
+from recheck_api import JudgeRequestError, config_from_env, request_judgement
 
 DEFAULT_DATASETS = ["math", "gsm8k", "amc", "minerva", "olympiad", "aime2024", "aime2025"]
 
@@ -19,29 +19,17 @@ def load_openai_key(token_file: Path):
         return None
 
 
+RECHECK_CONFIG = config_from_env()
+
+
 def judge_model_response(api_url, api_key, gold_answer, model_response):
-    payload = {
-        "model": os.getenv("RECHECK_JUDGE_MODEL", "gpt-5-nano"),
-        "messages": [
-            {"role": "system", "content": "You are a math answer checker."},
-            {
-                "role": "user",
-                "content": (
-                    f"Hi, there is a model response: {model_response}\n\n"
-                    f", and the ground truth answer is: {gold_answer}\n\n"
-                    "please check whether the model response is correct or not, "
-                    "and return the **only** Yes or No."
-                ),
-            },
-        ],
-    }
-    if "api.openai.com" in api_url or api_url.rstrip("/").endswith("/chat/completions"):
-        headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
-    else:
-        headers = {"api-key": api_key, "Content-Type": "application/json"}
-    response = requests.post(api_url, headers=headers, json=payload, timeout=20)
-    response.raise_for_status()
-    return response.json()["choices"][0]["message"]["content"]
+    return request_judgement(
+        api_url,
+        api_key,
+        gold_answer,
+        model_response,
+        config=RECHECK_CONFIG,
+    )
 
 
 def load_completed(output_file: Path):
@@ -72,19 +60,28 @@ def recheck_dataset(storage_path, model, dataset, api_url, api_key):
         raise FileNotFoundError(result_file)
     results = json.loads(result_file.read_text())
     rows = results[:-1]
+    judge_failures = 0
     if api_url and api_key:
         for row in tqdm(rows, desc=f"{dataset}"):
             if float(row.get("score", 0)) < 0.5:
                 try:
                     verdict = judge_model_response(api_url, api_key, row["answer"], row["response"])
-                except Exception as exc:
-                    print(f"judge error on {model} {dataset}: {exc}", flush=True)
-                    verdict = "No"
+                except JudgeRequestError as exc:
+                    judge_failures += 1
+                    print(
+                        f"WARNING: judge API failed on {model} {dataset}; "
+                        f"preserving local score: {exc}",
+                        flush=True,
+                    )
+                    continue
                 if "yes" in verdict.lower():
                     row["score"] = 1
     else:
         print("No API key configured; using local raw scores.", flush=True)
-    return round(sum(float(row.get("score", 0)) for row in rows) / len(rows) * 100, 2)
+    return (
+        round(sum(float(row.get("score", 0)) for row in rows) / len(rows) * 100, 2),
+        judge_failures,
+    )
 
 
 def main():
@@ -121,20 +118,39 @@ def main():
         print(f"PENDING: {model} {dataset}", flush=True)
     if args.dry_run:
         return
+    total_judge_failures = 0
     for model in models:
         for dataset in datasets:
             if (model, dataset) in completed:
                 print(f"SKIP done: {model} {dataset}", flush=True)
                 continue
             print(f"RUN: {model} {dataset}", flush=True)
-            score = recheck_dataset(storage_path, model, dataset, api_url, api_key)
-            record = {"model": model, "dataset": dataset, "score": score}
+            score, judge_failures = recheck_dataset(storage_path, model, dataset, api_url, api_key)
+            total_judge_failures += judge_failures
+            if judge_failures:
+                print(
+                    f"WARNING: {model} {dataset} had {judge_failures} judge API failure(s); "
+                    "those rows kept their original local scores.",
+                    flush=True,
+                )
+            record = {
+                "model": model,
+                "dataset": dataset,
+                "score": score,
+                "judge_failures": judge_failures,
+            }
             with output_file.open("a") as f:
                 json.dump(record, f)
                 f.write("\n")
             completed.add((model, dataset))
             print(f"DONE: {model} {dataset} {score}", flush=True)
     print(f"completed after finish: {len(completed)}/{total}", flush=True)
+    if total_judge_failures:
+        print(
+            f"WARNING: evaluation completed with {total_judge_failures} total judge API "
+            "failure(s); original local scores were preserved for those rows.",
+            flush=True,
+        )
 
 
 if __name__ == "__main__":

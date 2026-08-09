@@ -1,11 +1,12 @@
 import json
 from mathruler.grader import extract_boxed_content, grade_answer
 import openai
-import requests
 from tqdm import tqdm
 import random
 import argparse
 import os
+
+from recheck_api import JudgeRequestError, config_from_env, request_judgement
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--model_name", type=str, default="Qwen/Qwen2.5-7B-Instruct")
@@ -13,7 +14,7 @@ args = parser.parse_args()
 
 STORAGE_PATH = os.getenv("STORAGE_PATH")
 FINAL_RESULTS_FILE = os.getenv("FINAL_RESULTS_FILE", "final_results.jsonl")
-RECHECK_JUDGE_MODEL = os.getenv("RECHECK_JUDGE_MODEL", "gpt-5-nano")
+RECHECK_CONFIG = config_from_env()
 api_urls = []
 api_keys = []
 
@@ -30,30 +31,17 @@ if openai_key:
     api_keys.append(openai_key)
 
 def process_example(answer, response):
-    try:
-        gold_answer = answer
-        model_response = response
-        example = {
-            "model": RECHECK_JUDGE_MODEL,
-            "messages": [
-                {"role": "system", "content": "You are a math answer checker."},
-                {"role": "user", "content": f"Hi, there is a model response: {model_response}\n\n, and the ground truth answer is: {gold_answer}\n\n, please check whether the model response is correct or not, and return the **only** Yes or No."}
-            ]
-        }
-        api_index = random.randint(0, len(api_urls)-1)
-        api_url = api_urls[api_index]
-        api_key = api_keys[api_index]
-        if "api.openai.com" in api_url or api_url.rstrip('/').endswith('/chat/completions'):
-            headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
-        else:
-            headers = {"api-key": api_key, "Content-Type": "application/json"}
-        response = requests.post(api_url, headers=headers, json=example, timeout=20)
-        response.raise_for_status()
-        return response.json()['choices'][0]['message']['content']
-    except Exception as e:
-        print(e)
-        return "No"
+    api_index = random.randint(0, len(api_urls)-1)
+    return request_judgement(
+        api_urls[api_index],
+        api_keys[api_index],
+        answer,
+        response,
+        config=RECHECK_CONFIG,
+    )
+
 new_results = []
+total_judge_failures = 0
 for model_name in [args.model_name]:
     for dataset in [
     "math",
@@ -67,27 +55,52 @@ for model_name in [args.model_name]:
         with open(f'{STORAGE_PATH}/evaluation/{model_name.replace("/","_")}/results_{dataset}.json', 'r') as f:
             results = json.load(f)
 
+        dataset_judge_failures = 0
         if api_urls and api_keys:
             for i in tqdm(range(len(results)-1)):
                     if results[i]['score'] < 0.5:
-                        gpt_check = process_example(results[i]['answer'],results[i]['response'])
+                        try:
+                            gpt_check = process_example(results[i]['answer'],results[i]['response'])
+                        except JudgeRequestError as exc:
+                            dataset_judge_failures += 1
+                            print(
+                                f"WARNING: judge API failed for {model_name} {dataset} row {i}; "
+                                f"preserving local score: {exc}",
+                                flush=True,
+                            )
+                            continue
                         if "yes" in gpt_check.lower():
                             results[i]['score']=1
         else:
             print("No API urls configured; skipping GPT recheck and using local scores.")
+        total_judge_failures += dataset_judge_failures
+        if dataset_judge_failures:
+            print(
+                f"WARNING: {model_name} {dataset} had {dataset_judge_failures} judge API "
+                "failure(s); those rows kept their original local scores.",
+                flush=True,
+            )
         new_results.append({
             'model': model_name,
             'dataset': dataset,
-            'score': round(sum([result['score'] for result in results[:-1]])/len(results[:-1])*100, 2)
+            'score': round(sum([result['score'] for result in results[:-1]])/len(results[:-1])*100, 2),
+            'judge_failures': dataset_judge_failures,
         })
         print(new_results)
         with open(FINAL_RESULTS_FILE, 'a') as f:
             json.dump({
                 'model': model_name,
                 'dataset': dataset,
-                'score': round(sum([result['score'] for result in results[:-1]])/len(results[:-1])*100, 2)
+                'score': round(sum([result['score'] for result in results[:-1]])/len(results[:-1])*100, 2),
+                'judge_failures': dataset_judge_failures,
             }, f)
             f.write('\n')
 
+if total_judge_failures:
+    print(
+        f"WARNING: evaluation completed with {total_judge_failures} total judge API "
+        "failure(s); original local scores were preserved for those rows.",
+        flush=True,
+    )
 
 
