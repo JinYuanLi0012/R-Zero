@@ -18,6 +18,15 @@ def hydra_compose_command() -> list[str]:
     return [sys.executable, "-m", "verl.trainer.main_ppo", "--cfg", "job"]
 
 
+def cuda_abi_matches(torch_cuda: str | None, image_cuda: str) -> bool:
+    """Compare the CUDA ABI line while the image digest pins patch contents."""
+    if torch_cuda is None:
+        return False
+    actual = torch_cuda.split(".")
+    expected = image_cuda.split(".")
+    return len(actual) >= 2 and len(expected) >= 2 and actual[:2] == expected[:2]
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", required=True)
@@ -50,9 +59,10 @@ def main() -> None:
         "vllm": (vllm.__version__, args.expected_vllm_version),
         "transformers": (transformers.__version__, args.expected_transformers_version),
         "torch": (torch.__version__.split("+", 1)[0], args.expected_torch_version),
-        "cuda": (torch.version.cuda, args.expected_cuda_version),
     }
     mismatches = {name: pair for name, pair in versions.items() if pair[0] != pair[1]}
+    if not cuda_abi_matches(torch.version.cuda, args.expected_cuda_version):
+        mismatches["cuda_abi"] = (torch.version.cuda, args.expected_cuda_version)
     if mismatches:
         raise RuntimeError(f"runtime version mismatch: {mismatches}")
     repo_root = Path(__file__).resolve().parents[3]
@@ -80,6 +90,8 @@ def main() -> None:
     result = {
         "python": platform.python_version(),
         "torch": torch.__version__,
+        "torch_cuda_abi": torch.version.cuda,
+        "cuda_image_version": args.expected_cuda_version,
         "transformers": transformers.__version__,
         "vllm": vllm.__version__,
         "verl": getattr(verl, "__version__", "unknown"),

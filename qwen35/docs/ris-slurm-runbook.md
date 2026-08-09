@@ -21,6 +21,12 @@
 
 因此单卡成功不能替代四卡 Round 0 验收。
 
+2026-08-09 的首个四卡作业 `2692300` 已成功获得 4×H100、完成 pipeline
+dry-run、模型解析和 seed data 准备，但 environment smoke 在真正加载模型前被
+过严的版本断言终止：PyTorch 正常报告 CUDA ABI `13.0`，而固定镜像版本是
+`13.0.2`。校验现已改为要求 CUDA major.minor 一致；patch 级镜像内容继续由
+不可变 digest 锁定。同一 run directory 可用 `--resume` 跳过已完成 stage。
+
 ## 固定资源和路径
 
 ```bash
