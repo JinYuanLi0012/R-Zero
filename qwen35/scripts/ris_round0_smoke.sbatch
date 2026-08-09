@@ -22,6 +22,7 @@ export ENROOT_CACHE_PATH=${ENROOT_CACHE_PATH:-/scratch2/fs1/jiaxinh/${USER}/enro
 export ENROOT_DATA_PATH=${ENROOT_DATA_PATH:-/tmp/${USER}/enroot-data-${SLURM_JOB_ID}}
 export ENROOT_TEMP_PATH=${ENROOT_TEMP_PATH:-/tmp/${USER}/enroot-tmp-${SLURM_JOB_ID}}
 export TMPDIR=/tmp
+export SLURM_EXPORT_ENV=ALL
 
 mkdir -p \
   "${ENROOT_CACHE_PATH}" \
@@ -41,6 +42,7 @@ nvidia-smi --query-gpu=index,name,memory.total,driver_version --format=csv,nohea
 srun \
   --nodes=1 \
   --ntasks=1 \
+  --export="ALL,ENROOT_CACHE_PATH=${ENROOT_CACHE_PATH},ENROOT_DATA_PATH=${ENROOT_DATA_PATH},ENROOT_TEMP_PATH=${ENROOT_TEMP_PATH},TMPDIR=/tmp" \
   --container-image="${IMAGE}" \
   --container-mounts="${PROJECT}:/workspace/R-Zero,${HF_CACHE}:/root/.cache/huggingface" \
   --container-workdir=/opt/verl \
@@ -56,6 +58,7 @@ srun \
 srun \
   --nodes=1 \
   --ntasks=1 \
+  --export="ALL,ENROOT_CACHE_PATH=${ENROOT_CACHE_PATH},ENROOT_DATA_PATH=${ENROOT_DATA_PATH},ENROOT_TEMP_PATH=${ENROOT_TEMP_PATH},TMPDIR=/tmp" \
   --container-image="${IMAGE}" \
   --container-mounts="${PROJECT}:/workspace/R-Zero,${HF_CACHE}:/root/.cache/huggingface" \
   --container-workdir=/opt/verl \

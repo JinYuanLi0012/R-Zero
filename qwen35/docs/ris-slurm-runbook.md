@@ -27,6 +27,12 @@ dry-run、模型解析和 seed data 准备，但 environment smoke 在真正加�
 `13.0.2`。校验现已改为要求 CUDA major.minor 一致；patch 级镜像内容继续由
 不可变 digest 锁定。同一 run directory 可用 `--resume` 跳过已完成 stage。
 
+同日作业 `2693471` 在 Pyxis 导入前失败。虽然 batch shell 已设置
+`ENROOT_CACHE_PATH`，该值没有进入 SPANK job-step 环境，Enroot 仍尝试在已满的
+`$HOME/.cache/enroot` 创建 registry token。提交脚本现同时设置
+`SLURM_EXPORT_ENV=ALL`，并在每个 `srun` 上用 `--export=ALL,...` 显式传递
+Enroot 路径。重新申请四卡前应先用 `general-short` 单卡探针确认该边界。
+
 ## 固定资源和路径
 
 ```bash
@@ -258,6 +264,31 @@ Slurm 下默认根目录是：
 cd /storage1/fs1/jiaxinh/Active/jinyuan/R-Zero-Qwen3.5
 mkdir -p runs/slurm-logs
 ```
+
+每次修改 Pyxis/Enroot 启动参数后，先运行两分钟单卡探针：
+
+```bash
+export ENROOT_CACHE_PATH=/scratch2/fs1/jiaxinh/$USER/enroot-cache
+export ENROOT_DATA_PATH=/tmp/$USER/enroot-data
+export ENROOT_TEMP_PATH=/tmp/$USER/enroot-tmp
+
+srun \
+  -A compute2-jiaxinh \
+  -p general-short \
+  --nodes=1 \
+  --ntasks=1 \
+  --cpus-per-task=4 \
+  --mem=16G \
+  --gpus=1 \
+  --time=00:02:00 \
+  --job-name=rzero-pyxis-env-probe \
+  --export="ALL,ENROOT_CACHE_PATH=$ENROOT_CACHE_PATH,ENROOT_DATA_PATH=$ENROOT_DATA_PATH,ENROOT_TEMP_PATH=$ENROOT_TEMP_PATH,TMPDIR=/tmp" \
+  --container-image='ghcr.io#jinyuanli0012/rzero-qwen35:commit-81d554f1c4a871cc19387db929b1fad4a78cf170' \
+  env | grep '^ENROOT_'
+```
+
+只有镜像成功启动且容器输出三个 `/scratch2`/`/tmp` 路径后，才继续四卡
+`--test-only` 和正式提交。
 
 只查询预计启动时间，不提交：
 

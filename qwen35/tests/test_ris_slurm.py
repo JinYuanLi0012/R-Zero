@@ -12,6 +12,8 @@ class RisSlurmScriptTests(unittest.TestCase):
         self.assertIn("#SBATCH --mem=512G", script)
         self.assertIn("#SBATCH --time=08:00:00", script)
         self.assertIn("rzero-qwen35:commit-81d554f1c4a871cc19387db929b1fad4a78cf170", script)
+        self.assertIn("export SLURM_EXPORT_ENV=ALL", script)
+        self.assertEqual(script.count('--export="ALL,ENROOT_CACHE_PATH='), 2)
         self.assertIn("a100_4x_qwen35_4b_base_smoke.yaml", script)
         self.assertIn("--dry-run", script)
         self.assertIn("--resume", script)
