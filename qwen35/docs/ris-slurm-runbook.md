@@ -29,9 +29,12 @@ dry-run、模型解析和 seed data 准备，但 environment smoke 在真正加�
 
 同日作业 `2693471` 在 Pyxis 导入前失败。虽然 batch shell 已设置
 `ENROOT_CACHE_PATH`，该值没有进入 SPANK job-step 环境，Enroot 仍尝试在已满的
-`$HOME/.cache/enroot` 创建 registry token。提交脚本现同时设置
-`SLURM_EXPORT_ENV=ALL`，并在每个 `srun` 上用 `--export=ALL,...` 显式传递
-Enroot 路径。重新申请四卡前应先用 `general-short` 单卡探针确认该边界。
+`$HOME/.cache/enroot` 创建 registry token。随后使用 `srun --export` 的单卡
+复现实验仍然失败。NVIDIA Pyxis 源码明确将 `ENROOT_CACHE_PATH`、
+`ENROOT_DATA_PATH` 和 `ENROOT_TEMP_PATH` 列入 job environment denylist；因此这
+三项不能作为 Pyxis 启动参数。最终方案是先用裸 Enroot 将固定 OCI 镜像原子
+导入 scratch 上的 SquashFS，再让 Pyxis 直接加载该文件，彻底移除正式作业的
+registry/token 步骤。参见 [Pyxis `enroot_deny_env`](https://github.com/NVIDIA/pyxis/blob/main/pyxis_slurmstepd.c#L360-L388)。
 
 ## 固定资源和路径
 
@@ -39,18 +42,15 @@ Enroot 路径。重新申请四卡前应先用 `general-short` 单卡探针确�
 export PROJECT=/storage1/fs1/jiaxinh/Active/jinyuan/R-Zero-Qwen3.5
 export RUN_ROOT=$PROJECT/runs/rzero-qwen35
 export HF_CACHE=/scratch2/fs1/jiaxinh/$USER/hf-cache
-
-export ENROOT_CACHE_PATH=/scratch2/fs1/jiaxinh/$USER/enroot-cache
-export ENROOT_DATA_PATH=/tmp/$USER/enroot-data
-export ENROOT_TEMP_PATH=/tmp/$USER/enroot-tmp
-export TMPDIR=/tmp
+export RZERO_IMAGE=/scratch2/fs1/jiaxinh/$USER/images/rzero-qwen35-bdc8b2c29981.sqsh
 ```
 
 用途约定：
 
 - `/storage1/.../R-Zero-Qwen3.5/runs`：模型、dataset、checkpoint、manifest，持久化。
 - `/scratch2/.../hf-cache`：Hugging Face 缓存，持久化共享。
-- `/scratch2/.../enroot-cache`：镜像下载缓存。
+- `/scratch2/.../images/*.sqsh`：正式 Pyxis 作业使用的固定容器镜像。
+- `/scratch2/.../enroot-cache`：只供一次性裸 Enroot 导入作业使用。
 - 计算节点 `/tmp`：Enroot 展开目录和 GPU 编译缓存；任务结束后允许丢失。
 - 不把 Enroot data/temp 或 GPU JIT 缓存放进配额较小的 Home。
 
@@ -254,9 +254,9 @@ Slurm 下默认根目录是：
 记录的 `general-gpu` 上限为 15 天，因此该时限合法；
 8 小时是故障保护上限，不代表预计一定运行 8 小时。
 
-提交脚本使用构建 commit 对应的不可变镜像标签
-`commit-81d554f1c4a871cc19387db929b1fad4a78cf170`，而不是依赖可能被未来构建
-更新的友好标签。
+一次性导入脚本从构建 commit 对应的不可变镜像标签
+`commit-81d554f1c4a871cc19387db929b1fad4a78cf170` 生成 scratch SquashFS；四卡
+脚本只读取该本地文件，不再联系 GHCR。
 
 拉取最新分支后先创建 Slurm 输出目录：
 
@@ -265,30 +265,22 @@ cd /storage1/fs1/jiaxinh/Active/jinyuan/R-Zero-Qwen3.5
 mkdir -p runs/slurm-logs
 ```
 
-每次修改 Pyxis/Enroot 启动参数后，先运行两分钟单卡探针：
+首次运行或镜像文件缺失时，提交一次性导入作业：
 
 ```bash
-export ENROOT_CACHE_PATH=/scratch2/fs1/jiaxinh/$USER/enroot-cache
-export ENROOT_DATA_PATH=/tmp/$USER/enroot-data
-export ENROOT_TEMP_PATH=/tmp/$USER/enroot-tmp
-
-srun \
-  -A compute2-jiaxinh \
-  -p general-short \
-  --nodes=1 \
-  --ntasks=1 \
-  --cpus-per-task=4 \
-  --mem=16G \
-  --gpus=1 \
-  --time=00:02:00 \
-  --job-name=rzero-pyxis-env-probe \
-  --export="ALL,ENROOT_CACHE_PATH=$ENROOT_CACHE_PATH,ENROOT_DATA_PATH=$ENROOT_DATA_PATH,ENROOT_TEMP_PATH=$ENROOT_TEMP_PATH,TMPDIR=/tmp" \
-  --container-image='ghcr.io#jinyuanli0012/rzero-qwen35:commit-81d554f1c4a871cc19387db929b1fad4a78cf170' \
-  env | grep '^ENROOT_'
+sbatch qwen35/scripts/ris_prepare_image.sbatch
 ```
 
-只有镜像成功启动且容器输出三个 `/scratch2`/`/tmp` 路径后，才继续四卡
-`--test-only` 和正式提交。
+该作业运行在 `general-short`，不申请 GPU。它先写
+`.partial-$SLURM_JOB_ID`，验证非空后再原子重命名；已有完整目标文件时幂等
+跳过。完成后确认：
+
+```bash
+ls -lh /scratch2/fs1/jiaxinh/$USER/images/rzero-qwen35-bdc8b2c29981.sqsh
+cat runs/slurm-logs/rzero-qwen35-image-JOB_ID.out
+```
+
+只有 `.sqsh` 存在且导入 job 成功后，才继续四卡 `--test-only` 和正式提交。
 
 只查询预计启动时间，不提交：
 

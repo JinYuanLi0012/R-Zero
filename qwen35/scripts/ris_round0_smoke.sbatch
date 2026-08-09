@@ -16,21 +16,26 @@ set -euo pipefail
 PROJECT=${PROJECT:-/storage1/fs1/jiaxinh/Active/jinyuan/R-Zero-Qwen3.5}
 RUN_DIR=${PROJECT}/runs/rzero-qwen35-smoke
 HF_CACHE=${HF_CACHE:-/scratch2/fs1/jiaxinh/${USER}/hf-cache}
-IMAGE=${IMAGE:-ghcr.io#jinyuanli0012/rzero-qwen35:commit-81d554f1c4a871cc19387db929b1fad4a78cf170}
+IMAGE=${IMAGE:-/scratch2/fs1/jiaxinh/${USER}/images/rzero-qwen35-bdc8b2c29981.sqsh}
 
-export ENROOT_CACHE_PATH=${ENROOT_CACHE_PATH:-/scratch2/fs1/jiaxinh/${USER}/enroot-cache}
-export ENROOT_DATA_PATH=${ENROOT_DATA_PATH:-/tmp/${USER}/enroot-data-${SLURM_JOB_ID}}
-export ENROOT_TEMP_PATH=${ENROOT_TEMP_PATH:-/tmp/${USER}/enroot-tmp-${SLURM_JOB_ID}}
-export TMPDIR=/tmp
+PYXIS_XDG_CACHE_HOME=/scratch2/fs1/jiaxinh/${USER}/pyxis-cache
+PYXIS_XDG_DATA_HOME=/tmp/${USER}/pyxis-data-${SLURM_JOB_ID}
+PYXIS_TMPDIR=/tmp/${USER}/pyxis-tmp-${SLURM_JOB_ID}
 export SLURM_EXPORT_ENV=ALL
 
 mkdir -p \
-  "${ENROOT_CACHE_PATH}" \
-  "${ENROOT_DATA_PATH}" \
-  "${ENROOT_TEMP_PATH}" \
+  "${PYXIS_XDG_CACHE_HOME}" \
+  "${PYXIS_XDG_DATA_HOME}" \
+  "${PYXIS_TMPDIR}" \
   "${HF_CACHE}" \
   "${PROJECT}/runs/slurm-logs" \
   "${RUN_DIR}"
+
+if [[ ! -s "${IMAGE}" ]]; then
+  echo "missing prepared image: ${IMAGE}" >&2
+  echo "submit qwen35/scripts/ris_prepare_image.sbatch first" >&2
+  exit 2
+fi
 
 echo "job_id=${SLURM_JOB_ID}"
 echo "node=${SLURMD_NODENAME:-unknown}"
@@ -42,11 +47,11 @@ nvidia-smi --query-gpu=index,name,memory.total,driver_version --format=csv,nohea
 srun \
   --nodes=1 \
   --ntasks=1 \
-  --export="ALL,ENROOT_CACHE_PATH=${ENROOT_CACHE_PATH},ENROOT_DATA_PATH=${ENROOT_DATA_PATH},ENROOT_TEMP_PATH=${ENROOT_TEMP_PATH},TMPDIR=/tmp" \
+  --export="ALL,XDG_CACHE_HOME=${PYXIS_XDG_CACHE_HOME},XDG_DATA_HOME=${PYXIS_XDG_DATA_HOME},TMPDIR=${PYXIS_TMPDIR}" \
   --container-image="${IMAGE}" \
   --container-mounts="${PROJECT}:/workspace/R-Zero,${HF_CACHE}:/root/.cache/huggingface" \
   --container-workdir=/opt/verl \
-  env \
+  env -u XDG_CACHE_HOME -u XDG_DATA_HOME \
     PYTHONPATH=/opt/verl:/workspace/R-Zero \
     HF_HOME=/root/.cache/huggingface \
     VLLM_USE_V1=1 \
@@ -58,11 +63,11 @@ srun \
 srun \
   --nodes=1 \
   --ntasks=1 \
-  --export="ALL,ENROOT_CACHE_PATH=${ENROOT_CACHE_PATH},ENROOT_DATA_PATH=${ENROOT_DATA_PATH},ENROOT_TEMP_PATH=${ENROOT_TEMP_PATH},TMPDIR=/tmp" \
+  --export="ALL,XDG_CACHE_HOME=${PYXIS_XDG_CACHE_HOME},XDG_DATA_HOME=${PYXIS_XDG_DATA_HOME},TMPDIR=${PYXIS_TMPDIR}" \
   --container-image="${IMAGE}" \
   --container-mounts="${PROJECT}:/workspace/R-Zero,${HF_CACHE}:/root/.cache/huggingface" \
   --container-workdir=/opt/verl \
-  env \
+  env -u XDG_CACHE_HOME -u XDG_DATA_HOME \
     PYTHONPATH=/opt/verl:/workspace/R-Zero \
     HF_HOME=/root/.cache/huggingface \
     VLLM_USE_V1=1 \
