@@ -236,7 +236,36 @@ Slurm 下默认根目录是：
 
 ## 下一验收点
 
-下一步只提交缩小版四卡 Round 0，不直接开始正式五轮：
+下一步只提交缩小版四卡 Round 0，不直接开始正式五轮。仓库已经提供
+`qwen35/scripts/ris_round0_smoke.sbatch`，固定请求单节点、4 GPU、32 CPU、
+512 GB RAM 和 8 小时。[RIS Compute2 General Guidelines](https://washu.atlassian.net/wiki/spaces/RUD/pages/2140667974/Compute2%2BGeneral%2BGuidelines)
+记录的 `general-gpu` 上限为 15 天，因此该时限合法；
+8 小时是故障保护上限，不代表预计一定运行 8 小时。
+
+提交脚本使用构建 commit 对应的不可变镜像标签
+`commit-81d554f1c4a871cc19387db929b1fad4a78cf170`，而不是依赖可能被未来构建
+更新的友好标签。
+
+拉取最新分支后先创建 Slurm 输出目录：
+
+```bash
+cd /storage1/fs1/jiaxinh/Active/jinyuan/R-Zero-Qwen3.5
+mkdir -p runs/slurm-logs
+```
+
+只查询预计启动时间，不提交：
+
+```bash
+sbatch --test-only qwen35/scripts/ris_round0_smoke.sbatch
+```
+
+确认预估后正式提交：
+
+```bash
+sbatch qwen35/scripts/ris_round0_smoke.sbatch
+```
+
+脚本在同一四卡 allocation 内先执行 pipeline `--dry-run`，成功后才执行：
 
 ```bash
 qwen35/scripts/run.sh \
@@ -245,5 +274,19 @@ qwen35/scripts/run.sh \
   --resume
 ```
 
-该命令必须运行在四卡 `general-gpu` Pyxis 作业内部；提交脚本和时间/内存参数
-应在四卡 dry-run 与环境 smoke 确认后再固定。
+观察任务：
+
+```bash
+squeue -j JOB_ID -o "%.10i %.8T %.10M %.20R"
+squeue --start -j JOB_ID
+tail -f runs/slurm-logs/rzero-qwen35-round0-smoke-JOB_ID.out
+```
+
+取消任务（只在确实需要停止时执行）：
+
+```bash
+scancel JOB_ID
+```
+
+`--resume` 是故障恢复语义；同一 `RUN_DIR` 已提交的完整 stage 会跳过，未完成
+stage 会继续。不要为普通失败追加 `--from-stage`。
