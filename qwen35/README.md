@@ -70,6 +70,12 @@ filling a small quota-backed home directory. Set `RZERO_NODE_CACHE_ROOT` only
 when a cluster provides a different node-local executable filesystem. Model,
 dataset, checkpoint and manifest outputs remain under `--run-dir`, not `/tmp`.
 
+The RIS-specific storage layout, Slurm resource probes, exact successful
+one-H100 command, cache settings, rejected approaches and current validation
+boundary are recorded in [`docs/ris-slurm-runbook.md`](docs/ris-slurm-runbook.md).
+Keep that runbook updated as the four-GPU smoke and Round 0 cross their next
+acceptance gates.
+
 ## Dry-run and smoke Round 0
 
 Dry-run does not download models or create a run manifest:
