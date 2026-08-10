@@ -46,8 +46,15 @@ def build_command(args: argparse.Namespace) -> list[str]:
         "questioner_update_batch_size" if is_questioner else "solver_update_batch_size"
     ]
     micro_batch_size = 1
+    round_dir = args.output_dir.parent.parent
+    hydra_run_dir = round_dir / "logs" / "hydra" / args.experiment_name / "${now:%Y-%m-%d_%H-%M-%S}"
 
     overrides = {
+        # The official /opt/verl checkout is intentionally read-only inside the
+        # SquashFS image. Keep Hydra metadata with the persistent round logs
+        # while retaining /opt/verl as cwd for unambiguous package resolution.
+        "hydra.run.dir": str(hydra_run_dir),
+        "hydra.job.chdir": False,
         "algorithm.adv_estimator": "grpo",
         "algorithm.use_kl_in_reward": False,
         "data.train_files": str(args.train_file),

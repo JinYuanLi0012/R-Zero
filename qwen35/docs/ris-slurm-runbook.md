@@ -54,6 +54,12 @@ sha256:26e47958e9b689f21eb63b730fff88c5d13854d407fff592cdddcda87f329ec5
 给 orchestrator；配置中的旧固定端口仅为已有 run fingerprint 兼容而保留，不再
 用于绑定。
 
+下一次作业进入官方 `verl.trainer.main_ppo` 后，Hydra 默认尝试在只读 SquashFS
+中的 `/opt/verl/outputs` 创建运行目录并失败。训练命令现显式设置
+`hydra.run.dir=ROUND_DIR/logs/hydra/EXPERIMENT/${now:...}` 且
+`hydra.job.chdir=false`：Hydra 配置与日志持久化到 `/storage1`，进程 cwd 仍保持
+官方 `/opt/verl`，不会重新引入仓库旧版 verl 遮蔽问题。
+
 ## 固定资源和路径
 
 ```bash
