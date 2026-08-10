@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import argparse
+import json
+import os
+from pathlib import Path
 from typing import Any
 
 from qwen35.rzero.prompts import solver_messages
@@ -70,15 +73,31 @@ def create_app(model_path: str, samples: int, gpu_memory_utilization: float):
     return app
 
 
+def publish_service_receipt(path: Path, host: str, port: int) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    temporary.write_text(json.dumps({"host": host, "port": port}) + "\n", encoding="utf-8")
+    os.replace(temporary, path)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", required=True)
-    parser.add_argument("--port", type=int, required=True)
+    parser.add_argument("--port", type=int, default=0)
+    parser.add_argument("--port-file", type=Path, required=True)
     parser.add_argument("--samples", type=int, default=10)
     parser.add_argument("--gpu-memory-utilization", type=float, default=0.8)
     args = parser.parse_args()
     app = create_app(args.model, args.samples, args.gpu_memory_utilization)
-    app.run(host="127.0.0.1", port=args.port, threaded=False)
+    from werkzeug.serving import make_server
+
+    host = "127.0.0.1"
+    server = make_server(host, args.port, app, threaded=False)
+    publish_service_receipt(args.port_file, host, server.server_port)
+    try:
+        server.serve_forever()
+    finally:
+        server.server_close()
 
 
 if __name__ == "__main__":

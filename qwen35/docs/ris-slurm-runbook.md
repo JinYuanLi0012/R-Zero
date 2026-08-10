@@ -47,6 +47,13 @@ sha256:26e47958e9b689f21eb63b730fff88c5d13854d407fff592cdddcda87f329ec5
 `/opt/verl/verl/__init__.py` 并打印 `PYXIS_SQSH_OK`。四卡脚本会在启动容器前
 重新计算并核对上述 SHA256。
 
+四卡作业 `2696442` 随后通过 environment smoke 并进入真实
+`round_01.questioner_train`。冻结 Solver 已完成 vLLM 初始化，但 Flask 因共享
+节点上的 TCP `5000` 已被占用而退出。Solver service 现通过 Werkzeug 以端口
+`0` 让操作系统原子分配空闲端口，再用原子 JSON receipt 将实际 endpoint 回传
+给 orchestrator；配置中的旧固定端口仅为已有 run fingerprint 兼容而保留，不再
+用于绑定。
+
 ## 固定资源和路径
 
 ```bash

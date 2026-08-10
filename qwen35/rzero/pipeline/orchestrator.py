@@ -81,18 +81,28 @@ class Pipeline:
         # Return canonical path for dry-run/artifact declaration.
         return candidates[0]
 
-    def _wait_for_service(self, endpoint: str, process: subprocess.Popen, timeout: float = 900) -> None:
+    def _wait_for_service_receipt(
+        self, receipt: Path, process: subprocess.Popen, timeout: float = 900
+    ) -> str:
         deadline = time.monotonic() + timeout
         while time.monotonic() < deadline:
             if process.poll() is not None:
                 raise RuntimeError(f"Solver service exited early with {process.returncode}")
-            try:
-                with urllib.request.urlopen(f"{endpoint}/health", timeout=2) as response:
-                    if response.status == 200:
-                        return
-            except Exception:
-                time.sleep(2)
-        raise TimeoutError(f"Solver service did not become healthy: {endpoint}")
+            if receipt.is_file():
+                try:
+                    payload = json.loads(receipt.read_text(encoding="utf-8"))
+                    host = str(payload["host"])
+                    port = int(payload["port"])
+                    if host != "127.0.0.1" or not 0 < port < 65536:
+                        raise ValueError("invalid service address")
+                    endpoint = f"http://{host}:{port}"
+                    with urllib.request.urlopen(f"{endpoint}/health", timeout=2) as response:
+                        if response.status == 200:
+                            return endpoint
+                except Exception:
+                    pass
+            time.sleep(2)
+        raise TimeoutError(f"Solver service did not become healthy; receipt={receipt}")
 
     def _train_questioner(
         self, round_number: int, questioner_model: Path, solver_model: Path, stage_key: str
@@ -103,10 +113,9 @@ class Pipeline:
         processes: list[tuple[subprocess.Popen, object]] = []
         endpoints: list[str] = []
         try:
-            for gpu, port in zip(hardware["questioner_solver_gpus"], hardware["solver_service_ports"]):
-                endpoint = f"http://127.0.0.1:{port}"
-                endpoints.append(endpoint)
+            for gpu in hardware["questioner_solver_gpus"]:
                 log_path = round_dir / "logs" / f"solver_service_gpu{gpu}.log"
+                port_file = round_dir / "logs" / f"solver_service_gpu{gpu}.{os.getpid()}.{time.time_ns()}.json"
                 log_path.parent.mkdir(parents=True, exist_ok=True)
                 handle = log_path.open("a", encoding="utf-8")
                 env = os.environ.copy()
@@ -125,7 +134,9 @@ class Pipeline:
                         "--model",
                         str(solver_model),
                         "--port",
-                        str(port),
+                        "0",
+                        "--port-file",
+                        str(port_file),
                         "--samples",
                         str(samples),
                     ],
@@ -135,7 +146,7 @@ class Pipeline:
                     stderr=subprocess.STDOUT,
                 )
                 processes.append((process, handle))
-                self._wait_for_service(endpoint, process)
+                endpoints.append(self._wait_for_service_receipt(port_file, process))
 
             command = [
                 self.python,

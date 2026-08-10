@@ -5,6 +5,7 @@ import tempfile
 import unittest
 from contextlib import redirect_stdout
 from pathlib import Path
+from unittest.mock import patch
 
 from qwen35.rzero.pipeline.orchestrator import Pipeline
 from qwen35.rzero.run_benchmark import apply_text_only_overlay
@@ -85,6 +86,46 @@ class PipelineTests(unittest.TestCase):
             pipeline.force_fresh_stages.clear()
             pipeline._train_solver(2, Path("/model"), stage_key)
             self.assertIn("--resume", commands[-1])
+
+    def test_questioner_solver_services_use_os_assigned_ports(self):
+        class FakeProcess:
+            returncode = None
+
+            def poll(self):
+                return self.returncode
+
+            def terminate(self):
+                self.returncode = 0
+
+            def wait(self, timeout=None):
+                return self.returncode
+
+            def kill(self):
+                self.returncode = -9
+
+        with tempfile.TemporaryDirectory() as temporary:
+            pipeline = Pipeline(self.args(Path(temporary) / "run"))
+            service_commands = []
+            training_calls = []
+            endpoints = iter(["http://127.0.0.1:41001", "http://127.0.0.1:41002"])
+
+            def fake_popen(command, **kwargs):
+                service_commands.append(command)
+                return FakeProcess()
+
+            pipeline._wait_for_service_receipt = lambda receipt, process: next(endpoints)
+            pipeline._run = lambda command, *args, **kwargs: training_calls.append((command, kwargs))
+            with patch("qwen35.rzero.pipeline.orchestrator.subprocess.Popen", side_effect=fake_popen):
+                pipeline._train_questioner(1, Path("/questioner"), Path("/solver"), "round_01.questioner_train")
+
+            self.assertEqual(len(service_commands), 2)
+            for command in service_commands:
+                self.assertEqual(command[command.index("--port") + 1], "0")
+                self.assertIn("--port-file", command)
+            self.assertEqual(
+                training_calls[0][1]["env"]["RZERO_SOLVER_ENDPOINTS"],
+                "http://127.0.0.1:41001,http://127.0.0.1:41002",
+            )
 
 
 if __name__ == "__main__":
