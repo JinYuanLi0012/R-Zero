@@ -7,13 +7,14 @@ from qwen35.rzero.train_grpo import build_command
 
 ROOT = Path(__file__).resolve().parents[2]
 CONFIG = ROOT / "qwen35" / "configs" / "a100_4x_qwen35_4b_base.yaml"
+SMOKE_CONFIG = ROOT / "qwen35" / "configs" / "a100_4x_qwen35_4b_base_smoke.yaml"
 
 
 class TrainCommandTests(unittest.TestCase):
-    def args(self, role):
+    def args(self, role, config=CONFIG):
         return argparse.Namespace(
             role=role,
-            config=str(CONFIG),
+            config=str(config),
             model=Path("/model"),
             train_file=Path("/train.parquet"),
             val_file=Path("/val.parquet"),
@@ -41,6 +42,14 @@ class TrainCommandTests(unittest.TestCase):
         self.assertIn("reward.reward_manager.name=naive", rendered)
         self.assertIn("trainer.n_gpus_per_node=4", rendered)
         self.assertIn("trainer.total_training_steps=15", rendered)
+
+    def test_smoke_minibatches_pass_upstream_verl_batch_constraint(self):
+        questioner = "\n".join(build_command(self.args("questioner", SMOKE_CONFIG)))
+        solver = "\n".join(build_command(self.args("solver", SMOKE_CONFIG)))
+        self.assertIn("data.train_batch_size=4", questioner)
+        self.assertIn("actor_rollout_ref.actor.ppo_mini_batch_size=4", questioner)
+        self.assertIn("data.train_batch_size=4", solver)
+        self.assertIn("actor_rollout_ref.actor.ppo_mini_batch_size=4", solver)
 
 
 if __name__ == "__main__":

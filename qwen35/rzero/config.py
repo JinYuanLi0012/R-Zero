@@ -66,6 +66,27 @@ def validate_config(config: dict[str, Any]) -> None:
         raise ConfigError("questioner training and frozen Solver GPUs must be disjoint")
 
     algorithm = config["algorithm"]
+    batch_pairs = (
+        ("questioner_prompt_batch_size", "questioner_update_batch_size"),
+        ("solver_prompt_batch_size", "solver_update_batch_size"),
+    )
+    for prompt_key, update_key in batch_pairs:
+        prompt_batch = algorithm.get(prompt_key)
+        update_batch = algorithm.get(update_key)
+        if (
+            not isinstance(prompt_batch, int)
+            or isinstance(prompt_batch, bool)
+            or prompt_batch <= 0
+            or not isinstance(update_batch, int)
+            or isinstance(update_batch, bool)
+            or update_batch <= 0
+        ):
+            raise ConfigError(f"{prompt_key} and {update_key} must be positive integers")
+        if update_batch > prompt_batch:
+            raise ConfigError(f"{update_key} ({update_batch}) must not exceed {prompt_key} ({prompt_batch})")
+        if prompt_batch % update_batch:
+            raise ConfigError(f"{prompt_key} ({prompt_batch}) must be divisible by {update_key} ({update_batch})")
+
     if config.get("profile", "formal") != "formal":
         return
     expected = {

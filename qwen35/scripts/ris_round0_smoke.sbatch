@@ -14,7 +14,7 @@
 set -euo pipefail
 
 PROJECT=${PROJECT:-/storage1/fs1/jiaxinh/Active/jinyuan/R-Zero-Qwen3.5}
-RUN_DIR=${PROJECT}/runs/rzero-qwen35-smoke
+RUN_DIR=${PROJECT}/runs/rzero-qwen35-smoke-v2
 HF_CACHE=${HF_CACHE:-/scratch2/fs1/jiaxinh/${USER}/hf-cache}
 IMAGE=${IMAGE:-/scratch2/fs1/jiaxinh/${USER}/images/rzero-qwen35-bdc8b2c29981.sqsh}
 EXPECTED_IMAGE_SHA256=${EXPECTED_IMAGE_SHA256:-26e47958e9b689f21eb63b730fff88c5d13854d407fff592cdddcda87f329ec5}
@@ -65,7 +65,7 @@ srun \
     HF_HOME=/root/.cache/huggingface \
     VLLM_USE_V1=1 \
   bash /workspace/R-Zero/qwen35/scripts/run.sh \
-    --run-dir /workspace/R-Zero/runs/rzero-qwen35-smoke \
+    --run-dir /workspace/R-Zero/runs/rzero-qwen35-smoke-v2 \
     --config /workspace/R-Zero/qwen35/configs/a100_4x_qwen35_4b_base_smoke.yaml \
     --dry-run
 
@@ -81,6 +81,6 @@ srun \
     HF_HOME=/root/.cache/huggingface \
     VLLM_USE_V1=1 \
   bash /workspace/R-Zero/qwen35/scripts/run.sh \
-    --run-dir /workspace/R-Zero/runs/rzero-qwen35-smoke \
+    --run-dir /workspace/R-Zero/runs/rzero-qwen35-smoke-v2 \
     --config /workspace/R-Zero/qwen35/configs/a100_4x_qwen35_4b_base_smoke.yaml \
     --resume

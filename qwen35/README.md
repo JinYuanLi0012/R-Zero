@@ -91,7 +91,7 @@ Run the reduced one-step, eight-candidate integration profile first:
 
 ```bash
 qwen35/scripts/run.sh \
-  --run-dir /runs/rzero-qwen35-smoke \
+  --run-dir /runs/rzero-qwen35-smoke-v2 \
   --config qwen35/configs/a100_4x_qwen35_4b_base_smoke.yaml \
   --resume
 ```

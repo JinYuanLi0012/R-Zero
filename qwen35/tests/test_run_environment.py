@@ -58,6 +58,7 @@ class RunEnvironmentTests(unittest.TestCase):
                 path = root / "cache" / directory
                 self.assertEqual(values[name], str(path))
                 self.assertTrue(path.is_dir())
+            self.assertEqual(values["VLLM_NO_USAGE_STATS"], "1")
 
 
 if __name__ == "__main__":

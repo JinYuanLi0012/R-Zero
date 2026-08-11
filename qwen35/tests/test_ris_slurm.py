@@ -18,6 +18,7 @@ class RisSlurmScriptTests(unittest.TestCase):
         self.assertEqual(script.count('--export="ALL,XDG_CACHE_HOME='), 2)
         self.assertNotIn("ENROOT_CACHE_PATH", script)
         self.assertIn("a100_4x_qwen35_4b_base_smoke.yaml", script)
+        self.assertIn("rzero-qwen35-smoke-v2", script)
         self.assertIn("--dry-run", script)
         self.assertIn("--resume", script)
         self.assertNotIn("a100_4x_qwen35_4b_base.yaml", script)

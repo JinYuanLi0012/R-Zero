@@ -16,7 +16,7 @@
 
 尚未验证：
 
-- 四卡环境 smoke、FSDP2 GRPO 更新/checkpoint/HF export。
+- FSDP2 GRPO 更新/checkpoint/HF export。
 - 缩小版 Round 0 和正式五轮训练。
 
 因此单卡成功不能替代四卡 Round 0 验收。
@@ -59,6 +59,14 @@ sha256:26e47958e9b689f21eb63b730fff88c5d13854d407fff592cdddcda87f329ec5
 `hydra.run.dir=ROUND_DIR/logs/hydra/EXPERIMENT/${now:...}` 且
 `hydra.job.chdir=false`：Hydra 配置与日志持久化到 `/storage1`，进程 cwd 仍保持
 官方 `/opt/verl`，不会重新引入仓库旧版 verl 遮蔽问题。
+
+作业 `2709139` 已验证上述 Hydra 修复并进入 verl 配置校验，随后发现旧 smoke
+缩放参数自相矛盾：`train_batch_size=4` 小于 `ppo_mini_batch_size=16`。smoke 的
+Questioner/Solver update batch 现均缩为 `4`；配置加载器会在提交前检查 update
+batch 不大于 prompt batch 且能整除它。由于配置属于 run fingerprint，修复后的
+作业使用新目录 `runs/rzero-qwen35-smoke-v2`，不会把旧 manifest 冒充成新配置的
+结果。该作业中 vLLM 遥测线程还曾尝试写满额的 Home；运行入口现设置
+`VLLM_NO_USAGE_STATS=1`，编译缓存仍留在节点本地 `/tmp`。
 
 ## 固定资源和路径
 
@@ -322,7 +330,7 @@ sbatch qwen35/scripts/ris_round0_smoke.sbatch
 
 ```bash
 qwen35/scripts/run.sh \
-  --run-dir /workspace/R-Zero/runs/rzero-qwen35-smoke \
+  --run-dir /workspace/R-Zero/runs/rzero-qwen35-smoke-v2 \
   --config /workspace/R-Zero/qwen35/configs/a100_4x_qwen35_4b_base_smoke.yaml \
   --resume
 ```

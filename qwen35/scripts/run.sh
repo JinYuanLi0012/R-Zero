@@ -5,6 +5,9 @@ repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 export VERL_SOURCE_ROOT=${VERL_SOURCE_ROOT:-/opt/verl}
 export PYTHONPATH="${VERL_SOURCE_ROOT}:${repo_root}${PYTHONPATH:+:${PYTHONPATH}}"
 export VLLM_USE_V1=${VLLM_USE_V1:-1}
+# RIS Home is quota-limited. vLLM's optional telemetry writes below $HOME and
+# is unnecessary for a reproducible training run.
+export VLLM_NO_USAGE_STATS=${VLLM_NO_USAGE_STATS:-1}
 
 # GPU nodes commonly expose a small quota-backed $HOME. Keep compiler and
 # rollout caches on node-local storage so Triton/FlashInfer JIT compilation
