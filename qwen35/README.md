@@ -13,6 +13,10 @@ adaptation and fault-tolerant orchestration.
   Transformers 5.5.3 and verl commit `4a2cba76`; FSDP2 and vLLM text-only
 - Hardware: one node with 4×A100 80GB
 - Five rounds; Questioner step 5 and Solver step 15
+- Effect-equivalent GRPO batching: Questioner uses 512 prompts, `n=4` and a
+  4-prompt optimizer mini-batch (16 trajectories/mini-batch, 128 mini-batches
+  per outer batch); Solver uses 512 prompts, `n=5` and a 128-prompt optimizer
+  mini-batch (640 trajectories/mini-batch)
 - Released-code voting: online Challenger Solver `n=10`, candidate curation `m=9`
 - Difficulty interval `[0.3, 0.8]`
 - Four generation shards × 2000 = 8000 raw candidates per round
@@ -20,6 +24,8 @@ adaptation and fault-tolerant orchestration.
 
 The Challenger stage uses GPUs 0–1 for Questioner training and GPUs 2–3 for
 two frozen Solver services. Solver GRPO and benchmarks use all four GPUs.
+The per-GPU update micro-batch remains 1 for Qwen3.5 memory stability; it only
+changes gradient-accumulation partitioning, not the optimizer mini-batch.
 
 ## Environment
 

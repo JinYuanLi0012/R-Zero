@@ -41,6 +41,19 @@ class PipelineTests(unittest.TestCase):
             stages = pipeline.stages()
             self.assertEqual(len(stages), 73)
             self.assertEqual(len([stage for stage in stages if ".generate." in stage.key]), 20)
+            by_key = {stage.key: stage for stage in stages}
+            self.assertEqual(
+                by_key["round_01.questioner_train"].artifacts[0].path.name,
+                "actor",
+            )
+            self.assertEqual(
+                by_key["round_01.questioner_train"].artifacts[0].path.parent.name,
+                "global_step_5",
+            )
+            self.assertEqual(
+                by_key["round_01.solver_train"].artifacts[0].path.parent.name,
+                "global_step_15",
+            )
             buffer = io.StringIO()
             with redirect_stdout(buffer):
                 pipeline.run()

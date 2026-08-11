@@ -16,6 +16,30 @@ class ConfigTests(unittest.TestCase):
         self.assertEqual(config["model"]["id"], "Qwen/Qwen3.5-4B-Base")
         self.assertEqual(config["generation"]["shards"] * config["generation"]["samples_per_shard"], 8000)
 
+    def test_formal_training_effect_semantics(self):
+        algorithm = load_config(CONFIG)["algorithm"]
+        self.assertEqual(algorithm["questioner_prompt_batch_size"], 512)
+        self.assertEqual(algorithm["questioner_rollouts"], 4)
+        self.assertEqual(algorithm["questioner_update_batch_size"], 4)
+        self.assertEqual(
+            algorithm["questioner_update_batch_size"] * algorithm["questioner_rollouts"],
+            16,
+        )
+        self.assertEqual(
+            algorithm["questioner_prompt_batch_size"] // algorithm["questioner_update_batch_size"],
+            128,
+        )
+
+        self.assertEqual(algorithm["solver_prompt_batch_size"], 512)
+        self.assertEqual(algorithm["solver_rollouts"], 5)
+        self.assertEqual(algorithm["solver_update_batch_size"], 128)
+        self.assertEqual(
+            algorithm["solver_update_batch_size"] * algorithm["solver_rollouts"],
+            640,
+        )
+        self.assertEqual(algorithm["questioner_steps"], 5)
+        self.assertEqual(algorithm["solver_steps"], 15)
+
     def test_rejects_candidate_scale_drift(self):
         config = load_config(CONFIG)
         config = copy.deepcopy({key: value for key, value in config.items() if not key.startswith("_")})
