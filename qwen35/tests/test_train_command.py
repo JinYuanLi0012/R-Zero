@@ -33,6 +33,10 @@ class TrainCommandTests(unittest.TestCase):
         self.assertIn("actor_rollout_ref.rollout.n=4", rendered)
         self.assertIn("actor_rollout_ref.actor.ppo_mini_batch_size=4", rendered)
         self.assertIn("actor_rollout_ref.actor.ppo_micro_batch_size_per_gpu=1", rendered)
+        self.assertIn("actor_rollout_ref.ref.log_prob_micro_batch_size_per_gpu=1", rendered)
+        self.assertIn("actor_rollout_ref.rollout.log_prob_micro_batch_size_per_gpu=1", rendered)
+        self.assertNotIn("actor_rollout_ref.ref.log_prob_micro_batch_size=", rendered)
+        self.assertNotIn("actor_rollout_ref.rollout.log_prob_micro_batch_size=", rendered)
         self.assertIn("reward.num_workers=1", rendered)
         self.assertIn("actor_rollout_ref.actor.strategy=fsdp2", rendered)
         self.assertIn("actor_rollout_ref.model.use_remove_padding=false", rendered)
@@ -48,6 +52,8 @@ class TrainCommandTests(unittest.TestCase):
         self.assertIn("data.train_batch_size=512", rendered)
         self.assertIn("actor_rollout_ref.rollout.n=5", rendered)
         self.assertIn("actor_rollout_ref.actor.ppo_mini_batch_size=128", rendered)
+        self.assertIn("actor_rollout_ref.ref.log_prob_micro_batch_size_per_gpu=1", rendered)
+        self.assertIn("actor_rollout_ref.rollout.log_prob_micro_batch_size_per_gpu=1", rendered)
 
     def test_smoke_minibatches_pass_upstream_verl_batch_constraint(self):
         questioner = "\n".join(build_command(self.args("questioner", SMOKE_CONFIG)))

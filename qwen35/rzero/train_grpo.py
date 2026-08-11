@@ -81,8 +81,13 @@ def build_command(args: argparse.Namespace) -> list[str]:
         "actor_rollout_ref.actor.kl_loss_coef": algorithm["kl_coef"],
         "actor_rollout_ref.actor.kl_loss_type": "low_var_kl",
         "actor_rollout_ref.actor.checkpoint.save_contents": "[model,optimizer,extra]",
+        # Current verl requires the per-GPU form for both reference-policy and
+        # rollout log-prob forward passes when dynamic batching is disabled.
+        # This is a memory partition only; it does not change PPO mini-batches.
+        "actor_rollout_ref.ref.log_prob_micro_batch_size_per_gpu": 1,
         "actor_rollout_ref.rollout.name": "vllm",
         "actor_rollout_ref.rollout.n": rollouts,
+        "actor_rollout_ref.rollout.log_prob_micro_batch_size_per_gpu": 1,
         "actor_rollout_ref.rollout.tensor_model_parallel_size": 1,
         "actor_rollout_ref.rollout.gpu_memory_utilization": 0.45,
         "actor_rollout_ref.rollout.enforce_eager": True,

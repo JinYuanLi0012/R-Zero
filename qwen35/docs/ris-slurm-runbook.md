@@ -76,6 +76,14 @@ trajectories/mini-batch。Questioner/Solver 分别消费 `global_step_5` 和
 `global_step_15`。此次只改变正式 profile fingerprint；正在运行或已经产生状态的
 `rzero-qwen35-smoke-v2` 使用独立 smoke 配置，不受影响。
 
+`smoke-v2` 作业 `2721258` 随后通过 batch-size 校验，在新版 verl 的 log-prob
+配置校验处停止。该版本在关闭 dynamic batch 时要求 Reference policy 和 rollout
+分别显式设置且只能设置新版 per-GPU 参数。训练适配器现为两者设置
+`log_prob_micro_batch_size_per_gpu=1`；这只拆分 ref/rollout 的 log-prob 前向计算，
+不改变 Questioner/Solver 的全局 optimizer mini-batch 或 trajectory 语义。失败发生
+在 Ray/模型训练启动前，没有产生可复用的训练 checkpoint，同一 `smoke-v2`
+目录可安全使用普通 `--resume`。
+
 ## 固定资源和路径
 
 ```bash
