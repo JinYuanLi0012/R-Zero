@@ -9,6 +9,13 @@ export VLLM_USE_V1=${VLLM_USE_V1:-1}
 # is unnecessary for a reproducible training run.
 export VLLM_NO_USAGE_STATS=${VLLM_NO_USAGE_STATS:-1}
 
+# Pyxis may expose ROCm compatibility variables even on an NVIDIA allocation.
+# verl/Ray deliberately reject ROCR plus CUDA visibility because the two use
+# different index spaces. This pipeline is pinned to NVIDIA CUDA, so retain
+# CUDA_VISIBLE_DEVICES and remove the inapplicable AMD selectors before Ray
+# starts and snapshots the driver environment.
+unset ROCR_VISIBLE_DEVICES HIP_VISIBLE_DEVICES
+
 # GPU nodes commonly expose a small quota-backed $HOME. Keep compiler and
 # rollout caches on node-local storage so Triton/FlashInfer JIT compilation
 # cannot exhaust that quota during a long run. A scheduler wrapper may set

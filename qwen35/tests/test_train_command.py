@@ -2,7 +2,7 @@ import argparse
 import unittest
 from pathlib import Path
 
-from qwen35.rzero.train_grpo import build_command
+from qwen35.rzero.train_grpo import build_command, sanitize_nvidia_visibility_env
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -62,6 +62,20 @@ class TrainCommandTests(unittest.TestCase):
         self.assertIn("actor_rollout_ref.actor.ppo_mini_batch_size=4", questioner)
         self.assertIn("data.train_batch_size=4", solver)
         self.assertIn("actor_rollout_ref.actor.ppo_mini_batch_size=4", solver)
+
+    def test_training_subprocess_removes_rocm_visibility_on_nvidia(self):
+        original = {
+            "CUDA_VISIBLE_DEVICES": "0,1",
+            "ROCR_VISIBLE_DEVICES": "0,1,2,3",
+            "HIP_VISIBLE_DEVICES": "0,1,2,3",
+            "KEEP": "yes",
+        }
+        sanitized = sanitize_nvidia_visibility_env(original)
+        self.assertEqual(sanitized["CUDA_VISIBLE_DEVICES"], "0,1")
+        self.assertEqual(sanitized["KEEP"], "yes")
+        self.assertNotIn("ROCR_VISIBLE_DEVICES", sanitized)
+        self.assertNotIn("HIP_VISIBLE_DEVICES", sanitized)
+        self.assertIn("ROCR_VISIBLE_DEVICES", original)
 
 
 if __name__ == "__main__":

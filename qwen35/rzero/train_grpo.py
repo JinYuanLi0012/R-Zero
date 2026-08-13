@@ -26,6 +26,14 @@ def _override(name: str, value: object) -> str:
     return f"{name}={rendered}"
 
 
+def sanitize_nvidia_visibility_env(env: dict[str, str]) -> dict[str, str]:
+    """Remove ROCm selectors that conflict with CUDA in verl Ray workers."""
+    sanitized = env.copy()
+    sanitized.pop("ROCR_VISIBLE_DEVICES", None)
+    sanitized.pop("HIP_VISIBLE_DEVICES", None)
+    return sanitized
+
+
 def build_command(args: argparse.Namespace) -> list[str]:
     config = load_config(args.config)
     algorithm = config["algorithm"]
@@ -144,7 +152,7 @@ def main() -> None:
     ensure_training_lineage(args.output_dir, lineage, resume=args.resume)
     if args.resume:
         recover_tracker(args.output_dir)
-    env = os.environ.copy()
+    env = sanitize_nvidia_visibility_env(os.environ)
     env.setdefault("VLLM_USE_V1", "1")
     repo_root = Path(__file__).resolve().parents[2]
     official_root = verl_source_root(config["runtime"]["verl_source_root"])

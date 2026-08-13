@@ -84,6 +84,14 @@ trajectories/mini-batch。Questioner/Solver 分别消费 `global_step_5` 和
 在 Ray/模型训练启动前，没有产生可复用的训练 checkpoint，同一 `smoke-v2`
 目录可安全使用普通 `--resume`。
 
+作业 `2729570` 已通过上述配置校验并启动 Ray，但 RIS/Pyxis 在 NVIDIA allocation
+中同时传入 `CUDA_VISIBLE_DEVICES` 与 ROCm 兼容变量 `ROCR_VISIBLE_DEVICES`，触发
+锁定 verl worker 的防歧义检查，两个 actor 在加载模型前退出。统一入口现保留
+Slurm/Ray 所需的 `CUDA_VISIBLE_DEVICES`，在 Ray 初始化前移除不适用于 NVIDIA
+运行的 `ROCR_VISIBLE_DEVICES` 和 `HIP_VISIBLE_DEVICES`；训练适配器对子进程再做
+同样清理，避免绕过 `run.sh` 直接调用时复发。该修复不改变 run fingerprint、
+GPU 分配或训练算法，同一 `smoke-v2` 目录继续普通 `--resume`。
+
 ## 固定资源和路径
 
 ```bash

@@ -23,6 +23,9 @@ class RunEnvironmentTests(unittest.TestCase):
                     "PATH": f"{bin_dir}{os.pathsep}{env['PATH']}",
                     "ENV_CAPTURE": str(capture),
                     "RZERO_NODE_CACHE_ROOT": str(root / "cache"),
+                    "CUDA_VISIBLE_DEVICES": "0,1",
+                    "ROCR_VISIBLE_DEVICES": "0,1,2,3",
+                    "HIP_VISIBLE_DEVICES": "0,1,2,3",
                 }
             )
             for name in (
@@ -59,6 +62,9 @@ class RunEnvironmentTests(unittest.TestCase):
                 self.assertEqual(values[name], str(path))
                 self.assertTrue(path.is_dir())
             self.assertEqual(values["VLLM_NO_USAGE_STATS"], "1")
+            self.assertEqual(values["CUDA_VISIBLE_DEVICES"], "0,1")
+            self.assertNotIn("ROCR_VISIBLE_DEVICES", values)
+            self.assertNotIn("HIP_VISIBLE_DEVICES", values)
 
 
 if __name__ == "__main__":
