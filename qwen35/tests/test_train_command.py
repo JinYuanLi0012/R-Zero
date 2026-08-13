@@ -27,6 +27,7 @@ class TrainCommandTests(unittest.TestCase):
         command = build_command(self.args("questioner"))
         rendered = "\n".join(command)
         self.assertIn("reward.reward_manager.name=batch", rendered)
+        self.assertIn("trainer.use_v1=false", rendered)
         self.assertIn("trainer.n_gpus_per_node=2", rendered)
         self.assertIn("trainer.total_training_steps=5", rendered)
         self.assertIn("data.train_batch_size=512", rendered)
@@ -47,6 +48,7 @@ class TrainCommandTests(unittest.TestCase):
     def test_solver_uses_naive_manager_and_four_gpus(self):
         rendered = "\n".join(build_command(self.args("solver")))
         self.assertIn("reward.reward_manager.name=naive", rendered)
+        self.assertIn("trainer.use_v1=false", rendered)
         self.assertIn("trainer.n_gpus_per_node=4", rendered)
         self.assertIn("trainer.total_training_steps=15", rendered)
         self.assertIn("data.train_batch_size=512", rendered)

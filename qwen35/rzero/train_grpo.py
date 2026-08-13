@@ -110,6 +110,14 @@ def build_command(args: argparse.Namespace) -> list[str]:
         "trainer.project_name": "rzero_qwen35",
         "trainer.experiment_name": args.experiment_name,
         "trainer.logger": "[console]",
+        # This pinned verl commit defaults to the experimental V1 reward loop,
+        # whose registry has no whole-population ``batch`` manager.  R-Zero's
+        # Challenger reward performs BLEU clustering across the complete
+        # rollout population, so replacing it with V1's per-sample ``naive``
+        # manager would change the algorithm.  Keep the official synchronous
+        # V0 trainer, which still provides the upstream BatchRewardManager and
+        # NaiveRewardManager required by the released R-Zero semantics.
+        "trainer.use_v1": False,
         "trainer.nnodes": 1,
         "trainer.n_gpus_per_node": 2 if is_questioner else 4,
         "trainer.total_training_steps": steps,

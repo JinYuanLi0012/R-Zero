@@ -92,6 +92,113 @@ Slurm/Ray 所需的 `CUDA_VISIBLE_DEVICES`，在 Ray 初始化前移除不适用
 同样清理，避免绕过 `run.sh` 直接调用时复发。该修复不改变 run fingerprint、
 GPU 分配或训练算法，同一 `smoke-v2` 目录继续普通 `--resume`。
 
+2026-08-13 在 Compute1 的 4×A100 交互式节点上，`smoke-v2` 已通过
+Qwen3.5/vLLM text-only environment smoke 并进入 Questioner FSDP2 初始化。
+权重成功加载后，固定 verl commit 的实验性 V1 reward loop 因未注册
+`batch` manager 而拒绝启动。不能将 Questioner 改成逐样本 `naive`，
+否则会破坏完整 rollout population 上的 BLEU 聚类奖励。训练适配器因此
+显式设置 `trainer.use_v1=false`，使用该 verl commit 仍提供的官方同步
+V0 trainer：Questioner 使用 `BatchRewardManager`，Solver 使用
+`NaiveRewardManager`。此修复不改变 reward 函数、batch 语义或 run
+fingerprint；失败发生在首个 optimizer step 之前，未产生可复用 checkpoint。
+
+## Compute1 交互式节点：固定路径与启动命令
+
+Compute1 与 Compute2 看到的项目是同一份共享 storage，只是挂载路径
+少了 `fs1`：
+
+```text
+Compute2: /storage1/fs1/jiaxinh/Active/jinyuan/R-Zero-Qwen3.5
+Compute1: /storage1/jiaxinh/Active/jinyuan/R-Zero-Qwen3.5
+container: /workspace/R-Zero
+```
+
+`/workspace/R-Zero` 是容器内挂载点，不是第二份代码。容器内写入
+`/workspace/R-Zero/runs/...` 会直接落到 Compute1 主机的
+`/storage1/jiaxinh/Active/jinyuan/R-Zero-Qwen3.5/runs/...`。代码、dataset、
+checkpoint、manifest 和 stage log 继续保留在 storage；镜像、Enroot rootfs
+和缓存使用 IB scratch。
+
+Compute1 站点 `/etc/enroot/enroot.conf` 将 Pyxis 解压目录强制设为
+`/scratch/enroot-data-user-UID`，而 2026-08-13 当时 `/scratch` 已 100% 满。
+Pyxis 又会过滤 `ENROOT_DATA_PATH`，无法通过 `srun --export` 改到 IB
+scratch。该节点也没有 `squashfuse`，因此不能用 `enroot start IMAGE.sqsh`
+直接挂载。已验证的路线是：在 IB scratch 上执行一次 `enroot create`，
+之后始终从持久容器目录启动。
+
+每次新交互式 shell 先设置：
+
+```bash
+export PROJECT=/storage1/jiaxinh/Active/jinyuan/R-Zero-Qwen3.5
+export IMAGE=/ib-scratch/jiaxinh01/project/rzero-runtime/images/rzero-qwen35-bdc8b2c29981.sqsh
+export RUNTIME_ROOT=/ib-scratch/jiaxinh01/project/rzero-runtime
+export HF_CACHE=$RUNTIME_ROOT/hf-cache
+export CONTAINER=rzero-qwen35-bdc8b2c29981
+
+export ENROOT_RUNTIME_PATH=$RUNTIME_ROOT/enroot-runtime/user-$(id -u)
+export ENROOT_CACHE_PATH=$RUNTIME_ROOT/enroot-cache/user-$(id -u)
+export ENROOT_DATA_PATH=$RUNTIME_ROOT/enroot-data/user-$(id -u)
+export ENROOT_TEMP_PATH=$RUNTIME_ROOT/enroot-tmp/user-$(id -u)
+
+mkdir -p \
+  "$HF_CACHE" \
+  "$ENROOT_RUNTIME_PATH" \
+  "$ENROOT_CACHE_PATH" \
+  "$ENROOT_DATA_PATH" \
+  "$ENROOT_TEMP_PATH"
+```
+
+只在 `$ENROOT_DATA_PATH/$CONTAINER` 不存在时执行一次：
+
+```bash
+export ENROOT_MAX_PROCESSORS=32
+enroot create --name "$CONTAINER" "$IMAGE"
+```
+
+已持有 4 GPU 的交互式 allocation 时，不再嵌套 `srun`，直接启动
+`smoke-v2`：
+
+```bash
+enroot start \
+  --root \
+  --rw \
+  --mount "$PROJECT:/workspace/R-Zero" \
+  --mount "$HF_CACHE:/root/.cache/huggingface" \
+  --env PYTHONPATH=/opt/verl:/workspace/R-Zero \
+  --env HF_HOME=/root/.cache/huggingface \
+  --env VLLM_NO_USAGE_STATS=1 \
+  "$CONTAINER" \
+  /bin/bash -lc '
+    set -euo pipefail
+    cd /opt/verl
+    unset ROCR_VISIBLE_DEVICES HIP_VISIBLE_DEVICES
+
+    exec bash /workspace/R-Zero/qwen35/scripts/run.sh \
+      --run-dir /workspace/R-Zero/runs/rzero-qwen35-smoke-v2 \
+      --config /workspace/R-Zero/qwen35/configs/a100_4x_qwen35_4b_base_smoke.yaml \
+      --resume
+  '
+```
+
+容器 rootfs 只需 `enroot create` 一次。之后更新共享 storage 中的
+`qwen35/` 代码不需重建容器，因为运行时使用的是
+`$PROJECT:/workspace/R-Zero` 挂载。但镜像中 `/opt/verl` 或 Python/CUDA/vLLM
+依赖发生变化时，必须生成新镜像和新容器名，不得覆盖现有固定容器。
+
+当前 terminal 只显示 stage 边界，详细日志在：
+
+```text
+$PROJECT/runs/rzero-qwen35-smoke-v2/logs/
+$PROJECT/runs/rzero-qwen35-smoke-v2/round_01/logs/
+```
+
+例如：
+
+```bash
+tail -n 100 -F \
+  "$PROJECT/runs/rzero-qwen35-smoke-v2/round_01/logs/questioner_train.log"
+```
+
 ## 固定资源和路径
 
 ```bash
