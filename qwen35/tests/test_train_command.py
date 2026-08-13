@@ -23,10 +23,13 @@ class TrainCommandTests(unittest.TestCase):
             resume=True,
         )
 
-    def test_questioner_uses_official_batch_manager_and_two_gpus(self):
+    def test_questioner_uses_population_manager_and_two_gpus(self):
         command = build_command(self.args("questioner"))
         rendered = "\n".join(command)
-        self.assertIn("reward.reward_manager.name=batch", rendered)
+        self.assertIn("reward.reward_manager.name=RZeroPopulationRewardManager", rendered)
+        self.assertIn("reward.reward_manager.source=importlib", rendered)
+        self.assertIn("reward.reward_manager.module.path=", rendered)
+        self.assertIn("/qwen35/rzero/rewards/population.py", rendered)
         self.assertIn("trainer.use_v1=false", rendered)
         self.assertIn("trainer.n_gpus_per_node=2", rendered)
         self.assertIn("trainer.total_training_steps=5", rendered)
@@ -48,6 +51,7 @@ class TrainCommandTests(unittest.TestCase):
     def test_solver_uses_naive_manager_and_four_gpus(self):
         rendered = "\n".join(build_command(self.args("solver")))
         self.assertIn("reward.reward_manager.name=naive", rendered)
+        self.assertNotIn("reward.reward_manager.source=importlib", rendered)
         self.assertIn("trainer.use_v1=false", rendered)
         self.assertIn("trainer.n_gpus_per_node=4", rendered)
         self.assertIn("trainer.total_training_steps=15", rendered)

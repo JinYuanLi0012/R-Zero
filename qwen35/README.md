@@ -26,13 +26,16 @@ The Challenger stage uses GPUs 0–1 for Questioner training and GPUs 2–3 for
 two frozen Solver services. Solver GRPO and benchmarks use all four GPUs.
 The per-GPU update micro-batch remains 1 for Qwen3.5 memory stability; it only
 changes gradient-accumulation partitioning, not the optimizer mini-batch.
-The pinned verl commit defaults to its experimental V1 reward loop, which does
-not expose the whole-population `batch` reward manager. Both roles therefore
-set `trainer.use_v1=false` and use verl's official synchronous V0 trainer:
-Questioner retains the upstream `BatchRewardManager` required for population
-BLEU clustering, while Solver retains the upstream `NaiveRewardManager`.
-Substituting V1's per-sample manager for Questioner would change R-Zero reward
-semantics and is intentionally forbidden.
+The pinned verl commit routes both V0 and V1 trainers through its new
+per-trajectory reward loop; its older `BatchRewardManager` belongs to a separate
+registry and cannot be selected there. Questioner therefore uses verl's
+official importlib extension point and the thin `RZeroPopulationRewardManager`
+adapter. With one reward worker, it gathers exactly
+`train_batch_size * rollout.n` trajectories and calls the unchanged Challenger
+batch score once, preserving full-population BLEU clustering. Solver continues
+to use the reward loop's official `NaiveRewardManager`. Both roles keep the
+official synchronous V0 trainer for the migration's established PPO/checkpoint
+path. Substituting per-sample scoring for Questioner is intentionally forbidden.
 
 ## Environment
 

@@ -94,13 +94,21 @@ GPU 分配或训练算法，同一 `smoke-v2` 目录继续普通 `--resume`。
 
 2026-08-13 在 Compute1 的 4×A100 交互式节点上，`smoke-v2` 已通过
 Qwen3.5/vLLM text-only environment smoke 并进入 Questioner FSDP2 初始化。
-权重成功加载后，固定 verl commit 的实验性 V1 reward loop 因未注册
-`batch` manager 而拒绝启动。不能将 Questioner 改成逐样本 `naive`，
-否则会破坏完整 rollout population 上的 BLEU 聚类奖励。训练适配器因此
-显式设置 `trainer.use_v1=false`，使用该 verl commit 仍提供的官方同步
-V0 trainer：Questioner 使用 `BatchRewardManager`，Solver 使用
-`NaiveRewardManager`。此修复不改变 reward 函数、batch 语义或 run
-fingerprint；失败发生在首个 optimizer step 之前，未产生可复用 checkpoint。
+权重成功加载后，固定 verl commit 的 reward loop 因未注册旧 `batch` manager
+而拒绝启动。随后实测确认 `trainer.use_v1=false` 虽切换到了官方 V0 TaskRunner，
+但该 commit 的 V0/V1 已共同使用新的逐 trajectory reward loop；旧
+`verl.workers.reward_manager.BatchRewardManager` 属于另一套 registry，因此单纯
+切换 trainer 无法解决。不能将 Questioner 改成逐样本 `naive`，否则会破坏完整
+rollout population 上的 BLEU 聚类奖励。
+
+最终适配使用 verl 官方 `reward.reward_manager.source=importlib` 扩展点：新增的
+`RZeroPopulationRewardManager` 在唯一 reward worker 内收齐
+`train_batch_size * rollout.n` 个并发 trajectory，再调用未修改的 Challenger
+`compute_score` 一次并按原顺序返回奖励。Questioner 因而仍在正式 profile 的
+2048 trajectories（smoke 为 16）完整 population 上聚类；Solver 继续使用新
+reward loop 的官方 `NaiveRewardManager`。两种 role 保留官方同步 V0 trainer，
+用于已建立的 PPO/checkpoint 路径。失败发生在首个 optimizer step 之前，未产生
+可复用 checkpoint。
 
 ## Compute1 交互式节点：固定路径与启动命令
 

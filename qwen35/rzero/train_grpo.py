@@ -45,6 +45,7 @@ def build_command(args: argparse.Namespace) -> list[str]:
     rollouts = algorithm["questioner_rollouts"] if is_questioner else algorithm["solver_rollouts"]
     reward_path = Path(__file__).parent / "rewards" / ("challenger.py" if is_questioner else "solver.py")
     reward_manager = "batch" if is_questioner else "naive"
+    population_manager_path = Path(__file__).parent / "rewards" / "population.py"
     # Formal values map released EasyR1's rollout_batch_size and actor global
     # batch size; the smoke profile scales them down explicitly.
     train_batch_size = algorithm[
@@ -103,20 +104,17 @@ def build_command(args: argparse.Namespace) -> list[str]:
         "+actor_rollout_ref.rollout.engine_kwargs.vllm.language_model_only": True,
         "reward.custom_reward_function.path": str(reward_path.resolve()),
         "reward.custom_reward_function.name": "compute_score",
-        "reward.reward_manager.name": reward_manager,
+        "reward.reward_manager.name": "RZeroPopulationRewardManager" if is_questioner else reward_manager,
         # Challenger diversity is defined over the complete rollout population;
         # splitting it across reward workers would change BLEU cluster shares.
         "reward.num_workers": 1 if is_questioner else 8,
         "trainer.project_name": "rzero_qwen35",
         "trainer.experiment_name": args.experiment_name,
         "trainer.logger": "[console]",
-        # This pinned verl commit defaults to the experimental V1 reward loop,
-        # whose registry has no whole-population ``batch`` manager.  R-Zero's
-        # Challenger reward performs BLEU clustering across the complete
-        # rollout population, so replacing it with V1's per-sample ``naive``
-        # manager would change the algorithm.  Keep the official synchronous
-        # V0 trainer, which still provides the upstream BatchRewardManager and
-        # NaiveRewardManager required by the released R-Zero semantics.
+        # Keep the official synchronous V0 trainer to preserve the established
+        # PPO/checkpoint path used by this migration.  Both V0 and V1 in this
+        # pinned commit share the new reward loop; Questioner therefore uses
+        # the importlib population adapter configured below.
         "trainer.use_v1": False,
         "trainer.nnodes": 1,
         "trainer.n_gpus_per_node": 2 if is_questioner else 4,
@@ -128,6 +126,13 @@ def build_command(args: argparse.Namespace) -> list[str]:
         "trainer.test_freq": -1,
         "trainer.val_before_train": False,
     }
+    if is_questioner:
+        overrides.update(
+            {
+                "reward.reward_manager.source": "importlib",
+                "reward.reward_manager.module.path": str(population_manager_path.resolve()),
+            }
+        )
     return [sys.executable, "-m", "verl.trainer.main_ppo", *[_override(key, value) for key, value in overrides.items()]]
 
 
