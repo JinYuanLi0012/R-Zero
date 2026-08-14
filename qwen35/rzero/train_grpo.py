@@ -76,7 +76,11 @@ def build_command(args: argparse.Namespace) -> list[str]:
         "data.seed": algorithm["seed"],
         "actor_rollout_ref.model.path": str(args.model),
         "actor_rollout_ref.model.trust_remote_code": False,
-        "actor_rollout_ref.model.use_remove_padding": False,
+        # The pinned verl commit's official text-only Qwen3.5 FSDP recipes use
+        # the model-specific packed path.  Its qwen3_5 patch carries cu_seqlens
+        # through Gated DeltaNet and full-attention layers; the padded path was
+        # observed to produce an invalid FlashAttention varlen QKV reshape.
+        "actor_rollout_ref.model.use_remove_padding": True,
         "actor_rollout_ref.model.enable_gradient_checkpointing": True,
         "actor_rollout_ref.actor.strategy": "fsdp2",
         "actor_rollout_ref.ref.strategy": "fsdp2",

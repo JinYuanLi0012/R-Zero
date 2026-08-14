@@ -110,6 +110,17 @@ reward loop 的官方 `NaiveRewardManager`。两种 role 保留官方同步 V0 t
 用于已建立的 PPO/checkpoint 路径。失败发生在首个 optimizer step 之前，未产生
 可复用 checkpoint。
 
+随后 `smoke-v2` 已完成真实 rollout，并在 actor 的 `old_log_prob` 前向进入
+Qwen3.5 full-attention 层；原先设置的 `use_remove_padding=false` 仍由默认
+FlashAttention 2 进入 varlen kernel，但 padded Q/K/V 形状不一致，报
+`shape ... is invalid`。固定 verl commit 的官方纯文本 Qwen3.5 27B/35B FSDP
+recipes 均明确设置 `actor_rollout_ref.model.use_remove_padding=True`，而该 commit
+的 `verl/models/transformers/qwen3_5.py` 已专门实现 packed Gated DeltaNet 的
+`cu_seqlens`、分段 causal-conv 和 full-attention 传递。因此训练适配器改为
+`use_remove_padding=true`，与官方纯文本 recipe 对齐；vLLM 仍保持
+`language_model_only`，不启用图像/视频输入。原迁移计划中基于旧版支持状态作出的
+“禁用 packed”假设已由官方代码和 A100 实测共同推翻。
+
 ## Compute1 交互式节点：固定路径与启动命令
 
 Compute1 与 Compute2 看到的项目是同一份共享 storage，只是挂载路径
@@ -376,8 +387,9 @@ QWEN35_VLLM_SMOKE_OK
 
 第一次请求出现
 `fused_recurrent_gated_delta_rule_packed_decode_kernel` JIT latency warning 是
-Gated DeltaNet kernel 首次编译，不代表启用了训练数据 packed/remove-padding
-路径。进程退出时的 EngineCore SIGTERM/cleanup 信息也不是 smoke 失败。
+Gated DeltaNet rollout decode kernel 首次编译；它与 FSDP actor/ref 是否使用
+remove-padding 是两个不同执行路径。进程退出时的 EngineCore SIGTERM/cleanup
+信息也不是 smoke 失败。
 
 ## 已排除的失败路线
 

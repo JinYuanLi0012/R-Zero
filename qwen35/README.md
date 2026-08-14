@@ -37,6 +37,15 @@ to use the reward loop's official `NaiveRewardManager`. Both roles keep the
 official synchronous V0 trainer for the migration's established PPO/checkpoint
 path. Substituting per-sample scoring for Questioner is intentionally forbidden.
 
+FSDP actor/reference forward passes set `use_remove_padding=true`, matching the
+pinned verl commit's official text-only Qwen3.5 FSDP recipes. That commit
+contains a Qwen3.5-specific packed implementation for Gated DeltaNet and
+full-attention layers. This does not enable multimodal training: vLLM remains
+`language_model_only`, and all R-Zero data is text-only. The earlier migration
+assumption that packed Qwen3.5 was unsupported was invalidated by both the
+official recipe and the padded-path FlashAttention QKV shape failure observed
+on the 4xA100 smoke.
+
 ## Environment
 
 Build from the repository root:

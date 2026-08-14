@@ -43,7 +43,7 @@ class TrainCommandTests(unittest.TestCase):
         self.assertNotIn("actor_rollout_ref.rollout.log_prob_micro_batch_size=", rendered)
         self.assertIn("reward.num_workers=1", rendered)
         self.assertIn("actor_rollout_ref.actor.strategy=fsdp2", rendered)
-        self.assertIn("actor_rollout_ref.model.use_remove_padding=false", rendered)
+        self.assertIn("actor_rollout_ref.model.use_remove_padding=true", rendered)
         self.assertIn("+actor_rollout_ref.rollout.engine_kwargs.vllm.language_model_only=true", rendered)
         self.assertIn("hydra.run.dir=/logs/hydra/test/${now:%Y-%m-%d_%H-%M-%S}", rendered)
         self.assertIn("hydra.job.chdir=false", rendered)

@@ -38,7 +38,7 @@ qwen35/
   recipes 的 verl main commit。最终矩阵为 CUDA 13.0.2、Torch 2.11.0、
   vLLM 0.24.0、Transformers 5.5.3；RIS 580.105.08 驱动满足 CUDA 13.0。
 - 使用 verl 官方安装和 checkpoint/merger 接口，记录依赖锁、verl commit、模型 revision 和容器 digest。
-- 仅启用文本路径：vLLM 使用 `language-model-only`，沿用官方 tokenizer/chat template，禁用 packed/remove-padding 路径。
+- 仅启用文本路径：vLLM 使用 `language-model-only`，沿用官方 tokenizer/chat template。实施验证后，FSDP actor/ref 的 remove-padding 改为启用：固定 verl commit 的官方纯文本 Qwen3.5 FSDP recipe 明确使用该路径，且其 `qwen3_5.py` 已实现 Gated DeltaNet packed 支持；原计划中“禁用 packed”的预防性假设已被服务器实测推翻。此变更不启用多模态数据路径。
 - XDG、Triton、TorchInductor、CUDA、vLLM 和 FlashInfer 编译缓存统一写入
   计算节点本地临时目录；模型、数据、checkpoint 和 manifest 仍写入持久化
   run directory，禁止大缓存占用配额较小的 Home。
