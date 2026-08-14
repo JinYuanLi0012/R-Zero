@@ -1,0 +1,15 @@
+{
+  "default": {
+    "goal_restatement": "Compute a uniquely specified value.",
+    "conditions_complete": true,
+    "contradictory": false,
+    "multiple_reasonable_interpretations": false,
+    "solution_exists": true,
+    "unique_or_explicit_grading": true,
+    "label": "A",
+    "confidence": 0.95,
+    "issue_types": [],
+    "reasoning_summary": "The statement is complete and directly solvable.",
+    "derived_answer": "2"
+  }
+}

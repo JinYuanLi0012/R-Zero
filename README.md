@@ -1,5 +1,8 @@
 # *R-Zero*: Self-Evolving Reasoning LLM from Zero Data
 
+An offline V1–V3 epistemic-disagreement validation pipeline is available under
+[`methods/gaussian_population_rzero_epistemic_validation`](methods/gaussian_population_rzero_epistemic_validation/README.md).
+
 > Teach Large Language Models to reason and evolve on their own, starting with nothing but a base model. No data required.
 
 Check  out our [paper](https://arxiv.org/abs/2508.05004) or [webpage](https://chengsong-huang.github.io/R-Zero.github.io/)  for the details
