@@ -36,6 +36,31 @@ GPU/FSDP child worker。训练日志必须出现
 
 因此单卡成功不能替代四卡 Round 0 验收。
 
+## 最短 Solver gate
+
+Compute1 one-step baseline 已成功完成 Questioner step 1、Questioner export、候选
+生成、评分和 curate，但整理结果只有 32 行。verl 的训练 DataLoader 会丢弃不足
+`train_batch_size=512` 的尾 batch，因此 Solver 在模型加载前以
+`Train dataloader is empty` 退出。这不是模型、显存或 reward 故障。
+
+为了尽快验证剩余的 Solver FSDP2 update、checkpoint 和官方 HF export，不再从头
+运行完整 smoke。`solver_gate.sh` 直接读取该 baseline 的 32 行 Parquet，使用已有
+轻量 smoke profile（4 prompts、`n=2`、一步）并写入完全独立的输出目录：
+
+```bash
+bash /workspace/R-Zero/qwen35/scripts/solver_gate.sh \
+  --source-run-dir /workspace/R-Zero/runs/rzero-qwen35-one-step \
+  --output-dir /workspace/R-Zero/runs/rzero-qwen35-solver-gate
+```
+
+成功标志是 `RZERO_SOLVER_GATE_OK`。该 gate 只验证工程链路，不声称复现正式 Solver
+训练效果；正式配置仍保持 512 prompts、`n=5`、128 prompts/optimizer mini-batch。
+
+curation 现始终检查输出至少能组成一个 Solver training batch。正式 profile 不足
+512 行会在 curate 阶段提前失败，绝不重复训练题；只有非正式集成 profile 才允许
+确定性重复已有题目到一个 batch，并在 `curation.json` 分别登记唯一题数、训练行数
+和重复行数。
+
 2026-08-09 的首个四卡作业 `2692300` 已成功获得 4×H100、完成 pipeline
 dry-run、模型解析和 seed data 准备，但 environment smoke 在真正加载模型前被
 过严的版本断言终止：PyTorch 正常报告 CUDA ABI `13.0`，而固定镜像版本是

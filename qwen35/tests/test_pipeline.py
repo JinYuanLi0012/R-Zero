@@ -13,6 +13,7 @@ from qwen35.rzero.run_benchmark import apply_text_only_overlay
 
 ROOT = Path(__file__).resolve().parents[2]
 CONFIG = ROOT / "qwen35" / "configs" / "a100_4x_qwen35_4b_base.yaml"
+SMOKE_CONFIG = ROOT / "qwen35" / "configs" / "a100_4x_qwen35_4b_base_smoke.yaml"
 
 
 class PipelineTests(unittest.TestCase):
@@ -139,6 +140,24 @@ class PipelineTests(unittest.TestCase):
                 training_calls[0][1]["env"]["RZERO_SOLVER_ENDPOINTS"],
                 "http://127.0.0.1:41001,http://127.0.0.1:41002",
             )
+
+    def test_only_non_formal_curation_can_repeat_to_training_batch(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            formal = Pipeline(self.args(Path(temporary) / "formal"))
+            formal_calls = []
+            formal._run = lambda command, *args, **kwargs: formal_calls.append(command)
+            next(stage for stage in formal.stages() if stage.key == "round_01.curate").action()
+            self.assertIn("--minimum-rows", formal_calls[0])
+            self.assertNotIn("--repeat-to-minimum", formal_calls[0])
+
+            smoke_args = self.args(Path(temporary) / "smoke", config=str(SMOKE_CONFIG))
+            smoke = Pipeline(smoke_args)
+            smoke_calls = []
+            smoke._run = lambda command, *args, **kwargs: smoke_calls.append(command)
+            next(stage for stage in smoke.stages() if stage.key == "round_01.curate").action()
+            self.assertIn("--repeat-to-minimum", smoke_calls[0])
+            minimum_index = smoke_calls[0].index("--minimum-rows")
+            self.assertEqual(smoke_calls[0][minimum_index + 1], "4")
 
 
 if __name__ == "__main__":

@@ -3,6 +3,15 @@ from pathlib import Path
 
 
 class RisSlurmScriptTests(unittest.TestCase):
+    def test_solver_gate_reuses_curated_data_and_exports_official_checkpoint(self):
+        repo_root = Path(__file__).resolve().parents[2]
+        script = (repo_root / "qwen35/scripts/solver_gate.sh").read_text(encoding="utf-8")
+        self.assertIn("--role solver", script)
+        self.assertIn("round_01/dataset/train.parquet", script)
+        self.assertIn("a100_4x_qwen35_4b_base_smoke.yaml", script)
+        self.assertIn("qwen35.rzero.export_model", script)
+        self.assertIn("RZERO_SOLVER_GATE_OK", script)
+
     def test_round0_smoke_uses_pinned_topology_and_isolated_profile(self):
         repo_root = Path(__file__).resolve().parents[2]
         script = (repo_root / "qwen35/scripts/ris_round0_smoke.sbatch").read_text(encoding="utf-8")

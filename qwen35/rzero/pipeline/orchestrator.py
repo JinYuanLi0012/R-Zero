@@ -412,7 +412,10 @@ class Pipeline:
                 "--output", str(dataset), "--metadata", str(metadata),
                 "--min-score", str(cfg["algorithm"]["difficulty_min"]),
                 "--max-score", str(cfg["algorithm"]["difficulty_max"]),
+                "--minimum-rows", str(cfg["algorithm"]["solver_prompt_batch_size"]),
             ])
+            if cfg.get("profile", "formal") != "formal":
+                curate_command.append("--repeat-to-minimum")
             if cfg.get("curation", {}).get("allow_smoke_fallback", False):
                 curate_command.extend(["--fallback", str(self.seed_data / "solver_val.parquet")])
             scored_inputs = [Artifact(round_dir / "scored" / f"shard_{shard}.json", "json") for shard in range(cfg["generation"]["shards"])]

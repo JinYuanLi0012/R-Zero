@@ -3,11 +3,41 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 import os
 from pathlib import Path
 
 from qwen35.rzero.data import solver_record
+
+
+def repeat_for_integration(records: list[dict], minimum_rows: int) -> list[dict]:
+    """Deterministically fill a non-formal integration batch.
+
+    This is intentionally opt-in and must never be used by the formal profile.
+    It preserves the curated examples and only supplies enough repeated rows for
+    verl's drop-last training dataloader to execute one integration step.
+    """
+    if minimum_rows <= 0:
+        raise ValueError("minimum_rows must be positive")
+    if not records or len(records) >= minimum_rows:
+        return records
+    unique_count = len(records)
+    expanded = list(records)
+    while len(expanded) < minimum_rows:
+        source_index = len(expanded) % unique_count
+        row = copy.deepcopy(records[source_index])
+        extra_info = dict(row.get("extra_info") or {})
+        extra_info.update(
+            {
+                "index": len(expanded),
+                "integration_repeat": len(expanded) // unique_count,
+                "integration_source_index": source_index,
+            }
+        )
+        row["extra_info"] = extra_info
+        expanded.append(row)
+    return expanded
 
 
 def curate(
@@ -16,6 +46,8 @@ def curate(
     minimum: float,
     maximum: float,
     fallback: Path | None = None,
+    minimum_rows: int = 1,
+    repeat_to_minimum: bool = False,
 ) -> dict[str, int | bool]:
     rows = []
     for path in inputs:
@@ -45,6 +77,14 @@ def curate(
         used_fallback = True
     if not records:
         raise RuntimeError("difficulty filtering produced an empty Solver dataset")
+    unique_rows = len(records)
+    if unique_rows < minimum_rows:
+        if not repeat_to_minimum:
+            raise RuntimeError(
+                f"curated Solver dataset has {unique_rows} rows, fewer than the required "
+                f"training batch of {minimum_rows}"
+            )
+        records = repeat_for_integration(records, minimum_rows)
 
     output.parent.mkdir(parents=True, exist_ok=True)
     temporary = output.with_name(f".{output.name}.tmp-{os.getpid()}")
@@ -53,7 +93,9 @@ def curate(
     return {
         "scored": len(rows),
         "accepted": len(accepted),
-        "deduplicated": len(records),
+        "deduplicated": unique_rows,
+        "training_rows": len(records),
+        "repeated_for_integration": len(records) - unique_rows,
         "used_smoke_fallback": used_fallback,
     }
 
@@ -66,8 +108,18 @@ def main() -> None:
     parser.add_argument("--max-score", type=float, default=0.8)
     parser.add_argument("--metadata", type=Path)
     parser.add_argument("--fallback", type=Path)
+    parser.add_argument("--minimum-rows", type=int, default=1)
+    parser.add_argument("--repeat-to-minimum", action="store_true")
     args = parser.parse_args()
-    metadata = curate(args.input, args.output, args.min_score, args.max_score, args.fallback)
+    metadata = curate(
+        args.input,
+        args.output,
+        args.min_score,
+        args.max_score,
+        args.fallback,
+        args.minimum_rows,
+        args.repeat_to_minimum,
+    )
     if args.metadata:
         args.metadata.parent.mkdir(parents=True, exist_ok=True)
         args.metadata.write_text(json.dumps(metadata, indent=2) + "\n", encoding="utf-8")
