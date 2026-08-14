@@ -46,6 +46,16 @@ assumption that packed Qwen3.5 was unsupported was invalidated by both the
 official recipe and the padded-path FlashAttention QKV shape failure observed
 on the 4xA100 smoke.
 
+The checkpoint has a unified vision-language architecture, so verl would also
+load `AutoProcessor` and create four-axis M-RoPE position IDs for these
+text-only batches. With PyTorch 2.11, splitting that 3-D jagged tensor into
+micro-batches was observed to transpose `710` tokens against
+`32 = 8 trajectories x 4 RoPE axes`. Training uses verl's supported
+`model.external_lib` hook to select the model's official tokenizer without the
+unused multimodal processor. Qwen3.5 expands the 1-D text positions internally;
+no model, attention, or weight code is replaced. `trainer.balance_batch=false`
+also matches the pinned official Qwen3.5 FSDP recipes.
+
 ## Environment
 
 Build from the repository root:

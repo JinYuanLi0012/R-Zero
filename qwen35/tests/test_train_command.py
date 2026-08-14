@@ -44,6 +44,8 @@ class TrainCommandTests(unittest.TestCase):
         self.assertIn("reward.num_workers=1", rendered)
         self.assertIn("actor_rollout_ref.actor.strategy=fsdp2", rendered)
         self.assertIn("actor_rollout_ref.model.use_remove_padding=true", rendered)
+        self.assertIn("actor_rollout_ref.model.external_lib=qwen35.rzero.verl_text_only", rendered)
+        self.assertIn("trainer.balance_batch=false", rendered)
         self.assertIn("+actor_rollout_ref.rollout.engine_kwargs.vllm.language_model_only=true", rendered)
         self.assertIn("hydra.run.dir=/logs/hydra/test/${now:%Y-%m-%d_%H-%M-%S}", rendered)
         self.assertIn("hydra.job.chdir=false", rendered)
@@ -60,6 +62,8 @@ class TrainCommandTests(unittest.TestCase):
         self.assertIn("actor_rollout_ref.actor.ppo_mini_batch_size=128", rendered)
         self.assertIn("actor_rollout_ref.ref.log_prob_micro_batch_size_per_gpu=1", rendered)
         self.assertIn("actor_rollout_ref.rollout.log_prob_micro_batch_size_per_gpu=1", rendered)
+        self.assertIn("actor_rollout_ref.model.external_lib=qwen35.rzero.verl_text_only", rendered)
+        self.assertIn("trainer.balance_batch=false", rendered)
 
     def test_smoke_minibatches_pass_upstream_verl_batch_constraint(self):
         questioner = "\n".join(build_command(self.args("questioner", SMOKE_CONFIG)))

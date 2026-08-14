@@ -76,6 +76,12 @@ def build_command(args: argparse.Namespace) -> list[str]:
         "data.seed": algorithm["seed"],
         "actor_rollout_ref.model.path": str(args.model),
         "actor_rollout_ref.model.trust_remote_code": False,
+        # R-Zero is strictly text-only. The Qwen3.5 AutoProcessor otherwise
+        # makes verl emit four-axis M-RoPE IDs even for text; PyTorch 2.11 can
+        # transpose that 3-D jagged tensor while splitting micro-batches. Use
+        # verl's external_lib hook to retain the official tokenizer while
+        # declining the unused multimodal processor.
+        "actor_rollout_ref.model.external_lib": "qwen35.rzero.verl_text_only",
         # The pinned verl commit's official text-only Qwen3.5 FSDP recipes use
         # the model-specific packed path.  Its qwen3_5 patch carries cu_seqlens
         # through Gated DeltaNet and full-attention layers; the padded path was
@@ -120,6 +126,9 @@ def build_command(args: argparse.Namespace) -> list[str]:
         # pinned commit share the new reward loop; Questioner therefore uses
         # the importlib population adapter configured below.
         "trainer.use_v1": False,
+        # Match the pinned verl Qwen3.5 FSDP recipes and avoid unnecessary
+        # reordering of the rollout population before reward calculation.
+        "trainer.balance_batch": False,
         "trainer.nnodes": 1,
         "trainer.n_gpus_per_node": 2 if is_questioner else 4,
         "trainer.total_training_steps": steps,

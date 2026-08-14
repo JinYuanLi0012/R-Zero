@@ -121,6 +121,15 @@ recipes 均明确设置 `actor_rollout_ref.model.use_remove_padding=True`，而�
 `language_model_only`，不启用图像/视频输入。原迁移计划中基于旧版支持状态作出的
 “禁用 packed”假设已由官方代码和 A100 实测共同推翻。
 
+下一处失败发生在 Questioner `old_log_prob`：真实 packed token 长度为 710，
+但 RoPE 收到的轴长度为 32。这里的 32 正好是单 rank 的 8 条轨迹乘 Qwen3.5
+的 4 个 M-RoPE 轴，说明纯文本 batch 被不必要地构造成 3-D jagged position
+IDs 后，在 micro-batch 切分时发生布局转置。当前通过 verl 官方
+`actor_rollout_ref.model.external_lib` 扩展点禁用未使用的多模态 processor，
+仍使用模型自带 tokenizer；纯文本 position IDs 保持 1-D，并由 Qwen3.5
+模型内部展开。同时显式设置 `trainer.balance_batch=false`，与锁定 commit 的
+官方 Qwen3.5 FSDP recipe 一致。
+
 ## Compute1 交互式节点：固定路径与启动命令
 
 Compute1 与 Compute2 看到的项目是同一份共享 storage，只是挂载路径
