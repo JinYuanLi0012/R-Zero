@@ -59,7 +59,10 @@ def validate_artifact(artifact: Artifact) -> dict[str, Any]:
             "path": str(path),
             "kind": artifact.kind,
             "config_sha256": file_hash(path / "config.json"),
-            "weights": sorted((item.name, item.stat().st_size) for item in weights),
+            # Keep nested values JSON-native. Tuples serialize as lists and
+            # would otherwise make every reloaded model manifest compare
+            # unequal to the current artifact.
+            "weights": sorted([item.name, item.stat().st_size] for item in weights),
         }
     if artifact.kind == "checkpoint":
         if not path.is_dir() or not (path / "fsdp_config.json").is_file():
@@ -91,7 +94,7 @@ def validate_artifact(artifact: Artifact) -> dict[str, Any]:
             "path": str(path),
             "kind": artifact.kind,
             "fsdp_config_sha256": file_hash(path / "fsdp_config.json"),
-            "files": sorted((item.name, item.stat().st_size) for item in files),
+            "files": sorted([item.name, item.stat().st_size] for item in files),
         }
     if not path.is_file() or path.stat().st_size == 0:
         raise StateError(f"missing or empty file: {path}")

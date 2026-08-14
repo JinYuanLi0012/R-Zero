@@ -72,6 +72,30 @@ class StateTests(unittest.TestCase):
             output.write_text("[]\n")
             self.assertFalse(state.is_complete("generate.0", [artifact]))
 
+    def test_model_manifest_survives_json_round_trip(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            model = root / "model"
+            model.mkdir()
+            (model / "config.json").write_text("{}\n")
+            (model / "model.safetensors").write_bytes(b"weights")
+            state = RunState(root / "run", "fingerprint")
+            state.initialize({})
+            artifact = Artifact(model, "model")
+            state.commit("resolve_model", [artifact])
+            self.assertTrue(state.is_complete("resolve_model", [artifact]))
+
+    def test_checkpoint_manifest_survives_json_round_trip(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self.make_checkpoint(root, 1)
+            actor = root / "global_step_1" / "actor"
+            state = RunState(root / "run", "fingerprint")
+            state.initialize({})
+            artifact = Artifact(actor, "checkpoint")
+            state.commit("questioner_train", [artifact])
+            self.assertTrue(state.is_complete("questioner_train", [artifact]))
+
     def test_checkpoint_requires_all_state_classes(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
