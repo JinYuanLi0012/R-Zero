@@ -241,6 +241,49 @@ tail -n 100 -F \
   "$PROJECT/runs/rzero-qwen35-smoke-v2/round_01/logs/questioner_train.log"
 ```
 
+### Compute1 one-step 全链路与 Ray GPU 隔离
+
+`one-step` 不是单一训练 stage，而是保留正式训练/奖励语义的一轮完整 R-Zero
+集成运行；只缩小轮数、训练步数和候选题规模：
+
+```bash
+enroot start \
+  --root \
+  --rw \
+  --mount "$PROJECT:/workspace/R-Zero" \
+  --mount "$HF_CACHE:/root/.cache/huggingface" \
+  --env PYTHONPATH=/opt/verl:/workspace/R-Zero \
+  --env HF_HOME=/root/.cache/huggingface \
+  --env VLLM_NO_USAGE_STATS=1 \
+  "$CONTAINER" \
+  /bin/bash -lc '
+    set -euo pipefail
+    cd /opt/verl
+    unset ROCR_VISIBLE_DEVICES HIP_VISIBLE_DEVICES
+
+    exec bash /workspace/R-Zero/qwen35/scripts/run.sh \
+      --run-dir /workspace/R-Zero/runs/rzero-qwen35-one-step \
+      --config /workspace/R-Zero/qwen35/configs/a100_4x_qwen35_4b_base_one_step.yaml \
+      --resume
+  '
+```
+
+2026-08-14 的一次运行在 Questioner FSDP2 加载阶段报
+`Duplicate GPU detected: rank 0 and rank 1 both on CUDA device 1000`。这不是
+reward、数据或 checkpoint 错误；两个 rank 在 NCCL 第一次 broadcast 前已映射到
+同一块物理 A100。根因边界是此前的 reward concurrency 适配把 Ray
+`worker_process_setup_hook` 安装到了整个 job，因而也会在 GPU worker 完成各自
+accelerator visibility 分配前加载 verl/torch。修复后 setup hook 只安装到实际
+构造 reward manager 的 CPU `TaskRunner`；FSDP worker 完全使用官方 Ray/verl
+GPU 分配路径。训练进程同时显式启动新的单节点 local Ray runtime，并清除
+`RAY_ADDRESS` 及所有会阻止 Ray 设置 `*_VISIBLE_DEVICES` 的
+`RAY_EXPERIMENTAL_NOSET_*` 开关。
+
+这项修复不改变 2+2 拓扑、Questioner/Solver batch、rollout、reward、训练步数或
+run fingerprint。失败发生在 optimizer step 之前，所以更新代码后继续对同一个
+`rzero-qwen35-one-step` 目录使用上述 `--resume` 命令；无需删除 dataset、模型或
+run manifest，也不得设置 NCCL 的 duplicate-GPU 忽略开关。
+
 ## 固定资源和路径
 
 ```bash

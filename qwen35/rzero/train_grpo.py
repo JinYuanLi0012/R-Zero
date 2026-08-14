@@ -28,10 +28,14 @@ def _override(name: str, value: object) -> str:
 
 
 def sanitize_nvidia_visibility_env(env: dict[str, str]) -> dict[str, str]:
-    """Remove ROCm selectors that conflict with CUDA in verl Ray workers."""
+    """Keep Ray in charge of assigning one distinct CUDA device per worker."""
     sanitized = env.copy()
     sanitized.pop("ROCR_VISIBLE_DEVICES", None)
     sanitized.pop("HIP_VISIBLE_DEVICES", None)
+    sanitized.pop("RAY_ADDRESS", None)
+    for key in tuple(sanitized):
+        if key.startswith("RAY_EXPERIMENTAL_NOSET_") and key.endswith("_VISIBLE_DEVICES"):
+            sanitized.pop(key)
     return sanitized
 
 

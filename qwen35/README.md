@@ -135,6 +135,19 @@ The smoke profile skips the expensive benchmark but exercises model loading,
 both GRPO roles, Solver services, four generation/evaluation shards, curation,
 checkpoint recovery and model export.
 
+For a one-round end-to-end run with the formal Questioner/Solver batch and
+reward semantics but reduced steps and candidate count, use:
+
+```bash
+qwen35/scripts/run.sh \
+  --run-dir /runs/rzero-qwen35-one-step \
+  --config qwen35/configs/a100_4x_qwen35_4b_base_one_step.yaml \
+  --resume
+```
+
+The exact Compute1 Enroot wrapper and the Ray/FSDP GPU-isolation recovery notes
+are recorded in [`docs/ris-slurm-runbook.md`](docs/ris-slurm-runbook.md).
+
 Because a one-step Base-model Questioner may produce no parseable candidate,
 the smoke profile may seed Solver training from eight rows of the fixed
 validation Parquet. This is recorded as `used_smoke_fallback` in curation

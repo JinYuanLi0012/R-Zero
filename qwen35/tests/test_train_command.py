@@ -2,13 +2,15 @@ import argparse
 import sys
 import unittest
 from pathlib import Path
-from types import SimpleNamespace
+from types import ModuleType, SimpleNamespace
 from unittest.mock import patch
 
 from qwen35.rzero.reward_loop_compat import (
     _ConcurrencyActorClass,
+    _TaskRunnerActorClass,
+    install_local_ray_runtime,
     install_population_reward_concurrency_patch,
-    install_ray_worker_setup_hook,
+    install_task_runner_setup_hook,
     required_reward_concurrency,
 )
 from qwen35.rzero.train_grpo import build_command, sanitize_nvidia_visibility_env
@@ -90,7 +92,7 @@ class TrainCommandTests(unittest.TestCase):
         wrapped = _ConcurrencyActorClass(ActorClass(), 2048)
         self.assertEqual(wrapped.options(max_concurrency=1000)["max_concurrency"], 2048)
 
-    def test_ray_init_installs_patch_in_worker_processes(self):
+    def test_local_ray_runtime_does_not_attach_to_an_existing_cluster(self):
         calls = []
 
         def init(*args, **kwargs):
@@ -99,15 +101,54 @@ class TrainCommandTests(unittest.TestCase):
 
         fake_ray = SimpleNamespace(init=init)
         with patch.dict(sys.modules, {"ray": fake_ray}):
-            install_ray_worker_setup_hook()
-            result = fake_ray.init(address="local", runtime_env={"env_vars": {"A": "1"}})
+            install_local_ray_runtime()
+            result = fake_ray.init(runtime_env={"env_vars": {"A": "1"}})
 
         self.assertEqual(result, "ray-context")
+        self.assertEqual(calls[0][1]["address"], "local")
         self.assertEqual(calls[0][1]["runtime_env"]["env_vars"], {"A": "1"})
+
+    def test_population_hook_is_scoped_to_task_runner_actor(self):
+        calls = []
+
+        class ConfiguredActor:
+            def remote(self, *args, **kwargs):
+                return args, kwargs
+
+        class ActorClass:
+            def options(self, **options):
+                calls.append(options)
+                return ConfiguredActor()
+
+        result = _TaskRunnerActorClass(ActorClass()).remote("config")
+        self.assertEqual(result, (("config",), {}))
         self.assertIs(
-            calls[0][1]["runtime_env"]["worker_process_setup_hook"],
+            calls[0]["runtime_env"]["worker_process_setup_hook"],
             install_population_reward_concurrency_patch,
         )
+
+    def test_official_run_ppo_wraps_only_task_runner(self):
+        calls = []
+        main_ppo = ModuleType("verl.trainer.main_ppo")
+
+        def run_ppo(config, task_runner_class):
+            calls.append((config, task_runner_class))
+
+        main_ppo.run_ppo = run_ppo
+        verl = ModuleType("verl")
+        trainer = ModuleType("verl.trainer")
+        trainer.main_ppo = main_ppo
+        verl.trainer = trainer
+        with patch.dict(
+            sys.modules,
+            {"verl": verl, "verl.trainer": trainer, "verl.trainer.main_ppo": main_ppo},
+        ):
+            install_task_runner_setup_hook()
+            actor_class = object()
+            main_ppo.run_ppo("config", actor_class)
+
+        self.assertEqual(calls[0][0], "config")
+        self.assertIs(calls[0][1].actor_class, actor_class)
 
     def test_solver_uses_naive_manager_and_four_gpus(self):
         rendered = "\n".join(build_command(self.args("solver")))
@@ -137,6 +178,9 @@ class TrainCommandTests(unittest.TestCase):
             "CUDA_VISIBLE_DEVICES": "0,1",
             "ROCR_VISIBLE_DEVICES": "0,1,2,3",
             "HIP_VISIBLE_DEVICES": "0,1,2,3",
+            "RAY_ADDRESS": "auto",
+            "RAY_EXPERIMENTAL_NOSET_CUDA_VISIBLE_DEVICES": "1",
+            "RAY_EXPERIMENTAL_NOSET_ROCR_VISIBLE_DEVICES": "1",
             "KEEP": "yes",
         }
         sanitized = sanitize_nvidia_visibility_env(original)
@@ -144,6 +188,9 @@ class TrainCommandTests(unittest.TestCase):
         self.assertEqual(sanitized["KEEP"], "yes")
         self.assertNotIn("ROCR_VISIBLE_DEVICES", sanitized)
         self.assertNotIn("HIP_VISIBLE_DEVICES", sanitized)
+        self.assertNotIn("RAY_ADDRESS", sanitized)
+        self.assertNotIn("RAY_EXPERIMENTAL_NOSET_CUDA_VISIBLE_DEVICES", sanitized)
+        self.assertNotIn("RAY_EXPERIMENTAL_NOSET_ROCR_VISIBLE_DEVICES", sanitized)
         self.assertIn("ROCR_VISIBLE_DEVICES", original)
 
 

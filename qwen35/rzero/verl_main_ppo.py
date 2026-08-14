@@ -3,14 +3,14 @@
 from __future__ import annotations
 
 from qwen35.rzero.reward_loop_compat import (
-    install_population_reward_concurrency_patch,
-    install_ray_worker_setup_hook,
+    install_local_ray_runtime,
+    install_task_runner_setup_hook,
 )
 
 
 def main() -> None:
-    install_population_reward_concurrency_patch()
-    install_ray_worker_setup_hook()
+    install_local_ray_runtime()
+    install_task_runner_setup_hook()
     from verl.trainer.main_ppo import main as official_main
 
     official_main()
