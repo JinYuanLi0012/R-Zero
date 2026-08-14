@@ -84,12 +84,21 @@ batch 不大于 prompt batch 且能整除它。由于配置属于 run fingerprin
 `VLLM_NO_USAGE_STATS=1`，编译缓存仍留在节点本地 `/tmp`。
 
 正式 profile 的 batch 映射按 Qwen3 实际五轮训练的有效更新语义审计：Questioner
-使用 512 prompts、rollout `n=4`、`ppo_mini_batch_size=4`，因此每个 optimizer
-mini-batch 为 16 trajectories、每个外层 batch 有 128 个 mini-batch；Solver
+使用 512 prompts、rollout `n=4`、`ppo_mini_batch_size=16`，因此每个 optimizer
+mini-batch 为 64 trajectories、每个外层 batch 有 32 个 mini-batch；Solver
 保持 512 prompts、`n=5`、`ppo_mini_batch_size=128`，即 640
 trajectories/mini-batch。Questioner/Solver 分别消费 `global_step_5` 和
 `global_step_15`。此次只改变正式 profile fingerprint；正在运行或已经产生状态的
 `rzero-qwen35-smoke-v2` 使用独立 smoke 配置，不受影响。
+
+2026-08-14 对 clean upstream 再审计后，纠正了上一段历史记录最初采用的错误
+`ppo_mini_batch_size=4` 结论。实际五轮入口调用
+`scripts/questioner_train_penalty.sh`，其 `worker.actor.global_batch_size=16`；旧
+EasyR1 随后按 rollout `n=4` 展开为 64 trajectories/update。锁定的新 verl 也会
+将 `ppo_mini_batch_size` 按 rollout `n` 展开，因此效果等价的新值必须为 16。
+one-step profile 同步保持这一正式训练语义；轻量 smoke 因 prompt batch 仅为 4，
+仍保留 mini-batch 4。正在 Compute1 运行的旧 one-step baseline 不应中断，也不得
+在配置更新后用原 run directory 续跑；纠偏后的运行必须使用新的 run directory。
 
 `smoke-v2` 作业 `2721258` 随后通过 batch-size 校验，在新版 verl 的 log-prob
 配置校验处停止。该版本在关闭 dynamic batch 时要求 Reference policy 和 rollout

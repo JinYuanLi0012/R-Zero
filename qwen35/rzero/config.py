@@ -97,7 +97,7 @@ def validate_config(config: dict[str, Any]) -> None:
         "solver_rollouts": 5,
         "questioner_prompt_batch_size": 512,
         "solver_prompt_batch_size": 512,
-        "questioner_update_batch_size": 4,
+        "questioner_update_batch_size": 16,
         "solver_update_batch_size": 128,
         "questioner_solver_samples": 10,
         "candidate_vote_samples": 9,

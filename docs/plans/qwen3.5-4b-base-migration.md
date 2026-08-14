@@ -48,8 +48,8 @@ qwen35/
 
 - 保持发布代码语义：五轮交替训练、`m=9`、难度区间 `0.3–0.8`、Questioner step 5、Solver step 15，以及原有 Prompt/奖励/数学验证行为。
 - 按有效训练语义映射 batch：Questioner 为 512 prompts、rollout `n=4`、
-  4 prompts/optimizer mini-batch，即每次更新 16 trajectories、每个外层 batch
-  128 个 mini-batch；Solver 为 512 prompts、`n=5`、128 prompts/mini-batch，
+  16 prompts/optimizer mini-batch，即每次更新 64 trajectories、每个外层 batch
+  32 个 mini-batch；Solver 为 512 prompts、`n=5`、128 prompts/mini-batch，
   即每次更新 640 trajectories。Qwen3.5 的 per-GPU micro-batch 保守设为 1，
   只改变梯度累积拆分，不改变上述全局 mini-batch。
 - 每轮依次执行 Questioner GRPO、Questioner 导出、4×2000 候选生成、Solver 投票、合并筛选、Solver GRPO、Solver 导出和固定评测。

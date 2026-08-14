@@ -14,7 +14,7 @@ adaptation and fault-tolerant orchestration.
 - Hardware: one node with 4×A100 80GB
 - Five rounds; Questioner step 5 and Solver step 15
 - Effect-equivalent GRPO batching: Questioner uses 512 prompts, `n=4` and a
-  4-prompt optimizer mini-batch (16 trajectories/mini-batch, 128 mini-batches
+  16-prompt optimizer mini-batch (64 trajectories/mini-batch, 32 mini-batches
   per outer batch); Solver uses 512 prompts, `n=5` and a 128-prompt optimizer
   mini-batch (640 trajectories/mini-batch)
 - Released-code voting: online Challenger Solver `n=10`, candidate curation `m=9`
@@ -26,6 +26,8 @@ The Challenger stage uses GPUs 0–1 for Questioner training and GPUs 2–3 for
 two frozen Solver services. Solver GRPO and benchmarks use all four GPUs.
 The per-GPU update micro-batch remains 1 for Qwen3.5 memory stability; it only
 changes gradient-accumulation partitioning, not the optimizer mini-batch.
+The source-level mapping and the isolated performance experiment order are
+recorded in [the Qwen3 training-effect alignment audit](docs/qwen3-training-effect-alignment.md).
 The pinned verl commit routes both V0 and V1 trainers through its new
 per-trajectory reward loop; its older `BatchRewardManager` belongs to a separate
 registry and cannot be selected there. Questioner therefore uses verl's

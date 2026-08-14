@@ -21,14 +21,14 @@ class ConfigTests(unittest.TestCase):
         algorithm = load_config(CONFIG)["algorithm"]
         self.assertEqual(algorithm["questioner_prompt_batch_size"], 512)
         self.assertEqual(algorithm["questioner_rollouts"], 4)
-        self.assertEqual(algorithm["questioner_update_batch_size"], 4)
+        self.assertEqual(algorithm["questioner_update_batch_size"], 16)
         self.assertEqual(
             algorithm["questioner_update_batch_size"] * algorithm["questioner_rollouts"],
-            16,
+            64,
         )
         self.assertEqual(
             algorithm["questioner_prompt_batch_size"] // algorithm["questioner_update_batch_size"],
-            128,
+            32,
         )
 
         self.assertEqual(algorithm["solver_prompt_batch_size"], 512)
@@ -37,6 +37,10 @@ class ConfigTests(unittest.TestCase):
         self.assertEqual(
             algorithm["solver_update_batch_size"] * algorithm["solver_rollouts"],
             640,
+        )
+        self.assertEqual(
+            algorithm["solver_prompt_batch_size"] // algorithm["solver_update_batch_size"],
+            4,
         )
         self.assertEqual(algorithm["questioner_steps"], 5)
         self.assertEqual(algorithm["solver_steps"], 15)

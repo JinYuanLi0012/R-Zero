@@ -47,7 +47,7 @@ class TrainCommandTests(unittest.TestCase):
         self.assertIn("trainer.total_training_steps=5", rendered)
         self.assertIn("data.train_batch_size=512", rendered)
         self.assertIn("actor_rollout_ref.rollout.n=4", rendered)
-        self.assertIn("actor_rollout_ref.actor.ppo_mini_batch_size=4", rendered)
+        self.assertIn("actor_rollout_ref.actor.ppo_mini_batch_size=16", rendered)
         self.assertIn("actor_rollout_ref.actor.ppo_micro_batch_size_per_gpu=1", rendered)
         self.assertIn("actor_rollout_ref.ref.log_prob_micro_batch_size_per_gpu=1", rendered)
         self.assertIn("actor_rollout_ref.rollout.log_prob_micro_batch_size_per_gpu=1", rendered)
