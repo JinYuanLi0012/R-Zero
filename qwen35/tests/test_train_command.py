@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 from qwen35.rzero.reward_loop_compat import (
     _ConcurrencyActorClass,
-    _TaskRunnerActorClass,
+    _patch_task_runner_actor,
     install_local_ray_runtime,
     install_population_reward_concurrency_patch,
     install_task_runner_setup_hook,
@@ -108,24 +108,27 @@ class TrainCommandTests(unittest.TestCase):
         self.assertEqual(calls[0][1]["address"], "local")
         self.assertEqual(calls[0][1]["runtime_env"]["env_vars"], {"A": "1"})
 
-    def test_population_hook_is_scoped_to_task_runner_actor(self):
-        calls = []
+    def test_population_hook_is_scoped_to_task_runner_run(self):
+        events = []
 
-        class ConfiguredActor:
-            def remote(self, *args, **kwargs):
-                return args, kwargs
+        class TaskRunner:
+            def run(self, config):
+                events.append(("official", config))
+                return "complete"
 
-        class ActorClass:
-            def options(self, **options):
-                calls.append(options)
-                return ConfiguredActor()
-
-        result = _TaskRunnerActorClass(ActorClass()).remote("config")
-        self.assertEqual(result, (("config",), {}))
-        self.assertIs(
-            calls[0]["runtime_env"]["worker_process_setup_hook"],
-            install_population_reward_concurrency_patch,
+        actor_class = SimpleNamespace(
+            __ray_metadata__=SimpleNamespace(modified_class=TaskRunner),
         )
+        _patch_task_runner_actor(actor_class)
+        with patch(
+            "qwen35.rzero.reward_loop_compat.install_population_reward_concurrency_patch",
+            side_effect=lambda: events.append(("patch", None)),
+        ):
+            result = TaskRunner().run("config")
+
+        self.assertEqual(result, "complete")
+        self.assertEqual(events, [("patch", None), ("official", "config")])
+        self.assertFalse(hasattr(actor_class, "runtime_env"))
 
     def test_official_run_ppo_wraps_only_task_runner(self):
         calls = []
@@ -144,11 +147,18 @@ class TrainCommandTests(unittest.TestCase):
             {"verl": verl, "verl.trainer": trainer, "verl.trainer.main_ppo": main_ppo},
         ):
             install_task_runner_setup_hook()
-            actor_class = object()
+            class TaskRunner:
+                def run(self, config):
+                    return config
+
+            actor_class = SimpleNamespace(
+                __ray_metadata__=SimpleNamespace(modified_class=TaskRunner),
+            )
             main_ppo.run_ppo("config", actor_class)
 
         self.assertEqual(calls[0][0], "config")
-        self.assertIs(calls[0][1].actor_class, actor_class)
+        self.assertIs(calls[0][1], actor_class)
+        self.assertTrue(TaskRunner._rzero_population_task_runner_patch)
 
     def test_solver_uses_naive_manager_and_four_gpus(self):
         rendered = "\n".join(build_command(self.args("solver")))

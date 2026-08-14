@@ -12,9 +12,10 @@ Ray async actor 默认只允许 1000 个并发调用，而 R-Zero population man
 verl trainer 和 RewardLoopWorker 的创建流程，只把这个单一 R-Zero reward
 actor 的 `max_concurrency` 动态提高到完整 population 大小。禁止用多个 reward
 worker 拆分 population，因为这会改变 BLEU diversity reward 的语义。
-由于 manager 实际在远端 `TaskRunner` 中构造，兼容层通过 Ray 官方
-`worker_process_setup_hook` 在每个 worker 解释器内安装补丁；只在 launcher
-进程中 monkey patch 不会跨越 Ray 进程边界。训练日志必须出现
+由于 manager 实际在远端 CPU `TaskRunner` 中构造，兼容层只包装该 actor 的
+`run()` 入口：先在 TaskRunner 进程内安装补丁，再委托给未修改的官方实现。
+不得使用 job-wide 或可继承的 `worker_process_setup_hook`，否则补丁会提前进入
+GPU/FSDP child worker。训练日志必须出现
 `RZERO_REWARD_LOOP_MAX_CONCURRENCY=2048`。
 
 ## 当前验证边界
@@ -273,9 +274,16 @@ enroot start \
 reward、数据或 checkpoint 错误；两个 rank 在 NCCL 第一次 broadcast 前已映射到
 同一块物理 A100。根因边界是此前的 reward concurrency 适配把 Ray
 `worker_process_setup_hook` 安装到了整个 job，因而也会在 GPU worker 完成各自
-accelerator visibility 分配前加载 verl/torch。修复后 setup hook 只安装到实际
-构造 reward manager 的 CPU `TaskRunner`；FSDP worker 完全使用官方 Ray/verl
-GPU 分配路径。训练进程同时显式启动新的单节点 local Ray runtime，并清除
+accelerator visibility 分配前加载 verl/torch。兼容层随后曾尝试把 callable
+setup hook 放入 CPU TaskRunner 的 actor-level `runtime_env`；Compute1 实测表明
+当前 Ray 在 actor 创建时把该值直接走 JSON 序列化，报
+`TypeError: Object of type function is not JSON serializable`，而且 actor runtime
+env 还可能被 child actor 继承，因此该路线也已废弃。
+
+最终实现完全不使用 setup-hook runtime env，而只包装官方 CPU TaskRunner actor
+class 的 `run()`：进入该远端方法后安装 reward patch，再调用保存下来的官方
+`run()`。FSDP worker 完全使用官方 Ray/verl GPU 分配路径。训练进程同时显式启动
+新的单节点 local Ray runtime，并清除
 `RAY_ADDRESS` 及所有会阻止 Ray 设置 `*_VISIBLE_DEVICES` 的
 `RAY_EXPERIMENTAL_NOSET_*` 开关。
 

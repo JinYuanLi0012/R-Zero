@@ -45,44 +45,33 @@ class _ConcurrencyActorClass:
         return self.actor_class.options(**options)
 
 
-def _runtime_env_with_population_hook(runtime_env: Any = None) -> dict[str, Any]:
-    """Return a copied runtime env with the R-Zero hook installed."""
+def _task_runner_run_with_population_patch(self: Any, config: Any) -> Any:
+    """Install reward compatibility inside the CPU TaskRunner, then delegate.
 
-    merged = dict(runtime_env or {})
-    existing_hook = merged.get("worker_process_setup_hook")
-    if existing_hook is None:
-        merged["worker_process_setup_hook"] = install_population_reward_concurrency_patch
-    elif existing_hook is not install_population_reward_concurrency_patch:
-        if not callable(existing_hook):
-            raise TypeError("existing Ray worker_process_setup_hook must be callable")
-
-        def _combined_worker_setup_hook() -> None:
-            existing_hook()
-            install_population_reward_concurrency_patch()
-
-        merged["worker_process_setup_hook"] = _combined_worker_setup_hook
-    return merged
-
-
-class _TaskRunnerActorClass:
-    """Apply the setup hook to the CPU TaskRunner, not every Ray worker.
-
-    Ray assigns accelerator visibility when a GPU actor receives its resource
-    allocation.  A job-wide setup hook can import torch before that assignment
-    and cache the driver's device mapping in every FSDP worker.  The reward
-    manager is constructed by the CPU-only TaskRunner, so that is the only
-    actor which needs this compatibility patch.
+    This method is attached to verl's already-created TaskRunner actor class
+    before Ray exports it.  It deliberately avoids ``runtime_env``: actor
+    runtime environments are inherited by child actors, and callable setup
+    hooks are not JSON-native in the pinned Ray serialization path.
     """
 
-    def __init__(self, actor_class: Any):
-        self.actor_class = actor_class
+    print("RZERO_POPULATION_PATCH_SCOPE=task_runner_run", flush=True)
+    install_population_reward_concurrency_patch()
+    return self._rzero_original_task_runner_run(config)
 
-    def options(self, **options: Any) -> Any:
-        options["runtime_env"] = _runtime_env_with_population_hook(options.get("runtime_env"))
-        return self.actor_class.options(**options)
 
-    def remote(self, *args: Any, **kwargs: Any) -> Any:
-        return self.options().remote(*args, **kwargs)
+def _patch_task_runner_actor(task_runner_class: Any) -> None:
+    """Patch only the concrete official TaskRunner class exported by Ray."""
+
+    metadata = getattr(task_runner_class, "__ray_metadata__", None)
+    modified_class = getattr(metadata, "modified_class", None)
+    if modified_class is None:
+        raise TypeError("official verl TaskRunner does not expose Ray modified_class metadata")
+    if getattr(modified_class, "_rzero_population_task_runner_patch", False):
+        return
+
+    modified_class._rzero_original_task_runner_run = modified_class.run
+    modified_class.run = _task_runner_run_with_population_patch
+    modified_class._rzero_population_task_runner_patch = True
 
 
 def install_task_runner_setup_hook() -> None:
@@ -96,7 +85,8 @@ def install_task_runner_setup_hook() -> None:
     original_run_ppo = main_ppo.run_ppo
 
     def _run_ppo(config: Any, task_runner_class: Any) -> Any:
-        return original_run_ppo(config, _TaskRunnerActorClass(task_runner_class))
+        _patch_task_runner_actor(task_runner_class)
+        return original_run_ppo(config, task_runner_class)
 
     _run_ppo._rzero_task_runner_hook = True  # type: ignore[attr-defined]
     main_ppo.run_ppo = _run_ppo
