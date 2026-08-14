@@ -3,6 +3,16 @@
 本文记录 2026-08-08 在 Washington University RIS Compute2 上的实际调试结果。
 它只适用于 `feature/qwen3.5-4b-base`，不改变原始 R-Zero 工作树。
 
+## 完整 population 奖励的 Ray 并发
+
+正式 Questioner 的奖励 population 包含 `512 × 4 = 2048` 条 trajectory。
+Ray async actor 默认只允许 1000 个并发调用，而 R-Zero population manager
+必须收齐全部 2048 条后才能返回任意单条奖励；默认限制会让前 1000 条等待、
+后 1048 条无法进入，形成确定性死锁。`qwen35.rzero.verl_main_ppo` 保持官方
+verl trainer 和 RewardLoopWorker 的创建流程，只把这个单一 R-Zero reward
+actor 的 `max_concurrency` 动态提高到完整 population 大小。禁止用多个 reward
+worker 拆分 population，因为这会改变 BLEU diversity reward 的语义。
+
 ## 当前验证边界
 
 已经实测通过：

@@ -1,7 +1,8 @@
 """Thin command builder for upstream verl GRPO.
 
 No training loop is implemented here. This module validates R-Zero role
-settings and execs ``verl.trainer.main_ppo`` with official configuration keys.
+settings and launches ``verl.trainer.main_ppo`` with official configuration
+keys through the Qwen3.5 compatibility entrypoint.
 """
 
 from __future__ import annotations
@@ -146,7 +147,12 @@ def build_command(args: argparse.Namespace) -> list[str]:
                 "reward.reward_manager.module.path": str(population_manager_path.resolve()),
             }
         )
-    return [sys.executable, "-m", "verl.trainer.main_ppo", *[_override(key, value) for key, value in overrides.items()]]
+    return [
+        sys.executable,
+        "-m",
+        "qwen35.rzero.verl_main_ppo",
+        *[_override(key, value) for key, value in overrides.items()],
+    ]
 
 
 def main() -> None:

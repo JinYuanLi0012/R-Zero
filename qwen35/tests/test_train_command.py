@@ -2,6 +2,7 @@ import argparse
 import unittest
 from pathlib import Path
 
+from qwen35.rzero.reward_loop_compat import _ConcurrencyActorClass, required_reward_concurrency
 from qwen35.rzero.train_grpo import build_command, sanitize_nvidia_visibility_env
 
 
@@ -26,6 +27,7 @@ class TrainCommandTests(unittest.TestCase):
     def test_questioner_uses_population_manager_and_two_gpus(self):
         command = build_command(self.args("questioner"))
         rendered = "\n".join(command)
+        self.assertEqual(command[1:3], ["-m", "qwen35.rzero.verl_main_ppo"])
         self.assertIn("reward.reward_manager.name=RZeroPopulationRewardManager", rendered)
         self.assertIn("reward.reward_manager.source=importlib", rendered)
         self.assertIn("reward.reward_manager.module.path=", rendered)
@@ -49,6 +51,28 @@ class TrainCommandTests(unittest.TestCase):
         self.assertIn("+actor_rollout_ref.rollout.engine_kwargs.vllm.language_model_only=true", rendered)
         self.assertIn("hydra.run.dir=/logs/hydra/test/${now:%Y-%m-%d_%H-%M-%S}", rendered)
         self.assertIn("hydra.job.chdir=false", rendered)
+
+    def test_formal_population_fits_reward_actor_concurrency(self):
+        class Config:
+            class data:
+                train_batch_size = 512
+
+            class actor_rollout_ref:
+                class rollout:
+                    n = 4
+
+        self.assertEqual(required_reward_concurrency(Config), 2048)
+
+    def test_concurrency_wrapper_retains_official_actor_options(self):
+        class ActorClass:
+            def options(self, **options):
+                return options
+
+        wrapped = _ConcurrencyActorClass(ActorClass(), 2048)
+        self.assertEqual(
+            wrapped.options(name="reward_loop_worker_0"),
+            {"name": "reward_loop_worker_0", "max_concurrency": 2048},
+        )
 
     def test_solver_uses_naive_manager_and_four_gpus(self):
         rendered = "\n".join(build_command(self.args("solver")))
