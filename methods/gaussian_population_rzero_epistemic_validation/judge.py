@@ -166,7 +166,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--input", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
-    parser.add_argument("--model", default="gpt-5.6")
+    parser.add_argument("--model", default="gpt-5.6-terra")
     parser.add_argument("--concurrency", type=int, default=4)
     parser.add_argument("--human-review-size", type=int, default=75)
     parser.add_argument("--seed", type=int, default=42)
