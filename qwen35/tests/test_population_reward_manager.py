@@ -59,7 +59,7 @@ class _SingleData:
 
 
 class PopulationRewardManagerTests(unittest.TestCase):
-    def _load_class(self):
+    def _load_class(self, register_module=True):
         base_module = types.ModuleType("verl.experimental.reward_loop.reward_manager.base")
 
         class RewardManagerBase:
@@ -87,12 +87,18 @@ class PopulationRewardManagerTests(unittest.TestCase):
                 "verl.experimental.reward_loop.reward_manager.base": base_module,
             },
         ):
-            sys.modules[spec.name] = module
+            if register_module:
+                sys.modules[spec.name] = module
             try:
                 spec.loader.exec_module(module)
             finally:
                 sys.modules.pop(spec.name, None)
         return module.RZeroPopulationRewardManager
+
+    def test_loads_with_verl_dynamic_loader_module_semantics(self):
+        # verl.utils.import_utils.load_module executes an external module
+        # without first registering it in sys.modules.
+        self.assertEqual(self._load_class(register_module=False).__name__, "RZeroPopulationRewardManager")
 
     def test_scores_complete_population_once_and_preserves_alignment(self):
         async def exercise():

@@ -12,20 +12,21 @@ from __future__ import annotations
 
 import asyncio
 import inspect
-from dataclasses import dataclass
 from typing import Any
 
 from verl import DataProto
 from verl.experimental.reward_loop.reward_manager.base import RewardManagerBase
 
 
-@dataclass
 class _PendingReward:
-    future: asyncio.Future[dict[str, Any]]
-    data_source: str
-    solution: str
-    ground_truth: str | None
-    extra_info: dict[str, Any]
+    """Simple record compatible with verl's non-registered dynamic loader."""
+
+    def __init__(self, future, data_source, solution, ground_truth, extra_info):
+        self.future = future
+        self.data_source = data_source
+        self.solution = solution
+        self.ground_truth = ground_truth
+        self.extra_info = extra_info
 
 
 class RZeroPopulationRewardManager(RewardManagerBase):
