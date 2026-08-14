@@ -1,0 +1,241 @@
+sigma,scope,budget,method,selected,precision
+0.0,V1,0.1,original_difficulty,20,0.85
+0.0,V2,0.1,original_difficulty,20,0.8
+0.0,V3,0.1,original_difficulty,20,0.5
+0.0,V1-V3 combined,0.1,original_difficulty,60,0.7166666666666667
+0.0,V1,0.1,H_total,20,0.8
+0.0,V2,0.1,H_total,20,0.7
+0.0,V3,0.1,H_total,20,0.55
+0.0,V1-V3 combined,0.1,H_total,60,0.6833333333333333
+0.0,V1,0.1,-H_within,20,0.9
+0.0,V2,0.1,-H_within,20,0.85
+0.0,V3,0.1,-H_within,20,0.75
+0.0,V1-V3 combined,0.1,-H_within,60,0.8333333333333334
+0.0,V1,0.1,U_epi,20,0.8
+0.0,V2,0.1,U_epi,20,0.65
+0.0,V3,0.1,U_epi,20,0.6
+0.0,V1-V3 combined,0.1,U_epi,60,0.6833333333333333
+0.0,V1,0.2,original_difficulty,40,0.8
+0.0,V2,0.2,original_difficulty,40,0.85
+0.0,V3,0.2,original_difficulty,40,0.55
+0.0,V1-V3 combined,0.2,original_difficulty,120,0.7333333333333333
+0.0,V1,0.2,H_total,40,0.725
+0.0,V2,0.2,H_total,40,0.6
+0.0,V3,0.2,H_total,40,0.55
+0.0,V1-V3 combined,0.2,H_total,120,0.625
+0.0,V1,0.2,-H_within,40,0.9
+0.0,V2,0.2,-H_within,40,0.8
+0.0,V3,0.2,-H_within,40,0.7
+0.0,V1-V3 combined,0.2,-H_within,120,0.8
+0.0,V1,0.2,U_epi,40,0.775
+0.0,V2,0.2,U_epi,40,0.6
+0.0,V3,0.2,U_epi,40,0.55
+0.0,V1-V3 combined,0.2,U_epi,120,0.6416666666666667
+0.0,V1,0.3,original_difficulty,60,0.8
+0.0,V2,0.3,original_difficulty,60,0.8333333333333334
+0.0,V3,0.3,original_difficulty,60,0.5666666666666667
+0.0,V1-V3 combined,0.3,original_difficulty,180,0.7333333333333333
+0.0,V1,0.3,H_total,60,0.75
+0.0,V2,0.3,H_total,60,0.6
+0.0,V3,0.3,H_total,60,0.5166666666666667
+0.0,V1-V3 combined,0.3,H_total,180,0.6222222222222222
+0.0,V1,0.3,-H_within,60,0.9166666666666666
+0.0,V2,0.3,-H_within,60,0.8
+0.0,V3,0.3,-H_within,60,0.65
+0.0,V1-V3 combined,0.3,-H_within,180,0.7888888888888889
+0.0,V1,0.3,U_epi,60,0.75
+0.0,V2,0.3,U_epi,60,0.6166666666666667
+0.0,V3,0.3,U_epi,60,0.5333333333333333
+0.0,V1-V3 combined,0.3,U_epi,180,0.6333333333333333
+0.0001,V1,0.1,original_difficulty,20,0.85
+0.0001,V2,0.1,original_difficulty,20,0.8
+0.0001,V3,0.1,original_difficulty,20,0.5
+0.0001,V1-V3 combined,0.1,original_difficulty,60,0.7166666666666667
+0.0001,V1,0.1,H_total,20,0.7
+0.0001,V2,0.1,H_total,20,0.65
+0.0001,V3,0.1,H_total,20,0.55
+0.0001,V1-V3 combined,0.1,H_total,60,0.6333333333333333
+0.0001,V1,0.1,-H_within,20,0.9
+0.0001,V2,0.1,-H_within,20,0.75
+0.0001,V3,0.1,-H_within,20,0.65
+0.0001,V1-V3 combined,0.1,-H_within,60,0.7666666666666667
+0.0001,V1,0.1,U_epi,20,0.7
+0.0001,V2,0.1,U_epi,20,0.65
+0.0001,V3,0.1,U_epi,20,0.55
+0.0001,V1-V3 combined,0.1,U_epi,60,0.6333333333333333
+0.0001,V1,0.2,original_difficulty,40,0.8
+0.0001,V2,0.2,original_difficulty,40,0.85
+0.0001,V3,0.2,original_difficulty,40,0.55
+0.0001,V1-V3 combined,0.2,original_difficulty,120,0.7333333333333333
+0.0001,V1,0.2,H_total,40,0.775
+0.0001,V2,0.2,H_total,40,0.575
+0.0001,V3,0.2,H_total,40,0.55
+0.0001,V1-V3 combined,0.2,H_total,120,0.6333333333333333
+0.0001,V1,0.2,-H_within,40,0.925
+0.0001,V2,0.2,-H_within,40,0.775
+0.0001,V3,0.2,-H_within,40,0.675
+0.0001,V1-V3 combined,0.2,-H_within,120,0.7916666666666666
+0.0001,V1,0.2,U_epi,40,0.8
+0.0001,V2,0.2,U_epi,40,0.6
+0.0001,V3,0.2,U_epi,40,0.55
+0.0001,V1-V3 combined,0.2,U_epi,120,0.65
+0.0001,V1,0.3,original_difficulty,60,0.8
+0.0001,V2,0.3,original_difficulty,60,0.8333333333333334
+0.0001,V3,0.3,original_difficulty,60,0.5666666666666667
+0.0001,V1-V3 combined,0.3,original_difficulty,180,0.7333333333333333
+0.0001,V1,0.3,H_total,60,0.7666666666666667
+0.0001,V2,0.3,H_total,60,0.65
+0.0001,V3,0.3,H_total,60,0.5166666666666667
+0.0001,V1-V3 combined,0.3,H_total,180,0.6444444444444445
+0.0001,V1,0.3,-H_within,60,0.9
+0.0001,V2,0.3,-H_within,60,0.75
+0.0001,V3,0.3,-H_within,60,0.6666666666666666
+0.0001,V1-V3 combined,0.3,-H_within,180,0.7722222222222223
+0.0001,V1,0.3,U_epi,60,0.85
+0.0001,V2,0.3,U_epi,60,0.5833333333333334
+0.0001,V3,0.3,U_epi,60,0.5
+0.0001,V1-V3 combined,0.3,U_epi,180,0.6444444444444445
+0.0003,V1,0.1,original_difficulty,20,0.85
+0.0003,V2,0.1,original_difficulty,20,0.8
+0.0003,V3,0.1,original_difficulty,20,0.5
+0.0003,V1-V3 combined,0.1,original_difficulty,60,0.7166666666666667
+0.0003,V1,0.1,H_total,20,0.7
+0.0003,V2,0.1,H_total,20,0.55
+0.0003,V3,0.1,H_total,20,0.6
+0.0003,V1-V3 combined,0.1,H_total,60,0.6166666666666667
+0.0003,V1,0.1,-H_within,20,0.85
+0.0003,V2,0.1,-H_within,20,0.85
+0.0003,V3,0.1,-H_within,20,0.75
+0.0003,V1-V3 combined,0.1,-H_within,60,0.8166666666666667
+0.0003,V1,0.1,U_epi,20,0.8
+0.0003,V2,0.1,U_epi,20,0.55
+0.0003,V3,0.1,U_epi,20,0.6
+0.0003,V1-V3 combined,0.1,U_epi,60,0.65
+0.0003,V1,0.2,original_difficulty,40,0.8
+0.0003,V2,0.2,original_difficulty,40,0.85
+0.0003,V3,0.2,original_difficulty,40,0.55
+0.0003,V1-V3 combined,0.2,original_difficulty,120,0.7333333333333333
+0.0003,V1,0.2,H_total,40,0.775
+0.0003,V2,0.2,H_total,40,0.625
+0.0003,V3,0.2,H_total,40,0.475
+0.0003,V1-V3 combined,0.2,H_total,120,0.625
+0.0003,V1,0.2,-H_within,40,0.875
+0.0003,V2,0.2,-H_within,40,0.775
+0.0003,V3,0.2,-H_within,40,0.725
+0.0003,V1-V3 combined,0.2,-H_within,120,0.7916666666666666
+0.0003,V1,0.2,U_epi,40,0.775
+0.0003,V2,0.2,U_epi,40,0.6
+0.0003,V3,0.2,U_epi,40,0.45
+0.0003,V1-V3 combined,0.2,U_epi,120,0.6083333333333333
+0.0003,V1,0.3,original_difficulty,60,0.8
+0.0003,V2,0.3,original_difficulty,60,0.8333333333333334
+0.0003,V3,0.3,original_difficulty,60,0.5666666666666667
+0.0003,V1-V3 combined,0.3,original_difficulty,180,0.7333333333333333
+0.0003,V1,0.3,H_total,60,0.7333333333333333
+0.0003,V2,0.3,H_total,60,0.6666666666666666
+0.0003,V3,0.3,H_total,60,0.48333333333333334
+0.0003,V1-V3 combined,0.3,H_total,180,0.6277777777777778
+0.0003,V1,0.3,-H_within,60,0.9166666666666666
+0.0003,V2,0.3,-H_within,60,0.7166666666666667
+0.0003,V3,0.3,-H_within,60,0.65
+0.0003,V1-V3 combined,0.3,-H_within,180,0.7611111111111111
+0.0003,V1,0.3,U_epi,60,0.7833333333333333
+0.0003,V2,0.3,U_epi,60,0.65
+0.0003,V3,0.3,U_epi,60,0.48333333333333334
+0.0003,V1-V3 combined,0.3,U_epi,180,0.6388888888888888
+0.001,V1,0.1,original_difficulty,20,0.85
+0.001,V2,0.1,original_difficulty,20,0.8
+0.001,V3,0.1,original_difficulty,20,0.5
+0.001,V1-V3 combined,0.1,original_difficulty,60,0.7166666666666667
+0.001,V1,0.1,H_total,20,0.75
+0.001,V2,0.1,H_total,20,0.75
+0.001,V3,0.1,H_total,20,0.45
+0.001,V1-V3 combined,0.1,H_total,60,0.65
+0.001,V1,0.1,-H_within,20,0.9
+0.001,V2,0.1,-H_within,20,0.8
+0.001,V3,0.1,-H_within,20,0.8
+0.001,V1-V3 combined,0.1,-H_within,60,0.8333333333333334
+0.001,V1,0.1,U_epi,20,0.75
+0.001,V2,0.1,U_epi,20,0.7
+0.001,V3,0.1,U_epi,20,0.55
+0.001,V1-V3 combined,0.1,U_epi,60,0.6666666666666666
+0.001,V1,0.2,original_difficulty,40,0.8
+0.001,V2,0.2,original_difficulty,40,0.85
+0.001,V3,0.2,original_difficulty,40,0.55
+0.001,V1-V3 combined,0.2,original_difficulty,120,0.7333333333333333
+0.001,V1,0.2,H_total,40,0.775
+0.001,V2,0.2,H_total,40,0.6
+0.001,V3,0.2,H_total,40,0.575
+0.001,V1-V3 combined,0.2,H_total,120,0.65
+0.001,V1,0.2,-H_within,40,0.925
+0.001,V2,0.2,-H_within,40,0.75
+0.001,V3,0.2,-H_within,40,0.75
+0.001,V1-V3 combined,0.2,-H_within,120,0.8083333333333333
+0.001,V1,0.2,U_epi,40,0.8
+0.001,V2,0.2,U_epi,40,0.575
+0.001,V3,0.2,U_epi,40,0.6
+0.001,V1-V3 combined,0.2,U_epi,120,0.6583333333333333
+0.001,V1,0.3,original_difficulty,60,0.8
+0.001,V2,0.3,original_difficulty,60,0.8333333333333334
+0.001,V3,0.3,original_difficulty,60,0.5666666666666667
+0.001,V1-V3 combined,0.3,original_difficulty,180,0.7333333333333333
+0.001,V1,0.3,H_total,60,0.8
+0.001,V2,0.3,H_total,60,0.65
+0.001,V3,0.3,H_total,60,0.5833333333333334
+0.001,V1-V3 combined,0.3,H_total,180,0.6777777777777778
+0.001,V1,0.3,-H_within,60,0.9166666666666666
+0.001,V2,0.3,-H_within,60,0.7333333333333333
+0.001,V3,0.3,-H_within,60,0.6833333333333333
+0.001,V1-V3 combined,0.3,-H_within,180,0.7777777777777778
+0.001,V1,0.3,U_epi,60,0.8333333333333334
+0.001,V2,0.3,U_epi,60,0.6166666666666667
+0.001,V3,0.3,U_epi,60,0.55
+0.001,V1-V3 combined,0.3,U_epi,180,0.6666666666666666
+0.003,V1,0.1,original_difficulty,20,0.85
+0.003,V2,0.1,original_difficulty,20,0.8
+0.003,V3,0.1,original_difficulty,20,0.5
+0.003,V1-V3 combined,0.1,original_difficulty,60,0.7166666666666667
+0.003,V1,0.1,H_total,20,0.85
+0.003,V2,0.1,H_total,20,0.8
+0.003,V3,0.1,H_total,20,0.65
+0.003,V1-V3 combined,0.1,H_total,60,0.7666666666666667
+0.003,V1,0.1,-H_within,20,0.8
+0.003,V2,0.1,-H_within,20,0.7
+0.003,V3,0.1,-H_within,20,0.5
+0.003,V1-V3 combined,0.1,-H_within,60,0.6666666666666666
+0.003,V1,0.1,U_epi,20,0.9
+0.003,V2,0.1,U_epi,20,0.8
+0.003,V3,0.1,U_epi,20,0.8
+0.003,V1-V3 combined,0.1,U_epi,60,0.8333333333333334
+0.003,V1,0.2,original_difficulty,40,0.8
+0.003,V2,0.2,original_difficulty,40,0.85
+0.003,V3,0.2,original_difficulty,40,0.55
+0.003,V1-V3 combined,0.2,original_difficulty,120,0.7333333333333333
+0.003,V1,0.2,H_total,40,0.925
+0.003,V2,0.2,H_total,40,0.65
+0.003,V3,0.2,H_total,40,0.65
+0.003,V1-V3 combined,0.2,H_total,120,0.7416666666666667
+0.003,V1,0.2,-H_within,40,0.9
+0.003,V2,0.2,-H_within,40,0.75
+0.003,V3,0.2,-H_within,40,0.525
+0.003,V1-V3 combined,0.2,-H_within,120,0.725
+0.003,V1,0.2,U_epi,40,0.925
+0.003,V2,0.2,U_epi,40,0.7
+0.003,V3,0.2,U_epi,40,0.65
+0.003,V1-V3 combined,0.2,U_epi,120,0.7583333333333333
+0.003,V1,0.3,original_difficulty,60,0.8
+0.003,V2,0.3,original_difficulty,60,0.8333333333333334
+0.003,V3,0.3,original_difficulty,60,0.5666666666666667
+0.003,V1-V3 combined,0.3,original_difficulty,180,0.7333333333333333
+0.003,V1,0.3,H_total,60,0.8666666666666667
+0.003,V2,0.3,H_total,60,0.6333333333333333
+0.003,V3,0.3,H_total,60,0.6166666666666667
+0.003,V1-V3 combined,0.3,H_total,180,0.7055555555555556
+0.003,V1,0.3,-H_within,60,0.85
+0.003,V2,0.3,-H_within,60,0.75
+0.003,V3,0.3,-H_within,60,0.5666666666666667
+0.003,V1-V3 combined,0.3,-H_within,180,0.7222222222222222
+0.003,V1,0.3,U_epi,60,0.85
+0.003,V2,0.3,U_epi,60,0.6833333333333333
+0.003,V3,0.3,U_epi,60,0.6333333333333333
+0.003,V1-V3 combined,0.3,U_epi,180,0.7222222222222222

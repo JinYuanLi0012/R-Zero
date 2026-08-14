@@ -10,6 +10,12 @@ separate valid questions **within old-reward-retained data**. It cannot reproduc
 selection from the deleted 8k candidate pools or reconstruct the rollout-batch
 BLEU component of the original Questioner reward.
 
+## Published results
+
+The completed 600-question, five-sigma experiment and its downloadable artifacts
+are available at
+[`results/fixed_sigma_gpt56_terra_2026-08-14`](results/fixed_sigma_gpt56_terra_2026-08-14/README.md).
+
 ## Run
 
 Edit environment overrides if required, then run from the repository root:
