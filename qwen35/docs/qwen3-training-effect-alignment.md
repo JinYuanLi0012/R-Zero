@@ -49,9 +49,47 @@ mini-batch 实际包含 `16 × 4 = 64` trajectories；每个外层 batch 是
 
 ## 性能验证顺序
 
-当前 Compute1 one-step baseline 不应中断；它记录的是纠偏前
-`ppo_mini_batch_size=4` 的基线。完成后收集生成、reward、old/ref log-prob、
-actor update、checkpoint 各阶段耗时以及峰值显存。
+### Compute1 纠偏前 baseline
+
+Compute1 的 one-step baseline 已于 2026-08-14 成功完成 Questioner GRPO step 1。
+`Training Progress` 到达 `1/1`，`training/global_step=1`，总耗时
+`11986.76s`（3:19:47）。orchestrator 随后进入
+`round_01.questioner_export`，证明训练子进程正常退出且 checkpoint artifact 已被
+接受；这条“开始 export”记录本身不代表 export 已完成，完整 one-step pipeline
+仍应继续运行，不得中断。
+
+该 baseline 使用纠偏前的 `ppo_mini_batch_size=4`，即 16
+trajectories/update、128 optimizer mini-batches/step。分段耗时如下：
+
+| 阶段 | 耗时 | 总耗时占比 |
+|---|---:|---:|
+| actor update | 7015.30s | 58.5% |
+| generation | 2040.81s | 17.0% |
+| reference log-prob | 1493.55s | 12.5% |
+| old log-prob | 1160.05s | 9.7% |
+| checkpoint save | 271.41s | 2.3% |
+
+`update_actor` 接近两小时，是第一瓶颈，与错误配置导致 optimizer mini-batch 数从
+32 增加到 128 的源码裁决一致。这是强性能佐证，但不能假定纠偏后 wall time 会
+严格缩短四倍；FSDP 通信、梯度累积、固定开销和 batch shape 都需要用新的
+effect-equivalent run 实测。
+
+reference/old log-prob 合计约 44 分钟，支持把 per-GPU log-prob micro-batch 从
+1 逐级提高列为第二优先级。actor 峰值 allocated 48.95 GB、reserved 63.99 GB，
+在 80 GB A100 上显示可能有空间，但 reserved memory、短时峰值和并发组件仍可能
+造成 OOM，所以只能按 1 → 2 → 4 → 8 单变量验证。
+
+生成结果的 response length mean 为 4086.33、max 为 4096，clip ratio 为
+0.995117；约 99.5% rollout 达到长度上限，总 token 数为 8,774,309。这解释了
+generation、reference 和 old log-prob 的巨大计算量，但 `max_response_length=4096`
+来自原始 Questioner penalty 训练语义，不能为提速擅自降低。后续应优先寻找用户
+原 Qwen3 作业的同类长度指标，以判断饱和是算法本身特征还是 Qwen3.5 行为变化。
+
+训练收尾附近出现过 DataLoader worker killed，但完整 step metrics、global step 和
+后续 export 转移均已发生，所以本次不将其判为 Questioner stage 失败；若后续阶段
+或新 run 重复出现，再单独调查 worker 生命周期和节点内存。
+
+### 纠偏及单变量实验
 
 纠偏后的运行必须使用新的 run directory，不能在旧 fingerprint 上 `--resume`。
 先用 `ppo_mini_batch_size=16` 建立效果等价基线；随后每次只改变一个内存/执行参数：
