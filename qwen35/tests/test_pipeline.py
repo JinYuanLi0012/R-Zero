@@ -7,7 +7,8 @@ from contextlib import redirect_stdout
 from pathlib import Path
 from unittest.mock import patch
 
-from qwen35.rzero.pipeline.orchestrator import Pipeline
+from qwen35.rzero.pipeline.orchestrator import Pipeline, Stage
+from qwen35.rzero.pipeline.state import Artifact
 from qwen35.rzero.run_benchmark import apply_text_only_overlay
 
 
@@ -19,7 +20,7 @@ class PipelineTests(unittest.TestCase):
     def args(self, run_dir, **overrides):
         values = dict(
             run_dir=Path(run_dir), config=str(CONFIG), resume=True,
-            from_stage=None, dry_run=True, round=None,
+            from_stage=None, only_stage=None, dry_run=True, round=None,
         )
         values.update(overrides)
         return argparse.Namespace(**values)
@@ -83,7 +84,59 @@ class PipelineTests(unittest.TestCase):
             pipeline = Pipeline(
                 self.args(Path(temporary) / "run", round=2, from_stage="round_02.curate")
             )
-            with self.assertRaisesRegex(Exception, "cannot be combined"):
+            with self.assertRaisesRegex(Exception, "mutually exclusive"):
+                pipeline.run()
+
+    def test_only_stage_runs_and_commits_exact_stage_without_prerequisite_actions(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            pipeline = Pipeline(self.args(root / "run", only_stage="target", dry_run=False))
+            prerequisite_output = root / "prerequisite.txt"
+            target_input = root / "input.txt"
+            target_output = root / "output.txt"
+            target_input.write_text("ready", encoding="utf-8")
+            actions = []
+
+            def prerequisite_action():
+                actions.append("prerequisite")
+                prerequisite_output.write_text("unexpected", encoding="utf-8")
+
+            def target_action():
+                actions.append("target")
+                target_output.write_text("complete", encoding="utf-8")
+
+            pipeline.stages = lambda: [
+                Stage("prerequisite", [Artifact(prerequisite_output)], prerequisite_action, "first"),
+                Stage(
+                    "target",
+                    [Artifact(target_output)],
+                    target_action,
+                    "selected",
+                    [Artifact(target_input)],
+                ),
+            ]
+
+            pipeline.run()
+
+            self.assertEqual(actions, ["target"])
+            self.assertFalse(prerequisite_output.exists())
+            self.assertTrue(pipeline.state.stage_manifest("target").is_file())
+            self.assertFalse(pipeline.state.stage_manifest("prerequisite").exists())
+
+    def test_only_stage_rejects_unknown_stage_and_other_selectors(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            pipeline = Pipeline(self.args(Path(temporary) / "run", only_stage="missing"))
+            with self.assertRaisesRegex(Exception, "unknown --only-stage"):
+                pipeline.run()
+
+            pipeline = Pipeline(
+                self.args(
+                    Path(temporary) / "run-2",
+                    only_stage="round_01.questioner_train",
+                    from_stage="round_01.questioner_train",
+                )
+            )
+            with self.assertRaisesRegex(Exception, "mutually exclusive"):
                 pipeline.run()
 
     def test_recompute_training_disables_resume_but_failure_recovery_keeps_it(self):

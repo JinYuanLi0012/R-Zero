@@ -185,6 +185,19 @@ To operate on one round whose dependencies already exist:
 qwen35/scripts/run.sh ... --resume --round 3
 ```
 
+To execute exactly one stage, validate its declared inputs and commit only its
+manifest, use `--only-stage`. It does not run prerequisite actions and does not
+invalidate, quarantine or recompute later stages:
+
+```bash
+qwen35/scripts/run.sh ... --resume --only-stage round_01.questioner_train
+```
+
+This is the supported interface for targeted diagnostics and for adopting an
+already complete, lineage-matching verl checkpoint through the normal stage
+action. Do not hand-create stage manifests. `--only-stage`, `--from-stage` and
+`--round` are mutually exclusive.
+
 ## Run artifacts
 
 ```text
