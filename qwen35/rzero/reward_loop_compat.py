@@ -39,8 +39,48 @@ class _ConcurrencyActorClass:
         self.max_concurrency = max_concurrency
 
     def options(self, **options: Any) -> Any:
-        options.setdefault("max_concurrency", self.max_concurrency)
+        # Some verl revisions pass Ray's default explicitly.  Never allow an
+        # upstream option to reduce admission below the complete population.
+        options["max_concurrency"] = max(int(options.get("max_concurrency", 0)), self.max_concurrency)
         return self.actor_class.options(**options)
+
+
+def install_ray_worker_setup_hook() -> None:
+    """Install the population patch inside every Ray worker process.
+
+    The official trainer constructs ``RewardLoopManager`` inside its remote
+    ``TaskRunner``, not in the launcher process.  A driver-only monkey patch
+    therefore cannot affect actor construction.  Injecting Ray's supported
+    worker setup hook makes the same narrow patch run before tasks and actors
+    execute in each worker interpreter.
+    """
+
+    import ray
+
+    if getattr(ray.init, "_rzero_population_worker_hook", False):
+        return
+
+    original_init = ray.init
+
+    def _ray_init(*args: Any, **kwargs: Any) -> Any:
+        runtime_env = dict(kwargs.get("runtime_env") or {})
+        existing_hook = runtime_env.get("worker_process_setup_hook")
+        if existing_hook is None:
+            runtime_env["worker_process_setup_hook"] = install_population_reward_concurrency_patch
+        elif existing_hook is not install_population_reward_concurrency_patch:
+            if not callable(existing_hook):
+                raise TypeError("existing Ray worker_process_setup_hook must be callable")
+
+            def _combined_worker_setup_hook() -> None:
+                existing_hook()
+                install_population_reward_concurrency_patch()
+
+            runtime_env["worker_process_setup_hook"] = _combined_worker_setup_hook
+        kwargs["runtime_env"] = runtime_env
+        return original_init(*args, **kwargs)
+
+    _ray_init._rzero_population_worker_hook = True  # type: ignore[attr-defined]
+    ray.init = _ray_init
 
 
 def install_population_reward_concurrency_patch() -> None:

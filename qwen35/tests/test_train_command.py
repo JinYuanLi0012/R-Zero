@@ -1,8 +1,16 @@
 import argparse
+import sys
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import patch
 
-from qwen35.rzero.reward_loop_compat import _ConcurrencyActorClass, required_reward_concurrency
+from qwen35.rzero.reward_loop_compat import (
+    _ConcurrencyActorClass,
+    install_population_reward_concurrency_patch,
+    install_ray_worker_setup_hook,
+    required_reward_concurrency,
+)
 from qwen35.rzero.train_grpo import build_command, sanitize_nvidia_visibility_env
 
 
@@ -72,6 +80,33 @@ class TrainCommandTests(unittest.TestCase):
         self.assertEqual(
             wrapped.options(name="reward_loop_worker_0"),
             {"name": "reward_loop_worker_0", "max_concurrency": 2048},
+        )
+
+    def test_concurrency_wrapper_overrides_smaller_explicit_limit(self):
+        class ActorClass:
+            def options(self, **options):
+                return options
+
+        wrapped = _ConcurrencyActorClass(ActorClass(), 2048)
+        self.assertEqual(wrapped.options(max_concurrency=1000)["max_concurrency"], 2048)
+
+    def test_ray_init_installs_patch_in_worker_processes(self):
+        calls = []
+
+        def init(*args, **kwargs):
+            calls.append((args, kwargs))
+            return "ray-context"
+
+        fake_ray = SimpleNamespace(init=init)
+        with patch.dict(sys.modules, {"ray": fake_ray}):
+            install_ray_worker_setup_hook()
+            result = fake_ray.init(address="local", runtime_env={"env_vars": {"A": "1"}})
+
+        self.assertEqual(result, "ray-context")
+        self.assertEqual(calls[0][1]["runtime_env"]["env_vars"], {"A": "1"})
+        self.assertIs(
+            calls[0][1]["runtime_env"]["worker_process_setup_hook"],
+            install_population_reward_concurrency_patch,
         )
 
     def test_solver_uses_naive_manager_and_four_gpus(self):

@@ -12,6 +12,10 @@ Ray async actor 默认只允许 1000 个并发调用，而 R-Zero population man
 verl trainer 和 RewardLoopWorker 的创建流程，只把这个单一 R-Zero reward
 actor 的 `max_concurrency` 动态提高到完整 population 大小。禁止用多个 reward
 worker 拆分 population，因为这会改变 BLEU diversity reward 的语义。
+由于 manager 实际在远端 `TaskRunner` 中构造，兼容层通过 Ray 官方
+`worker_process_setup_hook` 在每个 worker 解释器内安装补丁；只在 launcher
+进程中 monkey patch 不会跨越 Ray 进程边界。训练日志必须出现
+`RZERO_REWARD_LOOP_MAX_CONCURRENCY=2048`。
 
 ## 当前验证边界
 

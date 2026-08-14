@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
-from qwen35.rzero.reward_loop_compat import install_population_reward_concurrency_patch
+from qwen35.rzero.reward_loop_compat import (
+    install_population_reward_concurrency_patch,
+    install_ray_worker_setup_hook,
+)
 
 
 def main() -> None:
     install_population_reward_concurrency_patch()
+    install_ray_worker_setup_hook()
     from verl.trainer.main_ppo import main as official_main
 
     official_main()
@@ -14,4 +18,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
