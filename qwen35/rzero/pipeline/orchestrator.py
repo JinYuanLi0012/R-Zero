@@ -466,15 +466,8 @@ class Pipeline:
     def run(self) -> None:
         stages = self.stages()
         selected_round = self.args.round
-        only_stage = self.args.only_stage
-        selectors = [bool(selected_round), bool(self.args.from_stage), bool(only_stage)]
-        if sum(selectors) > 1:
-            raise StateError("--round, --from-stage and --only-stage are mutually exclusive")
-        if only_stage:
-            matching = [stage for stage in stages if stage.key == only_stage]
-            if not matching:
-                raise StateError(f"unknown --only-stage {only_stage!r}")
-            stages = matching
+        if selected_round and self.args.from_stage:
+            raise StateError("--round cannot be combined with --from-stage because downstream lineage would be stale")
         if selected_round:
             allowed_prefix = f"round_{selected_round:02d}."
             stages = [stage for stage in stages if not stage.key.startswith("round_") or stage.key.startswith(allowed_prefix)]
@@ -550,7 +543,6 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--config", required=True)
     parser.add_argument("--resume", action="store_true")
     parser.add_argument("--from-stage")
-    parser.add_argument("--only-stage")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--round", type=int, choices=range(1, 6))
     return parser

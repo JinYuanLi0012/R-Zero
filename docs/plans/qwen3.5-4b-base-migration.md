@@ -65,9 +65,7 @@ qwen35/scripts/run.sh \
   --resume
 ```
 
-- 支持 `--resume`、`--from-stage`、`--only-stage`、`--dry-run` 和 `--round`；
-  `--only-stage` 只校验并执行指定 stage，正常提交其 manifest，不触发前置 action
-  或 `--from-stage` 的后续失效/备份语义。
+- 支持 `--resume`、`--from-stage`、`--dry-run` 和 `--round`。
 - Run fingerprint 固定模型 revision、verl commit、依赖锁、算法参数、输入哈希和随机种子；不一致时拒绝续跑。
 - verl 每步保存完整 checkpoint，滚动保留最近两份；失败发生在 step 3 内部时从完整 step 2 重跑 step 3。
 - 生成/评估按 shard 独立提交，所有 stage 经验证后原子提交 manifest，不提前删除输入。

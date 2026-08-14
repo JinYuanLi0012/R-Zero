@@ -144,15 +144,6 @@ IDs 后，在 micro-batch 切分时发生布局转置。当前通过 verl 官方
 模型内部展开。同时显式设置 `trainer.balance_batch=false`，与锁定 commit 的
 官方 Qwen3.5 FSDP recipe 一致。
 
-上述 text-only position-ID 修复随后在 Compute1 真实 4×A100 上完成了
-Questioner 的 1-step smoke GRPO：GPU 0–1 执行 rollout/反向传播/optimizer 更新，
-GPU 2–3 提供两个冻结 Solver 在线奖励服务，日志到达 `training/global_step:1`
-并保存完整 `global_step_1` checkpoint。该次 direct-debug 直接调用 stage action，
-所以 checkpoint 存在但 stage manifest 尚未提交。正式诊断接口现提供
-`--only-stage`：它只校验并执行一个指定 stage，成功后通过正常 artifact 校验提交
-manifest，不运行前置 action，也不触发 `--from-stage` 的 checkpoint 备份或后续
-失效语义。不要手工伪造 manifest。
-
 ## Compute1 交互式节点：固定路径与启动命令
 
 Compute1 与 Compute2 看到的项目是同一份共享 storage，只是挂载路径
