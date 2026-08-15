@@ -25,13 +25,38 @@ def terra_label(row: dict[str, Any]) -> str:
     return label
 
 
+def csv_safe(value: Any) -> Any:
+    """Make invalid control bytes visible while preserving ordinary CSV text exactly."""
+    if not isinstance(value, str):
+        return value
+    result = []
+    for character in value:
+        codepoint = ord(character)
+        if character in "\t\n\r" or 32 <= codepoint < 127 or codepoint >= 160:
+            result.append(character)
+        else:
+            result.append(f"\\u{codepoint:04x}")
+    return "".join(result)
+
+
 def write_csv(path: Path, rows: list[dict[str, Any]], fields: list[str]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_name(f"{path.name}.tmp")
     with temporary.open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=fields, extrasaction="ignore")
+        writer = csv.DictWriter(
+            handle,
+            fieldnames=fields,
+            extrasaction="ignore",
+            quoting=csv.QUOTE_ALL,
+            escapechar="\\",
+            doublequote=True,
+            lineterminator="\n",
+        )
         writer.writeheader()
-        writer.writerows(rows)
+        writer.writerows(
+            {field: csv_safe(row.get(field)) for field in fields}
+            for row in rows
+        )
     temporary.replace(path)
 
 

@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import csv
 import json
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -12,6 +14,7 @@ from base_judge_common import (  # noqa: E402
     BASE_JUDGE_SCHEMA, SYSTEM_PROMPT, binary_metrics, build_prompt, parse_judgment, roc_auc,
 )
 from judge import JUDGE_SCHEMA, SYSTEM_PROMPT as TERRA_SYSTEM_PROMPT  # noqa: E402
+from base_judge_analyze import write_csv  # noqa: E402
 
 
 def judgment() -> dict:
@@ -79,6 +82,27 @@ class MetricTests(unittest.TestCase):
     def test_auc_handles_ties(self):
         self.assertAlmostEqual(roc_auc([False, True, False, True], [0.1, 0.9, 0.2, 0.8]), 1.0)
         self.assertAlmostEqual(roc_auc([False, True], [0.5, 0.5]), 0.5)
+
+
+class CsvExportTests(unittest.TestCase):
+    def test_special_text_round_trips_and_controls_are_made_visible(self):
+        question = 'Quoted "value", comma, newline\nbackslash \\ remains'
+        reasoning = "tab\tis allowed; nul:\x00 unit-separator:\x1f delete:\x7f next-line:\x85"
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "disagreements.csv"
+            write_csv(
+                path,
+                [{"question": question, "reasoning": reasoning}],
+                ["question", "reasoning"],
+            )
+            with path.open(encoding="utf-8", newline="") as handle:
+                restored = list(csv.DictReader(handle))
+
+        self.assertEqual(restored[0]["question"], question)
+        self.assertEqual(
+            restored[0]["reasoning"],
+            "tab\tis allowed; nul:\\u0000 unit-separator:\\u001f delete:\\u007f next-line:\\u0085",
+        )
 
 
 if __name__ == "__main__":
