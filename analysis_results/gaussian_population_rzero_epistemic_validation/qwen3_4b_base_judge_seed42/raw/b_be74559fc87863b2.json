@@ -1,0 +1,30 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Find all integer pairs \\u003c(x, y)\\u003e that satisfy the equation \\u003c(x + y)^2 + (x - y)^2 = 2024\\u003e.\",\n\"conditions_complete\": true,\n\"contradictory\": false,\n\"multiple_reasonable_interpretations\": false,\n\"solution_exists\": true,\n\"unique_or_explicit_grading\": false,\n\"label\": \"B\",\n\"confidence\": 0.95,\n\"probability_label_A\": 0.05,\n\"issue_types\": [\"unique_or_explicit_grading\"],\n\"reasoning_summary\": \"The equation can be simplified to 2x^2 + 2y^2 = 2024, which further simplifies to x^2 + y^2 = 1012. This is a Diophantine equation, and while there are integer solutions, they are not unique and require further analysis to list all possible pairs.\",\n\"derived_answer\": \"The equation simplifies to x^2 + y^2 = 1012. To find all integer solutions, we need to find all pairs of integers (x, y) such that their squares sum to 1012. This involves checking all possible integer values of x and y that satisfy this condition.\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The equation simplifies to x^2 + y^2 = 1012. To find all integer solutions, we need to find all pairs of integers (x, y) such that their squares sum to 1012. This involves checking all possible integer values of x and y that satisfy this condition.",
+    "goal_restatement": "Find all integer pairs <(x, y)> that satisfy the equation <(x + y)^2 + (x - y)^2 = 2024>.",
+    "issue_types": [
+      "unique_or_explicit_grading"
+    ],
+    "label": "B",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.05,
+    "reasoning_summary": "The equation can be simplified to 2x^2 + 2y^2 = 2024, which further simplifies to x^2 + y^2 = 1012. This is a Diophantine equation, and while there are integer solutions, they are not unique and require further analysis to list all possible pairs.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": false
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_be74559fc87863b2",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

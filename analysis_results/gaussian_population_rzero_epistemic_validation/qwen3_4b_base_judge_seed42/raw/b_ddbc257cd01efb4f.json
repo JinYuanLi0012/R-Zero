@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{\n  \"goal_restatement\": \"Determine the maximum number of houses that can be painted red, given that no two adjacent houses can have the same color.\",\n  \"conditions_complete\": true,\n  \"contradictory\": false,\n  \"multiple_reasonable_interpretations\": false,\n  \"solution_exists\": true,\n  \"unique_or_explicit_grading\": true,\n  \"label\": \"A\",\n  \"confidence\": 0.95,\n  \"probability_label_A\": 0.95,\n  \"issue_types\": [],\n  \"reasoning_summary\": \"The problem is self-contained, valid, solvable, and uniquely gradable. The goal is to maximize the number of red houses while ensuring no two adjacent houses have the same color. This can be achieved by alternating colors in a pattern that allows the maximum number of red houses.\",\n  \"derived_answer\": \"The maximum number of houses that can be painted red is 50.\"\n}"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The maximum number of houses that can be painted red is 50.",
+    "goal_restatement": "Determine the maximum number of houses that can be painted red, given that no two adjacent houses can have the same color.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The problem is self-contained, valid, solvable, and uniquely gradable. The goal is to maximize the number of red houses while ensuring no two adjacent houses have the same color. This can be achieved by alternating colors in a pattern that allows the maximum number of red houses.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_ddbc257cd01efb4f",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

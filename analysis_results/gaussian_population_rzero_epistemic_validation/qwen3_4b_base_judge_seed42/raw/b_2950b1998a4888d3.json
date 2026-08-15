@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{\n  \"goal_restatement\": \"Find all pairs of prime numbers (p, q) such that the sum of their squares is a perfect square.\",\n  \"conditions_complete\": true,\n  \"contradictory\": false,\n  \"multiple_reasonable_interpretations\": false,\n  \"solution_exists\": true,\n  \"unique_or_explicit_grading\": true,\n  \"label\": \"A\",\n  \"confidence\": 0.95,\n  \"probability_label_A\": 0.95,\n  \"issue_types\": [],\n  \"reasoning_summary\": \"The problem is well-defined and solvable. We need to find prime numbers p and q such that p^2 + q^2 = k^2 for some integer k. This can be approached by considering the properties of Pythagorean triples and the nature of prime numbers.\",\n  \"derived_answer\": \"The only solution is (p, q) = (3, 4) and (4, 3), but since 4 is not a prime number, there are no valid solutions where both p and q are prime numbers.\"\n}"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The only solution is (p, q) = (3, 4) and (4, 3), but since 4 is not a prime number, there are no valid solutions where both p and q are prime numbers.",
+    "goal_restatement": "Find all pairs of prime numbers (p, q) such that the sum of their squares is a perfect square.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The problem is well-defined and solvable. We need to find prime numbers p and q such that p^2 + q^2 = k^2 for some integer k. This can be approached by considering the properties of Pythagorean triples and the nature of prime numbers.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_2950b1998a4888d3",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

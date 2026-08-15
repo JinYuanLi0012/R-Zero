@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Find the smallest positive integer n such that the expression n^2 + 3n + 2 is divisible by 10.\",\n\"conditions_complete\": true,\n\"contradictory\": false,\n\"multiple_reasonable_interpretations\": false,\n\"solution_exists\": true,\n\"unique_or_explicit_grading\": true,\n\"label\": \"A\",\n\"confidence\": 0.95,\n\"probability_label_A\": 0.95,\n\"issue_types\": [],\n\"reasoning_summary\": \"The problem is self-contained, valid, solvable, and uniquely gradable. The expression n^2 + 3n + 2 can be factored as (n+1)(n+2). For this product to be divisible by 10, one of the factors must be divisible by 2 and the other by 5. The smallest positive integer n that satisfies this condition is 3, as (3+1)(3+2) = 4*5 = 20, which is divisible by 10.\",\n\"derived_answer\":   \"3\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "3",
+    "goal_restatement": "Find the smallest positive integer n such that the expression n^2 + 3n + 2 is divisible by 10.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The problem is self-contained, valid, solvable, and uniquely gradable. The expression n^2 + 3n + 2 can be factored as (n+1)(n+2). For this product to be divisible by 10, one of the factors must be divisible by 2 and the other by 5. The smallest positive integer n that satisfies this condition is 3, as (3+1)(3+2) = 4*5 = 20, which is divisible by 10.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_2c9f14b4e078516b",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

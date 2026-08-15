@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Determine the number of distinct seating arrangements around a round table for six friends such that no two best friends sit next to each other, given specific pairs of best friends.\",\n\"conditions_complete\": true,\n\"contradictory\": false,\n\"multiple_reasonable_interpretations\": false,\n\"solution_exists\": true,\n\"unique_or_explicit_grading\": true,\n\"label\": \"A\",\n\"confidence\": 0.95,\n\"probability_label_A\": 0.95,\n\"issue_types\": [],\n\"reasoning_summary\": \"The problem involves arranging six people around a round table with constraints on seating best friends. The solution uses the principle of inclusion-exclusion to count valid arrangements.\",\n\"derived_answer\":  \"The number of valid seating arrangements is 144.\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The number of valid seating arrangements is 144.",
+    "goal_restatement": "Determine the number of distinct seating arrangements around a round table for six friends such that no two best friends sit next to each other, given specific pairs of best friends.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The problem involves arranging six people around a round table with constraints on seating best friends. The solution uses the principle of inclusion-exclusion to count valid arrangements.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_f528bb90a7a505b3",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

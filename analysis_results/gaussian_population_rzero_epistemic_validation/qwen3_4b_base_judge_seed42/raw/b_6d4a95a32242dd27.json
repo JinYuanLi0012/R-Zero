@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Calculate the sum of all numbers associated with sectors that are multiples of 4 on a circular track with 24 sectors, where each sector's number is defined by the formula $a \\bmod 24$ for $n = 1, 2, ..., 24$.\",\n\"conditions_complete\": true,\n\"contradictory\": false,\n\"multiple_reasonable_interpretations\": false,\n\"solution_exists\": true,\n\"unique_or_explicit_grading\": true,\n\"label\": \"A\",\n\"confidence\": 0.95,\n\"probability_label_A\": 0.95,\n\"issue_types\": [],\n\"reasoning_summary\": \"The problem involves calculating the sum of numbers associated with sectors that are multiples of 4 on a circular track with 24 sectors. Each sector's number is defined by the formula $a \\bmod 24$ for $n = 1, 2, ..., 24$. The sectors that are multiples of 4 are 4, 8, 12, 16, 20, and 24. We need to find the sum of the numbers associated with these sectors.\",\n\"derived_answer\": \"The sum of the numbers associated with the sectors that are multiples of 4 is 120.\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The sum of the numbers associated with the sectors that are multiples of 4 is 120.",
+    "goal_restatement": "Calculate the sum of all numbers associated with sectors that are multiples of 4 on a circular track with 24 sectors, where each sector's number is defined by the formula $a \bmod 24$ for $n = 1, 2, ..., 24$.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The problem involves calculating the sum of numbers associated with sectors that are multiples of 4 on a circular track with 24 sectors. Each sector's number is defined by the formula $a \bmod 24$ for $n = 1, 2, ..., 24$. The sectors that are multiples of 4 are 4, 8, 12, 16, 20, and 24. We need to find the sum of the numbers associated with these sectors.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_6d4a95a32242dd27",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

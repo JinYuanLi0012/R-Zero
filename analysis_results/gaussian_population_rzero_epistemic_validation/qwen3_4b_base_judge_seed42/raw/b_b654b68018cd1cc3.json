@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{\"goal_restatement\": \"Determine the maximum number of pets that the house numbered 5 can have, given the constraints on the distribution of pets among the houses.\",\n\"conditions_complete\": true,\n\"contradictory\": false,\n\"multiple_reasonable_interpretations\": false,\n\"solution_exists\": true,\n\"unique_or_explicit_grading\": true,\n\"label\": \"A\",\n\"confidence\": 0.95,\n\"probability_label_A\": 0.95,\n\"issue_types\": [],\n\"reasoning_summary\": \"The problem involves distributing 45 pets among 10 houses with unique numbers of pets (1 to 9) and ensuring no two adjacent houses have the same number of pets. The goal is to maximize the number of pets in house 5. By analyzing the constraints and possible distributions, we can determine the maximum number of pets house 5 can have.\",\n\"derived_answer\":  \"The maximum number of pets that the house numbered 5 can have is 9.\"}"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The maximum number of pets that the house numbered 5 can have is 9.",
+    "goal_restatement": "Determine the maximum number of pets that the house numbered 5 can have, given the constraints on the distribution of pets among the houses.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The problem involves distributing 45 pets among 10 houses with unique numbers of pets (1 to 9) and ensuring no two adjacent houses have the same number of pets. The goal is to maximize the number of pets in house 5. By analyzing the constraints and possible distributions, we can determine the maximum number of pets house 5 can have.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_b654b68018cd1cc3",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Find the area of triangle ADE given the conditions of the problem.\",\n  \"conditions_complete\": true,\n  \"contradictory\": false,\n  \"multiple_reasonable_interpretations\": false,\n  \"solution_exists\": true,\n  \"unique_or_explicit_grading\": true,\n  \"label\": \"A\",\n  \"confidence\": 0.95,\n  \"probability_label_A\": 0.95,\n  \"issue_types\": [],\n  \"reasoning_summary\": \"The problem provides clear conditions and a unique solution. The area of triangle ADE can be found using the given ratio and the area of triangle ABC.\",\n  \"derived_answer\": \"The area of triangle ADE is 4 square units.\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The area of triangle ADE is 4 square units.",
+    "goal_restatement": "Find the area of triangle ADE given the conditions of the problem.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The problem provides clear conditions and a unique solution. The area of triangle ADE can be found using the given ratio and the area of triangle ABC.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_003a4f3c6adecbf9",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

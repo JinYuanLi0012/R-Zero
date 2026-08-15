@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Find the largest possible sum of a sequence of positive integers where the product of any two distinct elements is divisible by their sum.\",\n\"conditions_complete\": true,\n\"contradictory\": false,\n\"multiple_reasonable_interpretations\": false,\n\"solution_exists\": true,\n\"unique_or_explicit_grading\": true,\n\"label\": \"A\",\n\"confidence\": 0.95,\n\"probability_label_A\": 0.95,\n\"issue_types\": [],\n\"reasoning_summary\": \"The problem requires finding a sequence of positive integers where the product of any two distinct elements is divisible by their sum. This condition implies that for any two elements a_i and a_j, a_i * a_j is divisible by a_i + a_j. The largest possible sum of such a sequence can be determined by considering the properties of the sequence and the constraints given.\",\n\"derived_answer\": \"The largest possible value of a_1 + a_2 + \\\\\\n\\\\cdots + a_n is achieved when the sequence consists of the smallest possible positive integers that satisfy the given condition. The sequence that satisfies this condition is 1, 2, 3, \\\\\\n..., n. The sum of this sequence is n(n+1)/2. Therefore, the largest possible value of a_1 + a_2 + \\\\\\n\\\\cdots + a_n is n(n+1)/2.\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The largest possible value of a_1 + a_2 + \\\n\\cdots + a_n is achieved when the sequence consists of the smallest possible positive integers that satisfy the given condition. The sequence that satisfies this condition is 1, 2, 3, \\\n..., n. The sum of this sequence is n(n+1)/2. Therefore, the largest possible value of a_1 + a_2 + \\\n\\cdots + a_n is n(n+1)/2.",
+    "goal_restatement": "Find the largest possible sum of a sequence of positive integers where the product of any two distinct elements is divisible by their sum.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The problem requires finding a sequence of positive integers where the product of any two distinct elements is divisible by their sum. This condition implies that for any two elements a_i and a_j, a_i * a_j is divisible by a_i + a_j. The largest possible sum of such a sequence can be determined by considering the properties of the sequence and the constraints given.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_da2a22cc0f6aa29b",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

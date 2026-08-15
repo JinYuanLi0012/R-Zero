@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Find all pairs of positive integers $(a, b)$ that satisfy the equation $a^n + b^n = n^3 - n^2 + 1$ for a given positive integer $n$.\",\n  \"conditions_complete\": true,\n  \"contradictory\": false,\n  \"multiple_reasonable_interpretations\": false,\n  \"solution_exists\": true,\n  \"unique_or_explicit_grading\": true,\n  \"label\": \"A\",\n  \"confidence\": 0.95,\n  \"probability_label_A\": 0.95,\n  \"issue_types\": [],\n  \"reasoning_summary\": \"The equation $a^n + b^n = n^3 - n^2 + 1$ is well-defined for positive integers $a, b,$ and $n$. The right-hand side is a polynomial in $n$, and the left-hand side is a sum of two $n$-th powers. For small values of $n$, we can check if there are any solutions. For example, when $n=1$, the equation becomes $a + b = 1$, which has no solution in positive integers. When $n=2$, the equation becomes $a^2 + b^2 = 1$, which also has no solution in positive integers. When $n=3$, the equation becomes $a^3 + b^3 = 19$, which has the solution $(a, b) = (2, 3)$ or $(3, 2)$. For larger values of $n$, the right-hand side grows much faster than the left-hand side, so there are no solutions. Therefore, the only solution is $(a, b) = (2, 3)$ or $(3, 2)$ when $n=3$.\",\n  \"derived_answer\": \"(2, 3) or (3, 2) when n=3\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "(2, 3) or (3, 2) when n=3",
+    "goal_restatement": "Find all pairs of positive integers $(a, b)$ that satisfy the equation $a^n + b^n = n^3 - n^2 + 1$ for a given positive integer $n$.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The equation $a^n + b^n = n^3 - n^2 + 1$ is well-defined for positive integers $a, b,$ and $n$. The right-hand side is a polynomial in $n$, and the left-hand side is a sum of two $n$-th powers. For small values of $n$, we can check if there are any solutions. For example, when $n=1$, the equation becomes $a + b = 1$, which has no solution in positive integers. When $n=2$, the equation becomes $a^2 + b^2 = 1$, which also has no solution in positive integers. When $n=3$, the equation becomes $a^3 + b^3 = 19$, which has the solution $(a, b) = (2, 3)$ or $(3, 2)$. For larger values of $n$, the right-hand side grows much faster than the left-hand side, so there are no solutions. Therefore, the only solution is $(a, b) = (2, 3)$ or $(3, 2)$ when $n=3$.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_180217cb1dc4a228",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

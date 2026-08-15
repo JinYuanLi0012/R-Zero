@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Find the number of ordered pairs of integers \\u0000(x, y)\\u0000 such that \\u0000x^2 + y^2\\u0000 is divisible by 5, where \\u00001 \\u2264 x, y \\u2264 20\\u0000.\",\n\"conditions_complete\": true,\n\"contradictory\": false,\n\"multiple_reasonable_interpretations\": false,\n\"solution_exists\": true,\n\"unique_or_explicit_grading\": true,\n\"label\": \"A\",\n\"confidence\": 0.99,\n\"probability_label_A\": 0.99,\n\"issue_types\": [],\n\"reasoning_summary\": \"The problem is well-defined and solvable. We need to find pairs \\u0000(x, y)\\u0000 such that \\u0000x^2 + y^2\\u0000 is divisible by 5. Since \\u0000x^2\\u0000 and \\u0000y^2\\u0000 can only be congruent to 0, 1, or 4 modulo 5, we need to check combinations of these values. The pairs that satisfy the condition are \\u0000(0, 0)\\u0000, \\u0000(1, 4)\\u0000, \\u0000(4, 1)\\u0000, \\u0000(2, 3)\\u0000, \\u0000(3, 2)\\u0000, \\u0000(5, 0)\\u0000, \\u0000(0, 5)\\u0000, and their permutations within the range \\u00001 \\u2264 x, y \\u2264 20\\u0000. Counting these pairs gives the final answer.\",\n\"derived_answer\":  \"The number of ordered pairs \\u0000(x, y)\\u0000 such that \\u0000x^2 + y^2\\u0000 is divisible by 5, where \\u00001 \\u2264 x, y \\u2264 20\\u0000, is 16.\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.99,
+    "contradictory": false,
+    "derived_answer": "The number of ordered pairs \u0000(x, y)\u0000 such that \u0000x^2 + y^2\u0000 is divisible by 5, where \u00001 \u2264 x, y \u2264 20\u0000, is 16.",
+    "goal_restatement": "Find the number of ordered pairs of integers \u0000(x, y)\u0000 such that \u0000x^2 + y^2\u0000 is divisible by 5, where \u00001 \u2264 x, y \u2264 20\u0000.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.99,
+    "reasoning_summary": "The problem is well-defined and solvable. We need to find pairs \u0000(x, y)\u0000 such that \u0000x^2 + y^2\u0000 is divisible by 5. Since \u0000x^2\u0000 and \u0000y^2\u0000 can only be congruent to 0, 1, or 4 modulo 5, we need to check combinations of these values. The pairs that satisfy the condition are \u0000(0, 0)\u0000, \u0000(1, 4)\u0000, \u0000(4, 1)\u0000, \u0000(2, 3)\u0000, \u0000(3, 2)\u0000, \u0000(5, 0)\u0000, \u0000(0, 5)\u0000, and their permutations within the range \u00001 \u2264 x, y \u2264 20\u0000. Counting these pairs gives the final answer.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_2ce7842695b19ac1",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

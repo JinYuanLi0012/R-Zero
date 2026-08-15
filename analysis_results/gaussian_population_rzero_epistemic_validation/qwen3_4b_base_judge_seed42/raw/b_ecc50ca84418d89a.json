@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Find all pairs of positive integers \\u0028m, n\\u0029 that satisfy the equation m^2 + 3mn + 2n^2 = 2013.\",\n\"conditions_complete\": true,\n\"contradictory\": false,\n\"multiple_reasonable_interpretations\": false,\n\"solution_exists\": true,\n\"unique_or_explicit_grading\": true,\n\"label\": \"A\",\n\"confidence\": 0.95,\n\"probability_label_A\": 0.95,\n\"issue_types\": [],\n\"reasoning_summary\": \"The equation is a quadratic in m and n, and we can solve it by factoring or using the quadratic formula. Since we are looking for positive integer solutions, we can limit our search to values of m and n that are less than or equal to the square root of 2013. We can then check each pair of values to see if they satisfy the equation.\",\n\"derived_answer\": \"The pairs of positive integers \\u0028m, n\\u0029 that satisfy the equation are \\u00281, 10\\u0029, \\u00282, 9\\u0029, \\u00283, 8\\u0029, \\u00284, 7\\u0029, \\u00285, 6\\u0029, \\u00286, 5\\u0029, \\u00287, 4\\u0029, \\u00288, 3\\u0029, \\u00289, 2\\u0029, and \\u002810, 1\\u0029.\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The pairs of positive integers (m, n) that satisfy the equation are (1, 10), (2, 9), (3, 8), (4, 7), (5, 6), (6, 5), (7, 4), (8, 3), (9, 2), and (10, 1).",
+    "goal_restatement": "Find all pairs of positive integers (m, n) that satisfy the equation m^2 + 3mn + 2n^2 = 2013.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The equation is a quadratic in m and n, and we can solve it by factoring or using the quadratic formula. Since we are looking for positive integer solutions, we can limit our search to values of m and n that are less than or equal to the square root of 2013. We can then check each pair of values to see if they satisfy the equation.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_ecc50ca84418d89a",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

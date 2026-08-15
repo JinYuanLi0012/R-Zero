@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Find the measure of \\u2220ABC in an isosceles triangle ABC with AB = AC, where a point P inside the triangle satisfies AP = BP and \\u2220APB = 120\\u00b0.\",\n\"conditions_complete\": true,\n\"contradictory\": false,\n\"multiple_reasonable_interpretations\": false,\n\"solution_exists\": true,\n\"unique_or_explicit_grading\": true,\n\"label\": \"A\",\n\"confidence\": 0.95,\n\"probability_label_A\": 0.95,\n\"issue_types\": [],\n\"reasoning_summary\": \"Given that AB = AC, triangle ABC is isosceles with \\u2220BAC = \\u2220BCA. Since AP = BP and \\u2220APB = 120\\u00b0, P is the circumcenter of triangle ABP. Using the properties of isosceles triangles and the given angle, we can deduce that \\u2220ABC = 30\\u00b0.\",\n\"derived_answer\": \"30\\u00b0\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "30\u00b0",
+    "goal_restatement": "Find the measure of \u2220ABC in an isosceles triangle ABC with AB = AC, where a point P inside the triangle satisfies AP = BP and \u2220APB = 120\u00b0.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "Given that AB = AC, triangle ABC is isosceles with \u2220BAC = \u2220BCA. Since AP = BP and \u2220APB = 120\u00b0, P is the circumcenter of triangle ABP. Using the properties of isosceles triangles and the given angle, we can deduce that \u2220ABC = 30\u00b0.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_afec9d23a5006875",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

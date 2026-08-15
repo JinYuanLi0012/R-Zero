@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"\u6c42\u6700\u5c0f\u7684\u6b63\u6574\u6570 n\uff0c\u4f7f\u5f97 a_n \u662f\u4e00\u4e2a\u5b8c\u5168\u5e73\u65b9\u6570\u3002\",\n\"conditions_complete\": true,\n\"contradictory\": false,\n\"multiple_reasonable_interpretations\": false,\n\"solution_exists\": true,\n\"unique_or_explicit_grading\": true,\n\"label\": \"A\",\n\"confidence\": 0.95,\n\"probability_label_A\": 0.95,\n\"issue_types\": [],\n\"reasoning_summary\": \"\u8be5\u95ee\u9898\u5b9a\u4e49\u4e86\u4e00\u4e2a\u9012\u63a8\u5e8f\u5217\uff0c\u5e76\u8981\u6c42\u627e\u5230\u4f7f\u5f97\u5e8f\u5217\u9879\u6210\u4e3a\u5b8c\u5168\u5e73\u65b9\u6570\u7684\u6700\u5c0f\u6b63\u6574\u6570 n\u3002\u901a\u8fc7\u5206\u6790\u9012\u63a8\u5173\u7cfb\uff0c\u53ef\u4ee5\u786e\u5b9a\u5e8f\u5217\u7684\u589e\u957f\u6a21\u5f0f\uff0c\u5e76\u627e\u5230\u6ee1\u8db3\u6761\u4ef6\u7684\u6700\u5c0f n\u3002\",\n\"derived_answer\": \"\u901a\u8fc7\u8ba1\u7b97\uff0c\u53ef\u4ee5\u53d1\u73b0\u5f53 n = 15 \u65f6\uff0ca_n \u662f\u4e00\u4e2a\u5b8c\u5168\u5e73\u65b9\u6570\u3002\"\n}"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "\u901a\u8fc7\u8ba1\u7b97\uff0c\u53ef\u4ee5\u53d1\u73b0\u5f53 n = 15 \u65f6\uff0ca_n \u662f\u4e00\u4e2a\u5b8c\u5168\u5e73\u65b9\u6570\u3002",
+    "goal_restatement": "\u6c42\u6700\u5c0f\u7684\u6b63\u6574\u6570 n\uff0c\u4f7f\u5f97 a_n \u662f\u4e00\u4e2a\u5b8c\u5168\u5e73\u65b9\u6570\u3002",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "\u8be5\u95ee\u9898\u5b9a\u4e49\u4e86\u4e00\u4e2a\u9012\u63a8\u5e8f\u5217\uff0c\u5e76\u8981\u6c42\u627e\u5230\u4f7f\u5f97\u5e8f\u5217\u9879\u6210\u4e3a\u5b8c\u5168\u5e73\u65b9\u6570\u7684\u6700\u5c0f\u6b63\u6574\u6570 n\u3002\u901a\u8fc7\u5206\u6790\u9012\u63a8\u5173\u7cfb\uff0c\u53ef\u4ee5\u786e\u5b9a\u5e8f\u5217\u7684\u589e\u957f\u6a21\u5f0f\uff0c\u5e76\u627e\u5230\u6ee1\u8db3\u6761\u4ef6\u7684\u6700\u5c0f n\u3002",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_9ba8fdb1834c088c",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

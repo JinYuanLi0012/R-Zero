@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Find the smallest positive integer that can be expressed as the sum of two cubes in two distinct ways.\",\n\"conditions_complete\": true,\n\"contradictory\": false,\n\"multiple_reasonable_interpretations\": false,\n\"solution_exists\": true,\n\"unique_or_explicit_grading\": true,\n\"label\": \"A\",\n\"confidence\": 0.99,\n\"probability_label_A\": 0.99,\n\"issue_types\": [],\n\"reasoning_summary\": \"The problem asks for the smallest positive integer that can be written as the sum of two cubes in two different ways. This is a well-defined problem with a unique solution. The smallest such number is 1729, which can be expressed as 1^3 + 12^3 and 9^3 + 10^3.\",\n\"derived_answer\":  \"The smallest positive integer that can be expressed as the sum of two cubes in two different ways is 1729.\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.99,
+    "contradictory": false,
+    "derived_answer": "The smallest positive integer that can be expressed as the sum of two cubes in two different ways is 1729.",
+    "goal_restatement": "Find the smallest positive integer that can be expressed as the sum of two cubes in two distinct ways.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.99,
+    "reasoning_summary": "The problem asks for the smallest positive integer that can be written as the sum of two cubes in two different ways. This is a well-defined problem with a unique solution. The smallest such number is 1729, which can be expressed as 1^3 + 12^3 and 9^3 + 10^3.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_e749cd67dc024ba1",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

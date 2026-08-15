@@ -1,0 +1,590 @@
+{
+  "coverage": {
+    "overall": {
+      "parsed": 557,
+      "total": 600
+    },
+    "v1": {
+      "parsed": 194,
+      "total": 200
+    },
+    "v2": {
+      "parsed": 180,
+      "total": 200
+    },
+    "v3": {
+      "parsed": 183,
+      "total": 200
+    }
+  },
+  "parse_failures": [
+    {
+      "failure_reason": "no valid judgment JSON found: Expecting value: line 1 column 1 (char 0)",
+      "probability_label_A": null,
+      "question": "What is the smallest positive integer that is divisible by 2, 3, 4, 5, 6, 7, 8, 9, and 10?",
+      "question_id": "v1:1282:0e305e0c510775e5",
+      "qwen_label": null,
+      "qwen_reasoning_summary": null,
+      "round": 1,
+      "terra_label": "A"
+    },
+    {
+      "failure_reason": "no valid judgment JSON found: Expecting value: line 1 column 1 (char 0)",
+      "probability_label_A": null,
+      "question": "What is the smallest positive integer \\( n \\) such that \\( n \\) is divisible by \\( 10 \\), and \\( n \\) can be expressed as the sum of three consecutive positive integers?",
+      "question_id": "v1:1436:75236cb588ad5db1",
+      "qwen_label": null,
+      "qwen_reasoning_summary": null,
+      "round": 1,
+      "terra_label": "A"
+    },
+    {
+      "failure_reason": "no valid judgment JSON found: Expecting value: line 1 column 1 (char 0)",
+      "probability_label_A": null,
+      "question": "What is the value of \\( \\lim_{n \\to \\infty} \\left( \\sqrt{n^2 + n} - n \\right) \\)?",
+      "question_id": "v1:1507:f823b58aba30dd57",
+      "qwen_label": null,
+      "qwen_reasoning_summary": null,
+      "round": 1,
+      "terra_label": "A"
+    },
+    {
+      "failure_reason": "no valid judgment JSON found: Expecting value: line 1 column 1 (char 0)",
+      "probability_label_A": null,
+      "question": "In a certain board game, each player takes turns placing chips on a $5 \\times 5$ grid. A player wins if they can form a straight line (horizontally, vertically, or diagonally) of exactly 4 chips. Starting with 1 chip per turn and doubling the number of chips they place each subsequent turn, after 4 turns, what is the minimum number of chips placed on the board that ensures the first player can win no matter how the chips are placed by all players?",
+      "question_id": "v1:2872:2bccd649748a8b27",
+      "qwen_label": null,
+      "qwen_reasoning_summary": null,
+      "round": 1,
+      "terra_label": "C"
+    },
+    {
+      "failure_reason": "no valid judgment JSON found: Expecting value: line 1 column 1 (char 0)",
+      "probability_label_A": null,
+      "question": "Let \\( S \\) be the set of all positive integers less than 1000 that can be expressed as the sum of two or more consecutive positive integers. What is the maximum number of elements in the intersection of \\( S \\) with any interval of consecutive positive integers of length 100?",
+      "question_id": "v1:540:2b781fc55a92935b",
+      "qwen_label": null,
+      "qwen_reasoning_summary": null,
+      "round": 1,
+      "terra_label": "A"
+    },
+    {
+      "failure_reason": "no valid judgment JSON found: Invalid \\escape: line 2 column 42 (char 43)",
+      "probability_label_A": null,
+      "question": "Let \\( f: \\mathbb{R} \\rightarrow \\mathbb{R} \\) be a function such that for all real numbers \\( x \\) and \\( y \\), the function satisfies the equation \\( f(x + y) = f(x) + f(y) + 2xy \\). Additionally, \\( f \\) is differentiable at \\( x = 0 \\) and \\( f'(0) = 3 \\). Find the value of \\( f(5) \\).",
+      "question_id": "v1:796:3c33e809ff3d4db0",
+      "qwen_label": null,
+      "qwen_reasoning_summary": null,
+      "round": 1,
+      "terra_label": "A"
+    },
+    {
+      "failure_reason": "no valid judgment JSON found: Expecting value: line 1 column 1 (char 0)",
+      "probability_label_A": null,
+      "question": "In a certain kingdom, there are 2023 villages, and each village is connected to exactly three other villages by roads. No three villages form a triangle (i.e., there is no set of three villages such that each pair of villages in this set is connected by a road). What is the maximum number of roads that can be built in this kingdom?",
+      "question_id": "v2:1063:abe9aa6281e59fc2",
+      "qwen_label": null,
+      "qwen_reasoning_summary": null,
+      "round": 2,
+      "terra_label": "D"
+    },
+    {
+      "failure_reason": "no valid judgment JSON found: Expecting value: line 1 column 1 (char 0)",
+      "probability_label_A": null,
+      "question": "What is the largest positive integer that can never be expressed as the sum of a perfect square and a positive multiple of 4?",
+      "question_id": "v2:1373:36209df2fa32cd46",
+      "qwen_label": null,
+      "qwen_reasoning_summary": null,
+      "round": 2,
+      "terra_label": "D"
+    },
+    {
+      "failure_reason": "no valid judgment JSON found: Expecting value: line 1 column 1 (char 0)",
+      "probability_label_A": null,
+      "question": "In a small town, there are 12 distinct roads connecting different neighborhoods. Each neighborhood is connected to exactly four other neighborhoods by one road. Determine the minimum number of colors needed to color the roads such that no two roads meeting at a neighborhood are the same color.",
+      "question_id": "v2:1434:03343e8d2c93d9d4",
+      "qwen_label": null,
+      "qwen_reasoning_summary": null,
+      "round": 2,
+      "terra_label": "A"
+    },
+    {
+      "failure_reason": "no valid judgment JSON found: Expecting value: line 1 column 1 (char 0)",
+      "probability_label_A": null,
+      "question": "What is the minimum number of weights needed to measure any integral weight from 1 to 40 pounds on a balance scale if the weights can only be placed on one side of the scale?",
+      "question_id": "v2:1569:6be9332740b67bec",
+      "qwen_label": null,
+      "qwen_reasoning_summary": null,
+      "round": 2,
+      "terra_label": "A"
+    },
+    {
+      "failure_reason": "no valid judgment JSON found: Expecting value: line 1 column 1 (char 0)",
+      "probability_label_A": null,
+      "question": "Find the smallest positive integer \\( n \\) such that the polynomial \\( P(x) = x^n + x^{n-1} + \\cdots + x + 1 \\) is divisible by the polynomial \\( Q(x) = x^2 - 3x + 2 \\).",
+      "question_id": "v2:1734:691fd7a2218f8255",
+      "qwen_label": null,
+      "qwen_reasoning_summary": null,
+      "round": 2,
+      "terra_label": "D"
+    },
+    {
+      "failure_reason": "no valid judgment JSON found: Expecting value: line 1 column 1 (char 0)",
+      "probability_label_A": null,
+      "question": "What is the minimum number of points in the coordinate plane that must be selected to ensure that at least one of the points is a lattice point (a point with integer coordinates)?",
+      "question_id": "v2:1800:b062c50eed067961",
+      "qwen_label": null,
+      "qwen_reasoning_summary": null,
+      "round": 2,
+      "terra_label": "D"
+    },
+    {
+      "failure_reason": "no valid judgment JSON found: Expecting value: line 1 column 1 (char 0)",
+      "probability_label_A": null,
+      "question": "Let \\( f \\) be a function from the set of positive integers to the set of positive integers such that for any two distinct positive integers \\( m \\) and \\( n \\), the value \\( f(mn) \\) is equal to the product of \\( f(m) \\) and \\( f(n) \\). Suppose \\( f \\) is not the identity function, and it is known that \\( f(2) = 3 \\). Find the smallest positive integer \\( k \\) such that \\( f(k) = 1 \\).",
+      "question_id": "v2:1952:a0b746f1aa595e72",
+      "qwen_label": null,
+      "qwen_reasoning_summary": null,
+      "round": 2,
+      "terra_label": "A"
+    },
+    {
+      "failure_reason": "no valid judgment JSON found: Expecting value: line 1 column 1 (char 0)",
+      "probability_label_A": null,
+      "question": "Let \\( S \\) be the set of all positive integers that can be expressed as the sum of distinct positive Fibonacci numbers. For example, 10 is in \\( S \\) because \\( 10 = 8 + 2 \\). Find the smallest positive integer not in \\( S \\).",
+      "question_id": "v2:2240:3d1f31c850ea7ed2",
+      "qwen_label": null,
+      "qwen_reasoning_summary": null,
+      "round": 2,
+      "terra_label": "D"
+    },
+    {
+      "failure_reason": "no valid judgment JSON found: Expecting value: line 1 column 1 (char 0)",
+      "probability_label_A": null,
+      "question": "What is the smallest positive integer \\( n \\) such that the product of any \\( n \\) consecutive positive integers is divisible by a perfect square greater than 1?",
+      "question_id": "v2:2893:03756a3f237f71fa",
+      "qwen_label": null,
+      "qwen_reasoning_summary": null,
+      "round": 2,
+      "terra_label": "A"
+    },
+    {
+      "failure_reason": "no valid judgment JSON found: Expecting value: line 1 column 1 (char 0)",
+      "probability_label_A": null,
+      "question": "Let \\( S \\) be the set of all positive integers that can be expressed as the sum of two distinct positive integers and are not divisible by any prime number greater than 3. Determine the smallest element in \\( S \\) that is greater than 100.",
+      "question_id": "v2:3232:5eff355f3321f386",
+      "qwen_label": null,
+      "qwen_reasoning_summary": null,
+      "round": 2,
+      "terra_label": "A"
+    },
+    {
+      "failure_reason": "no valid judgment JSON found: Expecting value: line 1 column 1 (char 0)",
+      "probability_label_A": null,
+      "question": "Let \\( f(x) = x^2 + ax + b \\) be a quadratic polynomial with integer coefficients \\( a \\) and \\( b \\). Suppose that for every positive integer \\( n \\), the expression \\( f(n) \\) is divisible by \\( 13 \\). Determine the smallest possible value of \\( f(14) \\).",
+      "question_id": "v2:3417:a8cdebfe0b46f3f9",
+      "qwen_label": null,
+      "qwen_reasoning_summary": null,
+      "round": 2,
+      "terra_label": "D"
+    },
+    {
+      "failure_reason": "no valid judgment JSON found: Expecting value: line 1 column 1 (char 0)",
+      "probability_label_A": null,
+      "question": "What is the sum of all positive integers \\( n \\) such that \\( n \\) is a perfect square and \\( 100n + 1 \\) is also a perfect square?",
+      "question_id": "v2:3464:712673e8fa1e0705",
+      "qwen_label": null,
+      "qwen_reasoning_summary": null,
+      "round": 2,
+      "terra_label": "A"
+    },
+    {
+      "failure_reason": "no valid judgment JSON found: Expecting value: line 1 column 1 (char 0)",
+      "probability_label_A": null,
+      "question": "Find the number of ordered pairs of integers \\((x, y)\\) that satisfy the equation \\(x^2 + y^2 = 2xy + 1\\).",
+      "question_id": "v2:3514:4421581f76d37761",
+      "qwen_label": null,
+      "qwen_reasoning_summary": null,
+      "round": 2,
+      "terra_label": "A"
+    },
+    {
+      "failure_reason": "no valid judgment JSON found: Expecting value: line 1 column 1 (char 0)",
+      "probability_label_A": null,
+      "question": "In the complex plane, let \\( A \\) and \\( B \\) be points corresponding to the complex numbers \\( 2 + 3i \\) and \\( -4 + 5i \\) respectively. A circle is drawn with \\( A \\) and \\( B \\) as endpoints of a diameter. Find the area of the region enclosed by this circle and the line segment connecting \\( A \\) and \\( B \\).",
+      "question_id": "v2:3612:b18ecc8977b1c8eb",
+      "qwen_label": null,
+      "qwen_reasoning_summary": null,
+      "round": 2,
+      "terra_label": "C"
+    },
+    {
+      "failure_reason": "no valid judgment JSON found: Expecting value: line 1 column 1 (char 0)",
+      "probability_label_A": null,
+      "question": "What is the minimum number of weights needed to measure all integer weights from 1 to 40 pounds using a balance scale? Each weight can be placed only on one side of the scale.",
+      "question_id": "v2:3687:472ff4a03e5a6b0c",
+      "qwen_label": null,
+      "qwen_reasoning_summary": null,
+      "round": 2,
+      "terra_label": "A"
+    },
+    {
+      "failure_reason": "no valid judgment JSON found: Expecting value: line 1 column 1 (char 0)",
+      "probability_label_A": null,
+      "question": "Let \\( S \\) be a set of positive integers. Define the sequence \\( \\{a_n\\} \\) by \\( a_1 = 1 \\) and \\( a_{n+1} = a_n^2 + a_n + 1 \\) for \\( n \\geq 1 \\). Determine the largest \\( k \\) such that \\( a_k \\) divides the product \\( a_1 \\cdot a_2 \\cdot \\ldots \\cdot a_{k-1} \\).",
+      "question_id": "v2:3691:a03254fc056471e1",
+      "qwen_label": null,
+      "qwen_reasoning_summary": null,
+      "round": 2,
+      "terra_label": "A"
+    },
+    {
+      "failure_reason": "no valid judgment JSON found: Expecting value: line 1 column 1 (char 0)",
+      "probability_label_A": null,
+      "question": "What is the least positive integer \\( n \\) such that \\( n^2 + 15n + 56 \\) is a perfect square?",
+      "question_id": "v2:4103:6c3ee454a75400ba",
+      "qwen_label": null,
+      "qwen_reasoning_summary": null,
+      "round": 2,
+      "terra_label": "D"
+    },
+    {
+      "failure_reason": "no valid judgment JSON found: Expecting value: line 1 column 1 (char 0)",
+      "probability_label_A": null,
+      "question": "A sequence of numbers \\( a_1, a_2, a_3, \\ldots \\) is defined as follows: \\( a_1 = 1 \\), and for \\( n \\geq 2 \\), \\( a_n = a_{n-1} + \\frac{1}{a_{n-1}} \\). Find the smallest positive integer \\( k \\) such that \\( a_k \\) is an integer.",
+      "question_id": "v2:4628:49ae359a0d5eaca7",
+      "qwen_label": null,
+      "qwen_reasoning_summary": null,
+      "round": 2,
+      "terra_label": "A"
+    },
+    {
+      "failure_reason": "no valid judgment JSON found: Expecting value: line 1 column 1 (char 0)",
+      "probability_label_A": null,
+      "question": "What is the greatest possible value of \\(k\\) such that the polynomial \\(P(x) = x^3 - 3x^2 + 4x - k\\) has three distinct real roots, where \\(k\\) is an integer?",
+      "question_id": "v2:850:a5fe5a55a76cb751",
+      "qwen_label": null,
+      "qwen_reasoning_summary": null,
+      "round": 2,
+      "terra_label": "D"
+    },
+    {
+      "failure_reason": "no valid judgment JSON found: Expecting value: line 1 column 1 (char 0)",
+      "probability_label_A": null,
+      "question": "What is the largest possible value of \\(k\\) such that for some positive integer \\(n\\), the sum of the first \\(k\\) squares of positive integers is divisible by \\(n\\) and \\(n\\) is a prime number?",
+      "question_id": "v2:974:80a9cfb29964ab22",
+      "qwen_label": null,
+      "qwen_reasoning_summary": null,
+      "round": 2,
+      "terra_label": "D"
+    },
+    {
+      "failure_reason": "no valid judgment JSON found: Expecting value: line 1 column 1 (char 0)",
+      "probability_label_A": null,
+      "question": "What is the smallest positive integer \\( n \\) such that \\( n^2 + 15n + 56 \\) is a perfect square?",
+      "question_id": "v3:145:1476ea11b25735e8",
+      "qwen_label": null,
+      "qwen_reasoning_summary": null,
+      "round": 3,
+      "terra_label": "D"
+    },
+    {
+      "failure_reason": "no valid judgment JSON found: Expecting value: line 1 column 1 (char 0)",
+      "probability_label_A": null,
+      "question": "For a positive integer \\( n \\), let \\( S(n) \\) denote the sum of its digits. Define a positive integer \\( k \\) to be **digitally peaceful** if there exists a positive integer \\( m \\) such that \\( n = S(m) + S(S(m)) + \\cdots + S^{(k)}(m) \\), where \\( S^{(k)}(m) \\) denotes the application of the function \\( S \\) \\( k \\)-times starting from \\( m \\).\n\nDetermine all values of \\( k \\) for which there exists a digitally peaceful number \\( n \\) such that \\( n = 2024 \\).",
+      "question_id": "v3:1704:47d36a62b2a8bd57",
+      "qwen_label": null,
+      "qwen_reasoning_summary": null,
+      "round": 3,
+      "terra_label": "C"
+    },
+    {
+      "failure_reason": "no valid judgment JSON found: Expecting value: line 1 column 1 (char 0)",
+      "probability_label_A": null,
+      "question": "What is the least positive integer \\( n \\) such that \\( n^2 + 15n + 56 \\) is a perfect square?",
+      "question_id": "v3:1753:6c3ee454a75400ba",
+      "qwen_label": null,
+      "qwen_reasoning_summary": null,
+      "round": 3,
+      "terra_label": "D"
+    },
+    {
+      "failure_reason": "no valid judgment JSON found: Expecting value: line 1 column 1 (char 0)",
+      "probability_label_A": null,
+      "question": "Find the smallest positive integer \\( n \\) such that the equation \\( n^2 + 3n + 2 = 2^k \\) has an integer solution for \\( k \\).",
+      "question_id": "v3:2167:13d4d6e1452c12d1",
+      "qwen_label": null,
+      "qwen_reasoning_summary": null,
+      "round": 3,
+      "terra_label": "D"
+    },
+    {
+      "failure_reason": "no valid judgment JSON found: Expecting value: line 1 column 1 (char 0)",
+      "probability_label_A": null,
+      "question": "Find all integers \\( n \\) such that the polynomial \\( P(x) = x^n - 5x + 4 \\) has exactly two distinct integer roots.",
+      "question_id": "v3:2262:ca509834dfe54ed3",
+      "qwen_label": null,
+      "qwen_reasoning_summary": null,
+      "round": 3,
+      "terra_label": "C"
+    },
+    {
+      "failure_reason": "no valid judgment JSON found: Expecting value: line 1 column 1 (char 0)",
+      "probability_label_A": null,
+      "question": "What is the smallest positive integer \\( n \\) such that \\( n \\) is the product of three distinct primes \\( p, q, \\) and \\( r \\) and \\( n \\) is equal to the sum of the squares of these three primes?",
+      "question_id": "v3:2475:80fb6c080d8fe468",
+      "qwen_label": null,
+      "qwen_reasoning_summary": null,
+      "round": 3,
+      "terra_label": "D"
+    },
+    {
+      "failure_reason": "no valid judgment JSON found: Expecting value: line 1 column 1 (char 0)",
+      "probability_label_A": null,
+      "question": "The largest power of $4$ that divides $3^{16} + 5^{16}$ is",
+      "question_id": "v3:2496:2664c70d25d91dbd",
+      "qwen_label": null,
+      "qwen_reasoning_summary": null,
+      "round": 3,
+      "terra_label": "A"
+    },
+    {
+      "failure_reason": "no valid judgment JSON found: Expecting value: line 1 column 1 (char 0)",
+      "probability_label_A": null,
+      "question": "In a unique chess tournament, there are 10 players, each playing against every other player exactly once. After the tournament, it was noted that the sum of the number of games won by each player equals the sum of the number of games lost by each player. What is the minimum number of draws in the tournament?",
+      "question_id": "v3:2825:e6efa44b2171ccb9",
+      "qwen_label": null,
+      "qwen_reasoning_summary": null,
+      "round": 3,
+      "terra_label": "A"
+    },
+    {
+      "failure_reason": "no valid judgment JSON found: Expecting value: line 1 column 1 (char 0)",
+      "probability_label_A": null,
+      "question": "If \\( f(x) \\) is a polynomial with integer coefficients such that \\( f(1) = 2009 \\) and \\( f(2009) = 2009 \\), determine the maximum number of integer roots of \\( f(x) \\).",
+      "question_id": "v3:366:e29d68ac5fd19a21",
+      "qwen_label": null,
+      "qwen_reasoning_summary": null,
+      "round": 3,
+      "terra_label": "A"
+    },
+    {
+      "failure_reason": "no valid judgment JSON found: Expecting value: line 1 column 1 (char 0)",
+      "probability_label_A": null,
+      "question": "What is the minimum number of squares that must be cut from a 7\u00d77 chessboard so that the remaining squares cannot form a domino?",
+      "question_id": "v3:374:46b636fd0bd75ed9",
+      "qwen_label": null,
+      "qwen_reasoning_summary": null,
+      "round": 3,
+      "terra_label": "C"
+    },
+    {
+      "failure_reason": "no valid judgment JSON found: Expecting value: line 1 column 1 (char 0)",
+      "probability_label_A": null,
+      "question": "Find the smallest positive integer \\( n \\) such that for every integer \\( m \\), the polynomial \\( P(x) = x^2 + nx + m \\) has at least one integer root.",
+      "question_id": "v3:3782:32409baceb7e51bd",
+      "qwen_label": null,
+      "qwen_reasoning_summary": null,
+      "round": 3,
+      "terra_label": "D"
+    },
+    {
+      "failure_reason": "no valid judgment JSON found: Expecting value: line 1 column 1 (char 0)",
+      "probability_label_A": null,
+      "question": "What is the smallest positive integer \\( n \\) such that \\( n^2 + 15n + 56 \\) is a perfect square?",
+      "question_id": "v3:3798:1476ea11b25735e8",
+      "qwen_label": null,
+      "qwen_reasoning_summary": null,
+      "round": 3,
+      "terra_label": "D"
+    },
+    {
+      "failure_reason": "no valid judgment JSON found: Expecting value: line 1 column 1 (char 0)",
+      "probability_label_A": null,
+      "question": "What is the smallest positive integer \\( n \\) such that \\( n^2 + 15n + 56 \\) is a perfect square?",
+      "question_id": "v3:3904:1476ea11b25735e8",
+      "qwen_label": null,
+      "qwen_reasoning_summary": null,
+      "round": 3,
+      "terra_label": "D"
+    },
+    {
+      "failure_reason": "no valid judgment JSON found: Expecting value: line 1 column 1 (char 0)",
+      "probability_label_A": null,
+      "question": "Find the number of ordered pairs \\((x, y)\\) of positive integers that satisfy \\(x + y = 12\\) and \\(x^2 - y^2 = 16\\).",
+      "question_id": "v3:4177:8e4233d69b95a6d7",
+      "qwen_label": null,
+      "qwen_reasoning_summary": null,
+      "round": 3,
+      "terra_label": "A"
+    },
+    {
+      "failure_reason": "no valid judgment JSON found: Expecting value: line 1 column 1 (char 0)",
+      "probability_label_A": null,
+      "question": "In triangle $ABC$, $AB = 13$, $BC = 14$, and $AC = 15$.  Let $D$ be a point on line $BC$ such that $AD$ is the angle bisector of $\\angle BAC$.  Find the length of $AD$.\n\n(A) $4\\sqrt{5}$\n(B) $3\\sqrt{6}$\n(C) $4\\sqrt{6}$\n(D) $5\\sqrt{3}$\n(E) $6$",
+      "question_id": "v3:476:6387f5caf042ba0e",
+      "qwen_label": null,
+      "qwen_reasoning_summary": null,
+      "round": 3,
+      "terra_label": "D"
+    },
+    {
+      "failure_reason": "no valid judgment JSON found: Expecting value: line 1 column 1 (char 0)",
+      "probability_label_A": null,
+      "question": "In a magical kingdom, there are 100 wizards, each of whom can cast a spell that affects exactly one other wizard. No wizard can affect himself. The spellcaster and the recipient of the spell both know who is affecting whom. After all spells are cast, what is the minimum number of pairs of wizards that could have cast spells directly on each other?",
+      "question_id": "v3:638:e0800c798a81dd1b",
+      "qwen_label": null,
+      "qwen_reasoning_summary": null,
+      "round": 3,
+      "terra_label": "A"
+    },
+    {
+      "failure_reason": "no valid judgment JSON found: Expecting value: line 1 column 1 (char 0)",
+      "probability_label_A": null,
+      "question": "In a small town, there are 10 houses numbered from 1 to 10. Each house has a unique number of pets, ranging from 1 to 10. It is known that the number of pets in each house is a divisor of the house number. If the house with the highest number of pets has 5 pets, what is the number of pets in the house numbered 6?",
+      "question_id": "v3:970:4cd04577d8a55dfb",
+      "qwen_label": null,
+      "qwen_reasoning_summary": null,
+      "round": 3,
+      "terra_label": "D"
+    }
+  ],
+  "scopes": {
+    "overall": {
+      "always_valid": {
+        "accuracy": 0.7083333333333334,
+        "balanced_accuracy": 0.5,
+        "cohens_kappa": 0.0,
+        "fn": 0,
+        "fp": 175,
+        "invalid_recall": 0.0,
+        "mcc": 0.0,
+        "n": 600,
+        "roc_auc": 0.5,
+        "tn": 0,
+        "tp": 425,
+        "valid_f1": 0.8292682926829268,
+        "valid_precision": 0.7083333333333334,
+        "valid_recall": 1.0
+      },
+      "qwen_base": {
+        "accuracy": 0.7127468581687613,
+        "balanced_accuracy": 0.4921783625730994,
+        "cohens_kappa": -0.022088675826318096,
+        "fn": 9,
+        "fp": 151,
+        "invalid_recall": 0.006578947368421052,
+        "mcc": -0.052478730233422616,
+        "n": 557,
+        "roc_auc": 0.5594785575048733,
+        "tn": 1,
+        "tp": 396,
+        "valid_f1": 0.8319327731092436,
+        "valid_precision": 0.7239488117001828,
+        "valid_recall": 0.9777777777777777
+      }
+    },
+    "v1": {
+      "always_valid": {
+        "accuracy": 0.83,
+        "balanced_accuracy": 0.5,
+        "cohens_kappa": 0.0,
+        "fn": 0,
+        "fp": 34,
+        "invalid_recall": 0.0,
+        "mcc": 0.0,
+        "n": 200,
+        "roc_auc": 0.5,
+        "tn": 0,
+        "tp": 166,
+        "valid_f1": 0.9071038251366119,
+        "valid_precision": 0.83,
+        "valid_recall": 1.0
+      },
+      "qwen_base": {
+        "accuracy": 0.8298969072164949,
+        "balanced_accuracy": 0.5,
+        "cohens_kappa": 0.0,
+        "fn": 0,
+        "fp": 33,
+        "invalid_recall": 0.0,
+        "mcc": 0.0,
+        "n": 194,
+        "roc_auc": 0.6301524562394127,
+        "tn": 0,
+        "tp": 161,
+        "valid_f1": 0.9070422535211268,
+        "valid_precision": 0.8298969072164949,
+        "valid_recall": 1.0
+      }
+    },
+    "v2": {
+      "always_valid": {
+        "accuracy": 0.74,
+        "balanced_accuracy": 0.5,
+        "cohens_kappa": 0.0,
+        "fn": 0,
+        "fp": 52,
+        "invalid_recall": 0.0,
+        "mcc": 0.0,
+        "n": 200,
+        "roc_auc": 0.5,
+        "tn": 0,
+        "tp": 148,
+        "valid_f1": 0.8505747126436781,
+        "valid_precision": 0.74,
+        "valid_recall": 1.0
+      },
+      "qwen_base": {
+        "accuracy": 0.7666666666666667,
+        "balanced_accuracy": 0.5082815734989647,
+        "cohens_kappa": 0.02476780185758545,
+        "fn": 1,
+        "fp": 41,
+        "invalid_recall": 0.023809523809523808,
+        "mcc": 0.06683162878595182,
+        "n": 180,
+        "roc_auc": 0.5234644582470669,
+        "tn": 1,
+        "tp": 137,
+        "valid_f1": 0.8670886075949367,
+        "valid_precision": 0.7696629213483146,
+        "valid_recall": 0.9927536231884058
+      }
+    },
+    "v3": {
+      "always_valid": {
+        "accuracy": 0.555,
+        "balanced_accuracy": 0.5,
+        "cohens_kappa": 0.0,
+        "fn": 0,
+        "fp": 89,
+        "invalid_recall": 0.0,
+        "mcc": 0.0,
+        "n": 200,
+        "roc_auc": 0.5,
+        "tn": 0,
+        "tp": 111,
+        "valid_f1": 0.7138263665594855,
+        "valid_precision": 0.555,
+        "valid_recall": 1.0
+      },
+      "qwen_base": {
+        "accuracy": 0.5355191256830601,
+        "balanced_accuracy": 0.46226415094339623,
+        "cohens_kappa": -0.08601549954618433,
+        "fn": 8,
+        "fp": 77,
+        "invalid_recall": 0.0,
+        "mcc": -0.1822293806437681,
+        "n": 183,
+        "roc_auc": 0.47855917667238423,
+        "tn": 0,
+        "tp": 98,
+        "valid_f1": 0.6975088967971531,
+        "valid_precision": 0.56,
+        "valid_recall": 0.9245283018867925
+      }
+    }
+  }
+}

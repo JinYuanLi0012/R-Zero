@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Determine the number of houses in a town of 100 houses that will receive a letter from a mailman, given that the mailman delivers letters to houses whose numbers are either multiples of 3, perfect squares, or both.\",\n\"conditions_complete\": true,\n\"contradictory\": false,\n\"multiple_reasonable_interpretations\": false,\n\"solution_exists\": true,\n\"unique_or_explicit_grading\": true,\n\"label\": \"A\",\n\"confidence\": 0.95,\n\"probability_label_A\": 0.95,\n\"issue_types\": [],\n\"reasoning_summary\": \"The problem involves counting the number of houses that are multiples of 3, perfect squares, or both. We can use the principle of inclusion-exclusion to solve this. First, count the multiples of 3, then the perfect squares, and subtract the overlap (multiples of 9, which are both multiples of 3 and perfect squares).\",\n\"derived_answer\":  \"The number of houses that will receive a letter is 45.\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The number of houses that will receive a letter is 45.",
+    "goal_restatement": "Determine the number of houses in a town of 100 houses that will receive a letter from a mailman, given that the mailman delivers letters to houses whose numbers are either multiples of 3, perfect squares, or both.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The problem involves counting the number of houses that are multiples of 3, perfect squares, or both. We can use the principle of inclusion-exclusion to solve this. First, count the multiples of 3, then the perfect squares, and subtract the overlap (multiples of 9, which are both multiples of 3 and perfect squares).",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_252ea2777849c6f7",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

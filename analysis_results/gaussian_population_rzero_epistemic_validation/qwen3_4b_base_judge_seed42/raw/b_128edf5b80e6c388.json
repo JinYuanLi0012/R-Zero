@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Find the length of side AB in triangle ABC, given that point D is the midpoint of BC, point E is the midpoint of AC, lines AD and BE intersect at point P, and AP = BP with CP = 20.\",\n\"conditions_complete\": true,\n\"contradictory\": false,\n\"multiple_reasonable_interpretations\": false,\n\"solution_exists\": true,\n\"unique_or_explicit_grading\": true,\n\"label\": \"A\",\n\"confidence\": 0.95,\n\"probability_label_A\": 0.95,\n\"issue_types\": [],\n\"reasoning_summary\": \"Given that D and E are midpoints, AD and BE are medians. Since AP = BP, P is the centroid of the triangle. The centroid divides each median in a 2:1 ratio. Therefore, CP = 2/3 of the median from C to AB. Since CP = 20, the full median is 30. The length of AB can be found using the properties of medians in a triangle.\",\n\"derived_answer\": \"The length of AB is 30.\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The length of AB is 30.",
+    "goal_restatement": "Find the length of side AB in triangle ABC, given that point D is the midpoint of BC, point E is the midpoint of AC, lines AD and BE intersect at point P, and AP = BP with CP = 20.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "Given that D and E are midpoints, AD and BE are medians. Since AP = BP, P is the centroid of the triangle. The centroid divides each median in a 2:1 ratio. Therefore, CP = 2/3 of the median from C to AB. Since CP = 20, the full median is 30. The length of AB can be found using the properties of medians in a triangle.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_128edf5b80e6c388",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

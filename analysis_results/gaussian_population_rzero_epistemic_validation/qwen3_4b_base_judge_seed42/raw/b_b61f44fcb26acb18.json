@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Find all n-tuples of positive integers (a_1, a_2, ..., a_n) such that for every pair of distinct indices i and j, the expression a_i^2 + a_j^2 - 1 is divisible by a_i + a_j.\",\n\"conditions_complete\": true,\n\"contradictory\": false,\n\"multiple_reasonable_interpretations\": false,\n\"solution_exists\": true,\n\"unique_or_explicit_grading\": true,\n\"label\": \"A\",\n\"confidence\": 0.95,\n\"probability_label_A\": 0.95,\n\"issue_types\": [],\n\"reasoning_summary\": \"The problem requires finding n-tuples of positive integers where the given divisibility condition holds for all pairs of distinct elements. The condition can be analyzed by considering the properties of divisibility and the structure of the expressions involved. By examining the divisibility condition, we can derive constraints on the possible values of a_i and a_j. The solution involves checking the feasibility of these constraints and verifying that they lead to a unique or explicitly gradable set of n-tuples.\",\n\"derived_answer\": \"The only n-tuple that satisfies the given condition is (1, 1, ..., 1) for any positive integer n. This is because if any a_i is greater than 1, the divisibility condition will not hold for some pairs (i, j). Therefore, the only solution is the n-tuple where all elements are 1.\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The only n-tuple that satisfies the given condition is (1, 1, ..., 1) for any positive integer n. This is because if any a_i is greater than 1, the divisibility condition will not hold for some pairs (i, j). Therefore, the only solution is the n-tuple where all elements are 1.",
+    "goal_restatement": "Find all n-tuples of positive integers (a_1, a_2, ..., a_n) such that for every pair of distinct indices i and j, the expression a_i^2 + a_j^2 - 1 is divisible by a_i + a_j.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The problem requires finding n-tuples of positive integers where the given divisibility condition holds for all pairs of distinct elements. The condition can be analyzed by considering the properties of divisibility and the structure of the expressions involved. By examining the divisibility condition, we can derive constraints on the possible values of a_i and a_j. The solution involves checking the feasibility of these constraints and verifying that they lead to a unique or explicitly gradable set of n-tuples.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_b61f44fcb26acb18",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

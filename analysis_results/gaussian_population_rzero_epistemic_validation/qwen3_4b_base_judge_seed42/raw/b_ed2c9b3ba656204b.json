@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"\u5728\u6b63\u65b9\u5f62ABCD\u4e2d\uff0c\u8fb9\u957f\u4e3a10\u5398\u7c73\u3002M\u662fAB\u7684\u4e2d\u70b9\uff0cN\u662fBC\u7684\u4e2d\u70b9\u3002\u6c42\u7ebf\u6bb5MN\u7684\u957f\u5ea6\u3002\",\n  \"conditions_complete\": true,\n  \"contradictory\": false,\n  \"multiple_reasonable_interpretations\": false,\n  \"solution_exists\": true,\n  \"unique_or_explicit_grading\": true,\n  \"label\": \"A\",\n  \"confidence\": 0.99,\n  \"probability_label_A\": 0.99,\n  \"issue_types\": [],\n  \"reasoning_summary\": \"\u8be5\u95ee\u9898\u63cf\u8ff0\u6e05\u6670\uff0c\u6761\u4ef6\u5b8c\u6574\uff0c\u6ca1\u6709\u77db\u76fe\u4e4b\u5904\uff0c\u4e14\u5b58\u5728\u552f\u4e00\u89e3\u3002\u901a\u8fc7\u51e0\u4f55\u77e5\u8bc6\u53ef\u4ee5\u786e\u5b9aM\u548cN\u7684\u4f4d\u7f6e\uff0c\u8fdb\u800c\u8ba1\u7b97\u51faMN\u7684\u957f\u5ea6\u3002\",\n  \"derived_answer\": \"\u7ebf\u6bb5MN\u7684\u957f\u5ea6\u4e3a10\u221a2\u5398\u7c73\u3002\"\n}"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.99,
+    "contradictory": false,
+    "derived_answer": "\u7ebf\u6bb5MN\u7684\u957f\u5ea6\u4e3a10\u221a2\u5398\u7c73\u3002",
+    "goal_restatement": "\u5728\u6b63\u65b9\u5f62ABCD\u4e2d\uff0c\u8fb9\u957f\u4e3a10\u5398\u7c73\u3002M\u662fAB\u7684\u4e2d\u70b9\uff0cN\u662fBC\u7684\u4e2d\u70b9\u3002\u6c42\u7ebf\u6bb5MN\u7684\u957f\u5ea6\u3002",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.99,
+    "reasoning_summary": "\u8be5\u95ee\u9898\u63cf\u8ff0\u6e05\u6670\uff0c\u6761\u4ef6\u5b8c\u6574\uff0c\u6ca1\u6709\u77db\u76fe\u4e4b\u5904\uff0c\u4e14\u5b58\u5728\u552f\u4e00\u89e3\u3002\u901a\u8fc7\u51e0\u4f55\u77e5\u8bc6\u53ef\u4ee5\u786e\u5b9aM\u548cN\u7684\u4f4d\u7f6e\uff0c\u8fdb\u800c\u8ba1\u7b97\u51faMN\u7684\u957f\u5ea6\u3002",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_ed2c9b3ba656204b",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

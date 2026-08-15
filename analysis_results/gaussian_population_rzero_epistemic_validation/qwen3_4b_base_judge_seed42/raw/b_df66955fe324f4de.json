@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Find the maximum number of throws (\\n) a player can make to achieve a total score of 8 points, given the scoring rules for perfect throws, average throws, and misses.\",\n\"conditions_complete\": true,\n\"contradictory\": false,\n\"multiple_reasonable_interpretations\": false,\n\"solution_exists\": true,\n\"unique_or_explicit_grading\": true,\n\"label\": \"A\",\n\"confidence\": 0.95,\n\"probability_label_A\": 0.95,\n\"issue_types\": [],\n\"reasoning_summary\": \"To maximize the number of throws, the player should aim to minimize the number of perfect throws, as they score the most points. The optimal strategy is to use as many average throws (1 point each) as possible, and then use misses (0 points) to fill in the remaining throws. Since the total score is 8 points, the player can achieve this by making 8 average throws and 0 perfect throws, resulting in a total of 8 throws. Any additional throws would either be misses or perfect throws, which would not increase the total score.\",\n\"derived_answer\":  \"The maximum possible value of \\\\(n\\\\) is 8.\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The maximum possible value of \\(n\\) is 8.",
+    "goal_restatement": "Find the maximum number of throws (\n) a player can make to achieve a total score of 8 points, given the scoring rules for perfect throws, average throws, and misses.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "To maximize the number of throws, the player should aim to minimize the number of perfect throws, as they score the most points. The optimal strategy is to use as many average throws (1 point each) as possible, and then use misses (0 points) to fill in the remaining throws. Since the total score is 8 points, the player can achieve this by making 8 average throws and 0 perfect throws, resulting in a total of 8 throws. Any additional throws would either be misses or perfect throws, which would not increase the total score.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_df66955fe324f4de",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

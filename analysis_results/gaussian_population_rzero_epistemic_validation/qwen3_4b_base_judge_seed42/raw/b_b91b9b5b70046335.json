@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{\"goal_restatement\": \"Find all integers n such that the equation x^2 + y^2 = n^2 x + n^2 y has exactly two distinct solutions (x, y) in positive integers.\", \"conditions_complete\": true, \"contradictory\": false, \"multiple_reasonable_interpretations\": false, \"solution_exists\": true, \"unique_or_explicit_grading\": true, \"label\": \"A\", \"confidence\": 0.95, \"probability_label_A\": 0.95, \"issue_types\": [], \"reasoning_summary\": \"The equation x^2 + y^2 = n^2 x + n^2 y can be rewritten as (x - n^2/2)^2 + (y - n^2/2)^2 = n^4/2. This is a circle with center (n^2/2, n^2/2) and radius n^2/2. For the equation to have exactly two distinct solutions in positive integers, the circle must intersect the first quadrant at exactly two points. This happens when n^2/2 is an integer and n^2/2 is not an integer, which is impossible. Therefore, there are no such integers n.\", \"derived_answer\": \"No such integers n exist.\"}"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "No such integers n exist.",
+    "goal_restatement": "Find all integers n such that the equation x^2 + y^2 = n^2 x + n^2 y has exactly two distinct solutions (x, y) in positive integers.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The equation x^2 + y^2 = n^2 x + n^2 y can be rewritten as (x - n^2/2)^2 + (y - n^2/2)^2 = n^4/2. This is a circle with center (n^2/2, n^2/2) and radius n^2/2. For the equation to have exactly two distinct solutions in positive integers, the circle must intersect the first quadrant at exactly two points. This happens when n^2/2 is an integer and n^2/2 is not an integer, which is impossible. Therefore, there are no such integers n.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_b91b9b5b70046335",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

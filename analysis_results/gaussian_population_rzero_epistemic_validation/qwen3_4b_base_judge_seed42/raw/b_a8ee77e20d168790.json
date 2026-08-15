@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{\n  \"goal_restatement\": \"Find all real numbers x such that the sum of their squares and their sum is equal to 10.\",\n  \"conditions_complete\": true,\n  \"contradictory\": false,\n  \"multiple_reasonable_interpretations\": false,\n  \"solution_exists\": true,\n  \"unique_or_explicit_grading\": true,\n  \"label\": \"A\",\n  \"confidence\": 0.95,\n  \"probability_label_A\": 0.95,\n  \"issue_types\": [],\n  \"reasoning_summary\": \"The problem is well-defined and solvable. The equation is x^2 + x = 10, which can be solved using standard algebraic methods. The solutions are x = 2 and x = -5, and these are the only real solutions.\",\n  \"derived_answer\": \"x = 2, x = -5\"\n}"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "x = 2, x = -5",
+    "goal_restatement": "Find all real numbers x such that the sum of their squares and their sum is equal to 10.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The problem is well-defined and solvable. The equation is x^2 + x = 10, which can be solved using standard algebraic methods. The solutions are x = 2 and x = -5, and these are the only real solutions.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_a8ee77e20d168790",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

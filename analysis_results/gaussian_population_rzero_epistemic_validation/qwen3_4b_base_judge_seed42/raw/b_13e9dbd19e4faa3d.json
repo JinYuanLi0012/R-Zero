@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Find all integer pairs $(n, m)$ that satisfy the equation $n^2 + 3n + 2 = 2^m$.\",\n  \"conditions_complete\": true,\n  \"contradictory\": false,\n  \"multiple_reasonable_interpretations\": false,\n  \"solution_exists\": true,\n  \"unique_or_explicit_grading\": true,\n  \"label\": \"A\",\n  \"confidence\": 0.95,\n  \"probability_label_A\": 0.95,\n  \"issue_types\": [],\n  \"reasoning_summary\": \"The equation $n^2 + 3n + 2 = 2^m$ can be factored as $(n+1)(n+2) = 2^m$. Since $2^m$ is a power of 2, both $(n+1)$ and $(n+2)$ must be powers of 2. The only consecutive integers that are both powers of 2 are 1 and 2. Therefore, $n+1 = 1$ and $n+2 = 2$, giving $n = -1$ and $m = 1$. This is the only solution.\",\n  \"derived_answer\": \"The only integer pair $(n, m)$ that satisfies the equation is $(-1, 1)$.\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The only integer pair $(n, m)$ that satisfies the equation is $(-1, 1)$.",
+    "goal_restatement": "Find all integer pairs $(n, m)$ that satisfy the equation $n^2 + 3n + 2 = 2^m$.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The equation $n^2 + 3n + 2 = 2^m$ can be factored as $(n+1)(n+2) = 2^m$. Since $2^m$ is a power of 2, both $(n+1)$ and $(n+2)$ must be powers of 2. The only consecutive integers that are both powers of 2 are 1 and 2. Therefore, $n+1 = 1$ and $n+2 = 2$, giving $n = -1$ and $m = 1$. This is the only solution.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_13e9dbd19e4faa3d",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

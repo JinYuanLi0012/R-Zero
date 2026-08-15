@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{\n  \"goal_restatement\": \"Determine the maximum number of pets that the house numbered 100 can have, given that the total number of pets in the town is 500 and each house has a unique number of pets ranging from 0 to 100.\",\n  \"conditions_complete\": true,\n  \"contradictory\": false,\n  \"multiple_reasonable_interpretations\": false,\n  \"solution_exists\": true,\n  \"unique_or_explicit_grading\": true,\n  \"label\": \"A\",\n  \"confidence\": 0.95,\n  \"probability_label_A\": 0.95,\n  \"issue_types\": [],\n  \"reasoning_summary\": \"The problem requires finding the maximum number of pets in house 100, given that the total number of pets is 500 and each house has a unique number of pets ranging from 0 to 100. To maximize the number of pets in house 100, we need to minimize the number of pets in the other 99 houses. The minimum number of pets in the other 99 houses is 0, 1, 2, ..., 98, which sums to 4850. Therefore, the maximum number of pets in house 100 is 500 - 4850 = 150. However, since the maximum number of pets in any house is 100, the maximum number of pets in house 100 is 100.\",\n  \"derived_answer\":   \"100\"\n}"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "100",
+    "goal_restatement": "Determine the maximum number of pets that the house numbered 100 can have, given that the total number of pets in the town is 500 and each house has a unique number of pets ranging from 0 to 100.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The problem requires finding the maximum number of pets in house 100, given that the total number of pets is 500 and each house has a unique number of pets ranging from 0 to 100. To maximize the number of pets in house 100, we need to minimize the number of pets in the other 99 houses. The minimum number of pets in the other 99 houses is 0, 1, 2, ..., 98, which sums to 4850. Therefore, the maximum number of pets in house 100 is 500 - 4850 = 150. However, since the maximum number of pets in any house is 100, the maximum number of pets in house 100 is 100.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_b315fe16796e8eb1",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

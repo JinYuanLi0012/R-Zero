@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Find the sum of the values of the function f(z) = z^2 + 1/z^2 for all roots z of the polynomial P(z) = z^6 - 1 in the complex plane.\",\n\"conditions_complete\": true,\n\"contradictory\": false,\n\"multiple_reasonable_interpretations\": false,\n\"solution_exists\": true,\n\"unique_or_explicit_grading\": true,\n\"label\": \"A\",\n\"confidence\": 0.95,\n\"probability_label_A\": 0.95,\n\"issue_types\": [],\n\"reasoning_summary\": \"The polynomial P(z) = z^6 - 1 has six roots, which are the sixth roots of unity. The function f(z) = z^2 + 1/z^2 is defined for all these roots. The sum of the values of f(z) over all roots can be calculated by summing the values of f(z) for each root.\",\n\"derived_answer\": \"The sum of the values of f(z) over all roots of P(z) is 6.\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The sum of the values of f(z) over all roots of P(z) is 6.",
+    "goal_restatement": "Find the sum of the values of the function f(z) = z^2 + 1/z^2 for all roots z of the polynomial P(z) = z^6 - 1 in the complex plane.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The polynomial P(z) = z^6 - 1 has six roots, which are the sixth roots of unity. The function f(z) = z^2 + 1/z^2 is defined for all these roots. The sum of the values of f(z) over all roots can be calculated by summing the values of f(z) for each root.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_bf3e3dc1e0c1f4c5",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

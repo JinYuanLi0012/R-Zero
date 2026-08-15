@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Find the smallest positive integer n such that f(n) = 24, where f(n) is the smallest integer greater than n that is a multiple of all positive divisors of n.\",\n\"conditions_complete\": true,\n\"contradictory\": false,\n\"multiple_reasonable_interpretations\": false,\n\"solution_exists\": true,\n\"unique_or_explicit_grading\": true,\n\"label\": \"A\",\n\"confidence\": 0.95,\n\"probability_label_A\": 0.95,\n\"issue_types\": [],\n\"reasoning_summary\": \"The function f(n) is well-defined and the goal is to find the smallest n such that f(n) = 24. The solution exists and is unique.\",\n\"derived_answer\":  \"The smallest positive integer n such that f(n) = 24 is 12.\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The smallest positive integer n such that f(n) = 24 is 12.",
+    "goal_restatement": "Find the smallest positive integer n such that f(n) = 24, where f(n) is the smallest integer greater than n that is a multiple of all positive divisors of n.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The function f(n) is well-defined and the goal is to find the smallest n such that f(n) = 24. The solution exists and is unique.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_5174048a2964f4da",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

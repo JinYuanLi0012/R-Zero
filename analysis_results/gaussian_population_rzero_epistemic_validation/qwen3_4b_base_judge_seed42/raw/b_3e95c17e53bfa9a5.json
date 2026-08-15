@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{\n  \"goal_restatement\": \"Find all real numbers x that satisfy the quadratic equation x^2 - 3x + 2 = 0.\",\n  \"conditions_complete\": true,\n  \"contradictory\": false,\n  \"multiple_reasonable_interpretations\": false,\n  \"solution_exists\": true,\n  \"unique_or_explicit_grading\": true,\n  \"label\": \"A\",\n  \"confidence\": 1.0,\n  \"probability_label_A\": 1.0,\n  \"issue_types\": [],\n  \"reasoning_summary\": \"The equation is a standard quadratic equation with real coefficients. It can be solved using the quadratic formula or by factoring. The solutions are x = 1 and x = 2, which are unique and can be explicitly graded.\",\n  \"derived_answer\": \"x = 1, x = 2\"\n}"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 1.0,
+    "contradictory": false,
+    "derived_answer": "x = 1, x = 2",
+    "goal_restatement": "Find all real numbers x that satisfy the quadratic equation x^2 - 3x + 2 = 0.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 1.0,
+    "reasoning_summary": "The equation is a standard quadratic equation with real coefficients. It can be solved using the quadratic formula or by factoring. The solutions are x = 1 and x = 2, which are unique and can be explicitly graded.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_3e95c17e53bfa9a5",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

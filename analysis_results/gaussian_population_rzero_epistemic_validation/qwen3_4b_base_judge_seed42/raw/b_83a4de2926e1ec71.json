@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Determine the minimum number of crossings required for all eight people to cross the river using the four bridges, given that each bridge can support exactly two people at a time and no one can swim across the river.\",\n  \"conditions_complete\": true,\n  \"contradictory\": false,\n  \"multiple_reasonable_interpretations\": false,\n  \"solution_exists\": true,\n  \"unique_or_explicit_grading\": true,\n  \"label\": \"A\",\n  \"confidence\": 0.95,\n  \"probability_label_A\": 0.95,\n  \"issue_types\": [],\n  \"reasoning_summary\": \"The problem is self-contained, valid, solvable, and uniquely gradable. The conditions are complete, there are no contradictions, and the solution exists. The goal is to find the minimum number of crossings required for all eight people to cross the river using the four bridges, with each bridge supporting exactly two people at a time. The solution involves a systematic approach to ensure all people cross the river with the minimum number of crossings.\",\n  \"derived_answer\": \"The minimum number of crossings needed for all eight people to reach the opposite bank is 8 crossings.\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The minimum number of crossings needed for all eight people to reach the opposite bank is 8 crossings.",
+    "goal_restatement": "Determine the minimum number of crossings required for all eight people to cross the river using the four bridges, given that each bridge can support exactly two people at a time and no one can swim across the river.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The problem is self-contained, valid, solvable, and uniquely gradable. The conditions are complete, there are no contradictions, and the solution exists. The goal is to find the minimum number of crossings required for all eight people to cross the river using the four bridges, with each bridge supporting exactly two people at a time. The solution involves a systematic approach to ensure all people cross the river with the minimum number of crossings.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_83a4de2926e1ec71",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

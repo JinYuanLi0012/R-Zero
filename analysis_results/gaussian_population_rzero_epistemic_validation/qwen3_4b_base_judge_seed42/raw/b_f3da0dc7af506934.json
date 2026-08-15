@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{\"goal_restatement\": \"Find the number of ordered triples of positive integers (x, y, z) such that x, y, z \u2264 2020 and the sum of the ceiling of the square roots of x, y, and z equals 2020.\", \"conditions_complete\": true, \"contradictory\": false, \"multiple_reasonable_interpretations\": false, \"solution_exists\": true, \"unique_or_explicit_grading\": true, \"label\": \"A\", \"confidence\": 0.95, \"probability_label_A\": 0.95, \"issue_types\": [], \"reasoning_summary\": \"The problem is well-defined with clear conditions and a unique solution can be derived through combinatorial methods.\", \"derived_answer\": \"The number of such ordered triples is 1020100.\"}"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The number of such ordered triples is 1020100.",
+    "goal_restatement": "Find the number of ordered triples of positive integers (x, y, z) such that x, y, z \u2264 2020 and the sum of the ceiling of the square roots of x, y, and z equals 2020.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The problem is well-defined with clear conditions and a unique solution can be derived through combinatorial methods.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_f3da0dc7af506934",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

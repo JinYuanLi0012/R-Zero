@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Find the length of the angle bisector AD in triangle ABC, given the side lengths AB = 10, AC = 14, and BC = 16.\",\n  \"conditions_complete\": true,\n  \"contradictory\": false,\n  \"multiple_reasonable_interpretations\": false,\n  \"solution_exists\": true,\n  \"unique_or_explicit_grading\": true,\n  \"label\": \"A\",\n  \"confidence\": 0.95,\n  \"probability_label_A\": 0.95,\n  \"issue_types\": [],\n  \"reasoning_summary\": \"The problem is well-defined with all necessary conditions provided. The length of the angle bisector can be calculated using the Angle Bisector Theorem and the formula for the length of the angle bisector in a triangle.\",\n  \"derived_answer\": \"The length of AD can be found using the formula for the length of the angle bisector in a triangle, which is given by: \\n\\nAD = \\\\sqrt{AB \\\\cdot AC \\\\left(1 - \\\\frac{BC^2}{(AB + AC)^2}\\\\right)}\\n\\nSubstituting the given values, we get:\\n\\nAD = \\\\sqrt{10 \\\\cdot 14 \\\\left(1 - \\\\frac{16^2}{(10 + 14)^2}\\\\right)}\\n\\nSimplifying this expression, we find the length of AD.\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The length of AD can be found using the formula for the length of the angle bisector in a triangle, which is given by: \n\nAD = \\sqrt{AB \\cdot AC \\left(1 - \\frac{BC^2}{(AB + AC)^2}\\right)}\n\nSubstituting the given values, we get:\n\nAD = \\sqrt{10 \\cdot 14 \\left(1 - \\frac{16^2}{(10 + 14)^2}\\right)}\n\nSimplifying this expression, we find the length of AD.",
+    "goal_restatement": "Find the length of the angle bisector AD in triangle ABC, given the side lengths AB = 10, AC = 14, and BC = 16.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The problem is well-defined with all necessary conditions provided. The length of the angle bisector can be calculated using the Angle Bisector Theorem and the formula for the length of the angle bisector in a triangle.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_09d1e25debcdcbf6",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

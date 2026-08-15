@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{\n  \"goal_restatement\": \"Find all real numbers x that satisfy the equation sqrt(x + 1) + sqrt(4 - x) = 5 - x.\",\n  \"conditions_complete\": true,\n  \"contradictory\": false,\n  \"multiple_reasonable_interpretations\": false,\n  \"solution_exists\": true,\n  \"unique_or_explicit_grading\": true,\n  \"label\": \"A\",\n  \"confidence\": 0.95,\n  \"probability_label_A\": 0.95,\n  \"issue_types\": [],\n  \"reasoning_summary\": \"The equation is well-defined for x in the interval [-1, 4]. By squaring both sides and simplifying, we can find the solutions. The equation can be solved explicitly, and the solutions can be verified.\",\n  \"derived_answer\": \"x = 2\"\n}"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "x = 2",
+    "goal_restatement": "Find all real numbers x that satisfy the equation sqrt(x + 1) + sqrt(4 - x) = 5 - x.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The equation is well-defined for x in the interval [-1, 4]. By squaring both sides and simplifying, we can find the solutions. The equation can be solved explicitly, and the solutions can be verified.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_702d91db02596dbf",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

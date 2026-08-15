@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{\"goal_restatement\": \"Find all real numbers x such that the equation sqrt(x + sqrt(2x - 1)) + sqrt(x - sqrt(2x - 1)) = 2 holds.\", \"conditions_complete\": true, \"contradictory\": false, \"multiple_reasonable_interpretations\": false, \"solution_exists\": true, \"unique_or_explicit_grading\": true, \"label\": \"A\", \"confidence\": 0.95, \"probability_label_A\": 0.95, \"issue_types\": [], \"reasoning_summary\": \"The equation is well-defined and has a unique solution.\", \"derived_answer\": \"x = 1\"}"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "x = 1",
+    "goal_restatement": "Find all real numbers x such that the equation sqrt(x + sqrt(2x - 1)) + sqrt(x - sqrt(2x - 1)) = 2 holds.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The equation is well-defined and has a unique solution.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_0e503dee60898c6f",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

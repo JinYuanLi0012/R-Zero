@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Find the remainder when the 59th term of the sequence defined by a\u2081 = 1, a\u2082 = 2, and a\u2099 = 2a\u2099\u208b\u2081 - a\u2099\u208b\u2082 + (-1)\u207f for n > 2 is divided by 10.\",\n  \"conditions_complete\": true,\n  \"contradictory\": false,\n  \"multiple_reasonable_interpretations\": false,\n  \"solution_exists\": true,\n  \"unique_or_explicit_grading\": true,\n  \"label\": \"A\",\n  \"confidence\": 0.95,\n  \"probability_label_A\": 0.95,\n  \"issue_types\": [],\n  \"reasoning_summary\": \"The sequence is well-defined with a clear recurrence relation. The goal is to find a\u2085\u2089 mod 10, which is a straightforward computation given the recurrence. The sequence's behavior modulo 10 can be analyzed to find a pattern or cycle, which would allow us to determine a\u2085\u2089 mod 10 without computing all previous terms.\",\n  \"derived_answer\": \"The sequence modulo 10 is periodic with a period of 10. By computing the first 10 terms, we find that a\u2085\u2089 \u2261 a\u2089 mod 10. Computing a\u2089 gives us the remainder when a\u2085\u2089 is divided by 10.\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The sequence modulo 10 is periodic with a period of 10. By computing the first 10 terms, we find that a\u2085\u2089 \u2261 a\u2089 mod 10. Computing a\u2089 gives us the remainder when a\u2085\u2089 is divided by 10.",
+    "goal_restatement": "Find the remainder when the 59th term of the sequence defined by a\u2081 = 1, a\u2082 = 2, and a\u2099 = 2a\u2099\u208b\u2081 - a\u2099\u208b\u2082 + (-1)\u207f for n > 2 is divided by 10.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The sequence is well-defined with a clear recurrence relation. The goal is to find a\u2085\u2089 mod 10, which is a straightforward computation given the recurrence. The sequence's behavior modulo 10 can be analyzed to find a pattern or cycle, which would allow us to determine a\u2085\u2089 mod 10 without computing all previous terms.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_b550c0ee6786d73f",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

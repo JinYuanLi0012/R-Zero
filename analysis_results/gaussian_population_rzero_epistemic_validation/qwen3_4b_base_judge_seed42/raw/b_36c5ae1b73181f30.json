@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{\"goal_restatement\": \"Find all integers n such that f(n) is a prime number.\", \"conditions_complete\": true, \"contradictory\": false, \"multiple_reasonable_interpretations\": false, \"solution_exists\": true, \"unique_or_explicit_grading\": true, \"label\": \"A\", \"confidence\": 0.95, \"probability_label_A\": 0.95, \"issue_types\": [], \"reasoning_summary\": \"The function f(n) = n^3 - 3n^2 + 2n can be factored as n(n-1)(n-2). For f(n) to be prime, one of the factors must be 1 or -1, and the other two must be 1 or -1. This leads to the solutions n = 0, 1, 2, 3, and -1.\", \"derived_answer\": \"The integers n that satisfy the condition are 0, 1, 2, 3, and -1.\"}"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The integers n that satisfy the condition are 0, 1, 2, 3, and -1.",
+    "goal_restatement": "Find all integers n such that f(n) is a prime number.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The function f(n) = n^3 - 3n^2 + 2n can be factored as n(n-1)(n-2). For f(n) to be prime, one of the factors must be 1 or -1, and the other two must be 1 or -1. This leads to the solutions n = 0, 1, 2, 3, and -1.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_36c5ae1b73181f30",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

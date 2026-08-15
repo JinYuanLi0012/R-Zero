@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Calculate the expected value of the score for one round of the game, where the score is the product of the number rolled on a fair six-sided die and the result of a fair coin flip (heads = 1, tails = 2).\",\n  \"conditions_complete\": true,\n  \"contradictory\": false,\n  \"multiple_reasonable_interpretations\": false,\n  \"solution_exists\": true,\n  \"unique_or_explicit_grading\": true,\n  \"label\": \"A\",\n  \"confidence\": 0.99,\n  \"probability_label_A\": 0.99,\n  \"issue_types\": [],\n  \"reasoning_summary\": \"The expected value is calculated by considering all possible outcomes of the die roll and coin flip, multiplying them, and then taking the average. Since the die and coin are fair, each outcome has an equal probability.\",\n  \"derived_answer\": \"The expected value of the score is 7.5.\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.99,
+    "contradictory": false,
+    "derived_answer": "The expected value of the score is 7.5.",
+    "goal_restatement": "Calculate the expected value of the score for one round of the game, where the score is the product of the number rolled on a fair six-sided die and the result of a fair coin flip (heads = 1, tails = 2).",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.99,
+    "reasoning_summary": "The expected value is calculated by considering all possible outcomes of the die roll and coin flip, multiplying them, and then taking the average. Since the die and coin are fair, each outcome has an equal probability.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_d717aade9ac807a0",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

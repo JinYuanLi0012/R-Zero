@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Find the distance from the midpoint of segment AD to the line passing through points B and C in the complex plane.\",\n  \"conditions_complete\": true,\n  \"contradictory\": false,\n  \"multiple_reasonable_interpretations\": false,\n  \"solution_exists\": true,\n  \"unique_or_explicit_grading\": true,\n  \"label\": \"A\",\n  \"confidence\": 0.95,\n  \"probability_label_A\": 0.95,\n  \"issue_types\": [],\n  \"reasoning_summary\": \"The problem is well-defined with clear conditions. The midpoint E of AD can be calculated, and the distance from E to the line BC can be determined using geometric principles. The solution is unique and can be explicitly graded.\",\n  \"derived_answer\": \"The distance from E to the line BC is \\\\(\\\\frac{\\\\sqrt{2}}{2}\\\\).\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The distance from E to the line BC is \\(\\frac{\\sqrt{2}}{2}\\).",
+    "goal_restatement": "Find the distance from the midpoint of segment AD to the line passing through points B and C in the complex plane.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The problem is well-defined with clear conditions. The midpoint E of AD can be calculated, and the distance from E to the line BC can be determined using geometric principles. The solution is unique and can be explicitly graded.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_17801c99ca4891fc",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

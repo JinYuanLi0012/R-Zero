@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Determine the minimum number of people in a group where each person has exactly 6 common acquaintances.\",\n\"conditions_complete\": true,\n\"contradictory\": false,\n\"multiple_reasonable_interpretations\": false,\n\"solution_exists\": true,\n\"unique_or_explicit_grading\": true,\n\"label\": \"A\",\n\"confidence\": 0.95,\n\"probability_label_A\": 0.95,\n\"issue_types\": [],\n\"reasoning_summary\": \"The problem can be approached using graph theory, where each person is a vertex and each acquaintance is an edge. We need to find the smallest graph where each vertex has exactly 6 edges. This is a well-defined problem with a unique solution.\",\n\"derived_answer\": \"The minimum number of people required is 7, forming a complete graph K7 where each vertex has 6 edges.\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The minimum number of people required is 7, forming a complete graph K7 where each vertex has 6 edges.",
+    "goal_restatement": "Determine the minimum number of people in a group where each person has exactly 6 common acquaintances.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The problem can be approached using graph theory, where each person is a vertex and each acquaintance is an edge. We need to find the smallest graph where each vertex has exactly 6 edges. This is a well-defined problem with a unique solution.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_92891132c7a3a7f5",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

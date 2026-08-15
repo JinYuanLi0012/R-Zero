@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Determine the minimum number of intersections formed by connecting any two of the n distinct points on the plane.\",\n\"conditions_complete\": true,\n\"contradictory\": false,\n\"multiple_reasonable_interpretations\": false,\n\"solution_exists\": true,\n\"unique_or_explicit_grading\": true,\n\"label\": \"A\",\n\"confidence\": 0.95,\n\"probability_label_A\": 0.95,\n\"issue_types\": [],\n\"reasoning_summary\": \"The goal is to find the minimum number of intersections formed by connecting any two of the n distinct points on the plane. Since each pair of points defines a unique line, and each line can intersect with every other line at most once, the minimum number of intersections is achieved when no three points are collinear. This results in a total of C(n, 2) = n(n-1)/2 intersections.\",\n\"derived_answer\": \"The minimum number of intersections is n(n-1)/2.\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The minimum number of intersections is n(n-1)/2.",
+    "goal_restatement": "Determine the minimum number of intersections formed by connecting any two of the n distinct points on the plane.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The goal is to find the minimum number of intersections formed by connecting any two of the n distinct points on the plane. Since each pair of points defines a unique line, and each line can intersect with every other line at most once, the minimum number of intersections is achieved when no three points are collinear. This results in a total of C(n, 2) = n(n-1)/2 intersections.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_6739396e5bceaf84",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

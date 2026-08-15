@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Prove that the product of the distances from point P on the circumcircle of triangle ABC to the sides of triangle ABC is equal to the square of the radius R of the circumcircle \u0393.\",\n\"conditions_complete\": true,\n\"contradictory\": false,\n\"multiple_reasonable_interpretations\": false,\n\"solution_exists\": true,\n\"unique_or_explicit_grading\": true,\n\"label\": \"A\",\n\"confidence\": 0.95,\n\"probability_label_A\": 0.95,\n\"issue_types\": [],\n\"reasoning_summary\": \"The problem involves proving a geometric property related to the distances from a point on the circumcircle to the sides of a triangle. The conditions are clear, and the solution can be derived using known geometric theorems and properties of the circumcircle.\",\n\"derived_answer\": \"The product of the distances from point P to the sides of triangle ABC is indeed equal to the square of the radius R of the circumcircle \u0393. This can be proven using the properties of the circumcircle and the distances from a point to the sides of a triangle.\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The product of the distances from point P to the sides of triangle ABC is indeed equal to the square of the radius R of the circumcircle \u0393. This can be proven using the properties of the circumcircle and the distances from a point to the sides of a triangle.",
+    "goal_restatement": "Prove that the product of the distances from point P on the circumcircle of triangle ABC to the sides of triangle ABC is equal to the square of the radius R of the circumcircle \u0393.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The problem involves proving a geometric property related to the distances from a point on the circumcircle to the sides of a triangle. The conditions are clear, and the solution can be derived using known geometric theorems and properties of the circumcircle.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_981c8cb070b96fed",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

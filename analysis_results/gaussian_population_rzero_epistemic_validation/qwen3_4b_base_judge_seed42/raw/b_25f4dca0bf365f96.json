@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Determine the minimum number of roads that must be sealed off to ensure at least one disconnected group of towns in a kingdom with 100 towns, each connected to exactly three others, starting from any town.\",\n  \"conditions_complete\": true,\n  \"contradictory\": false,\n  \"multiple_reasonable_interpretations\": false,\n  \"solution_exists\": true,\n  \"unique_or_explicit_grading\": true,\n  \"label\": \"A\",\n  \"confidence\": 0.95,\n  \"probability_label_A\": 0.95,\n  \"issue_types\": [],\n  \"reasoning_summary\": \"The problem involves a graph with 100 vertices (towns) and 150 edges (roads), as each town is connected to exactly three others. The goal is to find the minimum number of edges to remove to create at least one disconnected component. This is a classic problem in graph theory, specifically related to the concept of edge connectivity. The minimum number of edges to remove to disconnect the graph is equal to the minimum degree of the graph, which is 3 in this case. Therefore, the minimum number of roads that must be sealed off is 3.\",\n  \"derived_answer\":   \"The minimum number of roads that must be sealed off to ensure at least one disconnected group of towns is 3.\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The minimum number of roads that must be sealed off to ensure at least one disconnected group of towns is 3.",
+    "goal_restatement": "Determine the minimum number of roads that must be sealed off to ensure at least one disconnected group of towns in a kingdom with 100 towns, each connected to exactly three others, starting from any town.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The problem involves a graph with 100 vertices (towns) and 150 edges (roads), as each town is connected to exactly three others. The goal is to find the minimum number of edges to remove to create at least one disconnected component. This is a classic problem in graph theory, specifically related to the concept of edge connectivity. The minimum number of edges to remove to disconnect the graph is equal to the minimum degree of the graph, which is 3 in this case. Therefore, the minimum number of roads that must be sealed off is 3.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_25f4dca0bf365f96",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{\n  \"goal_restatement\": \"Find the measure of \\triangle BAD in degrees.\",\n  \"conditions_complete\": true,\n  \"contradictory\": false,\n  \"multiple_reasonable_interpretations\": false,\n  \"solution_exists\": true,\n  \"unique_or_explicit_grading\": true,\n  \"label\": \"A\",\n  \"confidence\": 0.95,\n  \"probability_label_A\": 0.95,\n  \"issue_types\": [],\n  \"reasoning_summary\": \"Given that \\triangle ABC is isosceles with AB = AC and \\triangle BAC = 40^\\triangle, we can determine the measures of \\triangle ABC and \\triangle ACB. Since BD:DC = 2:1, we can use the Angle Bisector Theorem to find \\triangle BAD. The solution involves calculating the angles using the properties of isosceles triangles and the given ratio.\",\n  \"derived_answer\": \"The measure of \\triangle BAD is 20^\\triangle.\"\n}"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The measure of \triangle BAD is 20^\triangle.",
+    "goal_restatement": "Find the measure of \triangle BAD in degrees.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "Given that \triangle ABC is isosceles with AB = AC and \triangle BAC = 40^\triangle, we can determine the measures of \triangle ABC and \triangle ACB. Since BD:DC = 2:1, we can use the Angle Bisector Theorem to find \triangle BAD. The solution involves calculating the angles using the properties of isosceles triangles and the given ratio.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_cb4b89db0b5de5b6",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

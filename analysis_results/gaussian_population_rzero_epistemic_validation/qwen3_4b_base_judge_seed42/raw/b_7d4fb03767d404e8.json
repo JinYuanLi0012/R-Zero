@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Find all prime numbers p and q such that p^2 + 2pq + q^2 = 442.\",\n  \"conditions_complete\": true,\n  \"contradictory\": false,\n  \"multiple_reasonable_interpretations\": false,\n  \"solution_exists\": true,\n  \"unique_or_explicit_grading\": true,\n  \"label\": \"A\",\n  \"confidence\": 0.95,\n  \"probability_label_A\": 0.95,\n  \"issue_types\": [],\n  \"reasoning_summary\": \"The equation p^2 + 2pq + q^2 = 442 can be rewritten as (p + q)^2 = 442. Since 442 is not a perfect square, there are no integer solutions for p and q. However, since the question asks for prime numbers, we need to check if there are any prime pairs (p, q) that satisfy the equation. After checking, we find that there are no such prime pairs.\",\n  \"derived_answer\": \"No prime numbers p and q satisfy the equation p^2 + 2pq + q^2 = 442.\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "No prime numbers p and q satisfy the equation p^2 + 2pq + q^2 = 442.",
+    "goal_restatement": "Find all prime numbers p and q such that p^2 + 2pq + q^2 = 442.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The equation p^2 + 2pq + q^2 = 442 can be rewritten as (p + q)^2 = 442. Since 442 is not a perfect square, there are no integer solutions for p and q. However, since the question asks for prime numbers, we need to check if there are any prime pairs (p, q) that satisfy the equation. After checking, we find that there are no such prime pairs.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_7d4fb03767d404e8",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

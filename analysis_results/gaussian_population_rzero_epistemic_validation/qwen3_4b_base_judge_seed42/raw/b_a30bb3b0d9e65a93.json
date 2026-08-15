@@ -1,0 +1,30 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{\n  \"goal_restatement\": \"Find all pairs of positive integers \\u0000(m, n)\\u0000 such that \\u0000m^2 + n^2 + 1\\u0000 is a perfect square.\",\n  \"conditions_complete\": true,\n  \"contradictory\": false,\n  \"multiple_reasonable_interpretations\": false,\n  \"solution_exists\": true,\n  \"unique_or_explicit_grading\": false,\n  \"label\": \"B\",\n  \"confidence\": 0.95,\n  \"probability_label_A\": 0.05,\n  \"issue_types\": [\"unique_or_explicit_grading\"],\n  \"reasoning_summary\": \"The problem is meaningful and solvable, but the solution is not unique or explicitly gradable. The pairs \\u0000(m, n)\\u0000 can be parameterized, leading to an infinite set of solutions.\",\n  \"derived_answer\": \"The pairs \\u0000(m, n)\\u0000 that satisfy the condition are of the form \\u0000(m, n) = (k, k)\\u0000 for any positive integer \\u0000k\\u0000, and also include pairs like \\u0000(m, n) = (k, k+1)\\u0000 and \\u0000(m, n) = (k, k-1)\\u0000 for certain values of \\u0000k\\u0000.\"\n}"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The pairs \u0000(m, n)\u0000 that satisfy the condition are of the form \u0000(m, n) = (k, k)\u0000 for any positive integer \u0000k\u0000, and also include pairs like \u0000(m, n) = (k, k+1)\u0000 and \u0000(m, n) = (k, k-1)\u0000 for certain values of \u0000k\u0000.",
+    "goal_restatement": "Find all pairs of positive integers \u0000(m, n)\u0000 such that \u0000m^2 + n^2 + 1\u0000 is a perfect square.",
+    "issue_types": [
+      "unique_or_explicit_grading"
+    ],
+    "label": "B",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.05,
+    "reasoning_summary": "The problem is meaningful and solvable, but the solution is not unique or explicitly gradable. The pairs \u0000(m, n)\u0000 can be parameterized, leading to an infinite set of solutions.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": false
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_a30bb3b0d9e65a93",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

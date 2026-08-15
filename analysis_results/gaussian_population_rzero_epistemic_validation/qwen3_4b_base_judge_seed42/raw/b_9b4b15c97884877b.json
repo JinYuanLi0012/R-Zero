@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{\n  \"goal_restatement\": \"Prove the inequality involving positive real numbers a, b, and c with the condition abc = 1.\",\n  \"conditions_complete\": true,\n  \"contradictory\": false,\n  \"multiple_reasonable_interpretations\": false,\n  \"solution_exists\": true,\n  \"unique_or_explicit_grading\": true,\n  \"label\": \"A\",\n  \"confidence\": 0.95,\n  \"probability_label_A\": 0.95,\n  \"issue_types\": [],\n  \"reasoning_summary\": \"The inequality is well-defined and solvable under the given conditions. The proof can be approached using algebraic manipulation and the AM-GM inequality.\",\n  \"derived_answer\": \"The inequality holds true for all positive real numbers a, b, and c such that abc = 1.\"\n}"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The inequality holds true for all positive real numbers a, b, and c such that abc = 1.",
+    "goal_restatement": "Prove the inequality involving positive real numbers a, b, and c with the condition abc = 1.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The inequality is well-defined and solvable under the given conditions. The proof can be approached using algebraic manipulation and the AM-GM inequality.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_9b4b15c97884877b",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

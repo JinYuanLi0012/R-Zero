@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Determine the maximum number of houses that can be painted using only 3 colors, given that no two adjacent houses can have the same color and there are 5 different colors available.\",\n  \"conditions_complete\": true,\n  \"contradictory\": false,\n  \"multiple_reasonable_interpretations\": false,\n  \"solution_exists\": true,\n  \"unique_or_explicit_grading\": true,\n  \"label\": \"A\",\n  \"confidence\": 0.95,\n  \"probability_label_A\": 0.95,\n  \"issue_types\": [],\n  \"reasoning_summary\": \"The problem involves a sequence of houses where each house must be painted a different color from its neighbors, using only 3 out of 5 available colors. The goal is to maximize the number of houses painted under these constraints. The solution involves understanding the pattern of color usage and calculating the maximum number of houses that can be painted.\",\n  \"derived_answer\": \"The maximum number of houses that can be painted using only 3 colors is 67.\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The maximum number of houses that can be painted using only 3 colors is 67.",
+    "goal_restatement": "Determine the maximum number of houses that can be painted using only 3 colors, given that no two adjacent houses can have the same color and there are 5 different colors available.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The problem involves a sequence of houses where each house must be painted a different color from its neighbors, using only 3 out of 5 available colors. The goal is to maximize the number of houses painted under these constraints. The solution involves understanding the pattern of color usage and calculating the maximum number of houses that can be painted.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_a242f2c723e9242c",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

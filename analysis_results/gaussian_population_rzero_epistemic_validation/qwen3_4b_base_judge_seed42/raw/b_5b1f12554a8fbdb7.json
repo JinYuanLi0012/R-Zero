@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Find all possible values of the largest element in a multiplicative set A that contains exactly four distinct elements, including 2 and 4.\",\n\"conditions_complete\": true,\n\"contradictory\": false,\n\"multiple_reasonable_interpretations\": false,\n\"solution_exists\": true,\n\"unique_or_explicit_grading\": true,\n\"label\": \"A\",\n\"confidence\": 0.95,\n\"probability_label_A\": 0.95,\n\"issue_types\": [],\n\"reasoning_summary\": \"The set A must be closed under multiplication and contain 2 and 4. The possible sets are {2, 4, 8, 16} and {2, 4, 8, 32}. The largest elements are 16 and 32.\",\n\"derived_answer\": \"The possible values of the largest element in A are 16 and 32.\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The possible values of the largest element in A are 16 and 32.",
+    "goal_restatement": "Find all possible values of the largest element in a multiplicative set A that contains exactly four distinct elements, including 2 and 4.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The set A must be closed under multiplication and contain 2 and 4. The possible sets are {2, 4, 8, 16} and {2, 4, 8, 32}. The largest elements are 16 and 32.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_5b1f12554a8fbdb7",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

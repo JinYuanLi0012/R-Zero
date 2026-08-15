@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{\"goal_restatement\": \"Determine the maximum value of the function f(n) for a given sequence of positive integers a_1, a_2, ..., a_n, where f(n) is defined as the number of distinct values of the expression a_i + a_j for 1 <= i < j <= n, and provide a construction of such a sequence.\", \"conditions_complete\": true, \"contradictory\": false, \"multiple_reasonable_interpretations\": false, \"solution_exists\": true, \"unique_or_explicit_grading\": true, \"label\": \"A\", \"confidence\": 0.95, \"probability_label_A\": 0.95, \"issue_types\": [], \"reasoning_summary\": \"The goal is to find the maximum value of f(n) for a given sequence of positive integers a_1, a_2, ..., a_n, where f(n) is defined as the number of distinct values of the expression a_i + a_j for 1 <= i < j <= n. The conditions are complete, there are no contradictions, and there are no multiple reasonable interpretations. A solution exists, and it is uniquely gradable.\", \"derived_answer\": \"The maximum value of f(n) is n(n-1)/2, and a construction of such a sequence is a_1 = 1, a_2 = 2, ..., a_n = n.\"}"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The maximum value of f(n) is n(n-1)/2, and a construction of such a sequence is a_1 = 1, a_2 = 2, ..., a_n = n.",
+    "goal_restatement": "Determine the maximum value of the function f(n) for a given sequence of positive integers a_1, a_2, ..., a_n, where f(n) is defined as the number of distinct values of the expression a_i + a_j for 1 <= i < j <= n, and provide a construction of such a sequence.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The goal is to find the maximum value of f(n) for a given sequence of positive integers a_1, a_2, ..., a_n, where f(n) is defined as the number of distinct values of the expression a_i + a_j for 1 <= i < j <= n. The conditions are complete, there are no contradictions, and there are no multiple reasonable interpretations. A solution exists, and it is uniquely gradable.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_0f7ba307846ba198",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

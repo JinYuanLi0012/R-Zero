@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{\"goal_restatement\": \"Find a third function h(x) such that h'(x) = f(x) + g(x) and h''(x) = 2f(x) - g(x). Additionally, find the values of f(0) and g(0) that make the system of equations consistent and have a solution.\",\n\"conditions_complete\": true,\n\"contradictory\": false,\n\"multiple_reasonable_interpretations\": false,\n\"solution_exists\": true,\n\"unique_or_explicit_grading\": true,\n\"label\": \"A\",\n\"confidence\": 0.95,\n\"probability_label_A\": 0.95,\n\"issue_types\": [],\n\"reasoning_summary\": \"The problem is well-defined with clear conditions and a unique solution exists. The system of equations is consistent, and the values of f(0) and g(0) can be determined explicitly.\",\n\"derived_answer\": \"The function h(x) can be found by integrating the given differential equations. The values of f(0) and g(0) can be determined by solving the system of equations at x=0.\"}"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The function h(x) can be found by integrating the given differential equations. The values of f(0) and g(0) can be determined by solving the system of equations at x=0.",
+    "goal_restatement": "Find a third function h(x) such that h'(x) = f(x) + g(x) and h''(x) = 2f(x) - g(x). Additionally, find the values of f(0) and g(0) that make the system of equations consistent and have a solution.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The problem is well-defined with clear conditions and a unique solution exists. The system of equations is consistent, and the values of f(0) and g(0) can be determined explicitly.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_88311207d2190b71",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

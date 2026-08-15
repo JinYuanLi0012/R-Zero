@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"\u5728\u6b63\u65b9\u5f62\u5185\u90e8\u6709\u4e00\u4e2a\u70b9P\uff0c\u4eceP\u5411\u6b63\u65b9\u5f62\u7684\u56db\u8fb9\u5f15\u56db\u6761\u5782\u7ebf\uff0c\u8fd9\u56db\u6761\u5782\u7ebf\u4e0e\u6b63\u65b9\u5f62\u7684\u56db\u8fb9\u5206\u522b\u4ea4\u4e8eA\u3001B\u3001C\u3001D\u56db\u70b9\uff0c\u4e14PA=PB=PC=PD\u3002\u5df2\u77e5\u6b63\u65b9\u5f62\u7684\u8fb9\u957f\u4e3aa\uff0c\u6c42AP\u7684\u957f\u5ea6\u3002\",\n  \"conditions_complete\": true,\n  \"contradictory\": false,\n  \"multiple_reasonable_interpretations\": false,\n  \"solution_exists\": true,\n  \"unique_or_explicit_grading\": true,\n  \"label\": \"A\",\n  \"confidence\": 0.95,\n  \"probability_label_A\": 0.95,\n  \"issue_types\": [],\n  \"reasoning_summary\": \"\u6839\u636e\u9898\u76ee\u63cf\u8ff0\uff0c\u70b9P\u5230\u6b63\u65b9\u5f62\u56db\u8fb9\u7684\u8ddd\u79bb\u76f8\u7b49\uff0c\u8fd9\u610f\u5473\u7740P\u662f\u6b63\u65b9\u5f62\u7684\u4e2d\u5fc3\u3002\u56e0\u6b64\uff0cAP\u7684\u957f\u5ea6\u7b49\u4e8e\u6b63\u65b9\u5f62\u5bf9\u89d2\u7ebf\u7684\u4e00\u534a\u3002\u6b63\u65b9\u5f62\u7684\u5bf9\u89d2\u7ebf\u957f\u5ea6\u4e3aa\u221a2\uff0c\u6240\u4ee5AP\u7684\u957f\u5ea6\u4e3a(a\u221a2)/2\u3002\",\n  \"derived_answer\": \"AP\u7684\u957f\u5ea6\u4e3a(a\u221a2)/2\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "AP\u7684\u957f\u5ea6\u4e3a(a\u221a2)/2",
+    "goal_restatement": "\u5728\u6b63\u65b9\u5f62\u5185\u90e8\u6709\u4e00\u4e2a\u70b9P\uff0c\u4eceP\u5411\u6b63\u65b9\u5f62\u7684\u56db\u8fb9\u5f15\u56db\u6761\u5782\u7ebf\uff0c\u8fd9\u56db\u6761\u5782\u7ebf\u4e0e\u6b63\u65b9\u5f62\u7684\u56db\u8fb9\u5206\u522b\u4ea4\u4e8eA\u3001B\u3001C\u3001D\u56db\u70b9\uff0c\u4e14PA=PB=PC=PD\u3002\u5df2\u77e5\u6b63\u65b9\u5f62\u7684\u8fb9\u957f\u4e3aa\uff0c\u6c42AP\u7684\u957f\u5ea6\u3002",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "\u6839\u636e\u9898\u76ee\u63cf\u8ff0\uff0c\u70b9P\u5230\u6b63\u65b9\u5f62\u56db\u8fb9\u7684\u8ddd\u79bb\u76f8\u7b49\uff0c\u8fd9\u610f\u5473\u7740P\u662f\u6b63\u65b9\u5f62\u7684\u4e2d\u5fc3\u3002\u56e0\u6b64\uff0cAP\u7684\u957f\u5ea6\u7b49\u4e8e\u6b63\u65b9\u5f62\u5bf9\u89d2\u7ebf\u7684\u4e00\u534a\u3002\u6b63\u65b9\u5f62\u7684\u5bf9\u89d2\u7ebf\u957f\u5ea6\u4e3aa\u221a2\uff0c\u6240\u4ee5AP\u7684\u957f\u5ea6\u4e3a(a\u221a2)/2\u3002",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_41fbc5a2d7810fe2",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

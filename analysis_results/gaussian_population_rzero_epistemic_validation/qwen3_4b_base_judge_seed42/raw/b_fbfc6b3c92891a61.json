@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{\n  \"goal_restatement\": \"Find the smallest positive integer n such that for any n-element subset of {1, 2, ..., 100}, there exist two distinct elements in the subset whose sum is a prime number.\",\n  \"conditions_complete\": true,\n  \"contradictory\": false,\n  \"multiple_reasonable_interpretations\": false,\n  \"solution_exists\": true,\n  \"unique_or_explicit_grading\": true,\n  \"label\": \"A\",\n  \"confidence\": 0.95,\n  \"probability_label_A\": 0.95,\n  \"issue_types\": [],\n  \"reasoning_summary\": \"The problem requires finding the smallest n such that any n-element subset of {1, 2, ..., 100} contains two distinct elements whose sum is prime. This is a combinatorial problem that can be approached by considering the properties of prime numbers and the distribution of numbers in the set. The solution involves checking the smallest n for which this condition holds, which can be done through systematic analysis or computational methods.\",\n  \"derived_answer\": \"The smallest positive integer n is 51.\"\n}"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The smallest positive integer n is 51.",
+    "goal_restatement": "Find the smallest positive integer n such that for any n-element subset of {1, 2, ..., 100}, there exist two distinct elements in the subset whose sum is a prime number.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The problem requires finding the smallest n such that any n-element subset of {1, 2, ..., 100} contains two distinct elements whose sum is prime. This is a combinatorial problem that can be approached by considering the properties of prime numbers and the distribution of numbers in the set. The solution involves checking the smallest n for which this condition holds, which can be done through systematic analysis or computational methods.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_fbfc6b3c92891a61",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

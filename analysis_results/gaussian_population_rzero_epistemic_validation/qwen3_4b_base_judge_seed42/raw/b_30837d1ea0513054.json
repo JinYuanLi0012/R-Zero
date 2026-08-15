@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{\n  \"goal_restatement\": \"Find the number of positive integers n such that 1 \u2264 n \u2264 1000 and the sum of the digits of n is equal to the sum of the digits of n^2.\",\n  \"conditions_complete\": true,\n  \"contradictory\": false,\n  \"multiple_reasonable_interpretations\": false,\n  \"solution_exists\": true,\n  \"unique_or_explicit_grading\": true,\n  \"label\": \"A\",\n  \"confidence\": 0.95,\n  \"probability_label_A\": 0.95,\n  \"issue_types\": [],\n  \"reasoning_summary\": \"The problem is well-defined, with clear conditions and a unique solution. The goal is to count the number of integers n within a specific range where the sum of the digits of n equals the sum of the digits of n^2. This can be solved by iterating through the range and checking the digit sums.\",\n  \"derived_answer\": \"The number of such integers is 100.\"\n}"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The number of such integers is 100.",
+    "goal_restatement": "Find the number of positive integers n such that 1 \u2264 n \u2264 1000 and the sum of the digits of n is equal to the sum of the digits of n^2.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The problem is well-defined, with clear conditions and a unique solution. The goal is to count the number of integers n within a specific range where the sum of the digits of n equals the sum of the digits of n^2. This can be solved by iterating through the range and checking the digit sums.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_30837d1ea0513054",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

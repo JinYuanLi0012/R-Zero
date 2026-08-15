@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Find the length of the line segment PD in a regular tetrahedron with side length 2, where P is the centroid of triangle ABC.\",\n\"conditions_complete\": true,\n\"contradictory\": false,\n\"multiple_reasonable_interpretations\": false,\n\"solution_exists\": true,\n\"unique_or_explicit_grading\": true,\n\"label\": \"A\",\n\"confidence\": 0.95,\n\"probability_label_A\": 0.95,\n\"issue_types\": [],\n\"reasoning_summary\": \"The problem is well-defined and solvable. The centroid P of triangle ABC divides each median in a 2:1 ratio. Using the properties of a regular tetrahedron and the Pythagorean theorem, we can calculate the length of PD.\",\n\"derived_answer\": \"The length of PD is \\frac{2\\root \\n{6} \\n}{3}\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The length of PD is \frac{2\root \n{6} \n}{3}",
+    "goal_restatement": "Find the length of the line segment PD in a regular tetrahedron with side length 2, where P is the centroid of triangle ABC.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The problem is well-defined and solvable. The centroid P of triangle ABC divides each median in a 2:1 ratio. Using the properties of a regular tetrahedron and the Pythagorean theorem, we can calculate the length of PD.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_6f2012a82b5b787b",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

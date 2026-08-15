@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{\"goal_restatement\": \"Find all integers n such that the quadratic equation x^2 - nx + n = 0 has two distinct integer solutions.\", \"conditions_complete\": true, \"contradictory\": false, \"multiple_reasonable_interpretations\": false, \"solution_exists\": true, \"unique_or_explicit_grading\": true, \"label\": \"A\", \"confidence\": 0.95, \"probability_label_A\": 0.95, \"issue_types\": [], \"reasoning_summary\": \"The equation x^2 - nx + n = 0 has two distinct integer solutions if and only if the discriminant n^2 - 4n is a perfect square and n is not zero. This leads to the equation n^2 - 4n = k^2 for some integer k. Solving this, we find that n = 0, 4, and 5 are the only solutions.\", \"derived_answer\": \"n = 0, 4, 5\"}"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "n = 0, 4, 5",
+    "goal_restatement": "Find all integers n such that the quadratic equation x^2 - nx + n = 0 has two distinct integer solutions.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The equation x^2 - nx + n = 0 has two distinct integer solutions if and only if the discriminant n^2 - 4n is a perfect square and n is not zero. This leads to the equation n^2 - 4n = k^2 for some integer k. Solving this, we find that n = 0, 4, and 5 are the only solutions.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_70da883f52c870e5",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

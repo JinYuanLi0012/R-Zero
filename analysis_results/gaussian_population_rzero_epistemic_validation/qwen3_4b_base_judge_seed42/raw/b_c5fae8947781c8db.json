@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Determine the maximum number of roads that can be removed from a network of 2020 towns, where each town is initially connected to exactly 3 other towns, such that no town remains connected to exactly 3 other towns after the removal.\",\n\"conditions_complete\": true,\n\"contradictory\": false,\n\"multiple_reasonable_interpretations\": false,\n\"solution_exists\": true,\n\"unique_or_explicit_grading\": true,\n\"label\": \"A\",\n\"confidence\": 0.95,\n\"probability_label_A\": 0.95,\n\"issue_types\": [],\n\"reasoning_summary\": \"The problem involves a 3-regular graph with 2020 vertices. The goal is to find the maximum number of edges that can be removed while ensuring no vertex remains 3-regular. This is equivalent to finding the maximum number of edges in a subgraph where no vertex has degree 3. The solution involves understanding the properties of 3-regular graphs and applying graph theory principles.\",\n\"derived_answer\": \"The maximum number of roads that can be removed is 1010.\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The maximum number of roads that can be removed is 1010.",
+    "goal_restatement": "Determine the maximum number of roads that can be removed from a network of 2020 towns, where each town is initially connected to exactly 3 other towns, such that no town remains connected to exactly 3 other towns after the removal.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The problem involves a 3-regular graph with 2020 vertices. The goal is to find the maximum number of edges that can be removed while ensuring no vertex remains 3-regular. This is equivalent to finding the maximum number of edges in a subgraph where no vertex has degree 3. The solution involves understanding the properties of 3-regular graphs and applying graph theory principles.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_c5fae8947781c8db",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

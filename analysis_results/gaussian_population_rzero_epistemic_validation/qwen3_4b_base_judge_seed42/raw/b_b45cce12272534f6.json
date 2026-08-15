@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Find the value of the polynomial p(4) given the conditions p(1) = 2, p(2) = 3, and p(3) = 5.\",\n\"conditions_complete\": true,\n\"contradictory\": false,\n\"multiple_reasonable_interpretations\": false,\n\"solution_exists\": true,\n\"unique_or_explicit_grading\": true,\n\"label\": \"A\",\n\"confidence\": 0.95,\n\"probability_label_A\": 0.95,\n\"issue_types\": [],\n\"reasoning_summary\": \"The polynomial p(x) is of degree 3 with integer coefficients. Given the values at x=1, x=2, and x=3, we can set up a system of equations to solve for the coefficients. Once the coefficients are determined, we can evaluate p(4).\",\n\"derived_answer\": \"The value of p(4) is 8.\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The value of p(4) is 8.",
+    "goal_restatement": "Find the value of the polynomial p(4) given the conditions p(1) = 2, p(2) = 3, and p(3) = 5.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The polynomial p(x) is of degree 3 with integer coefficients. Given the values at x=1, x=2, and x=3, we can set up a system of equations to solve for the coefficients. Once the coefficients are determined, we can evaluate p(4).",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_b45cce12272534f6",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

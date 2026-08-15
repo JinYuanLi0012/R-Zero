@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Find the 20th term of a sequence where each term is the smallest positive integer not already in the sequence and relatively prime to the previous term, starting with 1.\",\n\"conditions_complete\": true,\n\"contradictory\": false,\n\"multiple_reasonable_interpretations\": false,\n\"solution_exists\": true,\n\"unique_or_explicit_grading\": true,\n\"label\": \"A\",\n\"confidence\": 0.99,\n\"probability_label_A\": 0.99,\n\"issue_types\": [],\n\"reasoning_summary\": \"The sequence starts with 1. The next term must be the smallest positive integer not already in the sequence and relatively prime to 1, which is 2. The sequence continues by finding the smallest positive integer not already in the sequence and relatively prime to the previous term. The sequence is: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20. The 20th term is 20.\",\n\"derived_answer\":   \"20\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.99,
+    "contradictory": false,
+    "derived_answer": "20",
+    "goal_restatement": "Find the 20th term of a sequence where each term is the smallest positive integer not already in the sequence and relatively prime to the previous term, starting with 1.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.99,
+    "reasoning_summary": "The sequence starts with 1. The next term must be the smallest positive integer not already in the sequence and relatively prime to 1, which is 2. The sequence continues by finding the smallest positive integer not already in the sequence and relatively prime to the previous term. The sequence is: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20. The 20th term is 20.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_453a05b6d8a10b01",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

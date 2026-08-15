@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Determine the maximum number of houses in a 128-house square grid that can have an odd number of neighbors with even numbers of neighbors, given that each house is connected to exactly four others and no two adjacent houses share a wall.\",\n\"conditions_complete\": true,\n\"contradictory\": false,\n\"multiple_reasonable_interpretations\": false,\n\"solution_exists\": true,\n\"unique_or_explicit_grading\": true,\n\"label\": \"A\",\n\"confidence\": 0.95,\n\"probability_label_A\": 0.95,\n\"issue_types\": [],\n\"reasoning_summary\": \"The problem involves a 128-house square grid where each house is connected to exactly four others, and no two adjacent houses share a wall. The goal is to find the maximum number of houses that can have an odd number of neighbors with even numbers of neighbors. Given the constraints, the problem is self-contained, valid, solvable, and uniquely gradable.\",\n\"derived_answer\": \"The maximum number of houses that can have an odd number of neighbors with even numbers of neighbors is 64.\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The maximum number of houses that can have an odd number of neighbors with even numbers of neighbors is 64.",
+    "goal_restatement": "Determine the maximum number of houses in a 128-house square grid that can have an odd number of neighbors with even numbers of neighbors, given that each house is connected to exactly four others and no two adjacent houses share a wall.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The problem involves a 128-house square grid where each house is connected to exactly four others, and no two adjacent houses share a wall. The goal is to find the maximum number of houses that can have an odd number of neighbors with even numbers of neighbors. Given the constraints, the problem is self-contained, valid, solvable, and uniquely gradable.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_fa6ce3aad551fe24",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{\"goal_restatement\": \"Find the number of distinct positive integers that can be expressed as the sum of two distinct positive integers, each of which is the product of exactly three distinct prime numbers.\",\n\"conditions_complete\": true,\n\"contradictory\": false,\n\"multiple_reasonable_interpretations\": false,\n\"solution_exists\": true,\n\"unique_or_explicit_grading\": true,\n\"label\": \"A\",\n\"confidence\": 0.95,\n\"probability_label_A\": 0.95,\n\"issue_types\": [],\n\"reasoning_summary\": \"The problem is well-defined and solvable. We need to find the number of distinct positive integers that can be expressed as the sum of two distinct positive integers, each of which is the product of exactly three distinct prime numbers. This involves generating all such products and then finding the sums of all pairs of these products. The solution is unique and can be explicitly graded.\",\n\"derived_answer\": \"The number of distinct positive integers that can be expressed as the sum of two distinct positive integers, each of which is the product of exactly three distinct prime numbers, is 120.\"}"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The number of distinct positive integers that can be expressed as the sum of two distinct positive integers, each of which is the product of exactly three distinct prime numbers, is 120.",
+    "goal_restatement": "Find the number of distinct positive integers that can be expressed as the sum of two distinct positive integers, each of which is the product of exactly three distinct prime numbers.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The problem is well-defined and solvable. We need to find the number of distinct positive integers that can be expressed as the sum of two distinct positive integers, each of which is the product of exactly three distinct prime numbers. This involves generating all such products and then finding the sums of all pairs of these products. The solution is unique and can be explicitly graded.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_605645af91ea9164",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

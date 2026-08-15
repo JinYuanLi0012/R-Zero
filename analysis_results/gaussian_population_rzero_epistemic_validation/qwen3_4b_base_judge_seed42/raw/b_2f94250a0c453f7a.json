@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{\n  \"goal_restatement\": \"Find the sum of all positive integers n such that the polynomial P(x) = x^n + nx^(n-1) + (n-1)x^(n-2) + ... + 2x + 1 has exactly two distinct integer roots.\",\n  \"conditions_complete\": true,\n  \"contradictory\": false,\n  \"multiple_reasonable_interpretations\": false,\n  \"solution_exists\": true,\n  \"unique_or_explicit_grading\": true,\n  \"label\": \"A\",\n  \"confidence\": 0.95,\n  \"probability_label_A\": 0.95,\n  \"issue_types\": [],\n  \"reasoning_summary\": \"The polynomial P(x) is a specific form of a polynomial with a clear structure. The goal is to find the sum of all positive integers n for which P(x) has exactly two distinct integer roots. The conditions are complete, and there are no contradictions or multiple reasonable interpretations. A solution exists, and the grading is unique and explicit.\",\n  \"derived_answer\": \"The sum of all positive integers n such that the polynomial P(x) has exactly two distinct integer roots is 3.\"\n}"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The sum of all positive integers n such that the polynomial P(x) has exactly two distinct integer roots is 3.",
+    "goal_restatement": "Find the sum of all positive integers n such that the polynomial P(x) = x^n + nx^(n-1) + (n-1)x^(n-2) + ... + 2x + 1 has exactly two distinct integer roots.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The polynomial P(x) is a specific form of a polynomial with a clear structure. The goal is to find the sum of all positive integers n for which P(x) has exactly two distinct integer roots. The conditions are complete, and there are no contradictions or multiple reasonable interpretations. A solution exists, and the grading is unique and explicit.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_2f94250a0c453f7a",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

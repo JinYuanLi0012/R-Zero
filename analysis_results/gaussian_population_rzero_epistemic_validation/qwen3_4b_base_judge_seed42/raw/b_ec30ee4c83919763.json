@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Find the smallest positive integer that is divisible by 2, 5, and 7.\",\n  \"conditions_complete\": true,\n  \"contradictory\": false,\n  \"multiple_reasonable_interpretations\": false,\n  \"solution_exists\": true,\n  \"unique_or_explicit_grading\": true,\n  \"label\": \"A\",\n  \"confidence\": 0.99,\n  \"probability_label_A\": 0.99,\n  \"issue_types\": [],\n  \"reasoning_summary\": \"The smallest positive integer divisible by 2, 5, and 7 is the least common multiple (LCM) of these numbers. Since 2, 5, and 7 are all prime, their LCM is simply their product: 2 \u00d7 5 \u00d7 7 = 70.\",\n  \"derived_answer\":   \"70\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.99,
+    "contradictory": false,
+    "derived_answer": "70",
+    "goal_restatement": "Find the smallest positive integer that is divisible by 2, 5, and 7.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.99,
+    "reasoning_summary": "The smallest positive integer divisible by 2, 5, and 7 is the least common multiple (LCM) of these numbers. Since 2, 5, and 7 are all prime, their LCM is simply their product: 2 \u00d7 5 \u00d7 7 = 70.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_ec30ee4c83919763",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

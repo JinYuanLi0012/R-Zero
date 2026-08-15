@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Determine the winning strategy for the first player in a game where players take turns moving a token counterclockwise by a prime number of seats on a circular table with 20 seats, and the player who cannot make a move loses.\",\n\"conditions_complete\": true,\n\"contradictory\": false,\n\"multiple_reasonable_interpretations\": false,\n\"solution_exists\": true,\n\"unique_or_explicit_grading\": true,\n\"label\": \"A\",\n\"confidence\": 0.95,\n\"probability_label_A\": 0.95,\n\"issue_types\": [],\n\"reasoning_summary\": \"The game involves a circular table with 20 seats and players moving a token by prime numbers of seats. The player who cannot make a move loses. The goal is to determine the winning strategy for the first player, assuming both play optimally. The solution involves analyzing the game's structure and identifying the optimal moves.\",\n\"derived_answer\": \"The winning strategy for the first player is to occupy seats that are prime numbers. By doing so, the first player can force the second player into a position where they cannot make a valid move, ensuring a win.\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The winning strategy for the first player is to occupy seats that are prime numbers. By doing so, the first player can force the second player into a position where they cannot make a valid move, ensuring a win.",
+    "goal_restatement": "Determine the winning strategy for the first player in a game where players take turns moving a token counterclockwise by a prime number of seats on a circular table with 20 seats, and the player who cannot make a move loses.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The game involves a circular table with 20 seats and players moving a token by prime numbers of seats. The player who cannot make a move loses. The goal is to determine the winning strategy for the first player, assuming both play optimally. The solution involves analyzing the game's structure and identifying the optimal moves.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_b663de0390bb727b",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

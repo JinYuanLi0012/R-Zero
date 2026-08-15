@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Determine the number of positive integers not divisible by 4 for which doubling and adding one results in another positive integer not divisible by 4.\",\n\"conditions_complete\": true,\n\"contradictory\": false,\n\"multiple_reasonable_interpretations\": false,\n\"solution_exists\": true,\n\"unique_or_explicit_grading\": true,\n\"label\": \"A\",\n\"confidence\": 0.95,\n\"probability_label_A\": 0.95,\n\"issue_types\": [],\n\"reasoning_summary\": \"The function f(n) = 2n + 1 maps any positive integer n not divisible by 4 to another positive integer not divisible by 4. This is because if n is not divisible by 4, then 2n is not divisible by 4, and adding 1 ensures the result is not divisible by 4. Therefore, the number of such n is infinite.\",\n\"derived_answer\": \"Infinite\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "Infinite",
+    "goal_restatement": "Determine the number of positive integers not divisible by 4 for which doubling and adding one results in another positive integer not divisible by 4.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The function f(n) = 2n + 1 maps any positive integer n not divisible by 4 to another positive integer not divisible by 4. This is because if n is not divisible by 4, then 2n is not divisible by 4, and adding 1 ensures the result is not divisible by 4. Therefore, the number of such n is infinite.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_0ddb5ddaaa39a403",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

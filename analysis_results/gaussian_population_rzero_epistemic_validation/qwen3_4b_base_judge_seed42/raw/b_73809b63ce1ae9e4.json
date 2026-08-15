@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Calculate the total number of times the digit '1' appears in the house numbers from 1 to 100.\",\n  \"conditions_complete\": true,\n  \"contradictory\": false,\n  \"multiple_reasonable_interpretations\": false,\n  \"solution_exists\": true,\n  \"unique_or_explicit_grading\": true,\n  \"label\": \"A\",\n  \"confidence\": 0.95,\n  \"probability_label_A\": 0.95,\n  \"issue_types\": [],\n  \"reasoning_summary\": \"The digit '1' appears in the units place 10 times (1, 11, 21, ..., 91) and in the tens place 10 times (10, 11, 12, ..., 19). Therefore, the total number of times '1' is painted is 20.\",\n  \"derived_answer\":  \"The digit '1' needs to be painted 20 times.\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The digit '1' needs to be painted 20 times.",
+    "goal_restatement": "Calculate the total number of times the digit '1' appears in the house numbers from 1 to 100.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The digit '1' appears in the units place 10 times (1, 11, 21, ..., 91) and in the tens place 10 times (10, 11, 12, ..., 19). Therefore, the total number of times '1' is painted is 20.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_73809b63ce1ae9e4",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

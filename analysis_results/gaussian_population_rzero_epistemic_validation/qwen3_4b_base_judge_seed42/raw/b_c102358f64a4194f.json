@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Find the number of ordered pairs of positive integers \\u0000(m,n)\\u0000 such that \\u0000m^2 + n^2 = 13m + 15n + 32\\u0000.\",\n\"conditions_complete\": true,\n\"contradictory\": false,\n\"multiple_reasonable_interpretations\": false,\n\"solution_exists\": true,\n\"unique_or_explicit_grading\": true,\n\"label\": \"A\",\n\"confidence\": 0.95,\n\"probability_label_A\": 0.95,\n\"issue_types\": [],\n\"reasoning_summary\": \"The equation \\u0000m^2 + n^2 = 13m + 15n + 32\\u0000 can be rearranged to \\u0000m^2 - 13m + n^2 - 15n = 32\\u0000. Completing the square for both \\u0000m\\u0000 and \\u0000n\\u0000, we get \\u0000(m - 6.5)^2 - 42.25 + (n - 7.5)^2 - 56.25 = 32\\u0000, which simplifies to \\u0000(m - 6.5)^2 + (n - 7.5)^2 = 130.5\\u0000. Since \\u0000m\\u0000 and \\u0000n\\u0000 are positive integers, we need to find integer solutions to this equation. The only integer solutions are \\u0000(m, n) = (1, 1)\\u0000 and \\u0000(m, n) = (13, 15)\\u0000.\",\n\"derived_answer\":  \n\"2\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "2",
+    "goal_restatement": "Find the number of ordered pairs of positive integers \u0000(m,n)\u0000 such that \u0000m^2 + n^2 = 13m + 15n + 32\u0000.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The equation \u0000m^2 + n^2 = 13m + 15n + 32\u0000 can be rearranged to \u0000m^2 - 13m + n^2 - 15n = 32\u0000. Completing the square for both \u0000m\u0000 and \u0000n\u0000, we get \u0000(m - 6.5)^2 - 42.25 + (n - 7.5)^2 - 56.25 = 32\u0000, which simplifies to \u0000(m - 6.5)^2 + (n - 7.5)^2 = 130.5\u0000. Since \u0000m\u0000 and \u0000n\u0000 are positive integers, we need to find integer solutions to this equation. The only integer solutions are \u0000(m, n) = (1, 1)\u0000 and \u0000(m, n) = (13, 15)\u0000.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_c102358f64a4194f",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

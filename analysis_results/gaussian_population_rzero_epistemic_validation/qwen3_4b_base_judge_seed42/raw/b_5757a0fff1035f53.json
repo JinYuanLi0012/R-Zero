@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Determine which two non-overlapping discs can fit within a circle of radius 3 and provide a justification for the choice.\",\n  \"conditions_complete\": true,\n  \"contradictory\": false,\n  \"multiple_reasonable_interpretations\": false,\n  \"solution_exists\": true,\n  \"unique_or_explicit_grading\": true,\n  \"label\": \"A\",\n  \"confidence\": 0.95,\n  \"probability_label_A\": 0.95,\n  \"issue_types\": [],\n  \"reasoning_summary\": \"The problem is well-defined with clear conditions. The goal is to find two non-overlapping discs that can fit within a circle of radius 3. The solution is unique and can be explicitly graded based on the correct choice of discs and the justification provided.\",\n  \"derived_answer\": \"Two discs with radii of 1.5 can fit within a circle of radius 3 without overlapping. This is because the diameter of each disc (3) is less than the diameter of the larger circle (6), and they can be placed such that their centers are 3 units apart, ensuring they do not overlap.\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "Two discs with radii of 1.5 can fit within a circle of radius 3 without overlapping. This is because the diameter of each disc (3) is less than the diameter of the larger circle (6), and they can be placed such that their centers are 3 units apart, ensuring they do not overlap.",
+    "goal_restatement": "Determine which two non-overlapping discs can fit within a circle of radius 3 and provide a justification for the choice.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The problem is well-defined with clear conditions. The goal is to find two non-overlapping discs that can fit within a circle of radius 3. The solution is unique and can be explicitly graded based on the correct choice of discs and the justification provided.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_5757a0fff1035f53",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

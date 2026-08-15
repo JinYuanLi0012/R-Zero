@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{\n  \"goal_restatement\": \"Find all integers n such that the given cubic equation has exactly one real root.\",\n  \"conditions_complete\": true,\n  \"contradictory\": false,\n  \"multiple_reasonable_interpretations\": false,\n  \"solution_exists\": true,\n  \"unique_or_explicit_grading\": true,\n  \"label\": \"A\",\n  \"confidence\": 0.95,\n  \"probability_label_A\": 0.95,\n  \"issue_types\": [],\n  \"reasoning_summary\": \"The problem is well-defined, and the solution involves analyzing the discriminant of the cubic equation to determine when it has exactly one real root. The discriminant can be calculated and analyzed for different integer values of n to find the specific values that satisfy the condition.\",\n  \"derived_answer\": \"The integer values of n that satisfy the condition are n = -2 and n = 2.\"\n}"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The integer values of n that satisfy the condition are n = -2 and n = 2.",
+    "goal_restatement": "Find all integers n such that the given cubic equation has exactly one real root.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The problem is well-defined, and the solution involves analyzing the discriminant of the cubic equation to determine when it has exactly one real root. The discriminant can be calculated and analyzed for different integer values of n to find the specific values that satisfy the condition.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_5b1d36edc44ed1b6",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

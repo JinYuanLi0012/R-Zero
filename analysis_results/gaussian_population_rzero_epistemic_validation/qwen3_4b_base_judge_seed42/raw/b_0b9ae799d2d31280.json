@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Find the smallest positive integer that is divisible by every integer from 1 to 20.\",\n  \"conditions_complete\": true,\n  \"contradictory\": false,\n  \"multiple_reasonable_interpretations\": false,\n  \"solution_exists\": true,\n  \"unique_or_explicit_grading\": true,\n  \"label\": \"A\",\n  \"confidence\": 0.99,\n  \"probability_label_A\": 0.99,\n  \"issue_types\": [],\n  \"reasoning_summary\": \"The problem requires finding the least common multiple (LCM) of the numbers from 1 to 20. This is a well-defined mathematical operation with a unique solution.\",\n  \"derived_answer\": \"The smallest positive integer that is divisible by every integer from 1 to 20 is the least common multiple (LCM) of these numbers. The LCM of 1 to 20 is 232,792,560.\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.99,
+    "contradictory": false,
+    "derived_answer": "The smallest positive integer that is divisible by every integer from 1 to 20 is the least common multiple (LCM) of these numbers. The LCM of 1 to 20 is 232,792,560.",
+    "goal_restatement": "Find the smallest positive integer that is divisible by every integer from 1 to 20.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.99,
+    "reasoning_summary": "The problem requires finding the least common multiple (LCM) of the numbers from 1 to 20. This is a well-defined mathematical operation with a unique solution.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_0b9ae799d2d31280",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

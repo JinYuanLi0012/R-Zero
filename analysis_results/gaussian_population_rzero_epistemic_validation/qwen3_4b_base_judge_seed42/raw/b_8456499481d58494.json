@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{\n  \"goal_restatement\": \"Find the number of ordered pairs \\u0000(a, b)\\u0000 of positive integers such that \\u0000a^b + b^a = 2024\\u0000.\",\n  \"conditions_complete\": true,\n  \"contradictory\": false,\n  \"multiple_reasonable_interpretations\": false,\n  \"solution_exists\": true,\n  \"unique_or_explicit_grading\": true,\n  \"label\": \"A\",\n  \"confidence\": 0.95,\n  \"probability_label_A\": 0.95,\n  \"issue_types\": [],\n  \"reasoning_summary\": \"The problem is well-defined with clear conditions. It asks for the number of ordered pairs \\u0000(a, b)\\u0000 of positive integers satisfying \\u0000a^b + b^a = 2024\\u0000. The solution exists and can be uniquely determined by checking all possible pairs \\u0000(a, b)\\u0000 within a reasonable range.\",\n  \"derived_answer\": \"The number of ordered pairs \\u0000(a, b)\\u0000 is 2.\"\n}"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The number of ordered pairs \u0000(a, b)\u0000 is 2.",
+    "goal_restatement": "Find the number of ordered pairs \u0000(a, b)\u0000 of positive integers such that \u0000a^b + b^a = 2024\u0000.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The problem is well-defined with clear conditions. It asks for the number of ordered pairs \u0000(a, b)\u0000 of positive integers satisfying \u0000a^b + b^a = 2024\u0000. The solution exists and can be uniquely determined by checking all possible pairs \u0000(a, b)\u0000 within a reasonable range.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_8456499481d58494",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

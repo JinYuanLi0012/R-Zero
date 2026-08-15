@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{\n  \"goal_restatement\": \"Find the length of side BC in triangle ABC given the lengths of segments AP, BQ, and CP, and the fact that the angle bisectors of angles B and C meet at the incenter I, with the incircle touching the sides at points P, Q, and R.\",\n  \"conditions_complete\": true,\n  \"contradictory\": false,\n  \"multiple_reasonable_interpretations\": false,\n  \"solution_exists\": true,\n  \"unique_or_explicit_grading\": true,\n  \"label\": \"A\",\n  \"confidence\": 0.95,\n  \"probability_label_A\": 0.95,\n  \"issue_types\": [],\n  \"reasoning_summary\": \"The problem provides specific lengths for segments AP, BQ, and CP, and the configuration of the triangle and its incircle. The goal is to find the length of side BC. The conditions are clear and consistent, and the problem is solvable using known geometric properties and theorems. The solution is unique and can be explicitly graded based on the correctness of the application of these properties.\",\n  \"derived_answer\": \"The length of side BC can be found using the given segment lengths and the properties of the incircle and angle bisectors. The exact calculation involves applying the Angle Bisector Theorem and the properties of the incircle, leading to a unique solution.\"\n}"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The length of side BC can be found using the given segment lengths and the properties of the incircle and angle bisectors. The exact calculation involves applying the Angle Bisector Theorem and the properties of the incircle, leading to a unique solution.",
+    "goal_restatement": "Find the length of side BC in triangle ABC given the lengths of segments AP, BQ, and CP, and the fact that the angle bisectors of angles B and C meet at the incenter I, with the incircle touching the sides at points P, Q, and R.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The problem provides specific lengths for segments AP, BQ, and CP, and the configuration of the triangle and its incircle. The goal is to find the length of side BC. The conditions are clear and consistent, and the problem is solvable using known geometric properties and theorems. The solution is unique and can be explicitly graded based on the correctness of the application of these properties.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_55c69ed6a6c2534b",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Find the remainder when 7 raised to the power of 2023 is divided by 11.\",\n  \"conditions_complete\": true,\n  \"contradictory\": false,\n  \"multiple_reasonable_interpretations\": false,\n  \"solution_exists\": true,\n  \"unique_or_explicit_grading\": true,\n  \"label\": \"A\",\n  \"confidence\": 0.99,\n  \"probability_label_A\": 0.99,\n  \"issue_types\": [],\n  \"reasoning_summary\": \"The problem is to find the remainder of 7^2023 when divided by 11. This can be solved using modular arithmetic and properties of exponents. By Fermat's Little Theorem, since 11 is a prime number and 7 is not divisible by 11, we have 7^10 \u2261 1 (mod 11). Therefore, 7^2023 = 7^(2020+3) = (7^10)^202 * 7^3 \u2261 1^202 * 7^3 \u2261 7^3 (mod 11). Calculating 7^3 gives 343, and 343 mod 11 is 2. Thus, the remainder is 2.\",\n  \"derived_answer\":   \"2\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.99,
+    "contradictory": false,
+    "derived_answer": "2",
+    "goal_restatement": "Find the remainder when 7 raised to the power of 2023 is divided by 11.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.99,
+    "reasoning_summary": "The problem is to find the remainder of 7^2023 when divided by 11. This can be solved using modular arithmetic and properties of exponents. By Fermat's Little Theorem, since 11 is a prime number and 7 is not divisible by 11, we have 7^10 \u2261 1 (mod 11). Therefore, 7^2023 = 7^(2020+3) = (7^10)^202 * 7^3 \u2261 1^202 * 7^3 \u2261 7^3 (mod 11). Calculating 7^3 gives 343, and 343 mod 11 is 2. Thus, the remainder is 2.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_1100a9d9911a3f2d",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

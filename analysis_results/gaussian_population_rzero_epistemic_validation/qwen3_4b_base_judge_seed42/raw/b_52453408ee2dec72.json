@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{\"goal_restatement\": \"Find the remainder when the 10th term of the sequence defined by the recurrence relation is divided by 17.\", \"conditions_complete\": true, \"contradictory\": false, \"multiple_reasonable_interpretations\": false, \"solution_exists\": true, \"unique_or_explicit_grading\": true, \"label\": \"A\", \"confidence\": 0.99, \"probability_label_A\": 0.99, \"issue_types\": [], \"reasoning_summary\": \"The sequence is well-defined and the problem is solvable with a unique answer.\", \"derived_answer\": \"The remainder when a_10 is divided by 17 is 1.\"}"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.99,
+    "contradictory": false,
+    "derived_answer": "The remainder when a_10 is divided by 17 is 1.",
+    "goal_restatement": "Find the remainder when the 10th term of the sequence defined by the recurrence relation is divided by 17.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.99,
+    "reasoning_summary": "The sequence is well-defined and the problem is solvable with a unique answer.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_52453408ee2dec72",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

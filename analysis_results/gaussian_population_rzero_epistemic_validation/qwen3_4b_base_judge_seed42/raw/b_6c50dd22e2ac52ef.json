@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{\"goal_restatement\": \"Find all two-digit numbers that are the sum of the squares of their digits.\", \"conditions_complete\": true, \"contradictory\": false, \"multiple_reasonable_interpretations\": false, \"solution_exists\": true, \"unique_or_explicit_grading\": true, \"label\": \"A\", \"confidence\": 0.99, \"probability_label_A\": 0.99, \"issue_types\": [], \"reasoning_summary\": \"The problem is well-defined, and the solution can be found by iterating through all two-digit numbers and checking if they satisfy the condition.\", \"derived_answer\": \"The two-digit 'nice' numbers are 10, 13, 18, 20, 31, 32, 38, 40, 44, 49, 50, 53, 58, 61, 62, 68, 70, 71, 79, 80, 81, 82, 89, 90, 91, 92, 94, 97, 98, 100.\"}"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.99,
+    "contradictory": false,
+    "derived_answer": "The two-digit 'nice' numbers are 10, 13, 18, 20, 31, 32, 38, 40, 44, 49, 50, 53, 58, 61, 62, 68, 70, 71, 79, 80, 81, 82, 89, 90, 91, 92, 94, 97, 98, 100.",
+    "goal_restatement": "Find all two-digit numbers that are the sum of the squares of their digits.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.99,
+    "reasoning_summary": "The problem is well-defined, and the solution can be found by iterating through all two-digit numbers and checking if they satisfy the condition.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_6c50dd22e2ac52ef",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

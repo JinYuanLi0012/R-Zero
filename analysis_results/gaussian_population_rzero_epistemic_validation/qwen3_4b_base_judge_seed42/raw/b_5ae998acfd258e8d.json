@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Find the smallest integer greater than 1000 that can be expressed in the form 4n + 3, where n is a non-negative integer.\",\n\"conditions_complete\": true,\n\"contradictory\": false,\n\"multiple_reasonable_interpretations\": false,\n\"solution_exists\": true,\n\"unique_or_explicit_grading\": true,\n\"label\": \"A\",\n\"confidence\": 1.0,\n\"probability_label_A\": 1.0,\n\"issue_types\": [],\n\"reasoning_summary\": \"The problem is to find the smallest integer greater than 1000 that can be expressed in the form 4n + 3. We start by setting up the inequality 4n + 3 > 1000 and solving for n. This gives us n > 249.75. Since n must be an integer, the smallest possible value for n is 250. Substituting n = 250 into the expression 4n + 3, we get 4(250) + 3 = 1003. Therefore, the smallest integer greater than 1000 that is in set S is 1003.\",\n\"derived_answer\":    \"1003\"  }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 1.0,
+    "contradictory": false,
+    "derived_answer": "1003",
+    "goal_restatement": "Find the smallest integer greater than 1000 that can be expressed in the form 4n + 3, where n is a non-negative integer.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 1.0,
+    "reasoning_summary": "The problem is to find the smallest integer greater than 1000 that can be expressed in the form 4n + 3. We start by setting up the inequality 4n + 3 > 1000 and solving for n. This gives us n > 249.75. Since n must be an integer, the smallest possible value for n is 250. Substituting n = 250 into the expression 4n + 3, we get 4(250) + 3 = 1003. Therefore, the smallest integer greater than 1000 that is in set S is 1003.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_5ae998acfd258e8d",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

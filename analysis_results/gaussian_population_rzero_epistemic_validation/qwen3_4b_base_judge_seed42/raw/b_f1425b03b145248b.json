@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Find the smallest positive integer that is divisible by both 12 and 15, and is also a multiple of the sum of its digits.\",\n\"conditions_complete\": true,\n\"contradictory\": false,\n\"multiple_reasonable_interpretations\": false,\n\"solution_exists\": true,\n\"unique_or_explicit_grading\": true,\n\"label\": \"A\",\n\"confidence\": 0.95,\n\"probability_label_A\": 0.95,\n\"issue_types\": [],\n\"reasoning_summary\": \"The problem requires finding the smallest positive integer that meets three criteria: divisibility by 12 and 15, and being a multiple of the sum of its digits. The least common multiple (LCM) of 12 and 15 is 60. We then check multiples of 60 to find the smallest one that satisfies the third condition. After checking, we find that 60 itself meets all the criteria.\",\n\"derived_answer\":   \"60\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "60",
+    "goal_restatement": "Find the smallest positive integer that is divisible by both 12 and 15, and is also a multiple of the sum of its digits.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The problem requires finding the smallest positive integer that meets three criteria: divisibility by 12 and 15, and being a multiple of the sum of its digits. The least common multiple (LCM) of 12 and 15 is 60. We then check multiples of 60 to find the smallest one that satisfies the third condition. After checking, we find that 60 itself meets all the criteria.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_f1425b03b145248b",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

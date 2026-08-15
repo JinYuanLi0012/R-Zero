@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Find the smallest positive integer k such that a_k = a_{k+1} in the sequence defined by each term being the sum of the squares of the digits of the previous term.\",\n\"conditions_complete\": true,\n\"contradictory\": false,\n\"multiple_reasonable_interpretations\": false,\n\"solution_exists\": true,\n\"unique_or_explicit_grading\": true,\n\"label\": \"A\",\n\"confidence\": 0.95,\n\"probability_label_A\": 0.95,\n\"issue_types\": [],\n\"reasoning_summary\": \"The sequence is well-defined and each term is uniquely determined by the previous term. The sequence will eventually reach a fixed point or enter a cycle. The smallest k such that a_k = a_{k+1} is the first occurrence of a fixed point or the start of a cycle.\",\n\"derived_answer\": \"The smallest positive integer k such that a_k = a_{k+1} is 1, as a_1 = a_2 = 1.\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The smallest positive integer k such that a_k = a_{k+1} is 1, as a_1 = a_2 = 1.",
+    "goal_restatement": "Find the smallest positive integer k such that a_k = a_{k+1} in the sequence defined by each term being the sum of the squares of the digits of the previous term.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The sequence is well-defined and each term is uniquely determined by the previous term. The sequence will eventually reach a fixed point or enter a cycle. The smallest k such that a_k = a_{k+1} is the first occurrence of a fixed point or the start of a cycle.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_54617ea7c75ccd36",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

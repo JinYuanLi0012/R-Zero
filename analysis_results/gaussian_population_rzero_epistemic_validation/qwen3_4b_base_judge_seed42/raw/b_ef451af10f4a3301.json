@@ -1,0 +1,30 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Find all integer solutions to the equation x^4 + y^4 = z^2, where x, y, and z are positive integers and gcd(x, y) = 1.\",\n  \"conditions_complete\": true,\n  \"contradictory\": false,\n  \"multiple_reasonable_interpretations\": false,\n  \"solution_exists\": true,\n  \"unique_or_explicit_grading\": false,\n  \"label\": \"B\",\n  \"confidence\": 0.95,\n  \"probability_label_A\": 0.05,\n  \"issue_types\": [\"unique_or_explicit_grading\"],\n  \"reasoning_summary\": \"The equation x^4 + y^4 = z^2 has infinitely many solutions, but the problem asks for all integer solutions, which is not uniquely gradable. The condition gcd(x, y) = 1 further restricts the solutions, but the problem does not specify a method or range for finding them, making it open-ended.\",\n  \"derived_answer\": \"The equation x^4 + y^4 = z^2 has infinitely many solutions, but the problem does not specify a method or range for finding them, making it open-ended.\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The equation x^4 + y^4 = z^2 has infinitely many solutions, but the problem does not specify a method or range for finding them, making it open-ended.",
+    "goal_restatement": "Find all integer solutions to the equation x^4 + y^4 = z^2, where x, y, and z are positive integers and gcd(x, y) = 1.",
+    "issue_types": [
+      "unique_or_explicit_grading"
+    ],
+    "label": "B",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.05,
+    "reasoning_summary": "The equation x^4 + y^4 = z^2 has infinitely many solutions, but the problem asks for all integer solutions, which is not uniquely gradable. The condition gcd(x, y) = 1 further restricts the solutions, but the problem does not specify a method or range for finding them, making it open-ended.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": false
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_ef451af10f4a3301",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

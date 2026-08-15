@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Find the smallest positive integer n such that for any selection of n distinct integers from the set {1, 2, ..., 200}, there exists a subset of these integers whose sum is divisible by 20.\",\n\"conditions_complete\": true,\n\"contradictory\": false,\n\"multiple_reasonable_interpretations\": false,\n\"solution_exists\": true,\n\"unique_or_explicit_grading\": true,\n\"label\": \"A\",\n\"confidence\": 0.95,\n\"probability_label_A\": 0.95,\n\"issue_types\": [],\n\"reasoning_summary\": \"The problem requires finding the smallest n such that any subset of n integers from {1, 2, ..., 200} contains a subset with a sum divisible by 20. This is a classic application of the pigeonhole principle and modular arithmetic. By considering the remainders when dividing by 20, we can determine the minimum n needed to guarantee such a subset exists.\",\n\"derived_answer\": \"The smallest positive integer n is 21.\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The smallest positive integer n is 21.",
+    "goal_restatement": "Find the smallest positive integer n such that for any selection of n distinct integers from the set {1, 2, ..., 200}, there exists a subset of these integers whose sum is divisible by 20.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The problem requires finding the smallest n such that any subset of n integers from {1, 2, ..., 200} contains a subset with a sum divisible by 20. This is a classic application of the pigeonhole principle and modular arithmetic. By considering the remainders when dividing by 20, we can determine the minimum n needed to guarantee such a subset exists.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_2887b907cc096703",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

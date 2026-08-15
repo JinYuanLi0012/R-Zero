@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Find the height from the base of the cone to the circular cross-section with a radius of 3 units, given the cone's base radius and height.\",\n  \"conditions_complete\": true,\n  \"contradictory\": false,\n  \"multiple_reasonable_interpretations\": false,\n  \"solution_exists\": true,\n  \"unique_or_explicit_grading\": true,\n  \"label\": \"A\",\n  \"confidence\": 0.95,\n  \"probability_label_A\": 0.95,\n  \"issue_types\": [],\n  \"reasoning_summary\": \"The problem involves similar triangles. The ratio of the radii of the cross-section to the base is 3/6 = 1/2. Since the triangles are similar, the height from the base to the cross-section is half the height of the cone, which is 8/2 = 4 units.\",\n  \"derived_answer\": \"B\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "B",
+    "goal_restatement": "Find the height from the base of the cone to the circular cross-section with a radius of 3 units, given the cone's base radius and height.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The problem involves similar triangles. The ratio of the radii of the cross-section to the base is 3/6 = 1/2. Since the triangles are similar, the height from the base to the cross-section is half the height of the cone, which is 8/2 = 4 units.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_05933b4eeb58c60d",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

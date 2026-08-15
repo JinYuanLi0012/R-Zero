@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{\"goal_restatement\": \"Find all functions f: R -> R such that for all x, y in R, the equation f(f(x) + y) = f(x^2 - y) + 4f(x)y holds.\", \"conditions_complete\": true, \"contradictory\": false, \"multiple_reasonable_interpretations\": false, \"solution_exists\": true, \"unique_or_explicit_grading\": true, \"label\": \"A\", \"confidence\": 0.95, \"probability_label_A\": 0.95, \"issue_types\": [], \"reasoning_summary\": \"The problem is well-defined with clear conditions and a unique solution can be found through careful analysis.\", \"derived_answer\": \"The function f(x) = 0 for all x in R is the only solution.\"}"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The function f(x) = 0 for all x in R is the only solution.",
+    "goal_restatement": "Find all functions f: R -> R such that for all x, y in R, the equation f(f(x) + y) = f(x^2 - y) + 4f(x)y holds.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The problem is well-defined with clear conditions and a unique solution can be found through careful analysis.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_11e636cec481662d",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

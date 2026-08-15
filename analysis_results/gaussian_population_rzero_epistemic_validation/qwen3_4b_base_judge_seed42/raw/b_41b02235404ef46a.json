@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{\"goal_restatement\": \"Find the number of pets in the house numbered 50, given that the total number of pets in the town is 4950 and the sum of the squares of the number of pets in each house is equal to the sum of the squares of the house numbers.\",\n\"conditions_complete\": true,\n\"contradictory\": false,\n\"multiple_reasonable_interpretations\": false,\n\"solution_exists\": true,\n\"unique_or_explicit_grading\": true,\n\"label\": \"A\",\n\"confidence\": 0.95,\n\"probability_label_A\": 0.95,\n\"issue_types\": [],\n\"reasoning_summary\": \"The problem involves finding the number of pets in a specific house given certain conditions. The conditions are that the total number of pets is 4950 and the sum of the squares of the number of pets equals the sum of the squares of the house numbers. The solution involves setting up equations based on these conditions and solving for the number of pets in the house numbered 50.\",\n\"derived_answer\": \"The number of pets in the house numbered 50 is 50.\"}"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The number of pets in the house numbered 50 is 50.",
+    "goal_restatement": "Find the number of pets in the house numbered 50, given that the total number of pets in the town is 4950 and the sum of the squares of the number of pets in each house is equal to the sum of the squares of the house numbers.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The problem involves finding the number of pets in a specific house given certain conditions. The conditions are that the total number of pets is 4950 and the sum of the squares of the number of pets equals the sum of the squares of the house numbers. The solution involves setting up equations based on these conditions and solving for the number of pets in the house numbered 50.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_41b02235404ef46a",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

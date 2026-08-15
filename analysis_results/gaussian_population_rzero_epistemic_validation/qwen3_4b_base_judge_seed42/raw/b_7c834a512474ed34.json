@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Find the 20th term in a sequence where the first term is 1, and each subsequent term is the smallest positive integer not yet in the sequence that can be expressed as the sum of two distinct earlier terms.\",\n\"conditions_complete\": true,\n\"contradictory\": false,\n\"multiple_reasonable_interpretations\": false,\n\"solution_exists\": true,\n\"unique_or_explicit_grading\": true,\n\"label\": \"A\",\n\"confidence\": 0.95,\n\"probability_label_A\": 0.95,\n\"issue_types\": [],\n\"reasoning_summary\": \"The sequence starts with 1. The next term is the smallest positive integer not yet in the sequence that can be expressed as the sum of two distinct earlier terms. This process continues until the 20th term is found.\",\n\"derived_answer\": \"The 20th term in the sequence is 20.\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The 20th term in the sequence is 20.",
+    "goal_restatement": "Find the 20th term in a sequence where the first term is 1, and each subsequent term is the smallest positive integer not yet in the sequence that can be expressed as the sum of two distinct earlier terms.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The sequence starts with 1. The next term is the smallest positive integer not yet in the sequence that can be expressed as the sum of two distinct earlier terms. This process continues until the 20th term is found.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_7c834a512474ed34",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

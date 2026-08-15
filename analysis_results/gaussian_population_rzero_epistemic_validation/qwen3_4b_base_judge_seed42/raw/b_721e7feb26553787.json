@@ -1,0 +1,30 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Find all ordered pairs of positive integers $(x, y)$ that satisfy the equation $x^2 + y^2 = x^3 - y^3$.\",\n\"conditions_complete\": true,\n\"contradictory\": false,\n\"multiple_reasonable_interpretations\": false,\n\"solution_exists\": true,\n\"unique_or_explicit_grading\": false,\n\"label\": \"B\",\n\"confidence\": 0.95,\n\"probability_label_A\": 0.05,\n\"issue_types\": [\"unique_or_explicit_grading\"],\n\"reasoning_summary\": \"The equation $x^2 + y^2 = x^3 - y^3$ can be rewritten as $x^3 - x^2 = y^3 + y^2$. This equation is meaningful but open-ended, as it does not provide a unique or explicit grading for the solutions. The solutions may not be uniquely determined, and the grading of the solutions may not be straightforward.\",\n\"derived_answer\": \"The equation $x^2 + y^2 = x^3 - y^3$ can be rewritten as $x^3 - x^2 = y^3 + y^2$. This equation is meaningful but open-ended, as it does not provide a unique or explicit grading for the solutions. The solutions may not be uniquely determined, and the grading of the solutions may not be straightforward.\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The equation $x^2 + y^2 = x^3 - y^3$ can be rewritten as $x^3 - x^2 = y^3 + y^2$. This equation is meaningful but open-ended, as it does not provide a unique or explicit grading for the solutions. The solutions may not be uniquely determined, and the grading of the solutions may not be straightforward.",
+    "goal_restatement": "Find all ordered pairs of positive integers $(x, y)$ that satisfy the equation $x^2 + y^2 = x^3 - y^3$.",
+    "issue_types": [
+      "unique_or_explicit_grading"
+    ],
+    "label": "B",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.05,
+    "reasoning_summary": "The equation $x^2 + y^2 = x^3 - y^3$ can be rewritten as $x^3 - x^2 = y^3 + y^2$. This equation is meaningful but open-ended, as it does not provide a unique or explicit grading for the solutions. The solutions may not be uniquely determined, and the grading of the solutions may not be straightforward.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": false
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_721e7feb26553787",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

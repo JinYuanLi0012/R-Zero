@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Determine the minimum number of tunnels required to ensure direct travel between any two cities in a kingdom with 100 cities and 100 roads, where each road connects exactly two cities and there is exactly one road between any two cities.\",\n  \"conditions_complete\": true,\n  \"contradictory\": false,\n  \"multiple_reasonable_interpretations\": false,\n  \"solution_exists\": true,\n  \"unique_or_explicit_grading\": true,\n  \"label\": \"A\",\n  \"confidence\": 0.95,\n  \"probability_label_A\": 0.95,\n  \"issue_types\": [],\n  \"reasoning_summary\": \"The problem describes a complete graph with 100 vertices (cities) and 100 edges (roads). To ensure direct travel between any two cities, we need to build tunnels that form a spanning tree. A spanning tree of a graph with n vertices has exactly n-1 edges. Therefore, the minimum number of tunnels required is 99.\",\n  \"derived_answer\":   \"The minimum number of tunnels that need to be built is 99.\"}"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The minimum number of tunnels that need to be built is 99.",
+    "goal_restatement": "Determine the minimum number of tunnels required to ensure direct travel between any two cities in a kingdom with 100 cities and 100 roads, where each road connects exactly two cities and there is exactly one road between any two cities.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The problem describes a complete graph with 100 vertices (cities) and 100 edges (roads). To ensure direct travel between any two cities, we need to build tunnels that form a spanning tree. A spanning tree of a graph with n vertices has exactly n-1 edges. Therefore, the minimum number of tunnels required is 99.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_1f705a063c9af13d",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

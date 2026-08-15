@@ -1,0 +1,30 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{\n  \"goal_restatement\": \"Find all pairs of positive integers (n, m) such that the sum of the positive divisors of n equals m^2 and the sum of the positive divisors of m equals n.\",\n  \"conditions_complete\": true,\n  \"contradictory\": false,\n  \"multiple_reasonable_interpretations\": false,\n  \"solution_exists\": true,\n  \"unique_or_explicit_grading\": false,\n  \"label\": \"B\",\n  \"confidence\": 0.95,\n  \"probability_label_A\": 0.05,\n  \"issue_types\": [\"unique_or_explicit_grading\"],\n  \"reasoning_summary\": \"The problem is well-defined and has a solution, but the uniqueness of the solution is not guaranteed. The conditions are clear and do not lead to contradictions.\",\n  \"derived_answer\": \"The problem is meaningful but open-ended or not precisely gradable due to the potential for multiple solutions.\"\n}"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The problem is meaningful but open-ended or not precisely gradable due to the potential for multiple solutions.",
+    "goal_restatement": "Find all pairs of positive integers (n, m) such that the sum of the positive divisors of n equals m^2 and the sum of the positive divisors of m equals n.",
+    "issue_types": [
+      "unique_or_explicit_grading"
+    ],
+    "label": "B",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.05,
+    "reasoning_summary": "The problem is well-defined and has a solution, but the uniqueness of the solution is not guaranteed. The conditions are clear and do not lead to contradictions.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": false
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_7d51cec65f3c18cf",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

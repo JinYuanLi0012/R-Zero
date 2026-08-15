@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Determine the fraction of the total population that will be boys in a country where families stop having children after having a girl, given that the probability of having a boy or a girl is equally likely and independent for each child.\",\n\"conditions_complete\": true,\n\"contradictory\": false,\n\"multiple_reasonable_interpretations\": false,\n\"solution_exists\": true,\n\"unique_or_explicit_grading\": true,\n\"label\": \"A\",\n\"confidence\": 0.95,\n\"probability_label_A\": 0.95,\n\"issue_types\": [],\n\"reasoning_summary\": \"The problem is self-contained, valid, solvable, and uniquely gradable. The conditions are complete, there are no contradictions, and there is a unique solution. The reasoning involves understanding the stopping rule and calculating the expected fraction of boys in the population.\",\n\"derived_answer\": \"The fraction of the total population that will be boys is 1/2.\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The fraction of the total population that will be boys is 1/2.",
+    "goal_restatement": "Determine the fraction of the total population that will be boys in a country where families stop having children after having a girl, given that the probability of having a boy or a girl is equally likely and independent for each child.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The problem is self-contained, valid, solvable, and uniquely gradable. The conditions are complete, there are no contradictions, and there is a unique solution. The reasoning involves understanding the stopping rule and calculating the expected fraction of boys in the population.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_6d9b79efa511130c",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

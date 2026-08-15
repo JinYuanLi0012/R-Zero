@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Find the remainder when the 20th term of the sequence defined by $a_1 = 2$, $a_2 = 3$, and $a_n = a_{n-1} + a_{n-2} + n^2$ for $n \\\\\\\\_geq 3$ is divided by 17.\",\n\"conditions_complete\": true,\n\"contradictory\": false,\n\"multiple_reasonable_interpretations\": false,\n\"solution_exists\": true,\n\"unique_or_explicit_grading\": true,\n\"label\": \"A\",\n\"confidence\": 0.99,\n\"probability_label_A\": 0.99,\n\"issue_types\": [],\n\"reasoning_summary\": \"The sequence is well-defined with a clear recursive formula and initial conditions. The problem asks for a specific term modulo a prime number, which is a standard and solvable type of problem in number theory. The solution involves computing the terms of the sequence up to $a_{20}$ and then finding the remainder when this term is divided by 17. This process is straightforward and can be done algorithmically.\",\n\"derived_answer\": \"The remainder when $a_{20}$ is divided by 17 is 10.\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.99,
+    "contradictory": false,
+    "derived_answer": "The remainder when $a_{20}$ is divided by 17 is 10.",
+    "goal_restatement": "Find the remainder when the 20th term of the sequence defined by $a_1 = 2$, $a_2 = 3$, and $a_n = a_{n-1} + a_{n-2} + n^2$ for $n \\\\_geq 3$ is divided by 17.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.99,
+    "reasoning_summary": "The sequence is well-defined with a clear recursive formula and initial conditions. The problem asks for a specific term modulo a prime number, which is a standard and solvable type of problem in number theory. The solution involves computing the terms of the sequence up to $a_{20}$ and then finding the remainder when this term is divided by 17. This process is straightforward and can be done algorithmically.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_bf42434e1071f623",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

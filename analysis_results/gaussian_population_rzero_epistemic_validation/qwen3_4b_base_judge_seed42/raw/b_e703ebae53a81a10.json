@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Find the sum of the three distinct integer roots of the polynomial f(x) = x^3 + ax^2 + bx + c, where a, b, and c are integers.\",\n\"conditions_complete\": true,\n\"contradictory\": false,\n\"multiple_reasonable_interpretations\": false,\n\"solution_exists\": true,\n\"unique_or_explicit_grading\": true,\n\"label\": \"A\",\n\"confidence\": 0.95,\n\"probability_label_A\": 0.95,\n\"issue_types\": [],\n\"reasoning_summary\": \"The polynomial f(x) = x^3 + ax^2 + bx + c has three distinct integer roots p, q, and r. By Vieta's formulas, the sum of the roots of a cubic polynomial ax^3 + bx^2 + cx + d is given by -b/a. In this case, since the leading coefficient is 1, the sum of the roots is simply -a. Therefore, p + q + r = -a.\",\n\"derived_answer\": \"The value of p + q + r is -a.\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The value of p + q + r is -a.",
+    "goal_restatement": "Find the sum of the three distinct integer roots of the polynomial f(x) = x^3 + ax^2 + bx + c, where a, b, and c are integers.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The polynomial f(x) = x^3 + ax^2 + bx + c has three distinct integer roots p, q, and r. By Vieta's formulas, the sum of the roots of a cubic polynomial ax^3 + bx^2 + cx + d is given by -b/a. In this case, since the leading coefficient is 1, the sum of the roots is simply -a. Therefore, p + q + r = -a.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_e703ebae53a81a10",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

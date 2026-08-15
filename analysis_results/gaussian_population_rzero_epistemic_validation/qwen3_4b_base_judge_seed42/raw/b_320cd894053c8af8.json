@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Find the smallest positive integer that cannot be expressed as the sum of distinct Fibonacci numbers.\",\n\"conditions_complete\": true,\n\"contradictory\": false,\n\"multiple_reasonable_interpretations\": false,\n\"solution_exists\": true,\n\"unique_or_explicit_grading\": true,\n\"label\": \"A\",\n\"confidence\": 0.99,\n\"probability_label_A\": 0.99,\n\"issue_types\": [],\n\"reasoning_summary\": \"The problem is well-defined and solvable. The set $S$ consists of all positive integers that can be expressed as the sum of distinct Fibonacci numbers. The smallest positive integer not in $S$ is the smallest integer that cannot be represented in this way. This is a classic problem in number theory related to the Zeckendorf representation, which states that every positive integer can be uniquely represented as the sum of non-consecutive Fibonacci numbers. The smallest integer that cannot be represented in this way is 4, as it cannot be expressed as the sum of distinct Fibonacci numbers.\",\n\"derived_answer\":   \"4\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.99,
+    "contradictory": false,
+    "derived_answer": "4",
+    "goal_restatement": "Find the smallest positive integer that cannot be expressed as the sum of distinct Fibonacci numbers.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.99,
+    "reasoning_summary": "The problem is well-defined and solvable. The set $S$ consists of all positive integers that can be expressed as the sum of distinct Fibonacci numbers. The smallest positive integer not in $S$ is the smallest integer that cannot be represented in this way. This is a classic problem in number theory related to the Zeckendorf representation, which states that every positive integer can be uniquely represented as the sum of non-consecutive Fibonacci numbers. The smallest integer that cannot be represented in this way is 4, as it cannot be expressed as the sum of distinct Fibonacci numbers.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_320cd894053c8af8",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

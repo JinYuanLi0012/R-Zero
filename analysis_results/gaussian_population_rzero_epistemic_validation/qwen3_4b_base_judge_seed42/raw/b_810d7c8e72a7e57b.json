@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Determine the smallest number of tokens that can be achieved starting from a positive integer number of tokens, using the operations of doubling the number of tokens or subtracting one token if at least two tokens are present.\",\n\"conditions_complete\": true,\n\"contradictory\": false,\n\"multiple_reasonable_interpretations\": false,\n\"solution_exists\": true,\n\"unique_or_explicit_grading\": true,\n\"label\": \"A\",\n\"confidence\": 0.95,\n\"probability_label_A\": 0.95,\n\"issue_types\": [],\n\"reasoning_summary\": \"The problem is well-defined with clear operations and a unique solution. Starting from any positive integer, the smallest number of tokens achievable is 1, which can be reached by repeatedly subtracting one token until only one remains.\",\n\"derived_answer\":  \"The smallest number of tokens you can end up with is 1.\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The smallest number of tokens you can end up with is 1.",
+    "goal_restatement": "Determine the smallest number of tokens that can be achieved starting from a positive integer number of tokens, using the operations of doubling the number of tokens or subtracting one token if at least two tokens are present.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The problem is well-defined with clear operations and a unique solution. Starting from any positive integer, the smallest number of tokens achievable is 1, which can be reached by repeatedly subtracting one token until only one remains.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_810d7c8e72a7e57b",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

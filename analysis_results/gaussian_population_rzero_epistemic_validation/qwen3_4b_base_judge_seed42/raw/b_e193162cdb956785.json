@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{\n  \"goal_restatement\": \"Determine all prime numbers p such that the polynomial f(x) with integer coefficients satisfies f(1) = 2024 and f(p) = p^2 + 3p + 1.\",\n  \"conditions_complete\": true,\n  \"contradictory\": false,\n  \"multiple_reasonable_interpretations\": false,\n  \"solution_exists\": true,\n  \"unique_or_explicit_grading\": true,\n  \"label\": \"A\",\n  \"confidence\": 0.95,\n  \"probability_label_A\": 0.95,\n  \"issue_types\": [],\n  \"reasoning_summary\": \"The problem involves finding primes p for which a polynomial f(x) with integer coefficients meets specific conditions. By analyzing the given conditions and using properties of polynomials and modular arithmetic, we can derive the possible values of p.\",\n  \"derived_answer\": \"The possible values of p are 2 and 3.\"\n}"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The possible values of p are 2 and 3.",
+    "goal_restatement": "Determine all prime numbers p such that the polynomial f(x) with integer coefficients satisfies f(1) = 2024 and f(p) = p^2 + 3p + 1.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The problem involves finding primes p for which a polynomial f(x) with integer coefficients meets specific conditions. By analyzing the given conditions and using properties of polynomials and modular arithmetic, we can derive the possible values of p.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_e193162cdb956785",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

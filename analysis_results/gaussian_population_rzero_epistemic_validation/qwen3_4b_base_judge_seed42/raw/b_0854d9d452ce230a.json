@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Find the greatest possible value of k for which the system of equations x + y = 10 and xy = 20 has an integer solution.\",\n\"conditions_complete\": true,\n\"contradictory\": false,\n\"multiple_reasonable_interpretations\": false,\n\"solution_exists\": true,\n\"unique_or_explicit_grading\": true,\n\"label\": \"A\",\n\"confidence\": 0.95,\n\"probability_label_A\": 0.95,\n\"issue_types\": [],\n\"reasoning_summary\": \"The system of equations x + y = 10 and xy = 20 can be solved by finding the roots of the quadratic equation t^2 - 10t + 20 = 0. The discriminant of this equation is 100 - 80 = 20, which is not a perfect square. Therefore, there are no integer solutions for x and y, and the greatest possible value of k is 0.\",\n\"derived_answer\":   \"0\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "0",
+    "goal_restatement": "Find the greatest possible value of k for which the system of equations x + y = 10 and xy = 20 has an integer solution.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The system of equations x + y = 10 and xy = 20 can be solved by finding the roots of the quadratic equation t^2 - 10t + 20 = 0. The discriminant of this equation is 100 - 80 = 20, which is not a perfect square. Therefore, there are no integer solutions for x and y, and the greatest possible value of k is 0.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_0854d9d452ce230a",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

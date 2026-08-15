@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{\"goal_restatement\": \"Determine whether the number 2023 is in the set S, which consists of all positive integers that can be expressed as the sum of two or more consecutive positive integers, and provide a proof.\", \"conditions_complete\": true, \"contradictory\": false, \"multiple_reasonable_interpretations\": false, \"solution_exists\": true, \"unique_or_explicit_grading\": true, \"label\": \"A\", \"confidence\": 0.99, \"probability_label_A\": 0.99, \"issue_types\": [], \"reasoning_summary\": \"The number 2023 can be expressed as the sum of two or more consecutive positive integers. Specifically, 2023 = 1011 + 1012. This satisfies the condition of being in set S.\", \"derived_answer\": \"Yes, 2023 is in S.\"}"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.99,
+    "contradictory": false,
+    "derived_answer": "Yes, 2023 is in S.",
+    "goal_restatement": "Determine whether the number 2023 is in the set S, which consists of all positive integers that can be expressed as the sum of two or more consecutive positive integers, and provide a proof.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.99,
+    "reasoning_summary": "The number 2023 can be expressed as the sum of two or more consecutive positive integers. Specifically, 2023 = 1011 + 1012. This satisfies the condition of being in set S.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_fe2bac9e4126405a",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Find the value of the sum of all possible values of the polynomial evaluated at 2, given the relationship between the polynomial evaluated at 1 and -1.\",\n\"conditions_complete\": true,\n\"contradictory\": false,\n\"multiple_reasonable_interpretations\": false,\n\"solution_exists\": true,\n\"unique_or_explicit_grading\": true,\n\"label\": \"A\",\n\"confidence\": 0.95,\n\"probability_label_A\": 0.95,\n\"issue_types\": [],\n\"reasoning_summary\": \"The polynomial is given as a cubic with one integer root and two other distinct roots. The sum of all possible values of the polynomial at 2 is defined by a specific relationship involving the polynomial at 1 and -1. The problem is self-contained, valid, solvable, and uniquely gradable.\",\n\"derived_answer\": \"The value of S is determined by the given relationship and the properties of the polynomial, ensuring a unique and solvable outcome.\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The value of S is determined by the given relationship and the properties of the polynomial, ensuring a unique and solvable outcome.",
+    "goal_restatement": "Find the value of the sum of all possible values of the polynomial evaluated at 2, given the relationship between the polynomial evaluated at 1 and -1.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The polynomial is given as a cubic with one integer root and two other distinct roots. The sum of all possible values of the polynomial at 2 is defined by a specific relationship involving the polynomial at 1 and -1. The problem is self-contained, valid, solvable, and uniquely gradable.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_3802912b484ee4a1",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Find all prime numbers p such that there exist positive integers x and y satisfying x^p + y^p = p^x * y^y.\",\n\"conditions_complete\": true,\n\"contradictory\": false,\n\"multiple_reasonable_interpretations\": false,\n\"solution_exists\": true,\n\"unique_or_explicit_grading\": true,\n\"label\": \"A\",\n\"confidence\": 0.95,\n\"probability_label_A\": 0.95,\n\"issue_types\": [],\n\"reasoning_summary\": \"The problem is well-defined and solvable. The goal is to find all prime numbers p for which there exist positive integers x and y satisfying the given equation. The conditions are complete, and there are no contradictions or multiple reasonable interpretations. A solution exists, and the problem is uniquely gradable.\",\n\"derived_answer\": \"The only prime number p that satisfies the given equation is p = 2. For p = 2, the equation becomes x^2 + y^2 = 2^x * y^y. By testing small values of x and y, we find that (x, y) = (2, 2) is a solution. For other primes, the equation does not hold for any positive integers x and y.\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The only prime number p that satisfies the given equation is p = 2. For p = 2, the equation becomes x^2 + y^2 = 2^x * y^y. By testing small values of x and y, we find that (x, y) = (2, 2) is a solution. For other primes, the equation does not hold for any positive integers x and y.",
+    "goal_restatement": "Find all prime numbers p such that there exist positive integers x and y satisfying x^p + y^p = p^x * y^y.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The problem is well-defined and solvable. The goal is to find all prime numbers p for which there exist positive integers x and y satisfying the given equation. The conditions are complete, and there are no contradictions or multiple reasonable interpretations. A solution exists, and the problem is uniquely gradable.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_d2f7f32548ba76b4",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

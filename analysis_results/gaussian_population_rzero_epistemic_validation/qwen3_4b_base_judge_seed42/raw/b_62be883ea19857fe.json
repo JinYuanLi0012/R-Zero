@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{\"goal_restatement\": \"Determine the degree of the polynomial f(x) and find all possible values of f(x) at its root, given that f(x) has integer coefficients, f(0) = 1, f(1) = 3, and exactly one real root.\", \"conditions_complete\": true, \"contradictory\": false, \"multiple_reasonable_interpretations\": false, \"solution_exists\": true, \"unique_or_explicit_grading\": true, \"label\": \"A\", \"confidence\": 0.95, \"probability_label_A\": 0.95, \"issue_types\": [], \"reasoning_summary\": \"The conditions are complete and consistent. The polynomial f(x) must have a degree of at least 2 to have exactly one real root and satisfy the given conditions. The possible values of f(x) at its root can be determined by solving the polynomial equation.\", \"derived_answer\": \"The degree of f(x) is 2, and the possible values of f(x) at its root are the solutions to the polynomial equation.\"}"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The degree of f(x) is 2, and the possible values of f(x) at its root are the solutions to the polynomial equation.",
+    "goal_restatement": "Determine the degree of the polynomial f(x) and find all possible values of f(x) at its root, given that f(x) has integer coefficients, f(0) = 1, f(1) = 3, and exactly one real root.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The conditions are complete and consistent. The polynomial f(x) must have a degree of at least 2 to have exactly one real root and satisfy the given conditions. The possible values of f(x) at its root can be determined by solving the polynomial equation.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_62be883ea19857fe",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{\n  \"goal_restatement\": \"Find the smallest positive integer n such that for every integer m, the expression n^2 + m^2 is divisible by 5.\",\n  \"conditions_complete\": true,\n  \"contradictory\": false,\n  \"multiple_reasonable_interpretations\": false,\n  \"solution_exists\": true,\n  \"unique_or_explicit_grading\": true,\n  \"label\": \"A\",\n  \"confidence\": 0.95,\n  \"probability_label_A\": 0.95,\n  \"issue_types\": [],\n  \"reasoning_summary\": \"The problem requires finding the smallest positive integer n such that n^2 + m^2 is divisible by 5 for all integers m. This means that n^2 must be congruent to 0, 1, or 4 modulo 5. The smallest positive integer n that satisfies this condition is 1, since 1^2 = 1, which is congruent to 1 modulo 5. Therefore, the smallest positive integer n is 1.\",\n  \"derived_answer\":   \"1\"\n}"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "1",
+    "goal_restatement": "Find the smallest positive integer n such that for every integer m, the expression n^2 + m^2 is divisible by 5.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The problem requires finding the smallest positive integer n such that n^2 + m^2 is divisible by 5 for all integers m. This means that n^2 must be congruent to 0, 1, or 4 modulo 5. The smallest positive integer n that satisfies this condition is 1, since 1^2 = 1, which is congruent to 1 modulo 5. Therefore, the smallest positive integer n is 1.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_9d055e5c061d6206",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

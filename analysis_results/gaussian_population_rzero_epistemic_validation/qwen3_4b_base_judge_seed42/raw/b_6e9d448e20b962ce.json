@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Determine the minimum number of points that must be marked on a 3x3x3 cube so that each of its six faces contains at least one marked point.\",\n  \"conditions_complete\": true,\n  \"contradictory\": false,\n  \"multiple_reasonable_interpretations\": false,\n  \"solution_exists\": true,\n  \"unique_or_explicit_grading\": true,\n  \"label\": \"A\",\n  \"confidence\": 0.95,\n  \"probability_label_A\": 0.95,\n  \"issue_types\": [],\n  \"reasoning_summary\": \"The problem requires marking points on a 3x3x3 cube such that each of its six faces has at least one marked point. By placing one point on each of the six faces, we ensure that all faces are covered. This configuration is minimal and unique in terms of the number of points required.\",\n  \"derived_answer\":   \"The minimum number of points that must be marked on a 3x3x3 cube such that every face of the cube contains at least one marked point is 6.\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The minimum number of points that must be marked on a 3x3x3 cube such that every face of the cube contains at least one marked point is 6.",
+    "goal_restatement": "Determine the minimum number of points that must be marked on a 3x3x3 cube so that each of its six faces contains at least one marked point.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The problem requires marking points on a 3x3x3 cube such that each of its six faces has at least one marked point. By placing one point on each of the six faces, we ensure that all faces are covered. This configuration is minimal and unique in terms of the number of points required.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_6e9d448e20b962ce",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

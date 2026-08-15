@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Find the value of p + q given the roots of the quadratic equation x^2 + px + q = 0 are complex numbers a + bi and a - bi, where b \u2260 0, and the product of the roots taken two at a time is equal to the sum of the roots.\",\n\"conditions_complete\": true,\n\"contradictory\": false,\n\"multiple_reasonable_interpretations\": false,\n\"solution_exists\": true,\n\"unique_or_explicit_grading\": true,\n\"label\": \"A\",\n\"confidence\": 0.95,\n\"probability_label_A\": 0.95,\n\"issue_types\": [],\n\"reasoning_summary\": \"The roots of the quadratic equation are a + bi and a - bi. The sum of the roots is 2a, and the product of the roots is a^2 + b^2. Given that the product of the roots taken two at a time is equal to the sum of the roots, we have a^2 + b^2 = 2a. Solving for a and b, we find a = 1 and b = 0, but since b \u2260 0, this is not possible. Therefore, the problem has no solution.\",\n\"derived_answer\": \"D\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "D",
+    "goal_restatement": "Find the value of p + q given the roots of the quadratic equation x^2 + px + q = 0 are complex numbers a + bi and a - bi, where b \u2260 0, and the product of the roots taken two at a time is equal to the sum of the roots.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The roots of the quadratic equation are a + bi and a - bi. The sum of the roots is 2a, and the product of the roots is a^2 + b^2. Given that the product of the roots taken two at a time is equal to the sum of the roots, we have a^2 + b^2 = 2a. Solving for a and b, we find a = 1 and b = 0, but since b \u2260 0, this is not possible. Therefore, the problem has no solution.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_b430158a098d5df0",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

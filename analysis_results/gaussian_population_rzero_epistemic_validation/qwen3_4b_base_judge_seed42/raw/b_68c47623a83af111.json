@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Determine the number of years required for the combined height of all trees (Alphas and Betas) to reach or exceed 1000 meters, given their growth rates.\",\n\"conditions_complete\": true,\n\"contradictory\": false,\n\"multiple_reasonable_interpretations\": false,\n\"solution_exists\": true,\n\"unique_or_explicit_grading\": true,\n\"label\": \"A\",\n\"confidence\": 0.95,\n\"probability_label_A\": 0.95,\n\"issue_types\": [],\n\"reasoning_summary\": \"The problem is self-contained, with clear conditions and a unique solution. The growth of Alphas and Betas can be modeled using exponential functions, and the combined height can be calculated iteratively until it reaches or exceeds 1000 meters.\",\n\"derived_answer\": \"After 6 years, the total height of all trees combined will reach or exceed 1000 meters.\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "After 6 years, the total height of all trees combined will reach or exceed 1000 meters.",
+    "goal_restatement": "Determine the number of years required for the combined height of all trees (Alphas and Betas) to reach or exceed 1000 meters, given their growth rates.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The problem is self-contained, with clear conditions and a unique solution. The growth of Alphas and Betas can be modeled using exponential functions, and the combined height can be calculated iteratively until it reaches or exceeds 1000 meters.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_68c47623a83af111",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

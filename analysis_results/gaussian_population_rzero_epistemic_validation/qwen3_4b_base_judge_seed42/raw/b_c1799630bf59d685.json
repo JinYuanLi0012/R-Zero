@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Determine the number of ways to distribute 10 identical candies among 4 distinct children, ensuring that no child receives more than 3 candies.\",\n  \"conditions_complete\": true,\n  \"contradictory\": false,\n  \"multiple_reasonable_interpretations\": false,\n  \"solution_exists\": true,\n  \"unique_or_explicit_grading\": true,\n  \"label\": \"A\",\n  \"confidence\": 0.95,\n  \"probability_label_A\": 0.95,\n  \"issue_types\": [],\n  \"reasoning_summary\": \"The problem is well-defined with clear conditions. We need to find the number of non-negative integer solutions to the equation x1 + x2 + x3 + x4 = 10, where each xi (representing the number of candies received by the i-th child) is at most 3. This can be solved using the principle of inclusion-exclusion or generating functions. The solution is unique and can be explicitly calculated.\",\n  \"derived_answer\": \"The number of ways to distribute the candies is 126.\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The number of ways to distribute the candies is 126.",
+    "goal_restatement": "Determine the number of ways to distribute 10 identical candies among 4 distinct children, ensuring that no child receives more than 3 candies.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The problem is well-defined with clear conditions. We need to find the number of non-negative integer solutions to the equation x1 + x2 + x3 + x4 = 10, where each xi (representing the number of candies received by the i-th child) is at most 3. This can be solved using the principle of inclusion-exclusion or generating functions. The solution is unique and can be explicitly calculated.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_c1799630bf59d685",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

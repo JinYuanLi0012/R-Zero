@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Prove that the angles BPF and CPF are equal in the given geometric configuration involving a triangle, its circumcircle, and specific points defined by intersections of circles.\",\n\"conditions_complete\": true,\n\"contradictory\": false,\n\"multiple_reasonable_interpretations\": false,\n\"solution_exists\": true,\n\"unique_or_explicit_grading\": true,\n\"label\": \"A\",\n\"confidence\": 0.95,\n\"probability_label_A\": 0.95,\n\"issue_types\": [],\n\"reasoning_summary\": \"The problem involves proving that two angles are equal in a complex geometric setup. The conditions provided are clear and consistent, and the solution can be derived through a series of geometric theorems and properties, such as the properties of cyclic quadrilaterals and the angles subtended by the same arc. The proof is unique and can be explicitly graded based on the correctness of the steps and the application of the relevant theorems.\",\n\"derived_answer\": \"The angles BPF and CPF are equal due to the properties of cyclic quadrilaterals and the angles subtended by the same arc in the given geometric configuration.\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The angles BPF and CPF are equal due to the properties of cyclic quadrilaterals and the angles subtended by the same arc in the given geometric configuration.",
+    "goal_restatement": "Prove that the angles BPF and CPF are equal in the given geometric configuration involving a triangle, its circumcircle, and specific points defined by intersections of circles.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The problem involves proving that two angles are equal in a complex geometric setup. The conditions provided are clear and consistent, and the solution can be derived through a series of geometric theorems and properties, such as the properties of cyclic quadrilaterals and the angles subtended by the same arc. The proof is unique and can be explicitly graded based on the correctness of the steps and the application of the relevant theorems.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_32cc0b469c0ac4ee",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

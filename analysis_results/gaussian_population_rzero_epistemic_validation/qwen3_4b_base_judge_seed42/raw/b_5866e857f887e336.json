@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{\"goal_restatement\": \"Find the maximum possible score of a 10x10 grid where each cell is filled with either a 0 or a 1, and the score is defined as the sum of the products of the numbers in each 2x2 subgrid.\",\n\"conditions_complete\": true,\n\"contradictory\": false,\n\"multiple_reasonable_interpretations\": false,\n\"solution_exists\": true,\n\"unique_or_explicit_grading\": true,\n\"label\": \"A\",\n\"confidence\": 0.95,\n\"probability_label_A\": 0.95,\n\"issue_types\": [],\n\"reasoning_summary\": \"The problem is well-defined with clear conditions and a unique solution. The maximum score can be achieved by filling the grid with all 1s, resulting in a score of 2500.\",\n\"derived_answer\":  \"The maximum possible score of the grid is 2500.\"}"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The maximum possible score of the grid is 2500.",
+    "goal_restatement": "Find the maximum possible score of a 10x10 grid where each cell is filled with either a 0 or a 1, and the score is defined as the sum of the products of the numbers in each 2x2 subgrid.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The problem is well-defined with clear conditions and a unique solution. The maximum score can be achieved by filling the grid with all 1s, resulting in a score of 2500.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_5866e857f887e336",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{\n  \"goal_restatement\": \"Find all integers $n > 2$ such that $n^2 + 15n + 56$ is a perfect square.\",\n  \"conditions_complete\": true,\n  \"contradictory\": false,\n  \"multiple_reasonable_interpretations\": false,\n  \"solution_exists\": true,\n  \"unique_or_explicit_grading\": true,\n  \"label\": \"A\",\n  \"confidence\": 0.95,\n  \"probability_label_A\": 0.95,\n  \"issue_types\": [],\n  \"reasoning_summary\": \"The problem is well-defined, and the solution involves solving a quadratic equation. The conditions are clear, and the solution is unique and explicitly gradable.\",\n  \"derived_answer\": \"The integers $n > 2$ that satisfy the condition are $n = 1$ and $n = 14$. However, since $n > 2$, the only valid solution is $n = 14$.\"\n}"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The integers $n > 2$ that satisfy the condition are $n = 1$ and $n = 14$. However, since $n > 2$, the only valid solution is $n = 14$.",
+    "goal_restatement": "Find all integers $n > 2$ such that $n^2 + 15n + 56$ is a perfect square.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The problem is well-defined, and the solution involves solving a quadratic equation. The conditions are clear, and the solution is unique and explicitly gradable.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_7fb7ece9a20d4cf8",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

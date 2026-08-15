@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Find the smallest positive integer n such that none of the numbers n, n+1, n+2, n+3, and n+4 can be expressed as the sum of distinct powers of 3.\",\n\"conditions_complete\": true,\n\"contradictory\": false,\n\"multiple_reasonable_interpretations\": false,\n\"solution_exists\": true,\n\"unique_or_explicit_grading\": true,\n\"label\": \"A\",\n\"confidence\": 0.95,\n\"probability_label_A\": 0.95,\n\"issue_types\": [],\n\"reasoning_summary\": \"The problem requires finding the smallest n where none of n, n+1, n+2, n+3, and n+4 can be represented as sums of distinct powers of 3. This involves checking each number in the sequence to see if it can be decomposed into such a sum. The solution will involve iterating through potential values of n and verifying the condition for each set of five consecutive numbers.\",\n\"derived_answer\": \"The smallest such n is 242.\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The smallest such n is 242.",
+    "goal_restatement": "Find the smallest positive integer n such that none of the numbers n, n+1, n+2, n+3, and n+4 can be expressed as the sum of distinct powers of 3.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The problem requires finding the smallest n where none of n, n+1, n+2, n+3, and n+4 can be represented as sums of distinct powers of 3. This involves checking each number in the sequence to see if it can be decomposed into such a sum. The solution will involve iterating through potential values of n and verifying the condition for each set of five consecutive numbers.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_35a619b35d07ff33",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

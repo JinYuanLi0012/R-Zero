@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Determine the maximum number of strikes the clock can make in 24 hours, given that the sum of the number of strikes at each of the 12 hours is a perfect square.\",\n\"conditions_complete\": true,\n\"contradictory\": false,\n\"multiple_reasonable_interpretations\": false,\n\"solution_exists\": true,\n\"unique_or_explicit_grading\": true,\n\"label\": \"A\",\n\"confidence\": 0.95,\n\"probability_label_A\": 0.95,\n\"issue_types\": [],\n\"reasoning_summary\": \"The clock strikes in a repeating pattern of 1 to 12 times per hour. The sum of strikes in 12 hours is 78, which is not a perfect square. To achieve a perfect square sum, the clock must strike an additional 2 times in the 13th hour, making the total 80 strikes in 12 hours. This pattern repeats in the next 12 hours, resulting in a total of 160 strikes in 24 hours.\",\n\"derived_answer\":   \"160\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "160",
+    "goal_restatement": "Determine the maximum number of strikes the clock can make in 24 hours, given that the sum of the number of strikes at each of the 12 hours is a perfect square.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The clock strikes in a repeating pattern of 1 to 12 times per hour. The sum of strikes in 12 hours is 78, which is not a perfect square. To achieve a perfect square sum, the clock must strike an additional 2 times in the 13th hour, making the total 80 strikes in 12 hours. This pattern repeats in the next 12 hours, resulting in a total of 160 strikes in 24 hours.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_ee5a2d92587d05a4",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Determine the maximum number of houses that can be painted red under the given constraints.\",\n  \"conditions_complete\": true,\n  \"contradictory\": false,\n  \"multiple_reasonable_interpretations\": false,\n  \"solution_exists\": true,\n  \"unique_or_explicit_grading\": true,\n  \"label\": \"A\",\n  \"confidence\": 0.95,\n  \"probability_label_A\": 0.95,\n  \"issue_types\": [],\n  \"reasoning_summary\": \"The problem involves a sequence of 100 houses with each house painted one of three colors, with the constraint that no two adjacent houses can be the same color. To maximize the number of red houses, we can alternate the colors in a pattern that allows for the most red houses while adhering to the constraint. One such pattern is RBRBRB... (red, blue, red, blue, etc.). This pattern ensures that no two adjacent houses are the same color and maximizes the number of red houses. Since there are 100 houses, the pattern will repeat 50 times, resulting in 50 red houses.\",\n  \"derived_answer\":   \"50\"\n}"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "50",
+    "goal_restatement": "Determine the maximum number of houses that can be painted red under the given constraints.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The problem involves a sequence of 100 houses with each house painted one of three colors, with the constraint that no two adjacent houses can be the same color. To maximize the number of red houses, we can alternate the colors in a pattern that allows for the most red houses while adhering to the constraint. One such pattern is RBRBRB... (red, blue, red, blue, etc.). This pattern ensures that no two adjacent houses are the same color and maximizes the number of red houses. Since there are 100 houses, the pattern will repeat 50 times, resulting in 50 red houses.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_28eea9e1738206b2",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

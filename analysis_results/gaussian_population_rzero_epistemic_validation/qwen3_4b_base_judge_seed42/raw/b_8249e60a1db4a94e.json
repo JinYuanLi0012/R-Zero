@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Find the maximum possible number of integer solutions to the equation P(x) = x, given that P(x) is a polynomial with integer coefficients, P(1) = 2023, and P(2023) = 1.\",\n\"conditions_complete\": true,\n\"contradictory\": false,\n\"multiple_reasonable_interpretations\": false,\n\"solution_exists\": true,\n\"unique_or_explicit_grading\": true,\n\"label\": \"A\",\n\"confidence\": 0.95,\n\"probability_label_A\": 0.95,\n\"issue_types\": [],\n\"reasoning_summary\": \"The problem involves finding the maximum number of integer solutions to the equation P(x) = x, given specific conditions on the polynomial P(x). The conditions P(1) = 2023 and P(2023) = 1 are used to determine the behavior of the polynomial. The equation P(x) = x can be rewritten as P(x) - x = 0, which is a polynomial equation of degree n (where n is the degree of P(x)). The number of integer solutions to this equation is bounded by the degree of the polynomial. Since P(x) is a polynomial with integer coefficients, the number of integer solutions to P(x) = x is at most the degree of P(x). The specific values P(1) = 2023 and P(2023) = 1 do not change the maximum number of integer solutions, which is determined by the degree of the polynomial. Therefore, the maximum possible number of integer solutions to the equation P(x) = x is the degree of the polynomial P(x).\",\n\"derived_answer\": \"The maximum possible number of integer solutions to the equation P(x) = x is the degree of the polynomial P(x).\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The maximum possible number of integer solutions to the equation P(x) = x is the degree of the polynomial P(x).",
+    "goal_restatement": "Find the maximum possible number of integer solutions to the equation P(x) = x, given that P(x) is a polynomial with integer coefficients, P(1) = 2023, and P(2023) = 1.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The problem involves finding the maximum number of integer solutions to the equation P(x) = x, given specific conditions on the polynomial P(x). The conditions P(1) = 2023 and P(2023) = 1 are used to determine the behavior of the polynomial. The equation P(x) = x can be rewritten as P(x) - x = 0, which is a polynomial equation of degree n (where n is the degree of P(x)). The number of integer solutions to this equation is bounded by the degree of the polynomial. Since P(x) is a polynomial with integer coefficients, the number of integer solutions to P(x) = x is at most the degree of P(x). The specific values P(1) = 2023 and P(2023) = 1 do not change the maximum number of integer solutions, which is determined by the degree of the polynomial. Therefore, the maximum possible number of integer solutions to the equation P(x) = x is the degree of the polynomial P(x).",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_8249e60a1db4a94e",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

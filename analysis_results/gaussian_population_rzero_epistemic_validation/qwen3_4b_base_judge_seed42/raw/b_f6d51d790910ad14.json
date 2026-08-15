@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "guided_json": true,
+      "raw_completion": "{ \"goal_restatement\": \"Determine the minimum number of games required to find the overall champion in a tournament with 20 teams divided into two groups of 10, where each team plays every other team in its own group once, and the top two teams from each group advance to a single-elimination playoff round.\",\n\"conditions_complete\": true,\n\"contradictory\": false,\n\"multiple_reasonable_interpretations\": false,\n\"solution_exists\": true,\n\"unique_or_explicit_grading\": true,\n\"label\": \"A\",\n\"confidence\": 0.95,\n\"probability_label_A\": 0.95,\n\"issue_types\": [],\n\"reasoning_summary\": \"The problem is self-contained, valid, solvable, and uniquely gradable. The conditions are complete, there are no contradictions, and the solution is unique and explicitly gradable.\",\n\"derived_answer\": \"The minimum number of games required to determine the overall champion is 29.\" }"
+    }
+  ],
+  "judgment": {
+    "conditions_complete": true,
+    "confidence": 0.95,
+    "contradictory": false,
+    "derived_answer": "The minimum number of games required to determine the overall champion is 29.",
+    "goal_restatement": "Determine the minimum number of games required to find the overall champion in a tournament with 20 teams divided into two groups of 10, where each team plays every other team in its own group once, and the top two teams from each group advance to a single-elimination playoff round.",
+    "issue_types": [],
+    "label": "A",
+    "multiple_reasonable_interpretations": false,
+    "probability_label_A": 0.95,
+    "reasoning_summary": "The problem is self-contained, valid, solvable, and uniquely gradable. The conditions are complete, there are no contradictions, and the solution is unique and explicitly gradable.",
+    "solution_exists": true,
+    "unique_or_explicit_grading": true
+  },
+  "max_tokens": 4096,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_base_judge_id": "b_f6d51d790910ad14",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0
+}

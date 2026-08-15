@@ -1,0 +1,35 @@
+{
+  "blind_input_fields": [
+    "opaque_base_judge_id",
+    "question"
+  ],
+  "final_parse_failure_count": 43,
+  "generation": {
+    "deterministic_retries": 1,
+    "max_tokens": 4096,
+    "samples_per_question": 1,
+    "temperature": 0.0,
+    "top_p": 1.0
+  },
+  "gpu_ids": [
+    "0"
+  ],
+  "input": "/engrfs/project/jiaxinh/jinyuan/R-zero-storage/epistemic_validation/qwen3_4b_rzero_v1_v3_epistemic_seed42/prepared/all_samples.jsonl",
+  "input_sha256": "8739744ee2562778331ae9a6f1fe6076e7130c1a3bcdc63a274aa4aaa7f0cace",
+  "model": "Qwen/Qwen3-4B-Base",
+  "num_shards": 1,
+  "question_count": 600,
+  "seed": 42,
+  "software": {
+    "datasets": "3.6.0",
+    "git_commit": "c798c01e56ee3ee889c8c6c585279c9d1e79703a",
+    "openai": "1.86.0",
+    "pyarrow": "20.0.0",
+    "python": "3.10.20",
+    "scipy": "1.15.3",
+    "torch": "2.7.0",
+    "transformers": "4.52.4",
+    "vllm": "0.9.1"
+  },
+  "successful_count": 557
+}
