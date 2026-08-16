@@ -8,7 +8,7 @@ import math
 from typing import Any
 
 
-EXPERIMENT_VERSION = "binary-fewshot-logprob-v1"
+EXPERIMENT_VERSION = "binary-fewshot-logprob-v2"
 VARIANTS = ("direct", "solver_first")
 VALID_CANDIDATE = " VALID"
 INVALID_CANDIDATE = " INVALID"

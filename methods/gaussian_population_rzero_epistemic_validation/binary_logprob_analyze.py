@@ -16,7 +16,7 @@ from common import atomic_json, read_jsonl
 def metric_values(rows: list[dict[str, Any]], baseline: bool = False) -> dict[str, Any]:
     truth = [row["terra_valid"] for row in rows]
     predicted = [True] * len(rows) if baseline else [row["verdict"] == "VALID" for row in rows]
-    scores = [1.0] * len(rows) if baseline else [float(row["probability_valid"]) for row in rows]
+    scores = [1.0] * len(rows) if baseline else [float(row["valid_score"]) for row in rows]
     result = binary_metrics(truth, predicted)
     result["roc_auc"] = roc_auc(truth, scores)
     return result
@@ -114,10 +114,10 @@ def main() -> None:
                     "question_id": question_id, "round": direct["round"],
                     "terra_label": direct["terra_label"], "question": direct["question"],
                     "direct_verdict": direct["verdict"],
-                    "direct_probability_valid": direct["probability_valid"],
+                    "direct_valid_score": direct["valid_score"],
                     "direct_analysis": direct["analysis"],
                     "solver_first_verdict": solver["verdict"],
-                    "solver_first_probability_valid": solver["probability_valid"],
+                    "solver_first_valid_score": solver["valid_score"],
                     "solver_first_analysis": solver["analysis"],
                 }
             )
@@ -175,8 +175,8 @@ def main() -> None:
     write_csv(
         args.output_dir / "prompt_disagreements.csv", disagreements,
         ["question_id", "round", "question", "terra_label", "direct_verdict",
-         "direct_probability_valid", "direct_analysis", "solver_first_verdict",
-         "solver_first_probability_valid", "solver_first_analysis"],
+         "direct_valid_score", "direct_analysis", "solver_first_verdict",
+         "solver_first_valid_score", "solver_first_analysis"],
     )
     write_csv(
         args.output_dir / "generation_diagnostics.csv", diagnostics,
@@ -218,7 +218,7 @@ def main() -> None:
             f"mean_tokens={row['mean_analysis_tokens']:.1f}"
             for row in diagnostics
         ) + ".", "",
-        "`probability_valid` is the two-candidate softmax of model-computed sequence log-likelihoods for ` VALID` and ` INVALID`; it is not a self-reported confidence.",
+        "`valid_score` is a logprob-derived ranking score: the two-candidate softmax of model-computed sequence log-likelihoods for ` VALID` and ` INVALID`. It is not self-reported confidence or a calibrated probability.",
     ])
     (args.output_dir / "report.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 

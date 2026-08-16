@@ -33,7 +33,7 @@ def main() -> None:
             raise RuntimeError("result is incomplete or from a different experiment version")
         if row["verdict"] not in {"VALID", "INVALID"}:
             raise RuntimeError("invalid binary verdict")
-        probability = float(row["probability_valid"])
+        probability = float(row["valid_score"])
         if not math.isfinite(probability) or not 0 <= probability <= 1:
             raise RuntimeError("invalid paired probability")
         for field in ("valid_logprob", "invalid_logprob", "logprob_margin_valid_minus_invalid"):

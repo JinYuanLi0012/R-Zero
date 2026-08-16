@@ -18,8 +18,13 @@ opaque ID and question text.
 For each prompt, the model deterministically generates one concise analysis. The
 worker then appends `Verdict:` and independently scores the complete candidate
 token sequences ` VALID` and ` INVALID` with vLLM prompt-token logprobs. The
-reported `probability_valid` is a two-candidate softmax of those sequence
-log-likelihoods. It is not generated or self-reported by the model.
+reported `valid_score` is a two-candidate softmax of those sequence
+log-likelihoods. It is used only as a ranking signal for ROC-AUC; it is neither
+generated confidence nor a calibrated probability.
+
+Prefix caching is intentionally disabled in this worker because vLLM 0.9.1's
+V0 sampler is incompatible with the `prompt_logprobs` scoring path when
+automatic prefix caching is enabled.
 
 ## Formal run
 

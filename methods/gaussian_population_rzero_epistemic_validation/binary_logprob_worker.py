@@ -87,7 +87,7 @@ def score_candidates(llm, vllm_module, tokenizer, contexts: list[str]):
             {
                 "valid_logprob": valid_lp, "invalid_logprob": invalid_lp,
                 "logprob_margin_valid_minus_invalid": valid_lp - invalid_lp,
-                "probability_valid": probability,
+                "valid_score": probability,
                 "verdict": "VALID" if valid_lp > invalid_lp else "INVALID",
                 "valid_candidate_token_ids": valid_ids,
                 "invalid_candidate_token_ids": invalid_ids,
@@ -123,7 +123,10 @@ def main() -> None:
     tokenizer = AutoTokenizer.from_pretrained(args.model)
     llm = vllm.LLM(
         model=args.model, tokenizer=args.model, tensor_parallel_size=1,
-        gpu_memory_utilization=args.gpu_memory_utilization, enable_prefix_caching=True,
+        # vLLM 0.9.1 V0 can assert inside the sampler when prompt_logprobs
+        # and automatic prefix caching are used together. Candidate scoring
+        # below requires prompt_logprobs, so keep the cache disabled.
+        gpu_memory_utilization=args.gpu_memory_utilization, enable_prefix_caching=False,
     )
     for variant in VARIANTS:
         pending = [(item, path) for work_variant, item, path in work if work_variant == variant]

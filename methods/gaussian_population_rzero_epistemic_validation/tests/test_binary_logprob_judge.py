@@ -90,7 +90,7 @@ class AnalysisIntegrationTests(unittest.TestCase):
                             "question_id": row["question_id"], "round": row["round"],
                             "question": f"Question {row['question_id']}", "variant": variant,
                             "status": "success", "verdict": verdict,
-                            "probability_valid": 0.9 if verdict == "VALID" else 0.1,
+                            "valid_score": 0.9 if verdict == "VALID" else 0.1,
                             "analysis": "Synthetic fixture analysis.",
                             "analysis_truncated": False, "analysis_token_count": 4,
                             "valid_candidate_token_ids": [1],
@@ -113,6 +113,13 @@ class AnalysisIntegrationTests(unittest.TestCase):
             self.assertEqual(metrics["scopes"]["overall"]["solver_first"]["roc_auc"], 1.0)
             self.assertEqual(metrics["prompt_comparison"]["paired_count"], 3)
             self.assertTrue((output_dir / "report.md").is_file())
+
+
+class RuntimeConfigurationTests(unittest.TestCase):
+    def test_prompt_logprob_scoring_disables_prefix_cache(self):
+        source = (METHOD / "binary_logprob_worker.py").read_text(encoding="utf-8")
+        self.assertIn("enable_prefix_caching=False", source)
+        self.assertNotIn("enable_prefix_caching=True", source)
 
 
 if __name__ == "__main__":
