@@ -45,7 +45,8 @@ Compute1 one-step baseline 已成功完成 Questioner step 1、Questioner export
 
 为了尽快验证剩余的 Solver FSDP2 update、checkpoint 和官方 HF export，不再从头
 运行完整 smoke。`solver_gate.sh` 直接读取该 baseline 的 32 行 Parquet，使用已有
-轻量 smoke profile（4 prompts、`n=2`、一步）并写入完全独立的输出目录：
+轻量 smoke profile（4 prompts、Solver rollout `n=5`、一步、最大回复 512 tokens）
+并写入完全独立的输出目录：
 
 ```bash
 bash /workspace/R-Zero/qwen35/scripts/solver_gate.sh \
