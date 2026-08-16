@@ -56,6 +56,7 @@ qwen35/
   即每次更新 640 trajectories。Qwen3.5 的 per-GPU micro-batch 保守设为 1，
   只改变梯度累积拆分，不改变上述全局 mini-batch。
 - 每轮依次执行 Questioner GRPO、Questioner 导出、4×2000 候选生成、Solver 投票、合并筛选、Solver GRPO、Solver 导出和固定评测。正式筛选保留发布代码的行顺序与重复题，不新增去重。
+- Solver 投票的数学等价判断保留发布代码的鲁棒性边界：两个比较方向分别最多执行 10 秒，超时按不匹配处理，避免异常符号表达式阻塞整个 shard 或在线奖励服务。
 - Questioner 阶段使用 2 张训练卡和 2 张冻结 Solver 服务卡；Solver 训练使用全部 4 张 A100。
 - 本地 Parquet 是权威训练输入，Hugging Face 上传是可选幂等发布动作。
 
