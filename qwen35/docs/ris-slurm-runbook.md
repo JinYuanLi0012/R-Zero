@@ -76,6 +76,27 @@ agent-loop workers 的 `DataProto.chunk(8)` 只支持严格等分。训练适配
 batch 语义。Compute2 失败发生在首个 rollout 请求前，没有 checkpoint；拉取修复后
 可在同一 gate 输出目录使用 `--resume` 安全重试。
 
+2026-08-16 的 Compute2 重试已完整通过：Solver GRPO 到达
+`training/global_step=1`，保存四卡 FSDP2 checkpoint，官方 `verl.model_merger`
+成功加载 4 个 shards 并导出 Hugging Face model/tokenizer，最终打印
+`RZERO_SOLVER_GATE_OK`。训练收尾的 DataLoader worker atexit 警告发生在完整 step
+metrics 之后，且未阻止 checkpoint 或 export，故不视为 gate 失败。至此最小验证
+结束，不再追加 smoke。
+
+## Compute2 正式五轮运行
+
+正式主线使用独立目录 `runs/rzero-qwen35-formal` 和正式配置，不包含 smoke 或 gate：
+
+```bash
+mkdir -p runs/slurm-logs
+sbatch qwen35/scripts/ris_formal.sbatch
+```
+
+每个作业申请 24 小时。pipeline 固定以 `--resume` 启动：若作业达到 Slurm 时限，
+再次提交同一个脚本即可跳过已提交 stage，并从最近完整 verl checkpoint 恢复未完成
+训练。不要更换正式 run directory，也不要对它使用 smoke 配置。正式 curation 若不足
+512 条会在 Solver 训练前明确失败，禁止用 integration repeat 补齐正式数据。
+
 curation 现始终检查输出至少能组成一个 Solver training batch。正式 profile 不足
 512 行会在 curate 阶段提前失败，绝不重复训练题；只有非正式集成 profile 才允许
 确定性重复已有题目到一个 batch，并在 `curation.json` 分别登记唯一题数、训练行数

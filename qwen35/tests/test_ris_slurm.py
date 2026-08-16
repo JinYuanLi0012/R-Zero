@@ -26,6 +26,22 @@ class RisSlurmScriptTests(unittest.TestCase):
         self.assertIn("--source-run-dir /workspace/R-Zero/runs/rzero-qwen35-one-step", script)
         self.assertIn("--output-dir /workspace/R-Zero/runs/rzero-qwen35-solver-gate", script)
 
+    def test_compute2_formal_job_uses_only_formal_resumable_pipeline(self):
+        repo_root = Path(__file__).resolve().parents[2]
+        script = (repo_root / "qwen35/scripts/ris_formal.sbatch").read_text(encoding="utf-8")
+        self.assertIn("#SBATCH --account=compute2-jiaxinh", script)
+        self.assertIn("#SBATCH --partition=general-gpu", script)
+        self.assertIn("#SBATCH --gpus=4", script)
+        self.assertIn("#SBATCH --cpus-per-task=32", script)
+        self.assertIn("#SBATCH --mem=512G", script)
+        self.assertIn("#SBATCH --time=1-00:00:00", script)
+        self.assertIn("rzero-qwen35-bdc8b2c29981.sqsh", script)
+        self.assertIn("a100_4x_qwen35_4b_base.yaml", script)
+        self.assertIn("runs/rzero-qwen35-formal", script)
+        self.assertIn("--resume", script)
+        self.assertNotIn("smoke.yaml", script)
+        self.assertNotIn("solver_gate.sh", script)
+
     def test_round0_smoke_uses_pinned_topology_and_isolated_profile(self):
         repo_root = Path(__file__).resolve().parents[2]
         script = (repo_root / "qwen35/scripts/ris_round0_smoke.sbatch").read_text(encoding="utf-8")
