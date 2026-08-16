@@ -27,7 +27,7 @@ def arguments() -> argparse.Namespace:
     parser.add_argument("--max-analysis-tokens", type=int, default=1024)
     parser.add_argument("--batch-size", type=int, default=16)
     parser.add_argument("--score-batch-size", type=int, default=1)
-    parser.add_argument("--gpu-memory-utilization", type=float, default=0.8)
+    parser.add_argument("--gpu-memory-utilization", type=float, default=0.7)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--resume", action="store_true")
     return parser.parse_args()
@@ -72,21 +72,23 @@ def score_candidates(
     )
     scores = []
     for batch_start in range(0, len(contexts), score_batch_size):
-        token_prompts, starts = [], []
         for context in contexts[batch_start : batch_start + score_batch_size]:
             context_ids = tokenizer.encode(context, add_special_tokens=True)
+            candidate_scores = []
             for candidate_ids in (valid_ids, invalid_ids):
-                starts.append(len(context_ids))
-                token_prompts.append(context_ids + candidate_ids)
-        outputs = llm.generate(
-            prompts=None, prompt_token_ids=token_prompts,
-            sampling_params=params, use_tqdm=True,
-        )
-        if len(outputs) != len(token_prompts):
-            raise RuntimeError("vLLM returned an unexpected scoring output count")
-        for index in range(0, len(outputs), 2):
-            valid_lp = candidate_logprob(outputs[index], starts[index], valid_ids)
-            invalid_lp = candidate_logprob(outputs[index + 1], starts[index + 1], invalid_ids)
+                # Score candidates in separate engine calls. For long contexts,
+                # prompt_logprobs materializes a full-sequence vocabulary tensor;
+                # batching even these two candidates can exceed an 80 GB GPU.
+                outputs = llm.generate(
+                    prompts=None, prompt_token_ids=[context_ids + candidate_ids],
+                    sampling_params=params, use_tqdm=True,
+                )
+                if len(outputs) != 1:
+                    raise RuntimeError("vLLM returned an unexpected scoring output count")
+                candidate_scores.append(
+                    candidate_logprob(outputs[0], len(context_ids), candidate_ids)
+                )
+            valid_lp, invalid_lp = candidate_scores
             valid_score = paired_probability(valid_lp, invalid_lp)
             scores.append(
                 {
@@ -96,7 +98,7 @@ def score_candidates(
                     "verdict": "VALID" if valid_lp > invalid_lp else "INVALID",
                     "valid_candidate_token_ids": valid_ids,
                     "invalid_candidate_token_ids": invalid_ids,
-                    "context_token_count": starts[index],
+                    "context_token_count": len(context_ids),
                 }
             )
     return scores

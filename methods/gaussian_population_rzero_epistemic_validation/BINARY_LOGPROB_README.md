@@ -38,7 +38,9 @@ bash methods/gaussian_population_rzero_epistemic_validation/run_binary_logprob_j
 Defaults are four single-GPU shards (`0,1,2,3`), temperature 0, 1024 maximum
 analysis tokens, and analysis-generation batch size 16. Candidate logprob
 scoring uses a separate one-question micro-batch because prompt-token logprobs
-materialize a large full-vocabulary tensor. Atomic artifacts allow safe resume.
+materialize a large full-vocabulary tensor. The `VALID` and `INVALID` candidates
+are scored in separate engine calls, and vLLM's GPU-memory utilization defaults
+to 0.7 to leave headroom for the scoring tensor. Atomic artifacts allow safe resume.
 Resume additionally checks the configured analysis-token limit.
 
 To retain the 1024-token run and repeat the experiment with a doubled limit:
@@ -49,6 +51,7 @@ bash methods/gaussian_population_rzero_epistemic_validation/run_binary_logprob_j
   --model Qwen/Qwen3-4B-Base \
   --max-analysis-tokens 2048 \
   --output-name base_judge_binary_logprob_2048 \
+  --gpu-memory-utilization 0.7 \
   --resume
 ```
 

@@ -96,7 +96,7 @@ class LogprobTests(unittest.TestCase):
 
         llm = FakeLlm()
         rows = score_candidates(llm, FakeVllm, FakeTokenizer(), ["a", "b", "c"])
-        self.assertEqual(llm.prompt_counts, [2, 2, 2])
+        self.assertEqual(llm.prompt_counts, [1, 1, 1, 1, 1, 1])
         self.assertEqual([row["verdict"] for row in rows], ["VALID"] * 3)
 
 
@@ -157,6 +157,8 @@ class RuntimeConfigurationTests(unittest.TestCase):
         launcher = (METHOD / "binary_logprob_judge.py").read_text(encoding="utf-8")
         self.assertIn('parser.add_argument("--score-batch-size", type=int, default=1)', worker)
         self.assertIn('parser.add_argument("--score-batch-size", type=int, default=1)', launcher)
+        self.assertIn('parser.add_argument("--gpu-memory-utilization", type=float, default=0.7)', worker)
+        self.assertIn('parser.add_argument("--gpu-memory-utilization", type=float, default=0.7)', launcher)
 
     def test_resume_rejects_a_different_generation_length(self):
         with tempfile.TemporaryDirectory() as directory:

@@ -8,6 +8,7 @@ GPU_IDS="0,1,2,3"
 SCORE_BATCH_SIZE=1
 MAX_ANALYSIS_TOKENS=1024
 OUTPUT_NAME="base_judge_binary_logprob"
+GPU_MEMORY_UTILIZATION=0.7
 RESUME=0
 
 while [[ $# -gt 0 ]]; do
@@ -18,6 +19,7 @@ while [[ $# -gt 0 ]]; do
     --score-batch-size) SCORE_BATCH_SIZE="$2"; shift 2 ;;
     --max-analysis-tokens) MAX_ANALYSIS_TOKENS="$2"; shift 2 ;;
     --output-name) OUTPUT_NAME="$2"; shift 2 ;;
+    --gpu-memory-utilization) GPU_MEMORY_UTILIZATION="$2"; shift 2 ;;
     --resume) RESUME=1; shift ;;
     *) echo "Unknown argument: $1" >&2; exit 2 ;;
   esac
@@ -42,7 +44,8 @@ COMMAND=(python "$HERE/binary_logprob_judge.py"
   --model "$MODEL"
   --gpu-ids "$GPU_IDS"
   --score-batch-size "$SCORE_BATCH_SIZE"
-  --max-analysis-tokens "$MAX_ANALYSIS_TOKENS")
+  --max-analysis-tokens "$MAX_ANALYSIS_TOKENS"
+  --gpu-memory-utilization "$GPU_MEMORY_UTILIZATION")
 if [[ "$RESUME" -eq 1 ]]; then
   COMMAND+=(--resume)
 fi
