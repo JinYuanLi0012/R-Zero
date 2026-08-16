@@ -47,6 +47,7 @@ class TrainCommandTests(unittest.TestCase):
         self.assertIn("trainer.total_training_steps=5", rendered)
         self.assertIn("data.train_batch_size=512", rendered)
         self.assertIn("actor_rollout_ref.rollout.n=4", rendered)
+        self.assertIn("actor_rollout_ref.rollout.agent.num_workers=8", rendered)
         self.assertIn("actor_rollout_ref.actor.ppo_mini_batch_size=16", rendered)
         self.assertIn("actor_rollout_ref.actor.ppo_micro_batch_size_per_gpu=1", rendered)
         self.assertIn("actor_rollout_ref.ref.log_prob_micro_batch_size_per_gpu=1", rendered)
@@ -169,6 +170,7 @@ class TrainCommandTests(unittest.TestCase):
         self.assertIn("trainer.total_training_steps=15", rendered)
         self.assertIn("data.train_batch_size=512", rendered)
         self.assertIn("actor_rollout_ref.rollout.n=5", rendered)
+        self.assertIn("actor_rollout_ref.rollout.agent.num_workers=8", rendered)
         self.assertIn("actor_rollout_ref.actor.ppo_mini_batch_size=128", rendered)
         self.assertIn("actor_rollout_ref.ref.log_prob_micro_batch_size_per_gpu=1", rendered)
         self.assertIn("actor_rollout_ref.rollout.log_prob_micro_batch_size_per_gpu=1", rendered)
@@ -180,8 +182,10 @@ class TrainCommandTests(unittest.TestCase):
         solver = "\n".join(build_command(self.args("solver", SMOKE_CONFIG)))
         self.assertIn("data.train_batch_size=4", questioner)
         self.assertIn("actor_rollout_ref.actor.ppo_mini_batch_size=4", questioner)
+        self.assertIn("actor_rollout_ref.rollout.agent.num_workers=8", questioner)
         self.assertIn("data.train_batch_size=4", solver)
         self.assertIn("actor_rollout_ref.actor.ppo_mini_batch_size=4", solver)
+        self.assertIn("actor_rollout_ref.rollout.agent.num_workers=4", solver)
 
     def test_training_subprocess_removes_rocm_visibility_on_nvidia(self):
         original = {

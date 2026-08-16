@@ -56,6 +56,15 @@ bash /workspace/R-Zero/qwen35/scripts/solver_gate.sh \
 成功标志是 `RZERO_SOLVER_GATE_OK`。该 gate 只验证工程链路，不声称复现正式 Solver
 训练效果；正式配置仍保持 512 prompts、`n=5`、128 prompts/optimizer mini-batch。
 
+Compute2 首次 gate 已成功启动四个 vLLM server，但在生成前发现固定 verl 的另一项
+缩小 batch 约束：4 prompts × `n=5` 产生 20 trajectories，而官方默认 8 个
+agent-loop workers 的 `DataProto.chunk(8)` 只支持严格等分。训练适配器现按
+`gcd(8, prompt_batch × n)` 选择最大合法 worker 数，所以 gate 使用 4；Questioner
+正式 population 2048 和 Solver 正式 population 2560 都仍使用官方默认 8。该值只
+改变 CPU agent-loop 请求分发并发，不改变采样数、trajectory、reward 或 optimizer
+batch 语义。Compute2 失败发生在首个 rollout 请求前，没有 checkpoint；拉取修复后
+可在同一 gate 输出目录使用 `--resume` 安全重试。
+
 curation 现始终检查输出至少能组成一个 Solver training batch。正式 profile 不足
 512 行会在 curate 阶段提前失败，绝不重复训练题；只有非正式集成 profile 才允许
 确定性重复已有题目到一个 batch，并在 `curation.json` 分别登记唯一题数、训练行数

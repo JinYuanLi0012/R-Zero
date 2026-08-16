@@ -8,6 +8,7 @@ keys through the Qwen3.5 compatibility entrypoint.
 from __future__ import annotations
 
 import argparse
+import math
 import os
 import subprocess
 import sys
@@ -59,6 +60,11 @@ def build_command(args: argparse.Namespace) -> list[str]:
     mini_batch_size = algorithm[
         "questioner_update_batch_size" if is_questioner else "solver_update_batch_size"
     ]
+    trajectory_batch_size = train_batch_size * rollouts
+    # The pinned verl agent-loop manager requires exact equal chunks. Keep its
+    # default eight workers whenever possible (including both formal roles),
+    # and select the largest valid divisor only for reduced integration batches.
+    agent_loop_workers = math.gcd(8, trajectory_batch_size)
     micro_batch_size = 1
     round_dir = args.output_dir.parent.parent
     hydra_run_dir = round_dir / "logs" / "hydra" / args.experiment_name / "${now:%Y-%m-%d_%H-%M-%S}"
@@ -111,6 +117,7 @@ def build_command(args: argparse.Namespace) -> list[str]:
         "actor_rollout_ref.ref.log_prob_micro_batch_size_per_gpu": 1,
         "actor_rollout_ref.rollout.name": "vllm",
         "actor_rollout_ref.rollout.n": rollouts,
+        "actor_rollout_ref.rollout.agent.num_workers": agent_loop_workers,
         "actor_rollout_ref.rollout.log_prob_micro_batch_size_per_gpu": 1,
         "actor_rollout_ref.rollout.tensor_model_parallel_size": 1,
         "actor_rollout_ref.rollout.gpu_memory_utilization": 0.45,
