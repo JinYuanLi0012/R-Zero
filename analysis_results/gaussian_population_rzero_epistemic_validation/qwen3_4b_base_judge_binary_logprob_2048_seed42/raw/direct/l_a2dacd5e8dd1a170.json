@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and the full answer is objectively checkable. The smallest positive integer that can be expressed as the sum of two distinct positive cubes is 28 (2^3 + 2^3), but it is not divisible by 3. The next smallest positive integer that can be expressed as the sum of two distinct positive cubes is 35 (1^3 + 3^3), which is divisible by 3. Therefore, the smallest positive integer that can be expressed as the sum of two distinct positive cubes and is also divisible by 3 is 35.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 123,
+  "analysis_truncated": false,
+  "context_token_count": 444,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -7.63236665725708,
+  "logprob_margin_valid_minus_invalid": 7.62499990221113,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_a2dacd5e8dd1a170",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.007366755045950413,
+  "valid_score": 0.9995121428295342,
+  "variant": "direct",
+  "verdict": "VALID"
+}

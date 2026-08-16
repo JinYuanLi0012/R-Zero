@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and the full answer is objectively checkable. The functional equation is well-defined, and the solution space is sufficiently broad to allow for multiple functions to satisfy the equation. The conditions are sufficient to determine the functions, and the answer can be verified by substitution.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 58,
+  "analysis_truncated": false,
+  "context_token_count": 417,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.004925727844238,
+  "logprob_margin_valid_minus_invalid": 9.000000110827386,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_94fa586e7cb1bf6d",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.004925617016851902,
+  "valid_score": 0.9998766054376876,
+  "variant": "direct",
+  "verdict": "VALID"
+}

@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem provides sufficient information to determine the maximum number of pets the house numbered 5 can have. The total number of pets is 45, and the number of pets in each house must be unique and range from 1 to 9. The condition that no two adjacent houses have the same number of pets adds a constraint that can be used to find the maximum number of pets for house 5. The problem is consistent, and the complete answer is objectively gradable.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 99,
+  "analysis_truncated": false,
+  "context_token_count": 501,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -10.129810333251953,
+  "logprob_margin_valid_minus_invalid": 10.125000380910933,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_9656acb21f1b7f8a",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.004809952341020107,
+  "valid_score": 0.9999599363230308,
+  "variant": "direct",
+  "verdict": "VALID"
+}

@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete, consistent, and has one clear answer. The conditions are sufficient to determine the time it takes for Alice and Bob to meet for the second time at the starting point. The answer is objectively gradable.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 48,
+  "analysis_truncated": false,
+  "context_token_count": 431,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.136245727539062,
+  "logprob_margin_valid_minus_invalid": 9.125000051222742,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_6fb5bb3b1d97bbac",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.011245676316320896,
+  "valid_score": 0.9998911030955508,
+  "variant": "direct",
+  "verdict": "VALID"
+}

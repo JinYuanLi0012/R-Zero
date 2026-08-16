@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and consistent. The conditions are sufficient to determine the maximum number of liars. The answer is objectively gradable. The problem asks for the maximum number of liars, and there is a clear solution process to determine this number. The problem is VALID.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": null,
+  "analysis_token_count": 56,
+  "analysis_truncated": false,
+  "context_token_count": 472,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.261629104614258,
+  "logprob_margin_valid_minus_invalid": 9.249999932013452,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_2998ef71ebb0cbcb",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.01162917260080576,
+  "valid_score": 0.9999038975779674,
+  "variant": "direct",
+  "verdict": "VALID"
+}

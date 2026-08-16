@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and the full answer is objectively checkable. The conditions are sufficient to find all positive integers \\( n \\) that satisfy the equation \\( n^2 + 15n + 56 = k^2 \\) for some integer \\( k \\). The problem asks for the sum of all such \\( n \\), and this sum can be determined by solving the equation and verifying the solutions. Therefore, the problem is valid as written.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 96,
+  "analysis_truncated": false,
+  "context_token_count": 424,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.504000663757324,
+  "logprob_margin_valid_minus_invalid": 9.499999788589776,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_6d4a98f5ea9a1c55",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.0040008751675486565,
+  "valid_score": 0.9999251537566674,
+  "variant": "direct",
+  "verdict": "VALID"
+}

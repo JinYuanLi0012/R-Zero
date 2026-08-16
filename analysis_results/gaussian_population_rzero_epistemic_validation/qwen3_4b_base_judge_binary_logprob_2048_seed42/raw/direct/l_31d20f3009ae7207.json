@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and the full answer is objectively checkable. The conditions are sufficient and consistent, a solution exists, and the complete answer is objectively gradable. The problem asks for the smallest positive integer \\( n \\) such that the product of its digits equals the product of the digits of \\( n^2 + 1 \\). This is a well-defined problem with a clear objective. The solution can be verified by checking each positive integer \\( n \\) until the condition is met, and the smallest such \\( n \\) can be determined. Therefore, the problem is valid.\n",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 121,
+  "analysis_truncated": false,
+  "context_token_count": 449,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.75430679321289,
+  "logprob_margin_valid_minus_invalid": 9.749999751802534,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_31d20f3009ae7207",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.00430704141035676,
+  "valid_score": 0.9999417087198719,
+  "variant": "direct",
+  "verdict": "VALID"
+}

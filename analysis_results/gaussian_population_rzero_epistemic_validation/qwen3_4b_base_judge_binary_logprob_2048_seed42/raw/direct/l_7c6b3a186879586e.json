@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete, consistent, and has one clear answer. The sequence is defined recursively with initial conditions, and the task is to find the remainder when \\(a_{2023}\\) is divided by 5. The problem is well-posed and the answer is objectively gradable.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 63,
+  "analysis_truncated": false,
+  "context_token_count": 452,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -10.004976272583008,
+  "logprob_margin_valid_minus_invalid": 9.999999648425728,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_7c6b3a186879586e",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.00497662415727973,
+  "valid_score": 0.9999546021153376,
+  "variant": "direct",
+  "verdict": "VALID"
+}

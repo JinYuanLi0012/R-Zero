@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete, consistent, and has one clear answer. The remainder when \\(345678\\) is divided by \\(101\\) can be calculated using modular arithmetic. Specifically, we need to find \\(345678 \\mod 101\\). This calculation is straightforward and the result is an integer between 0 and 100, which is objectively gradable. Therefore, the conditions are sufficient, a solution exists, and the complete answer is objectively gradable.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 108,
+  "analysis_truncated": false,
+  "context_token_count": 425,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.505093574523926,
+  "logprob_margin_valid_minus_invalid": 9.499999644700438,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_4f0580237f323b4e",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.005093929823487997,
+  "valid_score": 0.9999251537458985,
+  "variant": "direct",
+  "verdict": "VALID"
+}

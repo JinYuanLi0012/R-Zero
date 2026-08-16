@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and the full answer is objectively checkable. The conditions are sufficient and consistent, a solution exists, and the complete answer is objectively gradable. The problem asks for all integers \\( n \\) such that the polynomial \\( P(x) = x^4 + 4x^3 + 3x^2 - 2x + n \\) has at least one integer root. To determine the possible values of \\( n \\), we can use the Rational Root Theorem, which states that any rational root of the polynomial must be a factor of the constant term \\( n \\) divided by a factor of the leading coefficient (which is 1 in this case). Therefore, any integer root must be a factor of \\( n \\). By testing possible integer roots, we can find the corresponding values of \\( n \\) that satisfy the condition. The complete answer is objectively gradable, as it involves listing all such integers \\( n \\).\n",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 197,
+  "analysis_truncated": false,
+  "context_token_count": 538,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -10.879130363464355,
+  "logprob_margin_valid_minus_invalid": 10.875000196043402,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_b3f382ee3b427b1b",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.004130167420953512,
+  "valid_score": 0.999981074855464,
+  "variant": "direct",
+  "verdict": "VALID"
+}

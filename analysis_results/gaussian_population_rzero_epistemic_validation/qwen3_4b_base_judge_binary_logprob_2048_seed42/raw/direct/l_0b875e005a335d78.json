@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is well-defined with the given conditions and the inequality to be proven. The conditions \\( abc = 1 \\) and the requirement to prove the inequality are sufficient and consistent. The problem asks for a proof, which is an objective task that can be graded based on the correctness and completeness of the proof. Therefore, the problem is valid as written.\n",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 75,
+  "analysis_truncated": false,
+  "context_token_count": 454,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.63077449798584,
+  "logprob_margin_valid_minus_invalid": 9.624999896623194,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_0b875e005a335d78",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.005774601362645626,
+  "valid_score": 0.9999339478483176,
+  "variant": "direct",
+  "verdict": "VALID"
+}

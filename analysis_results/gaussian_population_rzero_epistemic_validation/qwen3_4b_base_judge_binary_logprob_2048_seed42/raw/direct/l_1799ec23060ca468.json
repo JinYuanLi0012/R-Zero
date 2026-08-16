@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete, consistent, and has a clear answer. The conditions are sufficient to determine the number of silver coins, and the answer is objectively gradable.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 36,
+  "analysis_truncated": false,
+  "context_token_count": 413,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -8.88785457611084,
+  "logprob_margin_valid_minus_invalid": 8.875000358559191,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_1799ec23060ca468",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.012854217551648617,
+  "valid_score": 0.9998601779744801,
+  "variant": "direct",
+  "verdict": "VALID"
+}

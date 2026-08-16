@@ -1,0 +1,27 @@
+{
+  "analysis": " To solve this problem, we need to find all ordered pairs \\((a, b)\\) of positive integers that satisfy the equation \\(a^2 + b^2 = 10a + 12b\\) and the condition \\(a < b\\). Let's start by rearranging the equation to make it easier to analyze:\n\n\\[a^2 + b^2 - 10a - 12b = 0\\]\n\nWe can complete the square for both \\(a\\) and \\(b\\):\n\n\\[a^2 - 10a + b^2 - 12b = 0\\]\n\\[(a - 5)^2 - 25 + (b - 6)^2 - 36 = 0\\]\n\\[(a - 5)^2 + (b - 6)^2 = 61\\]\n\nThis equation represents a circle with center \\((5, 6)\\) and radius \\(\\sqrt{61}\\). We need to find all pairs of positive integers \\((a, b)\\) that lie on this circle and satisfy \\(a < b\\).\n\nNext, we will check possible integer values for \\(a\\) and \\(b\\) that could satisfy the equation. Since \\(a\\) and \\(b\\) are positive integers, we can start by testing values around the center of the circle, which is \\((5, 6)\\).\n\nLet's test some values:\n\n1. If \\(a = 1\\):\n   \\[(1 - 5)^2 + (b - 6)^2 = 61\\]\n   \\[16 + (b - 6)^2 = 61\\]\n   \\[(b - 6)^2 = 45\\]\n   This does not yield an integer value for \\(b\\).\n\n2. If \\(a = 2\\):\n   \\[(2 - 5)^2 + (b - 6)^2 = 61\\]\n   \\[9 + (b - 6)^2 = 61\\]\n   \\[(b - 6)^2 = 52\\]\n   This does not yield an integer value for \\(b\\).\n\n3. If \\(a = 3\\):\n   \\[(3 - 5)^2 + (b - 6)^2 = 61\\]\n   \\[4 + (b - 6)^2 = 61\\]\n   \\[(b - 6)^2 = 57\\]\n   This does not yield an integer value for \\(b\\).\n\n4. If \\(a = 4\\):\n   \\[(4 - 5)^2 + (b - 6)^2 = 61\\]\n   \\[1 + (b - 6)^2 = 61\\]\n   \\[(b - 6)^2 = 60\\]\n   This does not yield an integer value for \\(b\\).\n\n5. If \\(a = 6\\):\n   \\[(6 - 5)^2 + (b - 6)^2 = 61\\]\n   \\[1 + (b - 6)^2 = 61\\]\n   \\[(b - 6)^2 = 60\\]\n   This does not yield an integer value for \\(b\\).\n\n6. If \\(a = 7\\):\n   \\[(7 - 5)^2 + (b - 6)^2 = 61\\]\n   \\[4 + (b - 6)^2 = 61\\]\n   \\[(b - 6)^2 = 57\\]\n   This does not yield an integer value for \\(b\\).\n\n7. If \\(a = 8\\):\n   \\[(8 - 5)^2 + (b - 6)^2 = 61\\]\n   \\[9 + (b - 6)^2 = 61\\]\n   \\[(b - 6)^2 = 52\\]\n   This does not yield an integer value for \\(b\\).\n\n8. If \\(a = 9\\):\n   \\[(9 - 5)^2 + (b - 6)^2 = 61\\]\n   \\[16 + (b - 6)^2 = 61\\]\n   \\[(b - 6)^2 = 45\\]\n   This does not yield an integer value for \\(b\\).\n\n9. If \\(a = 10\\):\n   \\[(10 - 5)^2 + (b - 6)^2 = 61\\]\n   \\[25 + (b - 6)^2 = 61\\]\n   \\[(b - 6)^2 = 36\\]\n   \\[b - 6 = \\pm 6\\]\n   \\[b = 12 \\text{ or } b = 0\\]\n   Since \\(b\\) must be a positive integer, \\(b = 12\\).\n\nThus, the only pair \\((a, b)\\) that satisfies the equation and the condition \\(a < b\\) is \\((10, 12)\\).\n\nTherefore, the number of ordered pairs \\((a, b)\\) is 1.\n",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 1109,
+  "analysis_truncated": false,
+  "context_token_count": 1501,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -5.639190196990967,
+  "logprob_margin_valid_minus_invalid": 5.6249999506399035,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_23375f12394c1dc4",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.014190246351063251,
+  "valid_score": 0.9964063972418368,
+  "variant": "solver_first",
+  "verdict": "VALID"
+}

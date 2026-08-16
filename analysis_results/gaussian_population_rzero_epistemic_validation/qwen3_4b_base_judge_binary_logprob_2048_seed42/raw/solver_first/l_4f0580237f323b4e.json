@@ -1,0 +1,27 @@
+{
+  "analysis": " To find the remainder when \\(345678\\) is divided by \\(101\\), we can use the modulo operation. The modulo operation gives the remainder of a division of one number by another. Here, we need to compute \\(345678 \\mod 101\\).\n\nFirst, we perform the division of \\(345678\\) by \\(101\\):\n\n\\[ 345678 \\div 101 = 3422.554455445545 \\]\n\nThe integer part of the quotient is \\(3422\\). To find the remainder, we multiply the integer part of the quotient by \\(101\\) and subtract this product from \\(345678\\):\n\n\\[ 3422 \\times 101 = 345622 \\]\n\\[ 345678 - 345622 = 56 \\]\n\nThus, the remainder when \\(345678\\) is divided by \\(101\\) is \\(56\\).\n\nSince the problem is well-defined, all necessary information is provided, and the answer is objectively checkable, the problem is valid.\n",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 269,
+  "analysis_truncated": false,
+  "context_token_count": 639,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -10.380186080932617,
+  "logprob_margin_valid_minus_invalid": 10.375000237487257,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_4f0580237f323b4e",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.0051858434453606606,
+  "valid_score": 0.9999687980960159,
+  "variant": "solver_first",
+  "verdict": "VALID"
+}

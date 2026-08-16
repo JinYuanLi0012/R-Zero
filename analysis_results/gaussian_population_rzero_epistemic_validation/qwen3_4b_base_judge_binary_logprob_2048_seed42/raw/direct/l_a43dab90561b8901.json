@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is well-defined and asks for the smallest positive integer \\( n \\) such that the product of any \\( n \\) consecutive positive integers is divisible by a perfect square greater than 1. The conditions are sufficient, and the solution exists. The answer is objectively gradable as it requires finding the smallest \\( n \\) that satisfies the given condition. The problem is valid because it is clear, consistent, and has a unique solution.\n",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 92,
+  "analysis_truncated": false,
+  "context_token_count": 421,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -10.006346702575684,
+  "logprob_margin_valid_minus_invalid": 10.000000273343176,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_a43dab90561b8901",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.006346429232507944,
+  "valid_score": 0.9999546021437062,
+  "variant": "direct",
+  "verdict": "VALID"
+}

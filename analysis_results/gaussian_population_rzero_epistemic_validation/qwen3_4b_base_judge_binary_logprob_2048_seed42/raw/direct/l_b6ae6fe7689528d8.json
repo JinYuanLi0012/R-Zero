@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete, consistent, and has one clear answer. The minimum number of points required to ensure that at least one of the points is a lattice point is 1, as selecting any single point with integer coordinates satisfies the condition. The answer is objectively gradable.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 58,
+  "analysis_truncated": false,
+  "context_token_count": 388,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.005552291870117,
+  "logprob_margin_valid_minus_invalid": 8.999999708496034,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_b6ae6fe7689528d8",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.005552583374083042,
+  "valid_score": 0.9998766053880482,
+  "variant": "direct",
+  "verdict": "VALID"
+}

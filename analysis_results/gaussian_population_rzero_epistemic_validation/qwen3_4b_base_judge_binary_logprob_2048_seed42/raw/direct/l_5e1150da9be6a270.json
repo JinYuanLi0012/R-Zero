@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is well-defined, with a clear recursive rule and a specific request for the 20th term. The conditions are sufficient, and the sequence is constructed in a way that ensures each term is uniquely determined. The problem is consistent, and the answer is objectively gradable as it requires identifying the 20th term in a specific sequence. The problem has a unique solution, and the conditions are not contradictory. Therefore, the problem is valid.\n",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 95,
+  "analysis_truncated": false,
+  "context_token_count": 476,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.384222030639648,
+  "logprob_margin_valid_minus_invalid": 9.374999859370291,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_5e1150da9be6a270",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.009222171269357204,
+  "valid_score": 0.9999151889463505,
+  "variant": "direct",
+  "verdict": "VALID"
+}

@@ -1,0 +1,27 @@
+{
+  "analysis": " The question is complete, consistent, and has one clear answer. The problem is well-defined, and the answer can be objectively graded by checking the smallest positive integer that satisfies the given condition. The problem is valid as written.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 48,
+  "analysis_truncated": false,
+  "context_token_count": 366,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -8.634074211120605,
+  "logprob_margin_valid_minus_invalid": 8.625000048428774,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_c4663beb08b357bd",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.009074162691831589,
+  "valid_score": 0.9998204720393459,
+  "variant": "direct",
+  "verdict": "VALID"
+}

@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is well-defined, the conditions are sufficient, and the solution is objectively gradable. The problem asks for the smallest \\( n \\) such that \\( a_n \\) is a perfect square, and this is a clear and solvable task.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 54,
+  "analysis_truncated": false,
+  "context_token_count": 434,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.260648727416992,
+  "logprob_margin_valid_minus_invalid": 9.249999800696969,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_5f501ec833cee573",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.010648926720023155,
+  "valid_score": 0.9999038975653488,
+  "variant": "direct",
+  "verdict": "VALID"
+}

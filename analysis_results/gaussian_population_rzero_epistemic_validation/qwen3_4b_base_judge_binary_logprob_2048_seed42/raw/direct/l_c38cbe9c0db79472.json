@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete, consistent, and has a clear solution. The recurrence relation and initial terms are well-defined, and the task is to find the remainder of \\(a_{2021}\\) when divided by 13. The solution involves solving the recurrence relation and applying modular arithmetic, which is a standard and objectively gradable method. Therefore, the problem is valid.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 80,
+  "analysis_truncated": false,
+  "context_token_count": 476,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.629899978637695,
+  "logprob_margin_valid_minus_invalid": 9.624999747145921,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_c38cbe9c0db79472",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.004900231491774321,
+  "valid_score": 0.999933947838445,
+  "variant": "direct",
+  "verdict": "VALID"
+}

@@ -1,0 +1,27 @@
+{
+  "analysis": " The first 10 positive integers are 1, 2, 3, 4, 7, 8, 9, 11, 13, 17. The product of these numbers is 1 \u00d7 2 \u00d7 3 \u00d7 4 \u00d7 7 \u00d7 8 \u00d7 9 \u00d7 11 \u00d7 13 \u00d7 17 = 1,021,020. The minimum number of digits in the decimal representation of this product is 7. The problem is valid as it provides all necessary information and the answer is objectively gradable.\n",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 128,
+  "analysis_truncated": false,
+  "context_token_count": 516,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.383631706237793,
+  "logprob_margin_valid_minus_invalid": 9.375000047497451,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_ec97343bae20a18c",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.008631658740341663,
+  "valid_score": 0.9999151889623044,
+  "variant": "solver_first",
+  "verdict": "VALID"
+}

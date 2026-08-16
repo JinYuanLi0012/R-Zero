@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and consistent. The conditions specify that no two adjacent houses can have the same color, and the task is to maximize the number of houses painted red. The problem is well-defined, and the answer can be objectively graded by counting the maximum number of red houses that can be painted under the given constraints. The problem allows for multiple valid solutions, but the complete answer is still objectively gradable.\n",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 85,
+  "analysis_truncated": false,
+  "context_token_count": 457,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.505370140075684,
+  "logprob_margin_valid_minus_invalid": 9.500000020489097,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_488912fa1fce85a3",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.005370119586586952,
+  "valid_score": 0.9999251537740229,
+  "variant": "direct",
+  "verdict": "VALID"
+}

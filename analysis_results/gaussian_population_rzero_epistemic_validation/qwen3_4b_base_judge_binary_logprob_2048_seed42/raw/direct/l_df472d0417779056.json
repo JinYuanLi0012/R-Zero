@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and the full answer is objectively checkable. The problem is about graph theory, specifically finding the maximum number of edges that can be removed from a 100-vertex 10-regular graph without disconnecting it. The answer is the number of edges in the graph minus the number of edges in a spanning tree, which is 100 * 10 / 2 - 99 = 401. The problem is valid as written.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 103,
+  "analysis_truncated": false,
+  "context_token_count": 461,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -8.635781288146973,
+  "logprob_margin_valid_minus_invalid": 8.62499956227839,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_df472d0417779056",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.010781725868582726,
+  "valid_score": 0.9998204719520839,
+  "variant": "direct",
+  "verdict": "VALID"
+}

@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete, the conditions are consistent, and the probability can be calculated using the binomial distribution. The complete answer is objectively gradable.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 33,
+  "analysis_truncated": false,
+  "context_token_count": 386,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.137540817260742,
+  "logprob_margin_valid_minus_invalid": 9.125000048428774,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_ccac00a71ecb8bef",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.012540768831968307,
+  "valid_score": 0.9998911030952466,
+  "variant": "direct",
+  "verdict": "VALID"
+}

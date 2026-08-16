@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and the full answer is objectively checkable. The conditions are sufficient to find all such integers \\( n \\) that satisfy the given criteria. The problem asks for the sum of all positive integers \\( n \\) that are perfect squares and for which \\( 100n + 1 \\) is also a perfect square. This problem is well-defined and has a clear solution path, making it valid as written.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": null,
+  "analysis_token_count": 89,
+  "analysis_truncated": false,
+  "context_token_count": 426,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.75551700592041,
+  "logprob_margin_valid_minus_invalid": 9.749999632127583,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_4276a9139091641d",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.005517373792827129,
+  "valid_score": 0.9999417087128963,
+  "variant": "direct",
+  "verdict": "VALID"
+}

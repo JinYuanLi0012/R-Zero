@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and the full answer is objectively checkable. The smallest positive integer that satisfies the conditions is 4, as it is divisible by 4 and its last two digits (04) are also divisible by 4. ",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "Verdict:",
+  "analysis_token_count": 51,
+  "analysis_truncated": false,
+  "context_token_count": 384,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.131353378295898,
+  "logprob_margin_valid_minus_invalid": 9.12499996041879,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_a467c7b118688e47",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.006353417877107859,
+  "valid_score": 0.9998911030856635,
+  "variant": "direct",
+  "verdict": "VALID"
+}

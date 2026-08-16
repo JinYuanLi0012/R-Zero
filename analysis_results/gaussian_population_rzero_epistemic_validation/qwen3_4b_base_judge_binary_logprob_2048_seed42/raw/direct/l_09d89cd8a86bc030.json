@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete, consistent, and has a clear objective. The conditions specify that no two adjacent houses can be the same color, and the task is to find the minimum number of houses that must be painted red. This problem can be approached by considering the constraints and the goal, and the answer can be objectively graded based on the reasoning and the final count of red houses. The problem is well-defined and solvable with a clear solution path.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 93,
+  "analysis_truncated": false,
+  "context_token_count": 459,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.633047103881836,
+  "logprob_margin_valid_minus_invalid": 9.625000276602805,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_09d89cd8a86bc030",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.008046827279031277,
+  "valid_score": 0.9999339478734144,
+  "variant": "direct",
+  "verdict": "VALID"
+}

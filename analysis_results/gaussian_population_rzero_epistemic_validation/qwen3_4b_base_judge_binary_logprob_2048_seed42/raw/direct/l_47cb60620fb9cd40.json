@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and the full answer is objectively checkable. The equation is a Diophantine equation, and we can find all integer solutions by solving it systematically. The equation can be rewritten as \\(x^2 + xy + y^2 - 4x - 4y + 4 = 0\\). By completing the square, we can transform this into a more manageable form. After solving, we can verify that the solutions are indeed integers. Therefore, the problem is well-defined and the complete answer is objectively gradable.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 113,
+  "analysis_truncated": false,
+  "context_token_count": 443,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -10.00310230255127,
+  "logprob_margin_valid_minus_invalid": 9.99999957322143,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_47cb60620fb9cd40",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.003102729329839349,
+  "valid_score": 0.9999546021119237,
+  "variant": "direct",
+  "verdict": "VALID"
+}

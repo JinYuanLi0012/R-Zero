@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and the full answer \\( k = 20 \\) is objectively checkable.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 24,
+  "analysis_truncated": false,
+  "context_token_count": 360,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -6.645753860473633,
+  "logprob_margin_valid_minus_invalid": 6.624999783933163,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_eb23aa68083f0ed4",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.020754076540470123,
+  "valid_score": 0.9986749772968728,
+  "variant": "direct",
+  "verdict": "VALID"
+}

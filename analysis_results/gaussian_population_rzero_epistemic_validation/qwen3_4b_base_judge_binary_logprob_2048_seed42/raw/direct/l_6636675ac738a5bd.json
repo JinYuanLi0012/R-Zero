@@ -1,0 +1,27 @@
+{
+  "analysis": " The sequence is defined with a clear recurrence relation and initial conditions. The problem asks for the remainder when a\u2085\u2089 is divided by 10, which is a well-defined and objectively gradable request. The sequence can be computed step-by-step, and the remainder can be determined using modular arithmetic. The problem is complete, consistent, and has a unique solution. Therefore, the conditions are sufficient, a solution exists, and the complete answer is objectively gradable.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": null,
+  "analysis_token_count": 96,
+  "analysis_truncated": false,
+  "context_token_count": 459,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.507786750793457,
+  "logprob_margin_valid_minus_invalid": 9.499999760650098,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_6636675ac738a5bd",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.007786990143358707,
+  "valid_score": 0.9999251537545762,
+  "variant": "direct",
+  "verdict": "VALID"
+}

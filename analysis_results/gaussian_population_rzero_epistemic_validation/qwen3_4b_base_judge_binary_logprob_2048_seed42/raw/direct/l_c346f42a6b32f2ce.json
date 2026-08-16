@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem provides all necessary information to solve for the length of $AD$ using the Angle Bisector Theorem and the formula for the length of an angle bisector in a triangle. The conditions are sufficient, and a solution exists. The complete answer is objectively gradable as it involves a specific numerical value.\n",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 65,
+  "analysis_truncated": false,
+  "context_token_count": 470,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -10.129331588745117,
+  "logprob_margin_valid_minus_invalid": 10.125000095926225,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_c346f42a6b32f2ce",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.004331492818892002,
+  "valid_score": 0.9999599363116137,
+  "variant": "direct",
+  "verdict": "VALID"
+}

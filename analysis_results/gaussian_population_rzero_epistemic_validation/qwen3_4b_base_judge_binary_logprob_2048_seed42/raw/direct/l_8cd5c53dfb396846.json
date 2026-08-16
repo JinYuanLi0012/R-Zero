@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and consistent, as it provides all necessary information to determine the minimum number of draws. The conditions are sufficient because the sum of wins equals the sum of losses, which implies that the total number of games played is even. The requested solution, the minimum number of draws, is objectively gradable as it can be calculated based on the given conditions. Therefore, the problem is valid.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 83,
+  "analysis_truncated": false,
+  "context_token_count": 443,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.634312629699707,
+  "logprob_margin_valid_minus_invalid": 9.625000104308128,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_8cd5c53dfb396846",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.009312525391578674,
+  "valid_score": 0.9999339478620346,
+  "variant": "direct",
+  "verdict": "VALID"
+}

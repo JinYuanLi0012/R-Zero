@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is well-defined, with clear conditions and a specific request for the minimum number of air routes. The conditions are sufficient to determine the solution, and the answer is objectively gradable. The problem involves graph theory, where each city is a vertex and each air route is an edge. The problem asks for the minimum number of edges in a graph with 20 vertices, each of degree 5, such that the graph is connected. This is a valid and solvable problem in graph theory.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 104,
+  "analysis_truncated": false,
+  "context_token_count": 459,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.879379272460938,
+  "logprob_margin_valid_minus_invalid": 9.875000184867531,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_6eb6d55a6635c7cf",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.004379087593406439,
+  "valid_score": 0.9999485577957673,
+  "variant": "direct",
+  "verdict": "VALID"
+}

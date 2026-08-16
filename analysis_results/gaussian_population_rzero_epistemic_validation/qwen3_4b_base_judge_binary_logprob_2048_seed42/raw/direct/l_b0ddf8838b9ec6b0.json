@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is well-defined and asks for all prime numbers \\( p \\) that satisfy the condition \\( p^2 - 3 = k^3 \\) for some integer \\( k \\). The conditions are sufficient, and the solution is unique. The problem is consistent, and the complete answer is objectively gradable. The problem is valid as written.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": null,
+  "analysis_token_count": 72,
+  "analysis_truncated": false,
+  "context_token_count": 393,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -8.758543968200684,
+  "logprob_margin_valid_minus_invalid": 8.750000361353159,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_b0ddf8838b9ec6b0",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.008543606847524643,
+  "valid_score": 0.9998415638381397,
+  "variant": "direct",
+  "verdict": "VALID"
+}

@@ -1,0 +1,27 @@
+{
+  "analysis": " To solve the quadratic equation \\(x^2 - 3x + 2 = 0\\), we can factor it. The equation can be factored as \\((x - 1)(x - 2) = 0\\). Setting each factor equal to zero gives us the solutions \\(x = 1\\) and \\(x = 2\\). Since the problem asks for all real numbers \\(x\\) that satisfy the equation, and we have found two distinct solutions, the problem is valid. The conditions are sufficient and consistent, a solution exists, and the complete answer is objectively gradable.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": null,
+  "analysis_token_count": 124,
+  "analysis_truncated": false,
+  "context_token_count": 503,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.132801055908203,
+  "logprob_margin_valid_minus_invalid": 9.124999990221113,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_52812db09be927db",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.0078010656870901585,
+  "valid_score": 0.9998911030889087,
+  "variant": "solver_first",
+  "verdict": "VALID"
+}

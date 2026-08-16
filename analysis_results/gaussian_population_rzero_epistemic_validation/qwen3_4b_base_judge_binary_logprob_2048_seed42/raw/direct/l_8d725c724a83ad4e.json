@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and the full answer is objectively checkable. The conditions are sufficient and consistent, a solution exists, and the complete answer is objectively gradable. The problem asks for the smallest positive integer \\( n \\) such that the polynomial \\( P(x) \\) has exactly one real root. This is a well-defined problem with a clear objective. The polynomial \\( P(x) \\) is a sum of terms with coefficients increasing linearly, and the existence of a unique real root can be determined by analyzing the behavior of the polynomial. Therefore, the problem is valid.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": null,
+  "analysis_token_count": 118,
+  "analysis_truncated": false,
+  "context_token_count": 473,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.380254745483398,
+  "logprob_margin_valid_minus_invalid": 9.375000120606273,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_8d725c724a83ad4e",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.005254624877125025,
+  "valid_score": 0.9999151889685043,
+  "variant": "direct",
+  "verdict": "VALID"
+}

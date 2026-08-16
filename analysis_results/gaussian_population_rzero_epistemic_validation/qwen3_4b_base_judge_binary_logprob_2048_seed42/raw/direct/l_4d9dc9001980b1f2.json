@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem asks for all prime numbers \\( p \\) and \\( q \\) that satisfy the given equation. The equation is well-defined and the conditions are sufficient to find such primes. The complete answer, which includes all pairs of prime numbers \\( (p, q) \\) that satisfy the equation, is objectively gradable. Therefore, the problem is valid as written.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": null,
+  "analysis_token_count": 76,
+  "analysis_truncated": false,
+  "context_token_count": 415,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.629560470581055,
+  "logprob_margin_valid_minus_invalid": 9.6250000433065,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_4d9dc9001980b1f2",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.004560427274554968,
+  "valid_score": 0.9999339478580057,
+  "variant": "direct",
+  "verdict": "VALID"
+}

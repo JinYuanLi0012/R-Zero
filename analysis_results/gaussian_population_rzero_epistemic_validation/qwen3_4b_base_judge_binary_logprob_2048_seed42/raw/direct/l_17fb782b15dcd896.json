@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem asks for all integers \\( n \\) such that the equation \\( x^2 + y^2 = n^2 x + n^2 y \\) has exactly two distinct solutions \\((x, y)\\) in positive integers. The conditions are sufficient and consistent, as the equation is well-defined for all integers \\( n \\). The problem is also valid because the number of solutions is finite and can be objectively graded. The complete answer is the set of all such integers \\( n \\), which can be determined by analyzing the equation and finding the values of \\( n \\) that satisfy the condition of having exactly two distinct positive integer solutions. Therefore, the problem is valid.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": null,
+  "analysis_token_count": 140,
+  "analysis_truncated": false,
+  "context_token_count": 484,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.259373664855957,
+  "logprob_margin_valid_minus_invalid": 9.249999845400453,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_17fb782b15dcd896",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.009373819455504417,
+  "valid_score": 0.9999038975696445,
+  "variant": "direct",
+  "verdict": "VALID"
+}

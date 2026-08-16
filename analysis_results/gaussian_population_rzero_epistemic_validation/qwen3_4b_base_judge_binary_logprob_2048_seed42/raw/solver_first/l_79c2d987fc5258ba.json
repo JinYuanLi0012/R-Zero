@@ -1,0 +1,27 @@
+{
+  "analysis": " To solve for the length of \\( AD \\), we can use the Angle Bisector Theorem and the Law of Cosines. The Angle Bisector Theorem states that the angle bisector divides the opposite side into segments that are proportional to the adjacent sides. Therefore, if \\( BD = x \\) and \\( DC = y \\), then \\( \\frac{BD}{DC} = \\frac{AB}{AC} = \\frac{3}{4} \\). This gives us \\( \\frac{x}{y} = \\frac{3}{4} \\), so \\( x = \\frac{3}{7}BC \\) and \\( y = \\frac{4}{7}BC \\). Since \\( BC = x + y \\), we have \\( BC = \\frac{7}{7}BC = BC \\). Now, we can use the Law of Cosines in \\( \\triangle ABD \\) and \\( \\triangle ACD \\) to find \\( AD \\). However, we need to find \\( BC \\) first. Using the Law of Cosines in \\( \\triangle ABC \\):\n\n\\[\nBC^2 = AB^2 + AC^2 - 2 \\cdot AB \\cdot AC \\cdot \\cos(\\angle BAC)\n\\]\n\nSubstituting the given values:\n\n\\[\nBC^2 = 3^2 + 4^2 - 2 \\cdot 3 \\cdot 4 \\cdot \\cos(60^\\circ)\n\\]\n\nSince \\( \\cos(60^\\circ) = \\frac{1}{2} \\):\n\n\\[\nBC^2 = 9 + 16 - 2 \\cdot 3 \\cdot 4 \\cdot \\frac{1}{2} = 9 + 16 - 12 = 13\n\\]\n\nThus, \\( BC = \\sqrt{13} \\). Now, using the Angle Bisector Theorem, we have \\( BD = \\frac{3}{7} \\sqrt{13} \\) and \\( DC = \\frac{4}{7} \\sqrt{13} \\). We can now use the Angle Bisector Length Formula, which states that the length of the angle bisector \\( AD \\) is given by:\n\n\\[\nAD = \\sqrt{AB \\cdot AC \\left(1 - \\frac{BC^2}{(AB + AC)^2}\\right)}\n\\]\n\nSubstituting the values:\n\n\\[\nAD = \\sqrt{3 \\cdot 4 \\left(1 - \\frac{13}{(3 + 4)^2}\\right)} = \\sqrt{12 \\left(1 - \\frac{13}{49}\\right)} = \\sqrt{12 \\left(\\frac{36}{49}\\right)} = \\sqrt{\\frac{432}{49}} = \\frac{12\\sqrt{3}}{7}\n\\]\n\nThus, the length of \\( AD \\) is \\( \\frac{12\\sqrt{3}}{7} \\).\n",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 637,
+  "analysis_truncated": false,
+  "context_token_count": 1060,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.88879680633545,
+  "logprob_margin_valid_minus_invalid": 9.875000362284482,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_79c2d987fc5258ba",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.013796444050967693,
+  "valid_score": 0.9999485578048936,
+  "variant": "solver_first",
+  "verdict": "VALID"
+}

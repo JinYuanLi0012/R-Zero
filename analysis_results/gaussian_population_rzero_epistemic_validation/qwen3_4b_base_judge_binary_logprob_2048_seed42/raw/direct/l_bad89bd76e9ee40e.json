@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem provides specific conditions for a cubic polynomial with three distinct real roots. The conditions \\( P(1) = 0 \\), \\( P(2) = 12 \\), and \\( P(-1) = -16 \\) are given, which are sufficient to determine the coefficients \\( a, b, c, \\) and \\( d \\) of the polynomial. Once the coefficients are found, the value of \\( P(0) \\) can be calculated and is objectively gradable. Therefore, the problem is well-defined and solvable.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 117,
+  "analysis_truncated": false,
+  "context_token_count": 502,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.756595611572266,
+  "logprob_margin_valid_minus_invalid": 9.749999983701855,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_bad89bd76e9ee40e",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.006595627870410681,
+  "valid_score": 0.9999417087333888,
+  "variant": "direct",
+  "verdict": "VALID"
+}

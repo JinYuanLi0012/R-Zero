@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is well-defined, and the sequence generation rule is clear. The sequence starts with 1, and each subsequent term is the smallest positive integer not yet in the sequence that can be expressed as the sum of two distinct earlier terms. The problem asks for the 20th term, and the answer can be objectively determined by following the rule. The conditions are sufficient, and a solution exists. The complete answer is objectively gradable.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 92,
+  "analysis_truncated": false,
+  "context_token_count": 448,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -10.504293441772461,
+  "logprob_margin_valid_minus_invalid": 10.499999932013452,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_0a8159d74ce3e360",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.004293509759008884,
+  "valid_score": 0.9999724643070134,
+  "variant": "direct",
+  "verdict": "VALID"
+}

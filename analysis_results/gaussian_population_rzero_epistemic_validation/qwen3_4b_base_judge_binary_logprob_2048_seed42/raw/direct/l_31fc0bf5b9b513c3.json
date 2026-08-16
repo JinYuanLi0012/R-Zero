@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and the full answer is objectively checkable. The equation \\( x^3 - 3x + 2 = 0 \\) is a polynomial equation of degree 3, and it is known that such equations always have at least one real root. By factoring or using the Rational Root Theorem, we can find the roots. The Rational Root Theorem suggests that any rational root of the polynomial must be a factor of the constant term (2) divided by a factor of the leading coefficient (1). Thus, the possible rational roots are \\( \\pm 1, \\pm 2 \\). Testing these values, we find that \\( x = 1 \\) is a root because \\( 1^3 - 3(1) + 2 = 0 \\). Using synthetic division or polynomial division, we can factor \\( x^3 - 3x + 2 \\) as \\( (x - 1)(x^2 + x - 2) \\). Further factoring \\( x^2 + x - 2 \\) gives \\( (x - 1)(x + 2) \\). Therefore, the complete factorization is \\( (x - 1)^2 (x + 2) \\), and the roots are \\( x = 1 \\) (with multiplicity 2) and \\( x = -2 \\). The complete answer is objectively checkable and the conditions are sufficient and consistent.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 301,
+  "analysis_truncated": false,
+  "context_token_count": 622,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -11.252327919006348,
+  "logprob_margin_valid_minus_invalid": 11.250000088941306,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_31fc0bf5b9b513c3",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.0023278300650417805,
+  "valid_score": 0.9999869928726903,
+  "variant": "direct",
+  "verdict": "VALID"
+}

@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and the full answer is objectively checkable. The conditions are sufficient and consistent, a solution exists, and the complete answer is objectively gradable. The problem asks for all pairs of positive integers that satisfy the equation, and the solution can be verified by substituting the pairs back into the equation. Therefore, the problem is valid as written.\n",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 75,
+  "analysis_truncated": false,
+  "context_token_count": 397,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.630616188049316,
+  "logprob_margin_valid_minus_invalid": 9.625000420026481,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_a809da60a779bdbc",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.005615768022835255,
+  "valid_score": 0.9999339478828871,
+  "variant": "direct",
+  "verdict": "VALID"
+}

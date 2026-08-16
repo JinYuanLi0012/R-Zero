@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and the conditions are consistent. The smallest positive integer \\( n \\) that satisfies all three conditions can be found by solving the system of congruences:\n\\[ n \\equiv 0 \\pmod{3} \\]\n\\[ n \\equiv -1 \\pmod{4} \\]\n\\[ n \\equiv -2 \\pmod{5} \\]\nThese congruences can be solved using the Chinese Remainder Theorem, and the solution is unique modulo the least common multiple of 3, 4, and 5, which is 60. The smallest positive integer \\( n \\) that satisfies all conditions is 57. The answer is objectively gradable.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 146,
+  "analysis_truncated": false,
+  "context_token_count": 490,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -10.129233360290527,
+  "logprob_margin_valid_minus_invalid": 10.125000151339918,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_1c6874ca6bd3ff34",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.004233208950608969,
+  "valid_score": 0.9999599363138337,
+  "variant": "direct",
+  "verdict": "VALID"
+}

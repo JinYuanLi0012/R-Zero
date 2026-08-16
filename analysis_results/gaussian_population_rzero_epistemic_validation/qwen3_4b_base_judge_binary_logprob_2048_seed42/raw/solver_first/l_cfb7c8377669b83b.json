@@ -1,0 +1,27 @@
+{
+  "analysis": " To solve this problem, we need to determine the number of students who like neither math nor science. We are given the following information:\n- 60% of the students like math.\n- 50% of the students like science.\n- 30% of the students like both math and science.\n\nFirst, we calculate the number of students who like math:\n\\[ 60\\% \\text{ of } 100 = 0.60 \\times 100 = 60 \\text{ students} \\]\n\nNext, we calculate the number of students who like science:\n\\[ 50\\% \\text{ of } 100 = 0.50 \\times 100 = 50 \\text{ students} \\]\n\nThen, we calculate the number of students who like both math and science:\n\\[ 30\\% \\text{ of } 100 = 0.30 \\times 100 = 30 \\text{ students} \\]\n\nTo find the number of students who like either math or science or both, we use the principle of inclusion-exclusion:\n\\[ \\text{Number of students who like math or science or both} = \\text{Number of students who like math} + \\text{Number of students who like science} - \\text{Number of students who like both} \\]\n\\[ = 60 + 50 - 30 = 80 \\text{ students} \\]\n\nFinally, to find the number of students who like neither math nor science, we subtract the number of students who like math or science or both from the total number of students:\n\\[ \\text{Number of students who like neither math nor science} = 100 - 80 = 20 \\text{ students} \\]\n\nThe conditions are sufficient and consistent, a solution exists, and the complete answer is objectively gradable. Therefore, the problem is valid.\n",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 413,
+  "analysis_truncated": false,
+  "context_token_count": 802,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -10.629344940185547,
+  "logprob_margin_valid_minus_invalid": 10.624999560415745,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_cfb7c8377669b83b",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.0043453797698020935,
+  "valid_score": 0.9999756997485749,
+  "variant": "solver_first",
+  "verdict": "VALID"
+}

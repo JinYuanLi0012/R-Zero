@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is well-defined, and the conditions are sufficient to determine the smallest positive integer that cannot be represented as the sum of two or more distinct positive integers, each of which is a power of 3. The problem is consistent, and the answer is objectively gradable. The problem asks for a specific integer, and the solution process involves checking each positive integer in sequence to find the smallest one that does not meet the criteria. Therefore, the problem is valid.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 96,
+  "analysis_truncated": false,
+  "context_token_count": 505,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -10.131146430969238,
+  "logprob_margin_valid_minus_invalid": 10.125000092200935,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_fef3cc15a074f403",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.006146338768303394,
+  "valid_score": 0.9999599363114645,
+  "variant": "direct",
+  "verdict": "VALID"
+}

@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem asks for the number of ordered pairs \\((x, y)\\) of positive integers that satisfy the equation \\(x^2 + y^2 = 5^7\\). The equation is well-defined, and the conditions are sufficient to find the number of solutions. The complete answer, which is the count of such pairs, is objectively gradable. Therefore, the problem is valid as written.\n",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 85,
+  "analysis_truncated": false,
+  "context_token_count": 415,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.505260467529297,
+  "logprob_margin_valid_minus_invalid": 9.500000150874257,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_56bc63879b4568d9",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.005260316655039787,
+  "valid_score": 0.999925153783781,
+  "variant": "direct",
+  "verdict": "VALID"
+}

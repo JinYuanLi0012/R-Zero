@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and the full answer is objectively checkable. The conditions are sufficient to find the smallest positive integer $n$ that satisfies both conditions.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 34,
+  "analysis_truncated": false,
+  "context_token_count": 360,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -8.261631965637207,
+  "logprob_margin_valid_minus_invalid": 8.249999965541065,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_18df83587c699f01",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.011632000096142292,
+  "valid_score": 0.9997388096719062,
+  "variant": "direct",
+  "verdict": "VALID"
+}

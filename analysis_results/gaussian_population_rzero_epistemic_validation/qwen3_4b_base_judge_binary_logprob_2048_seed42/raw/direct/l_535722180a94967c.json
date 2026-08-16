@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is well-defined, and the conditions are sufficient to determine the maximum number of elements in \\( S \\) that can be divisible by 13. The problem asks for a specific, countable quantity, and the answer can be objectively graded based on the given constraints. The conditions ensure that the sum of any three elements is not divisible by 13, which is a clear and consistent requirement. Therefore, the problem is valid as written.\n",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 94,
+  "analysis_truncated": false,
+  "context_token_count": 442,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.880144119262695,
+  "logprob_margin_valid_minus_invalid": 9.874999665655196,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_535722180a94967c",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.0051444536074995995,
+  "valid_score": 0.9999485577690592,
+  "variant": "direct",
+  "verdict": "VALID"
+}

@@ -1,0 +1,27 @@
+{
+  "analysis": " To solve this problem, we need to find the smallest positive integer that can be written as the sum of two positive perfect squares in exactly two distinct ways. Let's denote this integer as \\( n \\). We are looking for pairs of positive integers \\( (a, b) \\) and \\( (c, d) \\) such that:\n\n\\[ n = a^2 + b^2 = c^2 + d^2 \\]\n\nwhere \\( a, b, c, \\) and \\( d \\) are positive integers, and the pairs \\( (a, b) \\) and \\( (c, d) \\) are distinct. \n\nTo proceed, we will start by listing the smallest perfect squares and their sums, checking for duplicates until we find the smallest \\( n \\) that meets the criteria. The smallest perfect squares are:\n\n\\[ 1^2 = 1, \\quad 2^2 = 4, \\quad 3^2 = 9, \\quad 4^2 = 16, \\quad 5^2 = 25, \\quad 6^2 = 36, \\quad 7^2 = 49, \\quad 8^2 = 64, \\quad 9^2 = 81, \\quad 10^2 = 100 \\]\n\nWe will now compute the sums of these squares and look for duplicates:\n\n- \\( 1^2 + 1^2 = 2 \\)\n- \\( 1^2 + 2^2 = 5 \\)\n- \\( 1^2 + 3^2 = 10 \\)\n- \\( 1^2 + 4^2 = 17 \\)\n- \\( 1^2 + 5^2 = 26 \\)\n- \\( 1^2 + 6^2 = 37 \\)\n- \\( 1^2 + 7^2 = 50 \\)\n- \\( 1^2 + 8^2 = 65 \\)\n- \\( 1^2 + 9^2 = 82 \\)\n- \\( 1^2 + 10^2 = 101 \\)\n- \\( 2^2 + 2^2 = 8 \\)\n- \\( 2^2 + 3^2 = 13 \\)\n- \\( 2^2 + 4^2 = 20 \\)\n- \\( 2^2 + 5^2 = 29 \\)\n- \\( 2^2 + 6^2 = 40 \\)\n- \\( 2^2 + 7^2 = 53 \\)\n- \\( 2^2 + 8^2 = 68 \\)\n- \\( 2^2 + 9^2 = 85 \\)\n- \\( 2^2 + 10^2 = 104 \\)\n- \\( 3^2 + 3^2 = 18 \\)\n- \\( 3^2 + 4^2 = 25 \\)\n- \\( 3^2 + 5^2 = 34 \\)\n- \\( 3^2 + 6^2 = 45 \\)\n- \\( 3^2 + 7^2 = 58 \\)\n- \\( 3^2 + 8^2 = 73 \\)\n- \\( 3^2 + 9^2 = 90 \\)\n- \\( 3^2 + 10^2 = 109 \\)\n- \\( 4^2 + 4^2 = 32 \\)\n- \\( 4^2 + 5^2 = 41 \\)\n- \\( 4^2 + 6^2 = 52 \\)\n- \\( 4^2 + 7^2 = 65 \\)\n- \\( 4^2 + 8^2 = 80 \\)\n- \\( 4^2 + 9^2 = 97 \\)\n- \\( 4^2 + 10^2 = 116 \\)\n- \\( 5^2 + 5^2 = 50 \\)\n- \\( 5^2 + 6^2 = 61 \\)\n- \\( 5^2 + 7^2 = 74 \\)\n- \\( 5^2 + 8^2 = 89 \\)\n- \\( 5^2 + 9^2 = 106 \\)\n- \\( 5^2 + 10^2 = 125 \\)\n- \\( 6^2 + 6^2 = 72 \\)\n- \\( 6^2 + 7^2 = 85 \\)\n- \\( 6^2 + 8^2 = 100 \\)\n- \\( 6^2 + 9^2 = 117 \\)\n- \\( 6^2 + 10^2 = 136 \\)\n- \\( 7^2 + 7^2 = 98 \\)\n- \\( 7^2 + 8^2 = 113 \\)\n- \\( 7^2 + 9^2 = 130 \\)\n- \\( 7^2 + 10^2 = 149 \\)\n- \\( 8^2 + 8^2 = 128 \\)\n- \\( 8^2 + 9^2 = 145 \\)\n- \\( 8^2 + 10^2 = 164 \\)\n- \\( 9^2 + 9^2 = 162 \\)\n- \\( 9^2 + 10^2 = 181 \\)\n- \\( 10^2 + 10^2 = 200 \\)\n\nFrom the list above, we see that the number 50 appears twice: once as \\( 1^2 + 7^2 \\) and once as \\( 5^2 + 5^2 \\). Therefore, the least positive integer that can be expressed as the sum of two positive perfect squares in exactly two different ways is 50.\n",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 1331,
+  "analysis_truncated": false,
+  "context_token_count": 1703,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -8.142172813415527,
+  "logprob_margin_valid_minus_invalid": 8.125000238418579,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_5671231441e9d29c",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.017172574996948242,
+  "valid_score": 0.9997040429570279,
+  "variant": "solver_first",
+  "verdict": "VALID"
+}

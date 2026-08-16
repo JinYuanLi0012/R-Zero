@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete, consistent, and has one clear answer. The smallest positive integer n that satisfies the condition is 3, as 3^2 + 3*3 + 2 = 20, which is divisible by 10. The answer is objectively gradable.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 62,
+  "analysis_truncated": false,
+  "context_token_count": 383,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.88029956817627,
+  "logprob_margin_valid_minus_invalid": 9.874999763909727,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_7560620089ba124a",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.005299804266542196,
+  "valid_score": 0.9999485577741133,
+  "variant": "direct",
+  "verdict": "VALID"
+}

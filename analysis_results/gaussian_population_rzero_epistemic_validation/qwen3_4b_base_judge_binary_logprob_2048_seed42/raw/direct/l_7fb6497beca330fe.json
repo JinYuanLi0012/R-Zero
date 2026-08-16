@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is well-defined, with clear conditions and a specific goal. The conditions are sufficient to determine the smallest number of moves required to reach the smallest power of 3 greater than or equal to \\( n \\). The problem is consistent, and a solution exists for any positive integer \\( n \\). The complete answer, which is the smallest number of moves, is objectively gradable. Therefore, the problem is valid.\n",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 87,
+  "analysis_truncated": false,
+  "context_token_count": 567,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -10.005507469177246,
+  "logprob_margin_valid_minus_invalid": 10.000000172760338,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_7fb6497beca330fe",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.005507296416908503,
+  "valid_score": 0.9999546021391401,
+  "variant": "direct",
+  "verdict": "VALID"
+}

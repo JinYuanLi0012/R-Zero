@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and the full answer is objectively checkable. The task is to count the number of valid house numbers from 1 to 500 that can be formed using only the digits 1 through 9. This is a well-defined combinatorial problem with a clear solution.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 63,
+  "analysis_truncated": false,
+  "context_token_count": 467,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -10.378835678100586,
+  "logprob_margin_valid_minus_invalid": 10.375000212341547,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_83d2187c0f0e3f9e",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.003835465759038925,
+  "valid_score": 0.9999687980952312,
+  "variant": "direct",
+  "verdict": "VALID"
+}

@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is well-defined, with a clear recursive rule and a specific goal. The sequence is constructed by ensuring that each term is the smallest integer greater than the previous term that is relatively prime to it. This process is deterministic and will always produce a unique sequence. The 2023rd term can be found by following the recursive rule, and the answer is objectively checkable. Therefore, the problem is valid.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 88,
+  "analysis_truncated": false,
+  "context_token_count": 486,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.756321907043457,
+  "logprob_margin_valid_minus_invalid": 9.749999761581421,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_39bae14d4d9b83cf",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.006322145462036133,
+  "valid_score": 0.9999417087204421,
+  "variant": "direct",
+  "verdict": "VALID"
+}

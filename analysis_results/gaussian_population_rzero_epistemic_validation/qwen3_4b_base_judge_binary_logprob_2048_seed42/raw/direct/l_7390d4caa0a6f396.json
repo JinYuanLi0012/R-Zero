@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is well-defined, and the function \\( f(a, b) = a^2 - b^2 \\) is clearly specified. The goal is to find the maximum number of distinct values that \\( f(a, b) \\) can take for \\( a \\neq b \\) when \\( S \\) is a set of 10 distinct integers chosen from \\(\\{1, 2, 3, \\ldots, 20\\}\\). The conditions are sufficient, and the problem is consistent. The answer is objectively gradable as it involves counting the number of distinct values of \\( f(a, b) \\). Therefore, the problem is valid.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": null,
+  "analysis_token_count": 140,
+  "analysis_truncated": false,
+  "context_token_count": 551,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.88297176361084,
+  "logprob_margin_valid_minus_invalid": 9.875000029802322,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_7390d4caa0a6f396",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.007971733808517456,
+  "valid_score": 0.9999485577877907,
+  "variant": "direct",
+  "verdict": "VALID"
+}

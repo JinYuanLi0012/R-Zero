@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and the full answer is objectively checkable. The conditions are sufficient and consistent, a solution exists, and the complete answer is objectively gradable. The problem asks for all prime numbers \\( p \\) and \\( q \\) that satisfy the equation \\( p^2 + q^2 = p^3 - q^3 \\). This equation can be analyzed to determine if there are any prime numbers that satisfy it, and the solutions can be verified. Therefore, the problem is valid as written.\n",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 107,
+  "analysis_truncated": false,
+  "context_token_count": 435,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.755228996276855,
+  "logprob_margin_valid_minus_invalid": 9.75000010477379,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_afeff01b2661a47c",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.0052288915030658245,
+  "valid_score": 0.999941708740446,
+  "variant": "direct",
+  "verdict": "VALID"
+}

@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is well-defined and asks for the minimum value of \\( n \\) such that a specific condition is met. The condition is that the sum of any two distinct elements in the set must be a perfect square. This is a clear and specific requirement, and the answer can be objectively determined and verified. The problem is complete, consistent, and has a unique solution. Therefore, the problem is valid.\n",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 85,
+  "analysis_truncated": false,
+  "context_token_count": 417,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.63040828704834,
+  "logprob_margin_valid_minus_invalid": 9.624999632593244,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_dc0cebcbea23fddd",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.0054086544550955296,
+  "valid_score": 0.999933947830879,
+  "variant": "direct",
+  "verdict": "VALID"
+}

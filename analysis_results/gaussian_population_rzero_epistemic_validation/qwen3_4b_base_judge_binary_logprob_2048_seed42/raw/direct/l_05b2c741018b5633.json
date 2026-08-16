@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and the full answer is objectively checkable. The equation is a Diophantine equation, and we can find all positive integer solutions by testing possible values of \\( n \\) and \\( m \\). The equation can be rewritten as \\( 5mn - n^2 - m^2 = 1 \\), and by testing small positive integers, we can find that the only positive integer solutions are \\( (n, m) = (1, 1) \\) and \\( (n, m) = (1, 1) \\). Therefore, the problem is well-defined and the complete answer is objectively gradable.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 134,
+  "analysis_truncated": false,
+  "context_token_count": 454,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.503301620483398,
+  "logprob_margin_valid_minus_invalid": 9.499999972758815,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_05b2c741018b5633",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.003301647724583745,
+  "valid_score": 0.9999251537704507,
+  "variant": "direct",
+  "verdict": "VALID"
+}

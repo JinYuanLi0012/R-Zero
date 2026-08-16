@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem asks for all positive integers $n$ that satisfy the condition, and the answer can be objectively graded by checking each $n$ for primality of $n^2 + n + 1$. The conditions are sufficient and consistent, and a solution exists. Therefore, the problem is valid as written.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 66,
+  "analysis_truncated": false,
+  "context_token_count": 383,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -8.759913444519043,
+  "logprob_margin_valid_minus_invalid": 8.750000420957804,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_2693aa36446b87fa",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.009913023561239243,
+  "valid_score": 0.9998415638475818,
+  "variant": "direct",
+  "verdict": "VALID"
+}

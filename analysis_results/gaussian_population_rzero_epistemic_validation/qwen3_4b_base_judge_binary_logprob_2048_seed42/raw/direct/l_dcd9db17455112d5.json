@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and the full answer is objectively checkable. The conditions are sufficient and consistent, a solution exists, and the complete answer is objectively gradable. The problem asks for all integers \\(n\\) such that the quadratic equation \\(x^2 - nx + n = 0\\) has two distinct integer solutions. To solve this, we need to find the values of \\(n\\) for which the discriminant of the quadratic equation is a perfect square and the roots are distinct integers. The discriminant \\(\\Delta\\) of the quadratic equation \\(x^2 - nx + n = 0\\) is given by \\(\\Delta = n^2 - 4n\\). For the equation to have two distinct integer solutions, \\(\\Delta\\) must be a perfect square and positive. Let \\(\\Delta = k^2\\) for some integer \\(k\\). Then, we have \\(n^2 - 4n = k^2\\). Rearranging, we get \\(n^2 - 4n - k^2 = 0\\). This is a quadratic equation in \\(n\\), and we can solve it using the quadratic formula \\(n = \\frac{4 \\pm \\sqrt{16 + 4k^2}}{2} = 2 \\pm \\sqrt{4 + k^2}\\). For \\(n\\) to be an integer, \\(\\sqrt{4 + k^2}\\) must be an integer. Let \\(\\sqrt{4 + k^2} = m\\) for some integer \\(m\\). Then, \\(m^2 = 4 + k^2\\), which simplifies to \\(m^2 - k^2 = 4\\). This is a difference of squares, so we can factor it as \\((m - k)(m + k) = 4\\). The possible factor pairs of 4 are \\((1, 4)\\), \\((-1, -4)\\), \\((2, 2)\\), and \\((-2, -2)\\). Solving these, we get:\n1. \\(m - k = 1\\) and \\(m + k = 4\\), which gives \\(m = \\frac{5}{2}\\) and \\(k = \\frac{3}{2}\\) (not integers).\n2. \\(m - k = -1\\) and \\(m + k = -4\\), which gives \\(m = -\\frac{5}{2}\\) and \\(k = -\\frac{3}{2}\\) (not integers).\n3. \\(m - k = 2\\) and \\(m + k = 2\\), which gives \\(m = 2\\) and \\(k = 0\\).\n4. \\(m - k = -2\\) and \\(m + k = -2\\), which gives \\(m = -2\\) and \\(k = 0\\).\n\nFor \\(m = 2\\) and \\(k = 0\\), we have \\(n = 2 \\pm 2\\), so \\(n = 4\\) or \\(n = 0\\). For \\(m = -2\\) and \\(k = 0\\), we have \\(n = 2 \\pm (-2)\\), so \\(n = 0\\) or \\(n = 4\\). Therefore, the only possible values for \\(n\\) are 0 and 4. We need to check if these values give distinct integer solutions:\n- For \\(n = 0\\), the equation is \\(x^2 = 0\\), which has a double root at \\(x = 0\\), so it does not have two distinct integer solutions.\n- For \\(n = 4\\), the equation is \\(x^2 - 4x + 4 = 0\\), which factors to \\((x - 2)^2 = 0\\), so it has a double root at \\(x = 2\\), so it does not have two distinct integer solutions.\n\nSince neither \\(n = 0\\) nor \\(n = 4\\) gives two distinct integer solutions, there are no integers \\(n\\) that satisfy the given conditions. Therefore, the problem is valid but has no solution.\n",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 876,
+  "analysis_truncated": false,
+  "context_token_count": 1199,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -1.2338169813156128,
+  "logprob_margin_valid_minus_invalid": 0.8749999701976776,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_dcd9db17455112d5",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.3588170111179352,
+  "valid_score": 0.7057850216484838,
+  "variant": "direct",
+  "verdict": "VALID"
+}

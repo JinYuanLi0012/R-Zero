@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem provides a recursive relation and initial conditions for a sequence. The recursive relation is \\(a_n = 2a_{n-1} - a_{n-2} + 2^n\\) for \\(n \\geq 2\\), with initial conditions \\(a_0 = 0\\) and \\(a_1 = 2\\). The goal is to find the value of \\(a_{10}\\). The problem is well-defined, and the recursive relation and initial conditions are sufficient to compute the sequence up to \\(a_{10}\\). The answer can be objectively graded by following the recursive relation step-by-step. Therefore, the problem is valid.\n",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 140,
+  "analysis_truncated": false,
+  "context_token_count": 564,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -10.253520011901855,
+  "logprob_margin_valid_minus_invalid": 10.250000359956175,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_cbc73d1c75875f4b",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.00351965194568038,
+  "valid_score": 0.9999646437619845,
+  "variant": "solver_first",
+  "verdict": "VALID"
+}

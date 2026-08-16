@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and the full answer is objectively checkable. We need to find all positive integers \\( n \\) such that \\( n \\) divides \\( 3^n + 5^n \\). This requires checking the divisibility condition for various values of \\( n \\). The problem is well-defined and the solution can be verified by checking each candidate \\( n \\). Therefore, the problem is valid.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": null,
+  "analysis_token_count": 83,
+  "analysis_truncated": false,
+  "context_token_count": 405,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.254524230957031,
+  "logprob_margin_valid_minus_invalid": 9.249999760650098,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_18e705897b9aabd9",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.004524470306932926,
+  "valid_score": 0.9999038975615006,
+  "variant": "direct",
+  "verdict": "VALID"
+}

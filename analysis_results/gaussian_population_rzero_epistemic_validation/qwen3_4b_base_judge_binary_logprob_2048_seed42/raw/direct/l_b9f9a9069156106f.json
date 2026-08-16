@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete, consistent, and has one clear answer. The smallest positive integer divisible by every integer from 1 to 20 is the least common multiple (LCM) of these numbers. The LCM can be calculated by finding the highest power of each prime number that appears in the factorization of any number from 1 to 20. The complete answer is objectively gradable as it involves a specific integer value.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 91,
+  "analysis_truncated": false,
+  "context_token_count": 406,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.753823280334473,
+  "logprob_margin_valid_minus_invalid": 9.750000402331352,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_b9f9a9069156106f",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.0038228780031204224,
+  "valid_score": 0.9999417087577899,
+  "variant": "direct",
+  "verdict": "VALID"
+}

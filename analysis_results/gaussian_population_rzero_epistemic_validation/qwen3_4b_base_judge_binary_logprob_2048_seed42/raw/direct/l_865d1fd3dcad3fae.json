@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem asks for the smallest positive integer that can be expressed as the sum of two perfect squares in exactly two different ways. This is a well-defined problem with a clear objective. The hint suggests using the identity \\(a^2 + b^2 = c^2 + d^2\\) to find such integers. The conditions are sufficient, and the problem is consistent. The solution exists, and the complete answer is objectively gradable. Therefore, the problem is valid.\n",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 98,
+  "analysis_truncated": false,
+  "context_token_count": 455,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -10.00452709197998,
+  "logprob_margin_valid_minus_invalid": 9.999999654479325,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_865d1fd3dcad3fae",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.004527437500655651,
+  "valid_score": 0.9999546021156124,
+  "variant": "direct",
+  "verdict": "VALID"
+}

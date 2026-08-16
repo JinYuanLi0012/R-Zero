@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and the full answer is objectively checkable. The equation can be factored as \\((p + q)^2 = 442\\), and since 442 is not a perfect square, there are no integer solutions for \\( p \\) and \\( q \\). However, the problem asks for prime numbers, and since there are no integer solutions, the problem is invalid because no prime numbers satisfy the equation.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 93,
+  "analysis_truncated": false,
+  "context_token_count": 422,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -0.00242475513368845,
+  "logprob_margin_valid_minus_invalid": -8.500000438652933,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_1fefa694dd10ccba",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -8.502425193786621,
+  "valid_score": 0.00020342688883953814,
+  "variant": "direct",
+  "verdict": "INVALID"
+}

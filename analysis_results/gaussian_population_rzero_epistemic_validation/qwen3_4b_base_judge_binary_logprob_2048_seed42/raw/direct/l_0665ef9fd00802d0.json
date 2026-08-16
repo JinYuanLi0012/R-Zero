@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and the full answer is objectively checkable. The conditions are sufficient and consistent, and a solution exists. The problem asks for the sum of all positive integers \\( n \\) that satisfy the given condition, and the answer can be verified by checking each possible \\( n \\). Therefore, the problem is valid as written.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 71,
+  "analysis_truncated": false,
+  "context_token_count": 426,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.504056930541992,
+  "logprob_margin_valid_minus_invalid": 9.499999539926648,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_0665ef9fd00802d0",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.0040573906153440475,
+  "valid_score": 0.9999251537380572,
+  "variant": "direct",
+  "verdict": "VALID"
+}

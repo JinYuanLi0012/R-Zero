@@ -1,0 +1,52 @@
+{
+  "blind_input_fields": [
+    "opaque_binary_judge_id",
+    "question"
+  ],
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "generation": {
+    "analysis_completions_per_question": 2,
+    "max_analysis_tokens": 2048,
+    "temperature": 0.0,
+    "top_p": 1.0
+  },
+  "gpu_ids": [
+    "0",
+    "1",
+    "2",
+    "3"
+  ],
+  "input": "/engrfs/project/jiaxinh/jinyuan/R-zero-storage/epistemic_validation/qwen3_4b_rzero_v1_v3_epistemic_seed42/prepared/all_samples.jsonl",
+  "input_sha256": "8739744ee2562778331ae9a6f1fe6076e7130c1a3bcdc63a274aa4aaa7f0cace",
+  "model": "Qwen/Qwen3-4B-Base",
+  "num_shards": 4,
+  "prompt_sha256": {
+    "direct": "b261e7b5e5d87ef3c735ced2e58404b09c3ce9be3e5c859a1c23b5ab28824e53",
+    "solver_first": "d0b1d918d7e06760a131769573256e5609e4b4e2b377c19d9af0f8d72bfdfe91"
+  },
+  "question_count": 600,
+  "result_count": 1200,
+  "scoring": {
+    "invalid_candidate": " INVALID",
+    "method": "sum of candidate prompt-token logprobs",
+    "score_batch_size": 1,
+    "valid_candidate": " VALID",
+    "valid_score": "two-candidate softmax used as an uncalibrated ranking score"
+  },
+  "seed": 42,
+  "software": {
+    "datasets": "3.6.0",
+    "git_commit": "6cbd77b27be724ecef251066e27c08c557883fa8",
+    "openai": "1.86.0",
+    "pyarrow": "20.0.0",
+    "python": "3.10.20",
+    "scipy": "1.15.3",
+    "torch": "2.7.0",
+    "transformers": "4.52.4",
+    "vllm": "0.9.1"
+  },
+  "variants": [
+    "direct",
+    "solver_first"
+  ]
+}

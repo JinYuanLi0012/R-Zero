@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete, the conditions are sufficient, and the solution exists. The equation is a quadratic equation, and it can be solved using the quadratic formula or by factoring. The complete answer, which includes all real numbers \\(x\\) that satisfy the equation, is objectively gradable. The solutions to the equation are \\(x = 1\\) and \\(x = 2\\), and these solutions can be verified by substituting them back into the original equation. Therefore, the problem meets all the criteria for being valid.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": null,
+  "analysis_token_count": 107,
+  "analysis_truncated": false,
+  "context_token_count": 433,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -10.004276275634766,
+  "logprob_margin_valid_minus_invalid": 9.999999977182597,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_52812db09be927db",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.004276298452168703,
+  "valid_score": 0.9999546021302618,
+  "variant": "direct",
+  "verdict": "VALID"
+}

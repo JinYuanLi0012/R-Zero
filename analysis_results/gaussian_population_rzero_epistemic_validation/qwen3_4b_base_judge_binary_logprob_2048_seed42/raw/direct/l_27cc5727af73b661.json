@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and the full answer $a_{10} = 10$ is objectively checkable.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 27,
+  "analysis_truncated": false,
+  "context_token_count": 414,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -7.387539386749268,
+  "logprob_margin_valid_minus_invalid": 7.375000148080289,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_27cc5727af73b661",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.012539238668978214,
+  "valid_score": 0.9993736659345802,
+  "variant": "direct",
+  "verdict": "VALID"
+}

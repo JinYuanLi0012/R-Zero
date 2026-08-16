@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and consistent. It asks for the minimum number of direct spell-casting pairs, which is a well-defined and objectively gradable question. The conditions are sufficient to determine the minimum number of pairs, which is 0, as it is possible for no wizard to cast a spell on another wizard. The answer is objectively checkable.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 73,
+  "analysis_truncated": false,
+  "context_token_count": 442,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.505396842956543,
+  "logprob_margin_valid_minus_invalid": 9.49999980814755,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_49384a30ccf4e20a",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.0053970348089933395,
+  "valid_score": 0.9999251537581311,
+  "variant": "direct",
+  "verdict": "VALID"
+}

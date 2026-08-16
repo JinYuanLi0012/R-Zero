@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and the full answer is objectively checkable. The conditions are sufficient to find all such integers \\( n \\). The expression \\( n^2 + 15n + 56 \\) can be rewritten as \\( (n + 7)(n + 8) \\). For this product to be a perfect square, both \\( n + 7 \\) and \\( n + 8 \\) must be perfect squares or their product must be a perfect square. Since \\( n + 7 \\) and \\( n + 8 \\) are consecutive integers, they cannot both be perfect squares unless one of them is 1. Therefore, we need to check the cases where \\( n + 7 = 1 \\) and \\( n + 8 = 1 \\), which are not possible since \\( n > 2 \\). The only way for their product to be a perfect square is if one of them is 1 and the other is a perfect square. This gives us the solutions \\( n + 7 = 1 \\) and \\( n + 8 = 4 \\), or \\( n + 7 = 4 \\) and \\( n + 8 = 1 \\). Solving these, we get \\( n = -6 \\) and \\( n = -3 \\), but since \\( n > 2 \\), neither of these solutions is valid. Therefore, there are no integers \\( n > 2 \\) for which \\( n^2 + 15n + 56 \\) is a perfect square.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 325,
+  "analysis_truncated": false,
+  "context_token_count": 652,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -0.10695595294237137,
+  "logprob_margin_valid_minus_invalid": -2.250000052154064,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_1bc6167ca5c4840e",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -2.3569560050964355,
+  "valid_score": 0.09534946040040723,
+  "variant": "direct",
+  "verdict": "INVALID"
+}

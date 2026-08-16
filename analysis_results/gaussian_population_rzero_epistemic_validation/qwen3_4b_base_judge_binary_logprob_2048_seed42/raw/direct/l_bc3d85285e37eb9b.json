@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and the full answer is objectively checkable. The conditions are sufficient to determine the integers \\( n \\) for which the equation has exactly one real root. The problem is well-defined and the solution can be verified by checking the discriminant or using other algebraic methods to ensure that the equation has exactly one real root for the specified values of \\( n \\).",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 79,
+  "analysis_truncated": false,
+  "context_token_count": 417,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.880200386047363,
+  "logprob_margin_valid_minus_invalid": 9.875000074505806,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_bc3d85285e37eb9b",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.005200311541557312,
+  "valid_score": 0.9999485577900904,
+  "variant": "direct",
+  "verdict": "VALID"
+}

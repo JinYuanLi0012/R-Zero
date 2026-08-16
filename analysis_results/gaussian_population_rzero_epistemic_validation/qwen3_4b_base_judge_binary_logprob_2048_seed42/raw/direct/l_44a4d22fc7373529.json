@@ -1,0 +1,27 @@
+{
+  "analysis": " The equation involves nested square roots, and the domain of \\( x \\) must satisfy \\( 2x - 1 \\geq 0 \\), which implies \\( x \\geq \\frac{1}{2} \\). Let \\( y = \\sqrt{x + \\sqrt{2x - 1}} \\) and \\( z = \\sqrt{x - \\sqrt{2x - 1}} \\). The equation becomes \\( y + z = 2 \\). Squaring both sides, we get \\( y^2 + z^2 + 2yz = 4 \\). Since \\( y^2 = x + \\sqrt{2x - 1} \\) and \\( z^2 = x - \\sqrt{2x - 1} \\), we have \\( y^2 + z^2 = 2x \\). Substituting, we get \\( 2x + 2yz = 4 \\), or \\( x + yz = 2 \\). Since \\( yz = \\sqrt{(x + \\sqrt{2x - 1})(x - \\sqrt{2x - 1})} = \\sqrt{x^2 - (2x - 1)} = \\sqrt{x^2 - 2x + 1} = \\sqrt{(x - 1)^2} = |x - 1| \\), we have \\( x + |x - 1| = 2 \\). For \\( x \\geq 1 \\), \\( |x - 1| = x - 1 \\), so \\( x + (x - 1) = 2 \\), or \\( 2x - 1 = 2 \\), which gives \\( x = \\frac{3}{2} \\). For \\( \\frac{1}{2} \\leq x < 1 \\), \\( |x - 1| = 1 - x \\), so \\( x + (1 - x) = 2 \\), which is impossible. Therefore, the only solution is \\( x = \\frac{3}{2} \\). The problem is complete, the conditions are sufficient, and the answer is objectively checkable.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 455,
+  "analysis_truncated": false,
+  "context_token_count": 797,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -10.503315925598145,
+  "logprob_margin_valid_minus_invalid": 10.50000037648715,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_44a4d22fc7373529",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.003315549110993743,
+  "valid_score": 0.999972464319252,
+  "variant": "direct",
+  "verdict": "VALID"
+}

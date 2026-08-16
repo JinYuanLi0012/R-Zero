@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem provides specific conditions for the polynomial \\( p(x) \\) and asks for the maximum number of integer roots of a related polynomial. The conditions \\( p(1) = 4 \\) and \\( p(2) = 9 \\) are sufficient to define \\( p(x) \\) uniquely up to a constant term. The related polynomial \\( p(x) - 2x^2 + 5x - 1 \\) is well-defined and its integer roots can be determined by solving the equation \\( p(x) = 2x^2 - 5x + 1 \\). The answer is objectively gradable based on the number of integer roots found. Therefore, the problem is complete, consistent, and has a clear, checkable answer.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 159,
+  "analysis_truncated": false,
+  "context_token_count": 519,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -10.004622459411621,
+  "logprob_margin_valid_minus_invalid": 10.000000446103513,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_47fcc45536900b28",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.004622013308107853,
+  "valid_score": 0.9999546021515489,
+  "variant": "direct",
+  "verdict": "VALID"
+}

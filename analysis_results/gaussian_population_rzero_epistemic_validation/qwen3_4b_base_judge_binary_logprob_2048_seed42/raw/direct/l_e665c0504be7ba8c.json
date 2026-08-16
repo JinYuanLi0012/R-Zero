@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete, consistent, and asks for a specific solution. The conditions are sufficient to determine a unique answer, and the answer can be objectively graded. The problem is to find the smallest positive integer \\( n \\) such that \\( 2^n \\equiv 1 \\pmod{1001} \\). This is a well-defined problem in number theory, specifically related to the concept of the order of an element modulo a number. The conditions are sufficient because the problem is asking for a specific solution, and the answer can be objectively graded by checking if \\( 2^n \\equiv 1 \\pmod{1001} \\) holds true for the given \\( n \\). Therefore, the problem is valid.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": null,
+  "analysis_token_count": 151,
+  "analysis_truncated": false,
+  "context_token_count": 479,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.380280494689941,
+  "logprob_margin_valid_minus_invalid": 9.374999781604856,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_e665c0504be7ba8c",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.005280713085085154,
+  "valid_score": 0.9999151889397557,
+  "variant": "direct",
+  "verdict": "VALID"
+}

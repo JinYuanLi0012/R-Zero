@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is well-defined, and the function \\( f(n) \\) is clearly specified. The task is to find the smallest positive integer \\( k \\) such that \\( k! \\) is divisible by 2023. Since 2023 is a prime number (2023 = 7 \u00d7 17 \u00d7 17), the smallest \\( k \\) for which \\( k! \\) is divisible by 2023 is \\( k = 2023 \\). The answer is objectively gradable as it is a specific integer value.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 124,
+  "analysis_truncated": false,
+  "context_token_count": 491,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.503837585449219,
+  "logprob_margin_valid_minus_invalid": 9.500000219559297,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_2857cc7d7d6b8a69",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.0038373658899217844,
+  "valid_score": 0.9999251537889214,
+  "variant": "direct",
+  "verdict": "VALID"
+}

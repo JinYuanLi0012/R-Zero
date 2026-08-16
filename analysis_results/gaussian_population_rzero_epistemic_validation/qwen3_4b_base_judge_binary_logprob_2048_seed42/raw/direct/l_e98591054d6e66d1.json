@@ -1,0 +1,27 @@
+{
+  "analysis": " The question is complete, consistent, and has one clear answer. The problem requires finding the least common multiple (LCM) of the numbers from 1 to 10, which is a well-defined mathematical operation. The LCM of these numbers is 2520, and this answer is objectively gradable. Therefore, the conditions are sufficient, a solution exists, and the complete answer is objectively gradable.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 88,
+  "analysis_truncated": false,
+  "context_token_count": 405,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.880661010742188,
+  "logprob_margin_valid_minus_invalid": 9.875000434927642,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_e98591054d6e66d1",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.005660575814545155,
+  "valid_score": 0.9999485578086303,
+  "variant": "direct",
+  "verdict": "VALID"
+}

@@ -1,0 +1,27 @@
+{
+  "analysis": " The question is complete, consistent, and has one clear answer. The problem is well-defined, and the answer can be objectively graded by checking each positive integer to see if it can be expressed as the sum of two squares of prime numbers. The smallest positive integer that cannot be expressed in this way is the answer to the problem.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 69,
+  "analysis_truncated": false,
+  "context_token_count": 384,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.008134841918945,
+  "logprob_margin_valid_minus_invalid": 9.00000015553087,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_434bb1c864f7927b",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.008134686388075352,
+  "valid_score": 0.9998766054432031,
+  "variant": "direct",
+  "verdict": "VALID"
+}

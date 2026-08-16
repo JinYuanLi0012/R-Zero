@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete, consistent, and has a clear answer. The digit '1' appears in the units place for every 10th house (1, 11, 21, ..., 91), and in the tens place for every 10 houses (10-19). This gives a total of 10 (units) + 10 (tens) = 20 times. The answer is objectively checkable.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 99,
+  "analysis_truncated": false,
+  "context_token_count": 480,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.631193161010742,
+  "logprob_margin_valid_minus_invalid": 9.624999787658453,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_790ba653b1984b41",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.0061933733522892,
+  "valid_score": 0.9999339478411208,
+  "variant": "direct",
+  "verdict": "VALID"
+}

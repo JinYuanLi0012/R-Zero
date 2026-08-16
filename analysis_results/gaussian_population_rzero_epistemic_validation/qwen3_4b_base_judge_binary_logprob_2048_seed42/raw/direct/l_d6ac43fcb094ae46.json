@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and the full answer is objectively checkable. The conditions are sufficient to find all integers \\( n \\) that satisfy the equation \\( n^2 - 10n + 21 = k^2 \\) for some integer \\( k \\). By solving the quadratic equation and checking for integer solutions, we can determine all such \\( n \\). The problem is well-defined and the solution is unique and verifiable.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 92,
+  "analysis_truncated": false,
+  "context_token_count": 416,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.378740310668945,
+  "logprob_margin_valid_minus_invalid": 9.375000207917765,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_d6ac43fcb094ae46",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.0037401027511805296,
+  "valid_score": 0.9999151889759087,
+  "variant": "direct",
+  "verdict": "VALID"
+}

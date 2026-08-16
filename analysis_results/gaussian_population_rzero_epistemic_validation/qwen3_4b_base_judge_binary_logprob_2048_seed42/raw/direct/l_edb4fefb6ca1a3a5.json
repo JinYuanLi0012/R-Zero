@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and the full answer is objectively checkable. The conditions are sufficient and consistent, a solution exists, and the complete answer is objectively gradable. The problem asks for the smallest positive integer \\( n \\) that meets the given criteria, and such a number exists. The answer can be verified by checking the divisibility and the sum of the digits.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 77,
+  "analysis_truncated": false,
+  "context_token_count": 407,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -11.002313613891602,
+  "logprob_margin_valid_minus_invalid": 11.000000055646524,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_edb4fefb6ca1a3a5",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.0023135582450777292,
+  "valid_score": 0.9999832985790812,
+  "variant": "direct",
+  "verdict": "VALID"
+}

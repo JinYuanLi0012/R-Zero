@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and the full answer is objectively checkable. The equation \\( x^2 + y^2 + x + y = 10 \\) can be solved for all real numbers \\( x \\) and \\( y \\), and the solutions can be verified by substitution. The problem is well-defined and the conditions are sufficient to find all real numbers \\( x \\) that satisfy the equation. The answer is objectively gradable as it involves finding all possible real numbers \\( x \\) that meet the given condition. Therefore, the problem is valid.\n",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 116,
+  "analysis_truncated": false,
+  "context_token_count": 436,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.75613784790039,
+  "logprob_margin_valid_minus_invalid": 9.749999684281647,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_71cde05407cc55bc",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.00613816361874342,
+  "valid_score": 0.9999417087159364,
+  "variant": "direct",
+  "verdict": "VALID"
+}

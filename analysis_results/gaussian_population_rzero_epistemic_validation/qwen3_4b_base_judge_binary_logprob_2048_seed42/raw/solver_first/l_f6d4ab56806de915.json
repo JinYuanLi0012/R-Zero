@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem describes a complete graph with 100 vertices (cities) and 100 edges (roads). The goal is to find the minimum number of edges (tunnels) that need to be added to make the graph a complete graph. In a complete graph with \\( n \\) vertices, the number of edges is given by the formula \\( \\frac{n(n-1)}{2} \\). For \\( n = 100 \\), the number of edges in a complete graph is \\( \\frac{100 \\times 99}{2} = 4950 \\). Since there are already 100 roads, the number of tunnels needed is \\( 4950 - 100 = 4850 \\). This solution is unique and can be objectively verified.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 175,
+  "analysis_truncated": false,
+  "context_token_count": 606,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.259245872497559,
+  "logprob_margin_valid_minus_invalid": 9.249999606050551,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_f6d4ab56806de915",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.009246266447007656,
+  "valid_score": 0.9999038975466447,
+  "variant": "solver_first",
+  "verdict": "VALID"
+}

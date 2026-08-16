@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is well-defined, and the solution involves finding the largest integer that cannot be expressed in the form \\( n^2 + 4k \\) where \\( n \\) is a non-negative integer and \\( k \\) is a positive integer. The problem is consistent and has a clear objective, which is to find the largest such integer. The answer is objectively gradable as it requires identifying a specific integer. Therefore, the problem is valid.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 94,
+  "analysis_truncated": false,
+  "context_token_count": 415,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.13194751739502,
+  "logprob_margin_valid_minus_invalid": 9.125000345520675,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_4fe8d35294cc526c",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.006947171874344349,
+  "valid_score": 0.9998911031275955,
+  "variant": "direct",
+  "verdict": "VALID"
+}

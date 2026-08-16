@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and the full answer is objectively checkable. The conditions are sufficient and consistent, a solution exists, and the complete answer is objectively gradable. The problem asks for the smallest possible value of \\(n\\), which is a clear and specific request. The conditions provided are sufficient to determine the smallest \\(n\\) that satisfies the given condition. Therefore, the problem is valid.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 82,
+  "analysis_truncated": false,
+  "context_token_count": 448,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.88036823272705,
+  "logprob_margin_valid_minus_invalid": 9.875000128988177,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_e5e691f5169fdb42",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.005368103738874197,
+  "valid_score": 0.9999485577928928,
+  "variant": "direct",
+  "verdict": "VALID"
+}

@@ -1,0 +1,27 @@
+{
+  "analysis": " The question is complete, consistent, and has one clear answer. The problem is to find the smallest positive integer that can be expressed as the sum of two positive perfect cubes in two different ways. This is a well-defined problem with a unique solution, and the answer can be objectively graded by checking if the number meets the criteria. The problem is valid as written.\n",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 76,
+  "analysis_truncated": false,
+  "context_token_count": 394,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.380866050720215,
+  "logprob_margin_valid_minus_invalid": 9.3750000721775,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_fe2383777c567c61",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.005865978542715311,
+  "valid_score": 0.9999151889643975,
+  "variant": "direct",
+  "verdict": "VALID"
+}

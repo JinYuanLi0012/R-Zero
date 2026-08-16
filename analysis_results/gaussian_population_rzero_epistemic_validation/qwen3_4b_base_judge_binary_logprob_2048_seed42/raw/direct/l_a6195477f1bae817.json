@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem asks for all positive integers \\( n \\) that satisfy the given condition. The condition involves the product of the digits of \\( n \\) and a quadratic expression. To determine if the problem is valid, we need to check if the conditions are sufficient, if a solution exists, and if the answer can be objectively graded. The problem is well-defined and the solution can be verified by checking each positive integer \\( n \\) to see if it satisfies the given condition. Therefore, the problem is valid.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": null,
+  "analysis_token_count": 104,
+  "analysis_truncated": false,
+  "context_token_count": 444,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -8.50883674621582,
+  "logprob_margin_valid_minus_invalid": 8.500000176019967,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_a6195477f1bae817",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.00883657019585371,
+  "valid_score": 0.9997965730577447,
+  "variant": "direct",
+  "verdict": "VALID"
+}

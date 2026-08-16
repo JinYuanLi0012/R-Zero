@@ -1,0 +1,265 @@
+{
+  "coverage": {
+    "overall:direct": {
+      "evaluable": 600,
+      "expected": 600
+    },
+    "overall:solver_first": {
+      "evaluable": 600,
+      "expected": 600
+    },
+    "v1:direct": {
+      "evaluable": 200,
+      "expected": 200
+    },
+    "v1:solver_first": {
+      "evaluable": 200,
+      "expected": 200
+    },
+    "v2:direct": {
+      "evaluable": 200,
+      "expected": 200
+    },
+    "v2:solver_first": {
+      "evaluable": 200,
+      "expected": 200
+    },
+    "v3:direct": {
+      "evaluable": 200,
+      "expected": 200
+    },
+    "v3:solver_first": {
+      "evaluable": 200,
+      "expected": 200
+    }
+  },
+  "failures": [],
+  "generation_diagnostics": [
+    {
+      "empty_analysis_count": 0,
+      "invalid_candidate_tokens": 1,
+      "mean_analysis_tokens": 237.175,
+      "n": 600,
+      "truncated_count": 20,
+      "valid_candidate_tokens": 1,
+      "variant": "direct"
+    },
+    {
+      "empty_analysis_count": 0,
+      "invalid_candidate_tokens": 1,
+      "mean_analysis_tokens": 673.8216666666667,
+      "n": 600,
+      "truncated_count": 41,
+      "valid_candidate_tokens": 1,
+      "variant": "solver_first"
+    }
+  ],
+  "prompt_comparison": {
+    "direct_only_correct": 74,
+    "paired_count": 600,
+    "same_verdict": 465,
+    "solver_first_only_correct": 61
+  },
+  "scopes": {
+    "overall": {
+      "always_valid": {
+        "accuracy": 0.7083333333333334,
+        "balanced_accuracy": 0.5,
+        "cohens_kappa": 0.0,
+        "fn": 0,
+        "fp": 175,
+        "invalid_recall": 0.0,
+        "mcc": 0.0,
+        "n": 600,
+        "roc_auc": 0.5,
+        "tn": 0,
+        "tp": 425,
+        "valid_f1": 0.8292682926829268,
+        "valid_precision": 0.7083333333333334,
+        "valid_recall": 1.0
+      },
+      "direct": {
+        "accuracy": 0.6616666666666666,
+        "balanced_accuracy": 0.4905882352941176,
+        "cohens_kappa": -0.02352941176470586,
+        "fn": 42,
+        "fp": 161,
+        "invalid_recall": 0.08,
+        "mcc": -0.029411764705882353,
+        "n": 600,
+        "roc_auc": 0.44147899159663867,
+        "tn": 14,
+        "tp": 383,
+        "valid_f1": 0.7905056759545924,
+        "valid_precision": 0.7040441176470589,
+        "valid_recall": 0.9011764705882352
+      },
+      "solver_first": {
+        "accuracy": 0.64,
+        "balanced_accuracy": 0.5593277310924369,
+        "cohens_kappa": 0.11986417657045842,
+        "fn": 105,
+        "fp": 111,
+        "invalid_recall": 0.3657142857142857,
+        "mcc": 0.11990001496505445,
+        "n": 600,
+        "roc_auc": 0.647146218487395,
+        "tn": 64,
+        "tp": 320,
+        "valid_f1": 0.7476635514018691,
+        "valid_precision": 0.7424593967517401,
+        "valid_recall": 0.7529411764705882
+      }
+    },
+    "v1": {
+      "always_valid": {
+        "accuracy": 0.83,
+        "balanced_accuracy": 0.5,
+        "cohens_kappa": 0.0,
+        "fn": 0,
+        "fp": 34,
+        "invalid_recall": 0.0,
+        "mcc": 0.0,
+        "n": 200,
+        "roc_auc": 0.5,
+        "tn": 0,
+        "tp": 166,
+        "valid_f1": 0.9071038251366119,
+        "valid_precision": 0.83,
+        "valid_recall": 1.0
+      },
+      "direct": {
+        "accuracy": 0.82,
+        "balanced_accuracy": 0.517363571934798,
+        "cohens_kappa": 0.05163329820864026,
+        "fn": 4,
+        "fp": 32,
+        "invalid_recall": 0.058823529411764705,
+        "mcc": 0.07646911758139807,
+        "n": 200,
+        "roc_auc": 0.4462260807937633,
+        "tn": 2,
+        "tp": 162,
+        "valid_f1": 0.9,
+        "valid_precision": 0.8350515463917526,
+        "valid_recall": 0.9759036144578314
+      },
+      "solver_first": {
+        "accuracy": 0.805,
+        "balanced_accuracy": 0.6252657689581856,
+        "cohens_kappa": 0.26608957470831796,
+        "fn": 17,
+        "fp": 22,
+        "invalid_recall": 0.35294117647058826,
+        "mcc": 0.2672753166697919,
+        "n": 200,
+        "roc_auc": 0.704376328844791,
+        "tn": 12,
+        "tp": 149,
+        "valid_f1": 0.8842729970326408,
+        "valid_precision": 0.8713450292397661,
+        "valid_recall": 0.8975903614457831
+      }
+    },
+    "v2": {
+      "always_valid": {
+        "accuracy": 0.74,
+        "balanced_accuracy": 0.5,
+        "cohens_kappa": 0.0,
+        "fn": 0,
+        "fp": 52,
+        "invalid_recall": 0.0,
+        "mcc": 0.0,
+        "n": 200,
+        "roc_auc": 0.5,
+        "tn": 0,
+        "tp": 148,
+        "valid_f1": 0.8505747126436781,
+        "valid_precision": 0.74,
+        "valid_recall": 1.0
+      },
+      "direct": {
+        "accuracy": 0.62,
+        "balanced_accuracy": 0.4688149688149688,
+        "cohens_kappa": -0.06741573033707872,
+        "fn": 32,
+        "fp": 44,
+        "invalid_recall": 0.15384615384615385,
+        "mcc": -0.06839411288813299,
+        "n": 200,
+        "roc_auc": 0.40689968814968813,
+        "tn": 8,
+        "tp": 116,
+        "valid_f1": 0.7532467532467533,
+        "valid_precision": 0.725,
+        "valid_recall": 0.7837837837837838
+      },
+      "solver_first": {
+        "accuracy": 0.55,
+        "balanced_accuracy": 0.4838877338877339,
+        "cohens_kappa": -0.028336380255941422,
+        "fn": 56,
+        "fp": 34,
+        "invalid_recall": 0.34615384615384615,
+        "mcc": -0.02927642336790943,
+        "n": 200,
+        "roc_auc": 0.54495841995842,
+        "tn": 18,
+        "tp": 92,
+        "valid_f1": 0.6715328467153284,
+        "valid_precision": 0.7301587301587301,
+        "valid_recall": 0.6216216216216216
+      }
+    },
+    "v3": {
+      "always_valid": {
+        "accuracy": 0.555,
+        "balanced_accuracy": 0.5,
+        "cohens_kappa": 0.0,
+        "fn": 0,
+        "fp": 89,
+        "invalid_recall": 0.0,
+        "mcc": 0.0,
+        "n": 200,
+        "roc_auc": 0.5,
+        "tn": 0,
+        "tp": 111,
+        "valid_f1": 0.7138263665594855,
+        "valid_precision": 0.555,
+        "valid_recall": 1.0
+      },
+      "direct": {
+        "accuracy": 0.545,
+        "balanced_accuracy": 0.4954448830853325,
+        "cohens_kappa": -0.00998890122086559,
+        "fn": 6,
+        "fp": 85,
+        "invalid_recall": 0.0449438202247191,
+        "mcc": -0.02077347808904099,
+        "n": 200,
+        "roc_auc": 0.47297297297297297,
+        "tn": 4,
+        "tp": 105,
+        "valid_f1": 0.6976744186046513,
+        "valid_precision": 0.5526315789473685,
+        "valid_recall": 0.9459459459459459
+      },
+      "solver_first": {
+        "accuracy": 0.565,
+        "balanced_accuracy": 0.546867091810912,
+        "cohens_kappa": 0.09619779763141471,
+        "fn": 32,
+        "fp": 55,
+        "invalid_recall": 0.38202247191011235,
+        "mcc": 0.09906725442518943,
+        "n": 200,
+        "roc_auc": 0.6042615649357223,
+        "tn": 34,
+        "tp": 79,
+        "valid_f1": 0.6448979591836734,
+        "valid_precision": 0.5895522388059702,
+        "valid_recall": 0.7117117117117117
+      }
+    }
+  }
+}

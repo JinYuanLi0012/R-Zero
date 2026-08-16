@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and the full answer is objectively checkable. The conditions are sufficient to determine all integers \\( n \\) for which the polynomial has at least one integer root. The problem is well-defined and the solution can be verified by checking each possible integer \\( n \\) to see if the polynomial has an integer root. Therefore, the problem is valid as written.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 78,
+  "analysis_truncated": false,
+  "context_token_count": 417,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.505861282348633,
+  "logprob_margin_valid_minus_invalid": 9.499999807681888,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_51a2a566c9e8a1c9",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.005861474666744471,
+  "valid_score": 0.9999251537580962,
+  "variant": "direct",
+  "verdict": "VALID"
+}

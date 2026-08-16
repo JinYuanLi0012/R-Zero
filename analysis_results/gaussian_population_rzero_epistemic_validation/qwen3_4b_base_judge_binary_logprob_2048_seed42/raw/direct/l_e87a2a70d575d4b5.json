@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete, consistent, and asks for all real solutions to the given cubic equation. The equation is well-defined, and the solutions can be found using methods such as factoring, synthetic division, or the Rational Root Theorem. The complete answer, which includes all real roots, is objectively gradable. Therefore, the problem meets the criteria for validity.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 76,
+  "analysis_truncated": false,
+  "context_token_count": 416,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.754443168640137,
+  "logprob_margin_valid_minus_invalid": 9.749999872408807,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_e87a2a70d575d4b5",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.004443296231329441,
+  "valid_score": 0.9999417087269019,
+  "variant": "direct",
+  "verdict": "VALID"
+}

@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and the full answer is objectively checkable. The function \\( f(n) = n^3 - 3n^2 + 2n \\) can be factored as \\( f(n) = n(n-1)(n-2) \\). For \\( f(n) \\) to be a prime number, one of the factors must be \\( \\pm 1 \\) and the other two must be \\( \\pm 1 \\) or \\( \\pm p \\) where \\( p \\) is a prime number. The only integer values of \\( n \\) that satisfy this condition are \\( n = 0, 1, 2, 3, -1, -2 \\). We can verify each of these values to ensure they yield a prime number. Therefore, the problem is well-defined and the complete answer is objectively gradable.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 182,
+  "analysis_truncated": false,
+  "context_token_count": 542,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -10.503578186035156,
+  "logprob_margin_valid_minus_invalid": 10.499999734573066,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_16dc3c8e3e7b72fe",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.0035784514620900154,
+  "valid_score": 0.9999724643015769,
+  "variant": "direct",
+  "verdict": "VALID"
+}

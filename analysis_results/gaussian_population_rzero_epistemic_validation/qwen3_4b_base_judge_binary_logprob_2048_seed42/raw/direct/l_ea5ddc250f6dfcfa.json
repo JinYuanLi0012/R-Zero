@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and the full answer is objectively checkable. The equation \\( n^2 + 3n + 2 = m^2 \\) can be factored as \\( (n+1)(n+2) = m^2 \\). We need to find all pairs of positive integers \\( (n, m) \\) that satisfy this equation. By analyzing the factors, we can determine the possible values of \\( n \\) and \\( m \\). The problem is well-defined and the solution is unique and verifiable.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 113,
+  "analysis_truncated": false,
+  "context_token_count": 440,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.004658699035645,
+  "logprob_margin_valid_minus_invalid": 8.999999664723873,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_ea5ddc250f6dfcfa",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.004659034311771393,
+  "valid_score": 0.9998766053826477,
+  "variant": "direct",
+  "verdict": "VALID"
+}

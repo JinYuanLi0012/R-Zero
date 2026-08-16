@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is well-defined and asks for a count of distinct positive integers. The conditions are sufficient to determine the solution, and the answer is objectively gradable. The problem requires identifying numbers that can be expressed as the sum of two distinct products of three distinct primes, which is a clear and solvable task. The solution involves combinatorial reasoning and number theory, and the final count of such numbers is a definitive and checkable result. Therefore, the problem is valid as written.\n",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 100,
+  "analysis_truncated": false,
+  "context_token_count": 428,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.753339767456055,
+  "logprob_margin_valid_minus_invalid": 9.749999980442226,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_ede831c7ab2207c7",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.0033397870138287544,
+  "valid_score": 0.9999417087331988,
+  "variant": "direct",
+  "verdict": "VALID"
+}

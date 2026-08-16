@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete, the recurrence relation is well-defined, and the sequence can be computed step-by-step. The value of \\(a_{10}\\) can be objectively determined and graded.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 42,
+  "analysis_truncated": false,
+  "context_token_count": 407,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.261709213256836,
+  "logprob_margin_valid_minus_invalid": 9.250000272877514,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_047405e30e5892b5",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.011708940379321575,
+  "valid_score": 0.9999038976107222,
+  "variant": "direct",
+  "verdict": "VALID"
+}

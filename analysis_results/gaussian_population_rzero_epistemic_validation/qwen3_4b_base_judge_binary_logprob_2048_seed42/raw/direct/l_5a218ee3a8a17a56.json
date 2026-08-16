@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is well-defined, and the conditions are sufficient to find a unique solution. The number of partitions of \\( n \\) into three positive integers can be calculated using combinatorial methods, and the smallest \\( n \\) that satisfies the condition can be determined. The answer is objectively gradable as it requires finding a specific integer \\( n \\).",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 74,
+  "analysis_truncated": false,
+  "context_token_count": 454,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.883011817932129,
+  "logprob_margin_valid_minus_invalid": 9.874999639578164,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_5a218ee3a8a17a56",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.008012178353965282,
+  "valid_score": 0.9999485577677177,
+  "variant": "direct",
+  "verdict": "VALID"
+}

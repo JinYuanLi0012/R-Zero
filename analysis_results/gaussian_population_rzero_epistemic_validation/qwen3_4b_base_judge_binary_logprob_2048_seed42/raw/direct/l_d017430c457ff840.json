@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and the full answer is objectively checkable. The conditions are sufficient to find all integers \\( n \\) that satisfy the equation \\( n^2 + 3n + 2 = k^2 \\) for some integer \\( k \\). The problem is consistent, and a solution exists. The complete answer is objectively gradable as it requires finding all such integers \\( n \\). Therefore, the problem is valid.\n",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 91,
+  "analysis_truncated": false,
+  "context_token_count": 413,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.630108833312988,
+  "logprob_margin_valid_minus_invalid": 9.625000078231096,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_d017430c457ff840",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.0051087550818920135,
+  "valid_score": 0.9999339478603124,
+  "variant": "direct",
+  "verdict": "VALID"
+}

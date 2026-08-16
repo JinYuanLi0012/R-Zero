@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is clear and asks for all two-digit numbers that are the sum of the squares of their digits. The conditions are sufficient, and the solution is objectively gradable. The problem is well-defined and can be solved systematically by checking all two-digit numbers. The answer is unique and can be verified by calculation. Therefore, the problem is valid.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": null,
+  "analysis_token_count": 71,
+  "analysis_truncated": false,
+  "context_token_count": 456,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.263134002685547,
+  "logprob_margin_valid_minus_invalid": 9.249999847263098,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_5ef8903adc2ba230",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.013134155422449112,
+  "valid_score": 0.9999038975698235,
+  "variant": "direct",
+  "verdict": "VALID"
+}

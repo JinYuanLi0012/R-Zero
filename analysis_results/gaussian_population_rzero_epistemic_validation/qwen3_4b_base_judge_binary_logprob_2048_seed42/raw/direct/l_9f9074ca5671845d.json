@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and the full answer is objectively checkable. The conditions are sufficient to determine the integers \\( n \\) that satisfy the given polynomial having exactly two distinct integer roots. The problem is well-defined and the solution can be verified by checking each possible integer value of \\( n \\) to see if the polynomial meets the criteria. Therefore, the problem is valid as written.\n",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 80,
+  "analysis_truncated": false,
+  "context_token_count": 409,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.881701469421387,
+  "logprob_margin_valid_minus_invalid": 9.87500044843182,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_9f9074ca5671845d",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.006701020989567041,
+  "valid_score": 0.9999485578093248,
+  "variant": "direct",
+  "verdict": "VALID"
+}

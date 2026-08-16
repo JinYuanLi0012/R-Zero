@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and the full answer is objectively checkable. The problem specifies a circle in the complex plane, a rotation by a constant angle, and asks for the new position of a point after rotation. The conditions are sufficient, and the solution exists. The answer can be objectively graded by verifying the calculation of the new position using the rotation formula in the complex plane. The problem is valid as written.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 85,
+  "analysis_truncated": false,
+  "context_token_count": 491,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -10.007894515991211,
+  "logprob_margin_valid_minus_invalid": 10.000000011175871,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_1d9d859953018277",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.007894504815340042,
+  "valid_score": 0.9999546021318049,
+  "variant": "direct",
+  "verdict": "VALID"
+}

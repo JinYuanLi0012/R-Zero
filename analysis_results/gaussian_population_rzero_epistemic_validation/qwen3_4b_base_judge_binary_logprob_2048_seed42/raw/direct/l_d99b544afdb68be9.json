@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is well-defined and asks for a proof, which is objectively gradable. The conditions are sufficient to determine whether 2023 can be expressed as the sum of two or more consecutive positive integers. The problem is valid as written.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 53,
+  "analysis_truncated": false,
+  "context_token_count": 461,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -8.762574195861816,
+  "logprob_margin_valid_minus_invalid": 8.750000464729965,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_d99b544afdb68be9",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.012573731131851673,
+  "valid_score": 0.9998415638545158,
+  "variant": "direct",
+  "verdict": "VALID"
+}

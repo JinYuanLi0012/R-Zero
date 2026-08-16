@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is well-defined and asks for a specific minimum value of \\( n \\). The conditions are sufficient, and the existence of an anchor set for any subset of points with at least \\( \\frac{n}{2} \\) points is a clear and objective criterion. The problem is consistent and has a unique solution, which can be objectively graded. Therefore, the problem is valid.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 80,
+  "analysis_truncated": false,
+  "context_token_count": 479,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.633749008178711,
+  "logprob_margin_valid_minus_invalid": 9.625000472180545,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_6b7ccf1fbc524793",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.008748535998165607,
+  "valid_score": 0.9999339478863319,
+  "variant": "direct",
+  "verdict": "VALID"
+}

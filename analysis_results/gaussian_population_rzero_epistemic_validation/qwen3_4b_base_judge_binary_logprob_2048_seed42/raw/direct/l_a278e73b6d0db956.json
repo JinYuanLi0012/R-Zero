@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and the full answer is objectively checkable. The conditions are sufficient and consistent, a solution exists, and the complete answer is objectively gradable. The problem asks for all distinct 4-digit integers that can be formed using the digits 1, 2, 3, and 4 exactly once, and the number must be divisible by 3. The conditions are sufficient because the digits are given, and the problem is consistent because the number must be divisible by 3. A solution exists because there are 24 possible 4-digit integers that can be formed using the digits 1, 2, 3, and 4 exactly once, and the complete answer is objectively gradable because the number of distinct 4-digit integers that can be formed is a clear and specific answer. Therefore, the problem is VALID.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": null,
+  "analysis_token_count": 172,
+  "analysis_truncated": false,
+  "context_token_count": 510,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -8.761748313903809,
+  "logprob_margin_valid_minus_invalid": 8.749999668449163,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_a278e73b6d0db956",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.011748645454645157,
+  "valid_score": 0.9998415637283762,
+  "variant": "direct",
+  "verdict": "VALID"
+}

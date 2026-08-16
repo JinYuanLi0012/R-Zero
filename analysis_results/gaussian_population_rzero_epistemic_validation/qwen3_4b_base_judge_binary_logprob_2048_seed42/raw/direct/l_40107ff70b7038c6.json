@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is well-defined and asks for the smallest positive integer \\( n \\) such that the polynomial \\( P(x) \\) is divisible by \\( x^2 - 3x + 2 \\). The polynomial \\( x^2 - 3x + 2 \\) can be factored as \\( (x-1)(x-2) \\), so \\( P(x) \\) must be divisible by both \\( x-1 \\) and \\( x-2 \\). This means that \\( P(1) = 0 \\) and \\( P(2) = 0 \\). We need to find the smallest \\( n \\) such that these conditions are satisfied. The problem is complete, consistent, and the answer is objectively gradable. Therefore, the problem is valid.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": null,
+  "analysis_token_count": 163,
+  "analysis_truncated": false,
+  "context_token_count": 528,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -10.130670547485352,
+  "logprob_margin_valid_minus_invalid": 10.125000370200723,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_40107ff70b7038c6",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.005670177284628153,
+  "valid_score": 0.9999599363226018,
+  "variant": "direct",
+  "verdict": "VALID"
+}

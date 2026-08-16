@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem provides a clear sequence rule and enough information to determine the constant factor. The sequence is geometric, and the sixth term can be calculated using the formula for the nth term of a geometric sequence. The complete answer is objectively gradable.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 51,
+  "analysis_truncated": false,
+  "context_token_count": 392,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -10.252799034118652,
+  "logprob_margin_valid_minus_invalid": 10.250000224914402,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_a58c88a1b3b83ac5",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.002798809204250574,
+  "valid_score": 0.9999646437572102,
+  "variant": "direct",
+  "verdict": "VALID"
+}

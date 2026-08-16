@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is well-defined and asks for the smallest integer \\( n \\) that satisfies a specific condition. The condition is clear and consistent, and the existence of such an \\( n \\) is guaranteed by the Pigeonhole Principle. The complete answer, which is \\( n = 2 \\), is objectively gradable. Therefore, the problem is valid as written.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 78,
+  "analysis_truncated": false,
+  "context_token_count": 427,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.503981590270996,
+  "logprob_margin_valid_minus_invalid": 9.499999593943357,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_a285106399f09144",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.003981996327638626,
+  "valid_score": 0.9999251537420999,
+  "variant": "direct",
+  "verdict": "VALID"
+}

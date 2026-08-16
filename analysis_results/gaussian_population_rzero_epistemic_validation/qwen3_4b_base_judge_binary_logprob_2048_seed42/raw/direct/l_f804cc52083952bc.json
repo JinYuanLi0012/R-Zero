@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and consistent, as it provides all necessary information to determine the minimum number of crossings required for all eight people to cross the river. The conditions are sufficient, and a solution exists. The complete answer, which is the minimum number of crossings, is objectively gradable. Therefore, the problem is valid.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 67,
+  "analysis_truncated": false,
+  "context_token_count": 446,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.639354705810547,
+  "logprob_margin_valid_minus_invalid": 9.624999579042196,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_f804cc52083952bc",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.014355126768350601,
+  "valid_score": 0.999933947827342,
+  "variant": "direct",
+  "verdict": "VALID"
+}

@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is well-defined with a clear recurrence relation and initial conditions. The sequence is a Fibonacci-like sequence, and the task is to find the remainder of the 2024th term when divided by 5. The problem is solvable and the answer is objectively gradable. The recurrence relation and initial conditions are sufficient to determine the sequence, and the remainder operation is a standard mathematical operation that can be applied to any integer. Therefore, the problem is valid.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 98,
+  "analysis_truncated": false,
+  "context_token_count": 470,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.507204055786133,
+  "logprob_margin_valid_minus_invalid": 9.499999787192792,
+  "max_analysis_tokens": 2048,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_69f2e41cc59f6744",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.007204268593341112,
+  "valid_score": 0.9999251537565628,
+  "variant": "direct",
+  "verdict": "VALID"
+}
