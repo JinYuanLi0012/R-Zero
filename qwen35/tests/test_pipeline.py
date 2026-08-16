@@ -60,6 +60,22 @@ class PipelineTests(unittest.TestCase):
                 pipeline.run()
             self.assertIn("round_05.solver_export", buffer.getvalue())
 
+    def test_formal_benchmark_stage_records_skip_without_running_benchmark(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            pipeline = Pipeline(self.args(Path(temporary) / "run"))
+            stage = next(item for item in pipeline.stages() if item.key == "round_01.benchmark")
+            self.assertEqual(stage.description, "record deferred benchmark skip marker")
+
+            with patch.object(pipeline, "_run") as run:
+                stage.action()
+
+            run.assert_not_called()
+            marker = pipeline.run_dir / "round_01" / "evaluation" / "skipped.json"
+            self.assertEqual(
+                json.loads(marker.read_text(encoding="utf-8")),
+                {"status": "skipped", "profile": "formal"},
+            )
+
     def test_from_stage_quarantines_affected_checkpoints_and_forces_fresh_training(self):
         with tempfile.TemporaryDirectory() as temporary:
             pipeline = Pipeline(self.args(Path(temporary) / "run", from_stage="round_02.curate"))

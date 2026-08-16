@@ -426,12 +426,18 @@ class Pipeline:
             stages.append(Stage(s_stage_key, [Artifact(s_actor, "checkpoint")], lambda n=round_number, model=solver_model, key=s_stage_key: self._train_solver(n, model, key), "train Solver on all four GPUs", [Artifact(dataset), Artifact(solver_model, "model"), Artifact(self.seed_data / "solver_val.parquet")]))
             stages.append(Stage(f"{prefix}.solver_export", [Artifact(s_export, "model")], lambda root=s_checkpoints, target=s_export, rd=round_dir: self._export(root, cfg["algorithm"]["solver_steps"], target, rd / "logs" / "solver_export.log"), "merge Solver FSDP checkpoint", [Artifact(s_actor, "checkpoint")]))
             benchmark = round_dir / "evaluation"
+            benchmark_enabled = cfg.get("benchmark", {}).get("enabled", True)
             benchmark_action = (
                 (lambda model=s_export, target=benchmark, rd=round_dir: self._run([self.python, "-m", "qwen35.rzero.run_benchmark", "--repo-root", str(self.repo_root), "--model", str(model), "--output-dir", str(target)], rd / "logs" / "benchmark.log", env={"CUDA_VISIBLE_DEVICES": "0,1,2,3", "VLLM_USE_V1": "1"}))
-                if cfg.get("benchmark", {}).get("enabled", True)
+                if benchmark_enabled
                 else (lambda target=benchmark: self._skip_benchmark(target))
             )
-            stages.append(Stage(f"{prefix}.benchmark", [Artifact(benchmark, "directory")], benchmark_action, "run unchanged upstream evaluation in isolated directory", [Artifact(s_export, "model")]))
+            benchmark_description = (
+                "run unchanged upstream evaluation in isolated directory"
+                if benchmark_enabled
+                else "record deferred benchmark skip marker"
+            )
+            stages.append(Stage(f"{prefix}.benchmark", [Artifact(benchmark, "directory")], benchmark_action, benchmark_description, [Artifact(s_export, "model")]))
         return stages
 
     def _prepare_recompute(self, stages: list[Stage], first_key: str) -> None:

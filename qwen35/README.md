@@ -24,9 +24,11 @@ adaptation and fault-tolerant orchestration.
 - Four generation shards × 2000 = 8000 raw candidates per round, seeded 0–3
 - Formal curation preserves all accepted rows in shard order, including duplicate questions
 - Checkpoint every completed step; retain the latest two complete checkpoints
+- Per-round Solver exports are retained; inline benchmark and Hugging Face publication are disabled
 
 The Challenger stage uses GPUs 0–1 for Questioner training and GPUs 2–3 for
-two frozen Solver services. Solver GRPO and benchmarks use all four GPUs.
+two frozen Solver services. Solver GRPO uses all four GPUs. Evaluation is
+deferred to an independent job after training rather than sharing the five-round run.
 The per-GPU update micro-batch remains 1 for Qwen3.5 memory stability; it only
 changes gradient-accumulation partitioning, not the optimizer mini-batch.
 The source-level mapping and the isolated performance experiment order are
@@ -71,7 +73,6 @@ docker run --gpus all --ipc=host --shm-size=64g \
   -v "$PWD:/workspace/R-Zero" \
   -v /path/to/runs:/runs \
   -v /path/to/hf-cache:/root/.cache/huggingface \
-  -e HF_TOKEN \
   -it rzero-qwen35:vllm024 bash
 ```
 
@@ -172,6 +173,12 @@ fails during step 3, verl restores complete step 2 and re-executes step 3. The
 orchestrator independently validates each generation/evaluation shard, so a
 single corrupt shard does not force the other three to rerun.
 
+After every Solver export, the formal graph commits its benchmark stage as an
+explicit `evaluation/skipped.json` marker. It does not invoke the current
+GPT-4o recheck benchmark inline. Fixed evaluation should be submitted later as
+an independent job so an evaluation failure cannot interrupt or falsely complete
+the five-round training lineage.
+
 Before invoking verl, the recovery preflight checks that every expected FSDP
 model, optimizer and extra-state rank shard exists. If the official tracker
 points at a partial checkpoint, it is atomically rewound to the newest complete
@@ -223,17 +230,10 @@ RUN_DIR/
     └── logs/
 ```
 
-The local Parquet file is authoritative. Optional Hugging Face publication is
-explicit and idempotent:
-
-```bash
-python3.12 -m qwen35.rzero.publish_dataset \
-  --dataset /runs/rzero-qwen35-formal/round_01/dataset/train.parquet \
-  --repo-id YOUR_ORG/rzero-qwen35 \
-  --config-name round_01 \
-  --receipt /runs/rzero-qwen35-formal/round_01/dataset/publish.json \
-  --private
-```
+The local Parquet file is authoritative. The formal profile keeps
+`publishing.enabled=false`, does not require or export `HF_TOKEN`, and uploads
+neither datasets nor models. The publication utility remains available for a
+separate, explicit post-training workflow, but the five-round job never invokes it.
 
 ## Local tests and isolation audit
 

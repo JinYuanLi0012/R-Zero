@@ -3,6 +3,7 @@ import unittest
 from pathlib import Path
 
 from qwen35.rzero.config import ConfigError, load_config, validate_config
+from qwen35.rzero.pipeline.state import canonical_hash
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -16,6 +17,24 @@ class ConfigTests(unittest.TestCase):
         config = load_config(CONFIG)
         self.assertEqual(config["model"]["id"], "Qwen/Qwen3.5-4B-Base")
         self.assertEqual(config["generation"]["shards"] * config["generation"]["samples_per_shard"], 8000)
+        self.assertFalse(config["benchmark"]["enabled"])
+        self.assertFalse(config["publishing"]["enabled"])
+
+    def test_formal_benchmark_policy_participates_in_fingerprint(self):
+        loaded = load_config(CONFIG)
+        config = copy.deepcopy({key: value for key, value in loaded.items() if not key.startswith("_")})
+        changed = copy.deepcopy(config)
+        changed["benchmark"]["enabled"] = True
+        self.assertNotEqual(canonical_hash(config), canonical_hash(changed))
+        with self.assertRaisesRegex(ConfigError, "defer benchmark"):
+            validate_config(changed)
+
+    def test_rejects_formal_publication(self):
+        loaded = load_config(CONFIG)
+        config = copy.deepcopy({key: value for key, value in loaded.items() if not key.startswith("_")})
+        config["publishing"]["enabled"] = True
+        with self.assertRaisesRegex(ConfigError, "publication disabled"):
+            validate_config(config)
 
     def test_formal_training_effect_semantics(self):
         algorithm = load_config(CONFIG)["algorithm"]

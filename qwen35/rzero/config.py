@@ -123,3 +123,7 @@ def validate_config(config: dict[str, Any]) -> None:
         raise ConfigError("checkpoint policy must save every step and retain two")
     if config.get("curation", {}).get("deduplicate_questions") is not False:
         raise ConfigError("formal curation must preserve duplicate questions like released R-Zero")
+    if config.get("benchmark", {}).get("enabled") is not False:
+        raise ConfigError("formal training must defer benchmark execution to an independent job")
+    if config.get("publishing", {}).get("enabled") is not False:
+        raise ConfigError("formal training must keep Hugging Face publication disabled")

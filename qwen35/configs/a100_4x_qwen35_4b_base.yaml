@@ -77,7 +77,7 @@
     "resume_mode": "auto"
   },
   "benchmark": {
-    "enabled": true
+    "enabled": false
   },
   "publishing": {
     "enabled": false,

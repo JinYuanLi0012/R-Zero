@@ -92,6 +92,12 @@ mkdir -p runs/slurm-logs
 sbatch qwen35/scripts/ris_formal.sbatch
 ```
 
+正式配置关闭内联 benchmark 与 Hugging Face 发布：每轮 Solver export 后仍保留
+`round_XX.benchmark` manifest stage，但只原子写入
+`round_XX/evaluation/skipped.json`，随后直接进入下一轮。当前 GPT-4o recheck 配置和
+token 文件不属于训练依赖，也不设置 `HF_TOKEN`；固定评估在五轮训练完成后以独立
+作业运行，避免评估脚本故障阻断或伪装完成正式模型迭代。
+
 每个作业申请 7 天，以减少五轮正式训练期间的重复排队和容器重启。pipeline 固定
 以 `--resume` 启动：若作业达到 Slurm 时限，
 再次提交同一个脚本即可跳过已提交 stage，并从最近完整 verl checkpoint 恢复未完成
