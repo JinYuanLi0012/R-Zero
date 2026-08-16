@@ -25,6 +25,7 @@ def arguments() -> argparse.Namespace:
     parser.add_argument("--expected-count", type=int, default=600)
     parser.add_argument("--max-analysis-tokens", type=int, default=1024)
     parser.add_argument("--batch-size", type=int, default=16)
+    parser.add_argument("--score-batch-size", type=int, default=1)
     parser.add_argument("--gpu-memory-utilization", type=float, default=0.8)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--resume", action="store_true")
@@ -67,6 +68,7 @@ def main() -> None:
             "--output-dir", str(raw_dir), "--shard-index", str(shard_index),
             "--num-shards", str(len(gpu_ids)), "--max-analysis-tokens",
             str(args.max_analysis_tokens), "--batch-size", str(args.batch_size),
+            "--score-batch-size", str(args.score_batch_size),
             "--gpu-memory-utilization", str(args.gpu_memory_utilization), "--seed", str(args.seed),
         ]
         if args.resume:
@@ -101,7 +103,8 @@ def main() -> None:
             "scoring": {"method": "sum of candidate prompt-token logprobs",
                         "valid_candidate": VALID_CANDIDATE,
                         "invalid_candidate": INVALID_CANDIDATE,
-                        "probability": "two-candidate softmax"},
+                        "valid_score": "two-candidate softmax used as an uncalibrated ranking score",
+                        "score_batch_size": args.score_batch_size},
             "gpu_ids": gpu_ids, "num_shards": len(gpu_ids), "seed": args.seed,
             "blind_input_fields": ["opaque_binary_judge_id", "question"],
             "software": software_manifest(),

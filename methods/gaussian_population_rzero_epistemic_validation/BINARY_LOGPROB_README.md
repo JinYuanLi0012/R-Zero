@@ -36,7 +36,9 @@ bash methods/gaussian_population_rzero_epistemic_validation/run_binary_logprob_j
 ```
 
 Defaults are four single-GPU shards (`0,1,2,3`), temperature 0, 1024 maximum
-analysis tokens, and batch size 16. Atomic artifacts allow safe resume.
+analysis tokens, and analysis-generation batch size 16. Candidate logprob
+scoring uses a separate one-question micro-batch because prompt-token logprobs
+materialize a large full-vocabulary tensor. Atomic artifacts allow safe resume.
 
 Outputs:
 

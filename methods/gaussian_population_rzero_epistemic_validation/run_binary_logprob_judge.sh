@@ -5,6 +5,7 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 RUN_ROOT=""
 MODEL="Qwen/Qwen3-4B-Base"
 GPU_IDS="0,1,2,3"
+SCORE_BATCH_SIZE=1
 RESUME=0
 
 while [[ $# -gt 0 ]]; do
@@ -12,6 +13,7 @@ while [[ $# -gt 0 ]]; do
     --run-root) RUN_ROOT="$2"; shift 2 ;;
     --model) MODEL="$2"; shift 2 ;;
     --gpu-ids) GPU_IDS="$2"; shift 2 ;;
+    --score-batch-size) SCORE_BATCH_SIZE="$2"; shift 2 ;;
     --resume) RESUME=1; shift ;;
     *) echo "Unknown argument: $1" >&2; exit 2 ;;
   esac
@@ -34,7 +36,8 @@ COMMAND=(python "$HERE/binary_logprob_judge.py"
   --input "$SOURCE"
   --output-dir "$OUTPUT"
   --model "$MODEL"
-  --gpu-ids "$GPU_IDS")
+  --gpu-ids "$GPU_IDS"
+  --score-batch-size "$SCORE_BATCH_SIZE")
 if [[ "$RESUME" -eq 1 ]]; then
   COMMAND+=(--resume)
 fi

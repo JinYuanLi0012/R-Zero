@@ -26,6 +26,7 @@ def arguments() -> argparse.Namespace:
     parser.add_argument("--num-shards", type=int, required=True)
     parser.add_argument("--max-analysis-tokens", type=int, default=1024)
     parser.add_argument("--batch-size", type=int, default=16)
+    parser.add_argument("--score-batch-size", type=int, default=1)
     parser.add_argument("--gpu-memory-utilization", type=float, default=0.8)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--resume", action="store_true")
@@ -58,42 +59,45 @@ def generate_analyses(llm, vllm_module, prompts: list[str], args: argparse.Names
     return outputs
 
 
-def score_candidates(llm, vllm_module, tokenizer, contexts: list[str]):
+def score_candidates(
+    llm, vllm_module, tokenizer, contexts: list[str], score_batch_size: int = 1,
+):
     valid_ids = tokenizer.encode(VALID_CANDIDATE, add_special_tokens=False)
     invalid_ids = tokenizer.encode(INVALID_CANDIDATE, add_special_tokens=False)
     if not valid_ids or not invalid_ids:
         raise RuntimeError("a verdict candidate tokenized to an empty sequence")
-    token_prompts, starts = [], []
-    for context in contexts:
-        context_ids = tokenizer.encode(context, add_special_tokens=True)
-        for candidate_ids in (valid_ids, invalid_ids):
-            starts.append(len(context_ids))
-            token_prompts.append(context_ids + candidate_ids)
     params = vllm_module.SamplingParams(
         max_tokens=1, temperature=0.0, top_p=1.0, prompt_logprobs=1,
     )
-    outputs = llm.generate(
-        prompts=None, prompt_token_ids=token_prompts,
-        sampling_params=params, use_tqdm=True,
-    )
-    if len(outputs) != len(token_prompts):
-        raise RuntimeError("vLLM returned an unexpected scoring output count")
     scores = []
-    for index in range(0, len(outputs), 2):
-        valid_lp = candidate_logprob(outputs[index], starts[index], valid_ids)
-        invalid_lp = candidate_logprob(outputs[index + 1], starts[index + 1], invalid_ids)
-        probability = paired_probability(valid_lp, invalid_lp)
-        scores.append(
-            {
-                "valid_logprob": valid_lp, "invalid_logprob": invalid_lp,
-                "logprob_margin_valid_minus_invalid": valid_lp - invalid_lp,
-                "valid_score": probability,
-                "verdict": "VALID" if valid_lp > invalid_lp else "INVALID",
-                "valid_candidate_token_ids": valid_ids,
-                "invalid_candidate_token_ids": invalid_ids,
-                "context_token_count": starts[index],
-            }
+    for batch_start in range(0, len(contexts), score_batch_size):
+        token_prompts, starts = [], []
+        for context in contexts[batch_start : batch_start + score_batch_size]:
+            context_ids = tokenizer.encode(context, add_special_tokens=True)
+            for candidate_ids in (valid_ids, invalid_ids):
+                starts.append(len(context_ids))
+                token_prompts.append(context_ids + candidate_ids)
+        outputs = llm.generate(
+            prompts=None, prompt_token_ids=token_prompts,
+            sampling_params=params, use_tqdm=True,
         )
+        if len(outputs) != len(token_prompts):
+            raise RuntimeError("vLLM returned an unexpected scoring output count")
+        for index in range(0, len(outputs), 2):
+            valid_lp = candidate_logprob(outputs[index], starts[index], valid_ids)
+            invalid_lp = candidate_logprob(outputs[index + 1], starts[index + 1], invalid_ids)
+            valid_score = paired_probability(valid_lp, invalid_lp)
+            scores.append(
+                {
+                    "valid_logprob": valid_lp, "invalid_logprob": invalid_lp,
+                    "logprob_margin_valid_minus_invalid": valid_lp - invalid_lp,
+                    "valid_score": valid_score,
+                    "verdict": "VALID" if valid_lp > invalid_lp else "INVALID",
+                    "valid_candidate_token_ids": valid_ids,
+                    "invalid_candidate_token_ids": invalid_ids,
+                    "context_token_count": starts[index],
+                }
+            )
     return scores
 
 
@@ -101,8 +105,8 @@ def main() -> None:
     args = arguments()
     if args.num_shards < 1 or not 0 <= args.shard_index < args.num_shards:
         raise ValueError("invalid shard assignment")
-    if args.batch_size < 1 or args.max_analysis_tokens < 1:
-        raise ValueError("batch size and max analysis tokens must be positive")
+    if args.batch_size < 1 or args.score_batch_size < 1 or args.max_analysis_tokens < 1:
+        raise ValueError("batch sizes and max analysis tokens must be positive")
     all_items = read_jsonl(args.input)
     if any(set(item) != {"opaque_binary_judge_id", "question"} for item in all_items):
         raise ValueError("worker input is not blind")
@@ -136,7 +140,9 @@ def main() -> None:
             generation_outputs = generate_analyses(llm, vllm, prompts, args)
             analyses = [output.outputs[0].text for output in generation_outputs]
             contexts = [f"{prompt}{analysis}\nVerdict:" for prompt, analysis in zip(prompts, analyses)]
-            scores = score_candidates(llm, vllm, tokenizer, contexts)
+            scores = score_candidates(
+                llm, vllm, tokenizer, contexts, score_batch_size=args.score_batch_size,
+            )
             for (item, path), analysis, generated, score in zip(
                 batch, analyses, generation_outputs, scores
             ):

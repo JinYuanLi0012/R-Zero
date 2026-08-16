@@ -16,6 +16,7 @@ from binary_logprob_common import (  # noqa: E402
     build_prompt, candidate_logprob, paired_probability,
 )
 from binary_logprob_analyze import main as analyze_main  # noqa: E402
+from binary_logprob_worker import score_candidates  # noqa: E402
 
 
 class FakeLogprob:
@@ -67,6 +68,36 @@ class LogprobTests(unittest.TestCase):
     def test_candidates_include_leading_space(self):
         self.assertEqual(VALID_CANDIDATE, " VALID")
         self.assertEqual(INVALID_CANDIDATE, " INVALID")
+
+    def test_scoring_micro_batches_limit_full_vocabulary_work(self):
+        class FakeTokenizer:
+            def encode(self, text, add_special_tokens=False):
+                if text == VALID_CANDIDATE:
+                    return [20]
+                if text == INVALID_CANDIDATE:
+                    return [21]
+                return [10, 11]
+
+        class FakeVllm:
+            @staticmethod
+            def SamplingParams(**kwargs):
+                return kwargs
+
+        class FakeLlm:
+            def __init__(self):
+                self.prompt_counts = []
+
+            def generate(self, prompts, prompt_token_ids, sampling_params, use_tqdm):
+                self.prompt_counts.append(len(prompt_token_ids))
+                return [
+                    FakeOutput(ids[:-1], ids[-1:], [-0.1 if ids[-1] == 20 else -1.0])
+                    for ids in prompt_token_ids
+                ]
+
+        llm = FakeLlm()
+        rows = score_candidates(llm, FakeVllm, FakeTokenizer(), ["a", "b", "c"])
+        self.assertEqual(llm.prompt_counts, [2, 2, 2])
+        self.assertEqual([row["verdict"] for row in rows], ["VALID"] * 3)
 
 
 class AnalysisIntegrationTests(unittest.TestCase):
@@ -120,6 +151,12 @@ class RuntimeConfigurationTests(unittest.TestCase):
         source = (METHOD / "binary_logprob_worker.py").read_text(encoding="utf-8")
         self.assertIn("enable_prefix_caching=False", source)
         self.assertNotIn("enable_prefix_caching=True", source)
+
+    def test_logprob_scoring_defaults_to_one_question_micro_batches(self):
+        worker = (METHOD / "binary_logprob_worker.py").read_text(encoding="utf-8")
+        launcher = (METHOD / "binary_logprob_judge.py").read_text(encoding="utf-8")
+        self.assertIn('parser.add_argument("--score-batch-size", type=int, default=1)', worker)
+        self.assertIn('parser.add_argument("--score-batch-size", type=int, default=1)', launcher)
 
 
 if __name__ == "__main__":
