@@ -56,6 +56,16 @@ bash /workspace/R-Zero/qwen35/scripts/solver_gate.sh \
 
 成功标志是 `RZERO_SOLVER_GATE_OK`。该 gate 只验证工程链路，不声称复现正式 Solver
 训练效果；正式配置仍保持 512 prompts、`n=5`、128 prompts/optimizer mini-batch。
+在 Compute2 登录节点应使用后台 Slurm 脚本提交，而不是直接前台 `srun`：
+
+```bash
+mkdir -p runs/slurm-logs
+sbatch qwen35/scripts/ris_solver_gate.sbatch
+```
+
+脚本已固定 `compute2-jiaxinh`、`general-gpu`、4 GPUs、32 CPUs、512 GB RAM 和
+4 小时时限；SSH 断开不会终止作业。登录 shell 不要设置 `set -e`，否则任一提交
+错误都会直接结束该 shell。
 
 Compute2 首次 gate 已成功启动四个 vLLM server，但在生成前发现固定 verl 的另一项
 缩小 batch 约束：4 prompts × `n=5` 产生 20 trajectories，而官方默认 8 个
