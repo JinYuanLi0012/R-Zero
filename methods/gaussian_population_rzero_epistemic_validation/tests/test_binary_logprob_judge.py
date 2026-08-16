@@ -1,0 +1,119 @@
+from __future__ import annotations
+
+import math
+import json
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+from unittest.mock import patch
+
+METHOD = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(METHOD))
+
+from binary_logprob_common import (  # noqa: E402
+    DIRECT_EXAMPLES, INVALID_CANDIDATE, SOLVER_FIRST_EXAMPLES, VALID_CANDIDATE,
+    build_prompt, candidate_logprob, paired_probability,
+)
+from binary_logprob_analyze import main as analyze_main  # noqa: E402
+
+
+class FakeLogprob:
+    def __init__(self, value: float):
+        self.logprob = value
+
+
+class FakeOutput:
+    def __init__(self, context_ids, candidate_ids, values):
+        self.prompt_token_ids = context_ids + candidate_ids
+        self.prompt_logprobs = [None] * len(context_ids) + [
+            {token_id: FakeLogprob(value)} for token_id, value in zip(candidate_ids, values)
+        ]
+
+
+class PromptTests(unittest.TestCase):
+    def test_prompts_are_binary_few_shot_and_blind(self):
+        for variant in ("direct", "solver_first"):
+            prompt = build_prompt("What is 7 + 8?", variant)
+            self.assertIn("What is 7 + 8?", prompt)
+            self.assertIn("Verdict: VALID", prompt)
+            self.assertIn("Verdict: INVALID", prompt)
+            self.assertTrue(prompt.endswith("Analysis:"))
+            for leaked in ("terra_label", "difficulty=", "sigma=", "v3:secret"):
+                self.assertNotIn(leaked, prompt)
+
+    def test_examples_are_synthetic_and_teach_find_all_as_valid(self):
+        self.assertIn("Solve x^2 = 4", DIRECT_EXAMPLES)
+        self.assertIn("Verdict: VALID", SOLVER_FIRST_EXAMPLES)
+        self.assertNotIn("1729", DIRECT_EXAMPLES + SOLVER_FIRST_EXAMPLES)
+
+    def test_variants_have_different_task_interfaces(self):
+        direct = build_prompt("Q", "direct")
+        solver = build_prompt("Q", "solver_first")
+        self.assertNotEqual(direct, solver)
+        self.assertIn("Solve the target problem carefully first", solver)
+
+
+class LogprobTests(unittest.TestCase):
+    def test_candidate_sequence_logprob_sums_all_tokens(self):
+        output = FakeOutput([10, 11], [20, 21], [-0.2, -0.3])
+        self.assertAlmostEqual(candidate_logprob(output, 2, [20, 21]), -0.5)
+
+    def test_two_candidate_softmax(self):
+        probability = paired_probability(math.log(3), math.log(1))
+        self.assertAlmostEqual(probability, 0.75)
+        self.assertGreater(paired_probability(-0.1, -2.0), 0.5)
+
+    def test_candidates_include_leading_space(self):
+        self.assertEqual(VALID_CANDIDATE, " VALID")
+        self.assertEqual(INVALID_CANDIDATE, " INVALID")
+
+
+class AnalysisIntegrationTests(unittest.TestCase):
+    def test_saved_results_rebuild_metrics_for_both_variants(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            terra_path = root / "terra.jsonl"
+            results_path = root / "results.jsonl"
+            output_dir = root / "analysis"
+            terra_rows = [
+                {"question_id": "q1", "round": 1, "label": "A"},
+                {"question_id": "q2", "round": 2, "label": "D"},
+                {"question_id": "q3", "round": 3, "label": "C"},
+            ]
+            results = []
+            for row in terra_rows:
+                for variant in ("direct", "solver_first"):
+                    verdict = "VALID" if row["label"] == "A" else "INVALID"
+                    results.append(
+                        {
+                            "question_id": row["question_id"], "round": row["round"],
+                            "question": f"Question {row['question_id']}", "variant": variant,
+                            "status": "success", "verdict": verdict,
+                            "probability_valid": 0.9 if verdict == "VALID" else 0.1,
+                            "analysis": "Synthetic fixture analysis.",
+                            "analysis_truncated": False, "analysis_token_count": 4,
+                            "valid_candidate_token_ids": [1],
+                            "invalid_candidate_token_ids": [2],
+                        }
+                    )
+            for path, rows in ((terra_path, terra_rows), (results_path, results)):
+                path.write_text(
+                    "".join(json.dumps(row) + "\n" for row in rows), encoding="utf-8"
+                )
+            argv = [
+                "binary_logprob_analyze.py", "--results", str(results_path),
+                "--terra-results", str(terra_path), "--output-dir", str(output_dir),
+                "--expected-count", "3",
+            ]
+            with patch.object(sys, "argv", argv):
+                analyze_main()
+            metrics = json.loads((output_dir / "metrics.json").read_text(encoding="utf-8"))
+            self.assertEqual(metrics["scopes"]["overall"]["direct"]["invalid_recall"], 1.0)
+            self.assertEqual(metrics["scopes"]["overall"]["solver_first"]["roc_auc"], 1.0)
+            self.assertEqual(metrics["prompt_comparison"]["paired_count"], 3)
+            self.assertTrue((output_dir / "report.md").is_file())
+
+
+if __name__ == "__main__":
+    unittest.main()
