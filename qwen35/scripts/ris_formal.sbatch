@@ -24,6 +24,11 @@ PYXIS_XDG_DATA_HOME=/tmp/${USER}/pyxis-data-${SLURM_JOB_ID}
 PYXIS_TMPDIR=/tmp/${USER}/pyxis-tmp-${SLURM_JOB_ID}
 export SLURM_EXPORT_ENV=ALL
 
+case "${RUN_DIR}" in
+  "${PROJECT}"/*) CONTAINER_RUN_DIR="/workspace/R-Zero/${RUN_DIR#"${PROJECT}"/}" ;;
+  *) echo "RUN_DIR must be inside PROJECT: ${RUN_DIR}" >&2; exit 2 ;;
+esac
+
 mkdir -p \
   "${PYXIS_XDG_CACHE_HOME}" \
   "${PYXIS_XDG_DATA_HOME}" \
@@ -45,6 +50,7 @@ echo "node=${SLURMD_NODENAME:-unknown}"
 echo "project=${PROJECT}"
 echo "git_commit=$(git -C "${PROJECT}" rev-parse HEAD)"
 echo "run_dir=${RUN_DIR}"
+echo "container_run_dir=${CONTAINER_RUN_DIR}"
 echo "image=${IMAGE}"
 echo "image_sha256=${image_checksum}"
 nvidia-smi --query-gpu=index,name,memory.total,driver_version --format=csv,noheader
@@ -62,6 +68,6 @@ srun \
     VLLM_USE_V1=1 \
     VLLM_NO_USAGE_STATS=1 \
   bash /workspace/R-Zero/qwen35/scripts/run.sh \
-    --run-dir /workspace/R-Zero/runs/rzero-qwen35-formal \
+    --run-dir "${CONTAINER_RUN_DIR}" \
     --config /workspace/R-Zero/qwen35/configs/a100_4x_qwen35_4b_base.yaml \
     --resume

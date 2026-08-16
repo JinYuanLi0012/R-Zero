@@ -102,7 +102,12 @@ sbatch qwen35/scripts/ris_formal.sbatch
 `0.2/0.3` 与 dual-clip `3.0`、GRPO rollout `top_p=0.99`/seed 1、离线 shard
 seed `0,1,2,3`，以及正式 curation 不去重。它们均进入正式 config fingerprint。
 任何基于旧 fingerprint 创建的 `runs/rzero-qwen35-formal` 都不得续跑；若旧正式
-作业已经启动，应取消，并改用修复后的空正式 run directory。
+作业已经启动，应取消，并改用修复后的空正式 run directory，例如：
+
+```bash
+RUN_DIR=/storage1/fs1/jiaxinh/Active/jinyuan/R-Zero-Qwen3.5/runs/rzero-qwen35-formal-aligned \
+  sbatch --export=ALL,RUN_DIR qwen35/scripts/ris_formal.sbatch
+```
 
 curation 现始终检查输出至少能组成一个 Solver training batch。正式 profile 不足
 512 行会在 curate 阶段提前失败，绝不重复训练题；只有非正式集成 profile 才允许

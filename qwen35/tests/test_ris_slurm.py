@@ -38,6 +38,8 @@ class RisSlurmScriptTests(unittest.TestCase):
         self.assertIn("rzero-qwen35-bdc8b2c29981.sqsh", script)
         self.assertIn("a100_4x_qwen35_4b_base.yaml", script)
         self.assertIn("runs/rzero-qwen35-formal", script)
+        self.assertIn('CONTAINER_RUN_DIR="/workspace/R-Zero/', script)
+        self.assertIn('--run-dir "${CONTAINER_RUN_DIR}"', script)
         self.assertIn("--resume", script)
         self.assertNotIn("smoke.yaml", script)
         self.assertNotIn("solver_gate.sh", script)
