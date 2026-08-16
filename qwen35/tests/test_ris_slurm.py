@@ -34,7 +34,7 @@ class RisSlurmScriptTests(unittest.TestCase):
         self.assertIn("#SBATCH --gpus=4", script)
         self.assertIn("#SBATCH --cpus-per-task=32", script)
         self.assertIn("#SBATCH --mem=512G", script)
-        self.assertIn("#SBATCH --time=1-00:00:00", script)
+        self.assertIn("#SBATCH --time=7-00:00:00", script)
         self.assertIn("rzero-qwen35-bdc8b2c29981.sqsh", script)
         self.assertIn("a100_4x_qwen35_4b_base.yaml", script)
         self.assertIn("runs/rzero-qwen35-formal", script)

@@ -92,7 +92,8 @@ mkdir -p runs/slurm-logs
 sbatch qwen35/scripts/ris_formal.sbatch
 ```
 
-每个作业申请 24 小时。pipeline 固定以 `--resume` 启动：若作业达到 Slurm 时限，
+每个作业申请 7 天，以减少五轮正式训练期间的重复排队和容器重启。pipeline 固定
+以 `--resume` 启动：若作业达到 Slurm 时限，
 再次提交同一个脚本即可跳过已提交 stage，并从最近完整 verl checkpoint 恢复未完成
 训练。不要更换正式 run directory，也不要对它使用 smoke 配置。正式 curation 若不足
 512 条会在 Solver 训练前明确失败，禁止用 integration repeat 补齐正式数据。

@@ -7,7 +7,7 @@
 #SBATCH --cpus-per-task=32
 #SBATCH --mem=512G
 #SBATCH --gpus=4
-#SBATCH --time=1-00:00:00
+#SBATCH --time=7-00:00:00
 #SBATCH --output=/storage1/fs1/jiaxinh/Active/jinyuan/R-Zero-Qwen3.5/runs/slurm-logs/%x-%j.out
 #SBATCH --error=/storage1/fs1/jiaxinh/Active/jinyuan/R-Zero-Qwen3.5/runs/slurm-logs/%x-%j.err
 
