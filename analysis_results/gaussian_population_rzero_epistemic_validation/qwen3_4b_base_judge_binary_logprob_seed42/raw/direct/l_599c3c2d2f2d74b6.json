@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is well-defined, and the number of solutions is a clear, countable quantity. The conditions are sufficient to determine the smallest \\( n \\) that satisfies the equation with exactly 12 distinct integer solutions. The answer is objectively gradable based on the number of solutions found.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 61,
+  "analysis_truncated": false,
+  "context_token_count": 398,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.382072448730469,
+  "logprob_margin_valid_minus_invalid": 9.375000153202564,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_599c3c2d2f2d74b6",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.007072295527905226,
+  "valid_score": 0.9999151889712685,
+  "variant": "direct",
+  "verdict": "VALID"
+}

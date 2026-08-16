@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is well-defined, with clear conditions and a specific request for the number of positive integers \\( n \\) within a given range. The conditions are sufficient to determine the solution, and the answer is objectively gradable. The problem asks for all such integers \\( n \\), and the solution can be verified by checking each integer within the range. Therefore, the problem is valid as written.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 82,
+  "analysis_truncated": false,
+  "context_token_count": 448,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.754371643066406,
+  "logprob_margin_valid_minus_invalid": 9.750000270083547,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_0f782e0df74fa920",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.0043713729828596115,
+  "valid_score": 0.9999417087500816,
+  "variant": "direct",
+  "verdict": "VALID"
+}

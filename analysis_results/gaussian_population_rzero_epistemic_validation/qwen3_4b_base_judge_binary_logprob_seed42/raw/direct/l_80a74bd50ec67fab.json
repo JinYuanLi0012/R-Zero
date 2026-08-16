@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem provides a polynomial with integer coefficients and specifies that it has three distinct integer roots. The sum of the roots of a polynomial \\( f(x) = x^3 + ax^2 + bx + c \\) is given by the negative of the coefficient of \\( x^2 \\), which is \\( -a \\). Since the roots are distinct integers, the sum \\( p + q + r \\) is an integer. The problem asks for the value of \\( p + q + r \\), which is \\( -a \\). The conditions are sufficient and consistent, and the complete answer is objectively gradable. Therefore, the problem is valid.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 135,
+  "analysis_truncated": false,
+  "context_token_count": 512,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -10.13065242767334,
+  "logprob_margin_valid_minus_invalid": 10.125000386498868,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_80a74bd50ec67fab",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.005652041174471378,
+  "valid_score": 0.9999599363232549,
+  "variant": "direct",
+  "verdict": "VALID"
+}

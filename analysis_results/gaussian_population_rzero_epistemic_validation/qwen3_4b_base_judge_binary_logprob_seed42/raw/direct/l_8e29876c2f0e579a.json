@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is well-defined, and the conditions are sufficient to determine the smallest positive integer \\( n \\) that cannot be expressed as the sum of any distinct elements of \\( S \\). The answer is objectively gradable as it requires identifying the smallest such integer. The problem is valid because it provides a clear and consistent set of conditions and a specific request for a solution.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": null,
+  "analysis_token_count": 75,
+  "analysis_truncated": false,
+  "context_token_count": 467,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.882492065429688,
+  "logprob_margin_valid_minus_invalid": 9.875000002328306,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_8e29876c2f0e579a",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.0074920631013810635,
+  "valid_score": 0.9999485577863776,
+  "variant": "direct",
+  "verdict": "VALID"
+}

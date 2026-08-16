@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and the full answer is objectively checkable. The equation can be simplified to \\( n \\cdot 2^n - n \\cdot 3^n = 3 \\cdot 2^n - 2 \\cdot 3^n \\), which further simplifies to \\( n(2^n - 3^n) = 3(2^n - 3^n) \\). This equation holds true for \\( n = 1 \\) and \\( n = 2 \\), as these are the only integer values that satisfy the equation. The problem is well-defined and the solution is unique and objectively gradable.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 129,
+  "analysis_truncated": false,
+  "context_token_count": 471,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.005352973937988,
+  "logprob_margin_valid_minus_invalid": 8.9999995729886,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_b37b208173e2f1da",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.0053534009493887424,
+  "valid_score": 0.9998766053713293,
+  "variant": "direct",
+  "verdict": "VALID"
+}

@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is well-defined, with all necessary conditions provided. The goal is to prove a geometric relationship involving angles and circles, which is a clear and objective task. The problem is consistent, and a solution exists based on geometric principles. The complete answer, which involves proving the equality of two angles, is objectively gradable. Therefore, the problem is valid as written.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 77,
+  "analysis_truncated": false,
+  "context_token_count": 486,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.631361961364746,
+  "logprob_margin_valid_minus_invalid": 9.625000133179128,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_51e14d37b0131a31",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.006361828185617924,
+  "valid_score": 0.9999339478639414,
+  "variant": "direct",
+  "verdict": "VALID"
+}

@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is well-defined and asks for all positive integers \\( n \\) that satisfy the condition \\( n \\) divides \\( 2^n + 1 \\). The condition is clear and consistent, and the solution space is finite. The answer is objectively gradable as it requires identifying all such integers. However, the problem is non-trivial and may require advanced number theory to solve completely. Despite this, the problem is valid as it is well-posed and has a clear objective. \n",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 102,
+  "analysis_truncated": false,
+  "context_token_count": 421,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -6.137654781341553,
+  "logprob_margin_valid_minus_invalid": 6.124999827705324,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_b1a35c471c74841c",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.012654953636229038,
+  "valid_score": 0.9978172831794053,
+  "variant": "direct",
+  "verdict": "VALID"
+}

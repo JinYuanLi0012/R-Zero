@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and the full answer is objectively checkable. The equation is a quadratic in \\(m\\) and \\(n\\), and we can solve for \\(m\\) in terms of \\(n\\) or vice versa. The conditions are sufficient to find all pairs \\((m, n)\\) that satisfy the equation. The problem is consistent, and a solution exists. The complete answer is objectively gradable as it requires finding all pairs \\((m, n)\\) that satisfy the equation.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 103,
+  "analysis_truncated": false,
+  "context_token_count": 435,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.757467269897461,
+  "logprob_margin_valid_minus_invalid": 9.750000291038305,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_93d2cf0bf4b76bca",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.00746697885915637,
+  "valid_score": 0.9999417087513028,
+  "variant": "direct",
+  "verdict": "VALID"
+}

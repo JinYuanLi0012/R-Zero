@@ -1,0 +1,27 @@
+{
+  "analysis": " The question is complete and consistent. It asks for the smallest positive integer that can be expressed as the sum of two distinct positive integers, each raised to the power of 3. The conditions are sufficient, and a solution exists. The complete answer, which is 28 (since \\(1^3 + 3^3 = 1 + 27 = 28\\)), is objectively gradable. Therefore, the problem meets all the criteria for validity.\n",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 98,
+  "analysis_truncated": false,
+  "context_token_count": 421,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -10.00342845916748,
+  "logprob_margin_valid_minus_invalid": 10.000000398838893,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_314a02904c27e630",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.0034280603285878897,
+  "valid_score": 0.9999546021494032,
+  "variant": "direct",
+  "verdict": "VALID"
+}

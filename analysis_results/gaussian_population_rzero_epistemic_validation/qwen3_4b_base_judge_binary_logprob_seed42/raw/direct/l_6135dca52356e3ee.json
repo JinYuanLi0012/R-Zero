@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is well-defined and asks for all prime numbers \\( p \\) that satisfy the given equation with positive integers \\( x \\) and \\( y \\). The conditions are sufficient, and the solution is consistent. The problem is valid because it is complete, the conditions are sufficient, and the answer is objectively gradable. The problem asks for all prime numbers \\( p \\) that satisfy the equation, and the solution can be verified by checking each prime number individually. Therefore, the problem is valid.\n",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 104,
+  "analysis_truncated": false,
+  "context_token_count": 442,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.634495735168457,
+  "logprob_margin_valid_minus_invalid": 9.624999810941517,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_6135dca52356e3ee",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.009495924226939678,
+  "valid_score": 0.9999339478426584,
+  "variant": "direct",
+  "verdict": "VALID"
+}

@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is well-defined, and the conditions are sufficient to determine the smallest positive integer not in \\( S \\). The set \\( S \\) is constructed based on the given constraints, and the task is to find the smallest positive integer that cannot be expressed in the specified form. The answer is objectively gradable as it requires identifying the smallest integer that does not satisfy the given conditions. Therefore, the problem is valid.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 87,
+  "analysis_truncated": false,
+  "context_token_count": 461,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.63448429107666,
+  "logprob_margin_valid_minus_invalid": 9.625000056810677,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_c8f67c6b3f310c21",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.009484234265983105,
+  "valid_score": 0.9999339478588974,
+  "variant": "direct",
+  "verdict": "VALID"
+}

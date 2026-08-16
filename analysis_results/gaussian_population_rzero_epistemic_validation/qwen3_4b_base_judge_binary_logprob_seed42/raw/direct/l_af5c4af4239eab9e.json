@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and the full answer is objectively checkable. The smallest positive integer \\( n \\) that satisfies the condition for every integer \\( m \\) is \\( n = 2 \\) or \\( n = 3 \\), as these values ensure that \\( n^2 + m^2 \\) is divisible by 5 for all \\( m \\). The problem is well-defined and the solution is unique in terms of the smallest positive integer.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 95,
+  "analysis_truncated": false,
+  "context_token_count": 426,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -8.254234313964844,
+  "logprob_margin_valid_minus_invalid": 8.250000155065209,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_af5c4af4239eab9e",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.0042341588996350765,
+  "valid_score": 0.9997388097213952,
+  "variant": "direct",
+  "verdict": "VALID"
+}

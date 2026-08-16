@@ -1,0 +1,27 @@
+{
+  "analysis": " To solve the equation \\(m^2 + n^2 = 13mn - 84\\), we first rearrange it to form a standard quadratic equation in terms of \\(m\\) and \\(n\\). The equation can be rewritten as:\n\n\\[ m^2 - 13mn + n^2 + 84 = 0 \\]\n\nThis is a quadratic equation in \\(m\\). To solve for \\(m\\), we can use the quadratic formula \\(m = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}\\), where \\(a = 1\\), \\(b = -13n\\), and \\(c = n^2 + 84\\). Plugging these values into the quadratic formula, we get:\n\n\\[ m = \\frac{13n \\pm \\sqrt{(13n)^2 - 4 \\cdot 1 \\cdot (n^2 + 84)}}{2 \\cdot 1} \\]\n\\[ m = \\frac{13n \\pm \\sqrt{169n^2 - 4n^2 - 336}}{2} \\]\n\\[ m = \\frac{13n \\pm \\sqrt{165n^2 - 336}}{2} \\]\n\nFor \\(m\\) to be a positive integer, the expression under the square root, \\(165n^2 - 336\\), must be a perfect square. Let's denote this perfect square by \\(k^2\\), so we have:\n\n\\[ 165n^2 - 336 = k^2 \\]\n\\[ 165n^2 - k^2 = 336 \\]\n\nThis is a difference of squares, which can be factored as:\n\n\\[ (11n - k)(11n + k) = 336 \\]\n\nWe need to find pairs of factors of 336 that can be expressed in the form \\((11n - k)\\) and \\((11n + k)\\). The factor pairs of 336 are: \\((1, 336)\\), \\((2, 168)\\), \\((3, 112)\\), \\((4, 84)\\), \\((6, 56)\\), \\((7, 48)\\), \\((8, 42)\\), \\((12, 28)\\), \\((14, 24)\\), and \\((16, 21)\\).\n\nWe will check each pair to see if they can be written in the form \\((11n - k)\\) and \\((11n + k)\\):\n\n1. For \\((1, 336)\\):\n   \\[ 11n - k = 1 \\]\n   \\[ 11n + k = 336 \\]\n   Adding these equations:\n   \\[ 22n = 337 \\]\n   \\[ n = \\frac{337}{22} \\]\n   This is not an integer.\n\n2. For \\((2, 168)\\):\n   \\[ 11n - k = 2 \\]\n   \\[ 11n + k = 168 \\]\n   Adding these equations:\n   \\[ 22n = 170 \\]\n   \\[ n = \\frac{170}{22} = \\frac{85}{11} \\]\n   This is not an integer.\n\n3. For \\((3, 112)\\):\n   \\[ 11n - k = 3 \\]\n   \\[ 11n + k = 112 \\]\n   Adding these equations:\n   \\[ 22n = 115 \\]\n   \\[ n = \\frac{115}{22} \\]\n   This is not an integer.\n\n4. For \\((4, 84)\\):\n   \\[ 11n - k = 4 \\]\n   \\[ 11n + k = 84 \\]\n   Adding these equations:\n   \\[ 22n = 88 \\]\n   \\[ n = 4 \\]\n   Substituting \\(n = 4\\) back into \\(11n - k = 4\\):\n   \\[ 11(4) - k = 4 \\]\n   \\[ 44 - k = 4 \\]\n   \\[ k = 40 \\]\n   So, \\(m = \\frac{13(4) \\pm 40}{2} = \\frac{52 \\pm 40}{2}\\). This gives us two solutions",
+  "analysis_finish_reason": "length",
+  "analysis_stop_reason": null,
+  "analysis_token_count": 1024,
+  "analysis_truncated": true,
+  "context_token_count": 1422,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -2.47045636177063,
+  "logprob_margin_valid_minus_invalid": 2.1249999701976776,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_71d9400d5eb6aacf",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.34545639157295227,
+  "valid_score": 0.8933094032139576,
+  "variant": "solver_first",
+  "verdict": "VALID"
+}

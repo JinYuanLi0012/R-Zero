@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is well-defined and asks for the smallest positive integer \\( n \\) such that for any selection of \\( n \\) distinct integers from the set \\(\\{1, 2, \\ldots, 200\\}\\), there exists a subset of these integers whose sum is divisible by 20. The conditions are sufficient and consistent, and the complete answer is objectively gradable. The problem is valid because it is clear, the conditions are met, and the solution can be verified.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": null,
+  "analysis_token_count": 104,
+  "analysis_truncated": false,
+  "context_token_count": 461,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.257390975952148,
+  "logprob_margin_valid_minus_invalid": 9.249999607913196,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_6479dc252944ec0e",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.007391368038952351,
+  "valid_score": 0.9999038975468236,
+  "variant": "direct",
+  "verdict": "VALID"
+}

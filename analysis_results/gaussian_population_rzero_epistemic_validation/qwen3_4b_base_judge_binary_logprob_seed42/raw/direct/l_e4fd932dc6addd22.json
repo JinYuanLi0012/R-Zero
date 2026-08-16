@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem provides specific conditions for the polynomial \\( P(x) \\) and asks for the smallest positive integer \\( n \\) such that \\( P(n) \\) is divisible by 11. The conditions are sufficient to determine a unique polynomial \\( P(x) \\) with integer coefficients, and the problem is consistent. The solution involves finding the smallest \\( n \\) that satisfies the divisibility condition, which is an objective and checkable task. Therefore, the problem is well-defined and the answer is objectively gradable.\n",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 109,
+  "analysis_truncated": false,
+  "context_token_count": 464,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.880459785461426,
+  "logprob_margin_valid_minus_invalid": 9.874999793246388,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_e4fd932dc6addd22",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.005459992215037346,
+  "valid_score": 0.9999485577756224,
+  "variant": "direct",
+  "verdict": "VALID"
+}

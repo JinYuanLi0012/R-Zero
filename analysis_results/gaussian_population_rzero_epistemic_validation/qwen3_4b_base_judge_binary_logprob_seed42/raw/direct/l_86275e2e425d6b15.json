@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and the full answer is objectively checkable. The functional equation is well-defined, and the solution involves finding all functions \\( f \\) that satisfy the given condition. The uniqueness of the solution can be proven by showing that no other function satisfies the equation. Therefore, the problem is well-posed and the answer is objectively gradable.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 74,
+  "analysis_truncated": false,
+  "context_token_count": 440,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -10.378242492675781,
+  "logprob_margin_valid_minus_invalid": 10.374999542022124,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_86275e2e425d6b15",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.003242950653657317,
+  "valid_score": 0.9999687980743166,
+  "variant": "direct",
+  "verdict": "VALID"
+}

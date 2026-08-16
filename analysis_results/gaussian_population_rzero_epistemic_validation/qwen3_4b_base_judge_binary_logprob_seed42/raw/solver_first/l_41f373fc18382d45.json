@@ -1,0 +1,27 @@
+{
+  "analysis": " To solve this problem, we need to find all integers between 1 and 1000 that are divisible by 3 or 5 but not both. We can start by finding the sum of all integers between 1 and 1000 that are divisible by 3, then find the sum of all integers between 1 and 1000 that are divisible by 5, and finally subtract the sum of all integers between 1 and 1000 that are divisible by both 3 and 5. This will give us the sum of all integers between 1 and 1000 that are divisible by 3 or 5 but not both.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": null,
+  "analysis_token_count": 142,
+  "analysis_truncated": false,
+  "context_token_count": 521,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -4.100387096405029,
+  "logprob_margin_valid_minus_invalid": 3.9999998956918716,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_41f373fc18382d45",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.10038720071315765,
+  "valid_score": 0.9820137881955446,
+  "variant": "solver_first",
+  "verdict": "VALID"
+}

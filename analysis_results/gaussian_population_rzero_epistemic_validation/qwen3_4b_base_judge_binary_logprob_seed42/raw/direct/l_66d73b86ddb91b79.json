@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem provides specific conditions for the polynomial \\( P(x) \\) and asks for the maximum number of integer roots of \\( P(x) - k \\) for some integer \\( k \\). The conditions are sufficient to determine the polynomial's behavior, and the problem is consistent. The complete answer, which involves finding the maximum number of integer roots, is objectively gradable. Therefore, the problem is well-defined and solvable.\n",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 89,
+  "analysis_truncated": false,
+  "context_token_count": 455,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.757057189941406,
+  "logprob_margin_valid_minus_invalid": 9.74999992735684,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_66d73b86ddb91b79",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.00705726258456707,
+  "valid_score": 0.9999417087301048,
+  "variant": "direct",
+  "verdict": "VALID"
+}

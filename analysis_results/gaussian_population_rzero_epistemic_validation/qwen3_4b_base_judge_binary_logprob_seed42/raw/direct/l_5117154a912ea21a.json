@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is well-defined, asking whether a specific number can be expressed as the sum of consecutive positive integers. The conditions are sufficient, and the answer is objectively gradable. The problem is valid because it can be solved by determining if 2021 can be expressed as such a sum and identifying the smallest number of terms if it can. The problem is also valid because it is clear and unambiguous, and the solution can be verified.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": null,
+  "analysis_token_count": 91,
+  "analysis_truncated": false,
+  "context_token_count": 480,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.014731407165527,
+  "logprob_margin_valid_minus_invalid": 8.999999613501132,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_5117154a912ea21a",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.01473179366439581,
+  "valid_score": 0.9998766053763278,
+  "variant": "direct",
+  "verdict": "VALID"
+}

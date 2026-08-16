@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem provides sufficient information and the conditions are consistent. The total number of pets and the sum of the squares of the house numbers are given, and the problem asks for the number of pets in a specific house. The solution can be objectively graded by verifying the given conditions and solving for the number of pets in house 50. The problem is well-defined and has a unique solution.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 81,
+  "analysis_truncated": false,
+  "context_token_count": 474,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.257680892944336,
+  "logprob_margin_valid_minus_invalid": 9.250000246334821,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_1a8a59c016b66b51",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.007680646609514952,
+  "valid_score": 0.9999038976081717,
+  "variant": "direct",
+  "verdict": "VALID"
+}

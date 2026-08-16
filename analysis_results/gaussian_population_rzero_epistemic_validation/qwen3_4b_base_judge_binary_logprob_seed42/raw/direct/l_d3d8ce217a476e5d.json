@@ -1,0 +1,27 @@
+{
+  "analysis": " The question is complete, consistent, and has one clear answer. The smallest positive integer divisible by 2, 3, and 4 is 12, as it is the least common multiple (LCM) of these numbers. The conditions are sufficient, and the answer is objectively gradable.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 64,
+  "analysis_truncated": false,
+  "context_token_count": 379,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.630477905273438,
+  "logprob_margin_valid_minus_invalid": 9.625000247731805,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_d3d8ce217a476e5d",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.005477657541632652,
+  "valid_score": 0.9999339478715075,
+  "variant": "direct",
+  "verdict": "VALID"
+}

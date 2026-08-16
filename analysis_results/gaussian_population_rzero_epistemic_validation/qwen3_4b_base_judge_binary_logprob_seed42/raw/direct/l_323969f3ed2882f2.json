@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem provides the lengths of two sides of the triangle and the length of the median from the vertex opposite those sides. Using Apollonius's theorem, which states that for any triangle, the sum of the squares of any two sides is equal to twice the square of the median to the third side plus twice the square of half the third side, we can set up the equation \\( AB^2 + AC^2 = 2AM^2 + 2BM^2 \\). Given \\( AB = 13 \\), \\( AC = 14 \\), and \\( AM = 15 \\), we can substitute these values into the equation to find \\( BM \\). Since \\( BM = MC \\) (because \\( M \\) is the midpoint of \\( BC \\)), we can solve for \\( BC \\). The conditions are sufficient, a solution exists, and the complete answer is objectively gradable.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 189,
+  "analysis_truncated": false,
+  "context_token_count": 549,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -10.503572463989258,
+  "logprob_margin_valid_minus_invalid": 10.500000308034942,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_323969f3ed2882f2",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.0035721559543162584,
+  "valid_score": 0.9999724643173672,
+  "variant": "direct",
+  "verdict": "VALID"
+}

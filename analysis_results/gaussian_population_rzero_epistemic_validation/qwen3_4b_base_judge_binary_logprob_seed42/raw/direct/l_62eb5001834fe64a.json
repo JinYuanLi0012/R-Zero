@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is well-defined, the conditions are sufficient, and the solution is unique and objectively gradable. The set \\( S \\) consists of all positive integers of the form \\( 4n + 3 \\), and we are asked to find the smallest integer greater than 1000 that belongs to this set. To solve this, we need to find the smallest integer \\( m \\) such that \\( m > 1000 \\) and \\( m = 4n + 3 \\) for some non-negative integer \\( n \\). This can be done by finding the smallest \\( n \\) such that \\( 4n + 3 > 1000 \\). Solving for \\( n \\), we get \\( 4n > 997 \\) or \\( n > 249.25 \\). Since \\( n \\) must be an integer, the smallest possible value for \\( n \\) is 250. Substituting \\( n = 250 \\) into the expression \\( 4n + 3 \\), we get \\( 4(250) + 3 = 1003 \\). Therefore, the smallest integer greater than 1000 that is in set \\( S \\) is 1003. The problem is complete, the conditions are sufficient, and the solution is unique and objectively gradable.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 296,
+  "analysis_truncated": false,
+  "context_token_count": 650,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -10.754618644714355,
+  "logprob_margin_valid_minus_invalid": 10.750000428408384,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_62eb5001834fe64a",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.004618216305971146,
+  "valid_score": 0.999978555060766,
+  "variant": "direct",
+  "verdict": "VALID"
+}

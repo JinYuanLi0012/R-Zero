@@ -1,0 +1,27 @@
+{
+  "analysis": " The given equation can be rearranged to \\( x^2 + y^2 + z^2 - 2xy - 2yz - 2zx + 2x + 2y + 2z - 4 = 0 \\). This can be rewritten as \\( (x-1)^2 + (y-1)^2 + (z-1)^2 = 0 \\). Since the sum of squares of real numbers is zero if and only if each term is zero, we have \\( x-1 = 0 \\), \\( y-1 = 0 \\), and \\( z-1 = 0 \\). Therefore, the only solution is \\( x = 1 \\), \\( y = 1 \\), and \\( z = 1 \\). The problem is complete, the conditions are sufficient, and the complete answer is objectively gradable.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 182,
+  "analysis_truncated": false,
+  "context_token_count": 532,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -10.877761840820312,
+  "logprob_margin_valid_minus_invalid": 10.875000002793968,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_80b9018e74b2b6df",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.002761838026344776,
+  "valid_score": 0.9999810748518069,
+  "variant": "direct",
+  "verdict": "VALID"
+}

@@ -1,0 +1,27 @@
+{
+  "analysis": " The question is complete, consistent, and has one clear answer. The smallest positive integer divisible by 3, 4, and 5 is the least common multiple (LCM) of these numbers. The LCM of 3, 4, and 5 is 60, as it is the smallest number that is a multiple of all three. The answer is objectively gradable, as it is a single, specific number.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 92,
+  "analysis_truncated": false,
+  "context_token_count": 407,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -10.005504608154297,
+  "logprob_margin_valid_minus_invalid": 9.999999564141035,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_f89787cc98f0ee79",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.005505044013261795,
+  "valid_score": 0.9999546021115114,
+  "variant": "direct",
+  "verdict": "VALID"
+}

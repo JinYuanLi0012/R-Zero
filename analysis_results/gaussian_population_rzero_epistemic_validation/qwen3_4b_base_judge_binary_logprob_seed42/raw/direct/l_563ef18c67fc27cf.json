@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and the full answer is objectively checkable. The distribution of pets follows a specific rule, and the total number of pets can be calculated using this rule. The mayor's plan to display the remainder when the total is divided by 1000 ensures that the sign will always display a three-digit number, even if the total number of pets is greater than 999. Therefore, the problem is valid.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 91,
+  "analysis_truncated": false,
+  "context_token_count": 533,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -10.00615406036377,
+  "logprob_margin_valid_minus_invalid": 9.999999546911567,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_563ef18c67fc27cf",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.006154513452202082,
+  "valid_score": 0.9999546021107292,
+  "variant": "direct",
+  "verdict": "VALID"
+}

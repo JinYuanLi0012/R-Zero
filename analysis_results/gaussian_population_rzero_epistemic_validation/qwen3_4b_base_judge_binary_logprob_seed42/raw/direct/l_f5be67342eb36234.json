@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is well-defined and asks for the smallest possible size of the set of pairwise differences. The conditions are sufficient, and the answer is objectively gradable. The problem is valid as written.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 42,
+  "analysis_truncated": false,
+  "context_token_count": 388,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -8.885972023010254,
+  "logprob_margin_valid_minus_invalid": 8.875000210478902,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_f5be67342eb36234",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.010971812531352043,
+  "valid_score": 0.999860177953778,
+  "variant": "direct",
+  "verdict": "VALID"
+}

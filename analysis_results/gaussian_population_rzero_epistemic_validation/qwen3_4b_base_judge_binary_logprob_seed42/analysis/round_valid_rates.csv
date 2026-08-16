@@ -1,0 +1,7 @@
+"round","variant","n","predicted_valid_rate","terra_valid_rate"
+"1","direct","200","0.94","0.83"
+"1","solver_first","200","0.845","0.83"
+"2","direct","200","0.755","0.74"
+"2","solver_first","200","0.61","0.74"
+"3","direct","200","0.94","0.555"
+"3","solver_first","200","0.675","0.555"

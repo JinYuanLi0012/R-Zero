@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem provides specific conditions and relationships between the points and segments in the triangle. It asks for the length of \\(AB\\), which is a clear and measurable quantity. The conditions are sufficient to determine the length of \\(AB\\) because the symmetry and equal segment lengths imply that \\(AB\\) can be calculated using geometric properties and the given length \\(CP = 20\\). The answer is objectively gradable as it involves a specific numerical value.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 93,
+  "analysis_truncated": false,
+  "context_token_count": 470,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.633190155029297,
+  "logprob_margin_valid_minus_invalid": 9.624999777413905,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_fd452596b992f76c",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.008190377615392208,
+  "valid_score": 0.999933947840444,
+  "variant": "direct",
+  "verdict": "VALID"
+}

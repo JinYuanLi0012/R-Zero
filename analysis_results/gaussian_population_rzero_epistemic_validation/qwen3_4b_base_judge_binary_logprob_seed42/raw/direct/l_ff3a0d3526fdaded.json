@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and the full answer is objectively checkable. The conditions are sufficient to determine the number of ordered pairs \\((x, y)\\) that satisfy the given condition. The range of \\(x\\) and \\(y\\) is clearly defined, and the divisibility condition is well-posed. The solution involves counting the number of pairs \\((x, y)\\) within the specified range where \\(x^2 + y^2\\) is divisible by 5. This can be done systematically by checking each pair, and the final count is an integer that can be objectively verified. Therefore, the problem is valid as written.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": null,
+  "analysis_token_count": 129,
+  "analysis_truncated": false,
+  "context_token_count": 475,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.880271911621094,
+  "logprob_margin_valid_minus_invalid": 9.874999736435711,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_ff3a0d3526fdaded",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.005272175185382366,
+  "valid_score": 0.9999485577727001,
+  "variant": "direct",
+  "verdict": "VALID"
+}

@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and the full answer is objectively checkable. The smallest positive integer \\( n \\) that satisfies the condition is \\( n = 4 \\), as \\( 4^2 + 3(4) + 2 = 16 + 12 + 2 = 30 \\), which is divisible by 10. The conditions are sufficient, and a solution exists.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 86,
+  "analysis_truncated": false,
+  "context_token_count": 413,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -10.129863739013672,
+  "logprob_margin_valid_minus_invalid": 10.12499980814755,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_b508e11991e7902b",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.004863930866122246,
+  "valid_score": 0.9999599363000847,
+  "variant": "direct",
+  "verdict": "VALID"
+}

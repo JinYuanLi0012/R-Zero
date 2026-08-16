@@ -1,0 +1,27 @@
+{
+  "analysis": " The question is complete, consistent, and has a clear answer. The two non-overlapping discs can fit in a circle of radius 3 because the sum of their radii must be less than or equal to the radius of the larger circle. The answer is objectively gradable.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 59,
+  "analysis_truncated": false,
+  "context_token_count": 372,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -7.893802642822266,
+  "logprob_margin_valid_minus_invalid": 7.874999905005097,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_c605074cde77a3e1",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.018802737817168236,
+  "valid_score": 0.9996200154491652,
+  "variant": "direct",
+  "verdict": "VALID"
+}

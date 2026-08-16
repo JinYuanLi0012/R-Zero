@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is well-defined and asks for the number of distinct positive integers less than 100 that can be expressed as the sum of two positive integers, one of which is a multiple of 4 and the other is a multiple of 5. The conditions are sufficient, and the solution exists. The answer is objectively gradable as it involves counting the number of such integers. The problem does not have multiple solutions but rather a countable set of solutions. Therefore, the problem is valid.\n",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 103,
+  "analysis_truncated": false,
+  "context_token_count": 447,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.507515907287598,
+  "logprob_margin_valid_minus_invalid": 9.499999588821083,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_8135922bd61b2768",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.007516318466514349,
+  "valid_score": 0.9999251537417164,
+  "variant": "direct",
+  "verdict": "VALID"
+}

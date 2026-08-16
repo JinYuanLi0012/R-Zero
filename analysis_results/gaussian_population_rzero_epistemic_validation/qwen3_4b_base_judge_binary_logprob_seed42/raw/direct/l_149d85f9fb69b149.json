@@ -1,0 +1,27 @@
+{
+  "analysis": " The Fibonacci sequence is well-defined, and the problem asks for the smallest positive integer that cannot be expressed as the sum of three or fewer terms from this sequence. The conditions are sufficient, and a solution exists. The complete answer is objectively gradable, as it requires identifying the smallest integer that does not meet the criteria. The problem is well-structured and does not contain any ambiguities or contradictions.  ",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 84,
+  "analysis_truncated": false,
+  "context_token_count": 402,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.511978149414062,
+  "logprob_margin_valid_minus_invalid": 9.499999905005097,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_149d85f9fb69b149",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.01197824440896511,
+  "valid_score": 0.9999251537653799,
+  "variant": "direct",
+  "verdict": "VALID"
+}

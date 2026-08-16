@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and the full answer is objectively checkable. We need to find all positive integers \\( n \\) for which \\( 2^n + 3^n \\) is a perfect square. This requires checking each positive integer \\( n \\) to see if the sum \\( 2^n + 3^n \\) results in a perfect square. The conditions are sufficient and consistent, and a solution exists. The complete answer is objectively gradable.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 95,
+  "analysis_truncated": false,
+  "context_token_count": 415,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.253937721252441,
+  "logprob_margin_valid_minus_invalid": 9.249999658204615,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_208f0d163af5017f",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.00393806304782629,
+  "valid_score": 0.9999038975516564,
+  "variant": "direct",
+  "verdict": "VALID"
+}

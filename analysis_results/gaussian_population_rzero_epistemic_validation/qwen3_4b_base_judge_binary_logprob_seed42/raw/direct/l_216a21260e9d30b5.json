@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete, consistent, and has a clear answer. The expected value can be calculated by considering all possible outcomes and their probabilities. The expected value is the sum of each possible score multiplied by its probability. Since the die and coin are fair, each outcome has an equal probability. The possible scores are 1, 2, 3, 4, 5, and 6, each with a probability of 1/12. The expected value is calculated as follows: (1*1/12) + (2*1/12) + (3*1/12) + (4*1/12) + (5*1/12) + (6*1/12) = 3.5. The answer is objectively gradable.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 169,
+  "analysis_truncated": false,
+  "context_token_count": 529,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.757380485534668,
+  "logprob_margin_valid_minus_invalid": 9.749999885447323,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_216a21260e9d30b5",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.0073806000873446465,
+  "valid_score": 0.9999417087276619,
+  "variant": "direct",
+  "verdict": "VALID"
+}

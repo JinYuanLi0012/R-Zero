@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem asks for all integers \\( n \\) such that the given polynomial \\( P(x) \\) is divisible by \\( x^2 - 5x + 6 \\). The polynomial \\( x^2 - 5x + 6 \\) can be factored into \\( (x-2)(x-3) \\). For \\( P(x) \\) to be divisible by \\( x^2 - 5x + 6 \\), it must be divisible by both \\( x-2 \\) and \\( x-3 \\). This means that \\( P(2) = 0 \\) and \\( P(3) = 0 \\). We need to check these conditions for different values of \\( n \\). The conditions are sufficient and consistent, and the complete answer is objectively gradable. Therefore, the problem is valid.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": null,
+  "analysis_token_count": 174,
+  "analysis_truncated": false,
+  "context_token_count": 536,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.756549835205078,
+  "logprob_margin_valid_minus_invalid": 9.749999683815986,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_f50ee2660ef14a5d",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.006550151389092207,
+  "valid_score": 0.999941708715909,
+  "variant": "direct",
+  "verdict": "VALID"
+}

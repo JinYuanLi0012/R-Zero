@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and the full answer is objectively checkable. The conditions are sufficient and consistent, a solution exists, and the complete answer is objectively gradable. The problem asks for all integers \\( n \\) that satisfy the given condition, and the solution can be verified by checking each integer \\( n \\) to see if \\( n^3 + 3n^2 + 2n \\) is a perfect square. Therefore, the problem is valid as written.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 99,
+  "analysis_truncated": false,
+  "context_token_count": 424,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.380053520202637,
+  "logprob_margin_valid_minus_invalid": 9.375000153668225,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_4094d062c28f96de",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.005053366534411907,
+  "valid_score": 0.999915188971308,
+  "variant": "direct",
+  "verdict": "VALID"
+}

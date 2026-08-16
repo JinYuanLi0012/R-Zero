@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is well-defined with clear conditions. The sequence is constructed based on the rule that each term \\(a_n\\) for \\(n \\geq 3\\) is the smallest positive integer that does not divide any of the previous terms. The sequence starts with \\(a_1 = 1\\) and \\(a_2 = 2\\). To find \\(a_{2023}\\), we need to determine the smallest positive integer that does not divide any of the previous 2021 terms. This requires generating the sequence up to \\(a_{2023}\\) and checking the divisibility condition for each term. The problem is complete, consistent, and the answer is objectively gradable as it involves a specific sequence and a specific term in that sequence. Therefore, the problem is valid.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 168,
+  "analysis_truncated": false,
+  "context_token_count": 552,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.630209922790527,
+  "logprob_margin_valid_minus_invalid": 9.624999886844307,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_f90f0820975bd124",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.0052100359462201595,
+  "valid_score": 0.9999339478476718,
+  "variant": "direct",
+  "verdict": "VALID"
+}

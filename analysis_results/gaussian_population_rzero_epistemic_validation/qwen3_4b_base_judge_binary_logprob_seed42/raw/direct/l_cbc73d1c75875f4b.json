@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete, the recursive relation and initial conditions are clear, and the task is to find a specific term in the sequence. The conditions are sufficient, and the solution exists. The answer, \\(a_{10}\\), can be objectively graded by verifying the calculation. Therefore, the problem is well-defined and solvable.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 70,
+  "analysis_truncated": false,
+  "context_token_count": 441,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -10.2543306350708,
+  "logprob_margin_valid_minus_invalid": 10.250000447966158,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_cbc73d1c75875f4b",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.004330187104642391,
+  "valid_score": 0.9999646437650962,
+  "variant": "direct",
+  "verdict": "VALID"
+}

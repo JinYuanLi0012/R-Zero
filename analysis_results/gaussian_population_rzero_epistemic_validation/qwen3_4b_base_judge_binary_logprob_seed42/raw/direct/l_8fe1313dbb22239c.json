@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is well-defined and asks for the maximum value of a specific trigonometric expression involving the angles of a non-right triangle. The conditions are sufficient, and the expression is mathematically valid. The complete answer, which would involve finding the maximum value of the given expression, is objectively gradable. Therefore, the problem is valid as written.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 74,
+  "analysis_truncated": false,
+  "context_token_count": 439,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.50537109375,
+  "logprob_margin_valid_minus_invalid": 9.500000262632966,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_8fe1313dbb22239c",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.0053708311170339584,
+  "valid_score": 0.999925153792145,
+  "variant": "direct",
+  "verdict": "VALID"
+}

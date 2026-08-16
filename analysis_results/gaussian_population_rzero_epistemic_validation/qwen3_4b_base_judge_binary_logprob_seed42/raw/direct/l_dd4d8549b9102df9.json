@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem provides specific lengths for segments related to the angle bisectors and the incircle, which are sufficient to determine the length of side BC using properties of angle bisectors and the incircle. The conditions are consistent, and the solution exists. The complete answer, which is the length of side BC, is objectively gradable.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 69,
+  "analysis_truncated": false,
+  "context_token_count": 435,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.632296562194824,
+  "logprob_margin_valid_minus_invalid": 9.625000455416739,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_dd4d8549b9102df9",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.007296106778085232,
+  "valid_score": 0.9999339478852245,
+  "variant": "direct",
+  "verdict": "VALID"
+}

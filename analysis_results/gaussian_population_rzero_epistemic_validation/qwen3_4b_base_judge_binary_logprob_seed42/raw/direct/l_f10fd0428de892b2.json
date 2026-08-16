@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is well-defined, with a clear objective and sufficient information to determine the minimum number of roads needed. The conditions are consistent, and a solution exists. The complete answer, which involves calculating the minimum number of additional roads, is objectively gradable.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 54,
+  "analysis_truncated": false,
+  "context_token_count": 419,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -10.00651741027832,
+  "logprob_margin_valid_minus_invalid": 9.999999946448952,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_f10fd0428de892b2",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.006517463829368353,
+  "valid_score": 0.9999546021288667,
+  "variant": "direct",
+  "verdict": "VALID"
+}

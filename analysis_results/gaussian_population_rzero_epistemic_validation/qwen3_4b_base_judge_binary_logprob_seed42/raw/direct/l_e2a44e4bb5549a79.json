@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem states that the hexagon is convex and provides specific side length equalities and angle equalities. However, the conditions given do not necessarily imply that all sides and angles are equal, which is required for a regular hexagon. The problem does not provide enough information to conclude that the hexagon is regular. Therefore, the conditions are insufficient to prove the hexagon is regular.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 80,
+  "analysis_truncated": false,
+  "context_token_count": 417,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -0.0032362965866923332,
+  "logprob_margin_valid_minus_invalid": -6.624999997206032,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_e2a44e4bb5549a79",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -6.628236293792725,
+  "valid_score": 0.0013250224209103258,
+  "variant": "direct",
+  "verdict": "INVALID"
+}

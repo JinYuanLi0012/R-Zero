@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and the full answer is objectively checkable. The equation involves positive integers, and the conditions are sufficient to find all ordered pairs \\((m, n)\\) that satisfy the equation. The problem is well-defined and does not contain any missing or ambiguous information. The solution can be verified by substituting the pairs back into the equation. Therefore, the problem is valid as written.\n",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 83,
+  "analysis_truncated": false,
+  "context_token_count": 419,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.379562377929688,
+  "logprob_margin_valid_minus_invalid": 9.375000052154064,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_b21d3c0cc1321e54",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.0045623257756233215,
+  "valid_score": 0.9999151889626993,
+  "variant": "direct",
+  "verdict": "VALID"
+}

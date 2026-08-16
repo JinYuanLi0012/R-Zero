@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem provides specific values for the polynomial at two points, which can be used to determine the polynomial's form. However, the problem does not specify the degree of the polynomial or any other constraints, which could lead to multiple possible polynomials. Additionally, the problem asks for the minimum number of integer roots, which is a well-defined and objectively gradable question. Therefore, the conditions are sufficient, a solution exists, and the complete answer is objectively gradable.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 96,
+  "analysis_truncated": false,
+  "context_token_count": 445,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.25411319732666,
+  "logprob_margin_valid_minus_invalid": 9.249999532010406,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_45b55a01b6332db3",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.0041136653162539005,
+  "valid_score": 0.99990389753953,
+  "variant": "direct",
+  "verdict": "VALID"
+}

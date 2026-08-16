@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and consistent. The king can stop giving out coins after 100 years, as each of the 100 subjects will have received exactly one coin. The maximum number of coins any subject can receive is 1, as the rule states that no subject can receive more than one coin in their lifetime. The answer is objectively gradable.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 77,
+  "analysis_truncated": false,
+  "context_token_count": 439,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.00804328918457,
+  "logprob_margin_valid_minus_invalid": 9.00000024586916,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_31e25ec570903ca6",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.008043043315410614,
+  "valid_score": 0.9998766054543491,
+  "variant": "direct",
+  "verdict": "VALID"
+}

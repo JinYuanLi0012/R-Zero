@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete, consistent, and has a clear answer. The sequence is defined by a recursive formula, and the 10th term can be calculated step-by-step. The remainder when the 10th term is divided by 5 can be determined objectively.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 58,
+  "analysis_truncated": false,
+  "context_token_count": 404,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -10.003493309020996,
+  "logprob_margin_valid_minus_invalid": 10.000000266591087,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_65523153c81a8e1b",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.00349304242990911,
+  "valid_score": 0.9999546021433997,
+  "variant": "direct",
+  "verdict": "VALID"
+}

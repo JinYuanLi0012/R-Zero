@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and the full answer is objectively checkable. The conditions are sufficient and consistent, a solution exists, and the complete answer is objectively gradable. The problem asks for a third function h(x) and the values of f(0) and g(0) that make the system of equations consistent and have a solution. The problem is well-defined and the solution can be verified. Therefore, the problem is valid exactly as written.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 93,
+  "analysis_truncated": false,
+  "context_token_count": 462,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.137170791625977,
+  "logprob_margin_valid_minus_invalid": 9.125000449828804,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_f54b0cb5ea837e83",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.012170341797173023,
+  "valid_score": 0.999891103138953,
+  "variant": "direct",
+  "verdict": "VALID"
+}

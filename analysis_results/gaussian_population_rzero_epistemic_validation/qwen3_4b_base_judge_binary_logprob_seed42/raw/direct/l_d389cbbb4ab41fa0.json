@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete, consistent, and has one clear answer. The sum of the first 100 positive integers is 5050, and when divided by 11, the remainder is 1. The answer is objectively gradable.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 55,
+  "analysis_truncated": false,
+  "context_token_count": 373,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -8.759552001953125,
+  "logprob_margin_valid_minus_invalid": 8.750000226311386,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_d389cbbb4ab41fa0",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.009551775641739368,
+  "valid_score": 0.9998415638167476,
+  "variant": "direct",
+  "verdict": "VALID"
+}

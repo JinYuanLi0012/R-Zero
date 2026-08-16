@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem provides the area of the triangle and the sum of the two legs, which are sufficient to determine the lengths of the sides. Using the area formula for a right triangle ($\\frac{1}{2}ab = 50$) and the Pythagorean theorem ($a^2 + b^2 = c^2$), we can solve for $a$ and $b$ and subsequently find $c$. The conditions are sufficient, a solution exists, and the complete answer is objectively gradable.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 108,
+  "analysis_truncated": false,
+  "context_token_count": 480,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -10.630069732666016,
+  "logprob_margin_valid_minus_invalid": 10.625000235624611,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_c7a5f8554b60d508",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.005069497041404247,
+  "valid_score": 0.9999756997649824,
+  "variant": "direct",
+  "verdict": "VALID"
+}

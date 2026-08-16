@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and the full answer is objectively checkable. The equation can be rearranged and factored to find the number of ordered pairs (x, y) that satisfy the equation. The conditions are sufficient, and a solution exists. The complete answer is objectively gradable.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 60,
+  "analysis_truncated": false,
+  "context_token_count": 401,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.882720947265625,
+  "logprob_margin_valid_minus_invalid": 9.874999725725502,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_34b719009b664819",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.007721221540123224,
+  "valid_score": 0.9999485577721493,
+  "variant": "direct",
+  "verdict": "VALID"
+}

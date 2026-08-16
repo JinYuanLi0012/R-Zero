@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem provides a right triangle with known side lengths and specifies that \\( BD \\) is the angle bisector of the right angle. Using the Angle Bisector Theorem, we can find the lengths of the segments \\( AD \\) and \\( DC \\) on \\( AC \\). Then, we can use the Pythagorean theorem in triangle \\( ABD \\) to find the length of \\( BD \\). The conditions are sufficient, a solution exists, and the answer is objectively gradable.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 103,
+  "analysis_truncated": false,
+  "context_token_count": 468,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -10.254861831665039,
+  "logprob_margin_valid_minus_invalid": 10.25000003585592,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_38b32bc717773757",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.00486179580911994,
+  "valid_score": 0.999964643750526,
+  "variant": "direct",
+  "verdict": "VALID"
+}

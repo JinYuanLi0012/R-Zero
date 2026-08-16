@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem provides specific conditions for the polynomial \\( f(x) \\), including its values at \\( x = 0 \\) and \\( x = 1 \\), and the fact that it has exactly one real root. The degree of \\( f(x) \\) is not specified, but the problem asks for the degree and the value of \\( f(x) \\) at its root. The conditions are sufficient to determine the degree of the polynomial and the value at its root, and the answer is objectively gradable. Therefore, the problem is valid.\n",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 114,
+  "analysis_truncated": false,
+  "context_token_count": 484,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.75692367553711,
+  "logprob_margin_valid_minus_invalid": 9.749999707564712,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_a1333b7eca2f747b",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.006923967972397804,
+  "valid_score": 0.9999417087172934,
+  "variant": "direct",
+  "verdict": "VALID"
+}

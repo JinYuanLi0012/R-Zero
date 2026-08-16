@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem provides sufficient information about the cone and the cross-section. The conditions are consistent, and a solution exists. The height from the base of the cone to the cross-section can be determined using similar triangles. The complete answer is objectively gradable as it involves a straightforward calculation and comparison with the given options. ",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "Verdict:",
+  "analysis_token_count": 65,
+  "analysis_truncated": false,
+  "context_token_count": 450,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -8.636422157287598,
+  "logprob_margin_valid_minus_invalid": 8.62500027101487,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_e8817de0d5ec2c99",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.011421886272728443,
+  "valid_score": 0.9998204720792991,
+  "variant": "direct",
+  "verdict": "VALID"
+}

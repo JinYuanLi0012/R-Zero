@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete, consistent, and has one clear answer. The minimum number of weights needed to measure all integer weights from 1 to 121 grams on a balance scale, where weights can be placed only on one side, can be determined using the concept of powers of 2. The weights needed are 1, 2, 4, 8, 16, 32, and 64 grams. These weights can be combined to measure any integer weight from 1 to 127 grams, which covers the range from 1 to 121 grams. Therefore, the problem is well-defined, has a unique solution, and the answer is objectively gradable.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 148,
+  "analysis_truncated": false,
+  "context_token_count": 479,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -10.006820678710938,
+  "logprob_margin_valid_minus_invalid": 10.000000067520887,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_61e7bce0ff743482",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.00682061119005084,
+  "valid_score": 0.9999546021343628,
+  "variant": "direct",
+  "verdict": "VALID"
+}

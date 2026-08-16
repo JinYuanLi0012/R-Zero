@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and the full answer is objectively checkable. We need to find the smallest positive integer \\( n \\) such that \\( 3^n + n \\) is divisible by 5. We can check each positive integer \\( n \\) starting from 1 until we find the smallest \\( n \\) that satisfies the condition. The answer is objectively gradable based on the correctness of the smallest \\( n \\) found.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": null,
+  "analysis_token_count": 89,
+  "analysis_truncated": false,
+  "context_token_count": 412,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.253693580627441,
+  "logprob_margin_valid_minus_invalid": 9.249999915948138,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_c954b3864c8342c9",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.0036936646793037653,
+  "valid_score": 0.9999038975764238,
+  "variant": "direct",
+  "verdict": "VALID"
+}

@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and the full answer is objectively checkable. However, the problem does not specify any constraints on the values of \\( x \\), \\( y \\), and \\( z \\), which could lead to an infinite number of solutions. Without additional constraints, the problem is ambiguous and does not have a unique solution. Therefore, the conditions are not sufficient to ensure a unique and objectively gradable answer.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 85,
+  "analysis_truncated": false,
+  "context_token_count": 412,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -0.005995029583573341,
+  "logprob_margin_valid_minus_invalid": -6.374999767169356,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_025b7702e09944b8",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -6.38099479675293,
+  "valid_score": 0.0017007228067421746,
+  "variant": "direct",
+  "verdict": "INVALID"
+}

@@ -1,0 +1,27 @@
+{
+  "analysis": " The sum of the first 100 positive integers is given by the formula \\( S = \\frac{n(n+1)}{2} \\), where \\( n = 100 \\). Plugging in the value, we get \\( S = \\frac{100 \\times 101}{2} = 5050 \\). To find the remainder when 5050 is divided by 11, we perform the division: \\( 5050 \\div 11 = 459 \\) with a remainder of 1. Therefore, the remainder is 1. All required information is present, and the answer is objectively checkable.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 147,
+  "analysis_truncated": false,
+  "context_token_count": 518,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.25666332244873,
+  "logprob_margin_valid_minus_invalid": 9.250000194180757,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_d389cbbb4ab41fa0",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.006663128267973661,
+  "valid_score": 0.9999038976031599,
+  "variant": "solver_first",
+  "verdict": "VALID"
+}

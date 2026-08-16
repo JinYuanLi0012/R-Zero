@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete, consistent, and has one clear answer. The conditions are sufficient to determine the smallest positive integer \\( n \\) such that \\( n! \\) has at least 10 trailing zeros. The answer is objectively gradable as it requires finding the smallest \\( n \\) that satisfies the condition. The problem is well-defined and does not have any missing or ambiguous information. Therefore, the problem is valid.\n",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 89,
+  "analysis_truncated": false,
+  "context_token_count": 414,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.757025718688965,
+  "logprob_margin_valid_minus_invalid": 9.749999706167728,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_9d6c606567f3d68e",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.007026012521237135,
+  "valid_score": 0.9999417087172119,
+  "variant": "direct",
+  "verdict": "VALID"
+}

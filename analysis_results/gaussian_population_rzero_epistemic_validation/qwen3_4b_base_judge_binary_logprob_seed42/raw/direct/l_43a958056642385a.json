@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete, consistent, and the requested solution exists. The answer is objectively gradable.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 23,
+  "analysis_truncated": false,
+  "context_token_count": 426,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -7.15151309967041,
+  "logprob_margin_valid_minus_invalid": 7.124999836087227,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_43a958056642385a",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.02651326358318329,
+  "valid_score": 0.9991959139326767,
+  "variant": "direct",
+  "verdict": "VALID"
+}

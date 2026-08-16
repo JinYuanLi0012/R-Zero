@@ -1,0 +1,27 @@
+{
+  "analysis": " To solve the problem, we need to find all pairs of positive integers \\((m, n)\\) that satisfy the equation \\(m^2 + 3mn + 2n^2 = 2013\\). Let's start by analyzing the equation.\n\nFirst, we can rewrite the equation in a more manageable form. Notice that the left-hand side can be factored:\n\\[ m^2 + 3mn + 2n^2 = (m + n)(m + 2n). \\]\nSo, the equation becomes:\n\\[ (m + n)(m + 2n) = 2013. \\]\n\nNext, we need to find all factor pairs of 2013. The prime factorization of 2013 is:\n\\[ 2013 = 3 \\times 11 \\times 61. \\]\nThe factor pairs of 2013 are:\n\\[ (1, 2013), (3, 671), (11, 183), (33, 61). \\]\n\nFor each factor pair \\((a, b)\\), we need to solve the system of equations:\n\\[ m + n = a, \\]\n\\[ m + 2n = b. \\]\n\nLet's solve for each factor pair:\n\n1. For \\((a, b) = (1, 2013)\\):\n   \\[ m + n = 1, \\]\n   \\[ m + 2n = 2013. \\]\n   Subtract the first equation from the second:\n   \\[ (m + 2n) - (m + n) = 2013 - 1, \\]\n   \\[ n = 2012. \\]\n   Substitute \\(n = 2012\\) into the first equation:\n   \\[ m + 2012 = 1, \\]\n   \\[ m = -2011. \\]\n   Since \\(m\\) must be a positive integer, this pair is invalid.\n\n2. For \\((a, b) = (3, 671)\\):\n   \\[ m + n = 3, \\]\n   \\[ m + 2n = 671. \\]\n   Subtract the first equation from the second:\n   \\[ (m + 2n) - (m + n) = 671 - 3, \\]\n   \\[ n = 668. \\]\n   Substitute \\(n = 668\\) into the first equation:\n   \\[ m + 668 = 3, \\]\n   \\[ m = -665. \\]\n   Since \\(m\\) must be a positive integer, this pair is invalid.\n\n3. For \\((a, b) = (11, 183)\\):\n   \\[ m + n = 11, \\]\n   \\[ m + 2n = 183. \\]\n   Subtract the first equation from the second:\n   \\[ (m + 2n) - (m + n) = 183 - 11, \\]\n   \\[ n = 172. \\]\n   Substitute \\(n = 172\\) into the first equation:\n   \\[ m + 172 = 11, \\]\n   \\[ m = -161. \\]\n   Since \\(m\\) must be a positive integer, this pair is invalid.\n\n4. For \\((a, b) = (33, 61)\\):\n   \\[ m + n = 33, \\]\n   \\[ m + 2n = 61. \\]\n   Subtract the first equation from the second:\n   \\[ (m + 2n) - (m + n) = 61 - 33, \\]\n   \\[ n = 28. \\]\n   Substitute \\(n = 28\\) into the first equation:\n   \\[ m + 28 = 33, \\]\n   \\[ m = 5. \\]\n   Since \\(m\\) and \\(n\\) are both positive integers, this pair is valid.\n\nThus, the only valid pair is \\((m, n) = (5, 28)\\).\n",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 927,
+  "analysis_truncated": false,
+  "context_token_count": 1312,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -7.522208213806152,
+  "logprob_margin_valid_minus_invalid": 7.50000012293458,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_93d2cf0bf4b76bca",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.022208090871572495,
+  "valid_score": 0.9994472214309945,
+  "variant": "solver_first",
+  "verdict": "VALID"
+}

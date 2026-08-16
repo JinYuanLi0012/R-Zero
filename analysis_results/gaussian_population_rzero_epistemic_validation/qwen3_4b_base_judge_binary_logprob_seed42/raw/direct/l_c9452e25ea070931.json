@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem provides all necessary information to apply the Angle Bisector Theorem and the formula for the length of the angle bisector. The conditions are sufficient, and the solution exists. The length of \\(AD\\) can be calculated using the formula \\(AD = \\sqrt{AB \\cdot AC \\left(1 - \\frac{BC^2}{(AB + AC)^2}\\right)}\\). The complete answer is objectively gradable.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 92,
+  "analysis_truncated": false,
+  "context_token_count": 447,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -10.254571914672852,
+  "logprob_margin_valid_minus_invalid": 10.250000451691449,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_c9452e25ea070931",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.004571462981402874,
+  "valid_score": 0.9999646437652279,
+  "variant": "direct",
+  "verdict": "VALID"
+}

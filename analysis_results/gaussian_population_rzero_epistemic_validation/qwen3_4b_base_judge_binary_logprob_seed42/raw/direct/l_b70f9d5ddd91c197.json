@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is asking for the smallest positive integer that cannot be represented as the sum of distinct powers of 2. This is essentially asking for the smallest positive integer that cannot be expressed in binary form, as every positive integer can be uniquely represented as a sum of distinct powers of 2. The smallest positive integer that cannot be represented in this way is 1, because 1 is a power of 2 itself and cannot be expressed as a sum of distinct powers of 2 other than itself. However, the problem specifies that the sum must be of distinct numbers, and 1 is the only number that cannot be expressed as a sum of distinct powers of 2 other than itself. Therefore, the smallest positive integer that cannot be represented as the sum of distinct powers of 2 is 1.\n",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 164,
+  "analysis_truncated": false,
+  "context_token_count": 538,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -1.8252294063568115,
+  "logprob_margin_valid_minus_invalid": 1.6250000596046448,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_b70f9d5ddd91c197",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.20022934675216675,
+  "valid_score": 0.8354835452961425,
+  "variant": "direct",
+  "verdict": "VALID"
+}

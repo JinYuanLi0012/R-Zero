@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is well-defined, and the answer is unique and objectively checkable. The smallest positive integer that cannot be expressed as the sum of two or more distinct Fibonacci numbers is 4. This is because the Fibonacci sequence starts with 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, and so on. The smallest positive integer that cannot be expressed as the sum of two or more distinct Fibonacci numbers is 4, as it cannot be expressed as the sum of any two or more distinct Fibonacci numbers. Therefore, the problem is valid exactly as written.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 145,
+  "analysis_truncated": false,
+  "context_token_count": 461,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -8.763643264770508,
+  "logprob_margin_valid_minus_invalid": 8.750000386498868,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_f4574e258f09a68e",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.013642878271639347,
+  "valid_score": 0.9998415638421233,
+  "variant": "direct",
+  "verdict": "VALID"
+}

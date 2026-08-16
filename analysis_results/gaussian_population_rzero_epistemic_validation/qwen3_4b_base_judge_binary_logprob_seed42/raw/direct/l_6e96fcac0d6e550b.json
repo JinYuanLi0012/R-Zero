@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem asks for the least positive integer \\( n \\) that satisfies the equation \\(\\frac{n+1000}{70} = \\lfloor \\sqrt{n} \\rfloor\\). The conditions are sufficient because the equation is well-defined, and a solution exists since we are looking for the smallest positive integer \\( n \\). The complete answer, which is the smallest \\( n \\) that satisfies the equation, is objectively gradable. Therefore, the problem is valid.\n",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 102,
+  "analysis_truncated": false,
+  "context_token_count": 437,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.382282257080078,
+  "logprob_margin_valid_minus_invalid": 9.375000233296305,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_6e96fcac0d6e550b",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.007282023783773184,
+  "valid_score": 0.9999151889780609,
+  "variant": "direct",
+  "verdict": "VALID"
+}

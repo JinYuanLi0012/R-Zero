@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and the full answer is objectively checkable. The conditions are sufficient to determine the smallest positive integer \\( n \\) such that \\( n! \\) is divisible by \\( 2^{10} \\times 3^5 \\times 5^3 \\). The problem asks for the smallest \\( n \\) that satisfies this condition, and the answer can be verified by checking the factorials of consecutive integers until the condition is met. Therefore, the problem is well-defined and the solution is objectively gradable.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 111,
+  "analysis_truncated": false,
+  "context_token_count": 454,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.878728866577148,
+  "logprob_margin_valid_minus_invalid": 9.874999809078872,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_fcca76ca01c1e4f3",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.0037290574982762337,
+  "valid_score": 0.999948557776437,
+  "variant": "direct",
+  "verdict": "VALID"
+}

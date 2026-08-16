@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is well-defined with a clear recursive rule and initial conditions. The sequence is constructed by finding the smallest integer greater than the previous term that is relatively prime to the term before that. The problem asks for the 15th term in this sequence, and the answer can be objectively determined by following the recursive rule. The conditions are sufficient, and a solution exists. The complete answer is objectively gradable.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 86,
+  "analysis_truncated": false,
+  "context_token_count": 483,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -10.628915786743164,
+  "logprob_margin_valid_minus_invalid": 10.624999928288162,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_d5c87d77dc09b74f",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.003915858455002308,
+  "valid_score": 0.999975699757514,
+  "variant": "direct",
+  "verdict": "VALID"
+}

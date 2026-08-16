@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and the full answer is objectively checkable. The smallest positive integer \\(n\\) that is a multiple of 7 and whose sum of digits is also a multiple of 7 is 7 itself, as the sum of its digits (7) is a multiple of 7. ",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "Verdict:",
+  "analysis_token_count": 63,
+  "analysis_truncated": false,
+  "context_token_count": 393,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.755264282226562,
+  "logprob_margin_valid_minus_invalid": 9.750000170897692,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_97509dfbf7ebe668",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.005264111328870058,
+  "valid_score": 0.9999417087443002,
+  "variant": "direct",
+  "verdict": "VALID"
+}

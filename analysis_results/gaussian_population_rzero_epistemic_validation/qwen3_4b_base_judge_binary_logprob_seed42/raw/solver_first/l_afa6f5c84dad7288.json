@@ -1,0 +1,27 @@
+{
+  "analysis": " To determine the maximum number of houses that can be painted red, we need to consider the constraint that no two adjacent houses can have the same color. This means that if a house is painted red, the next house must be painted either blue or green. We can start by painting the first house red. Then, the second house must be painted either blue or green. If we paint the second house blue, the third house must be painted red, and so on. This pattern continues, alternating between red and blue or green. Therefore, the maximum number of houses that can be painted red is 50, as we can alternate the colors every two houses. This ensures that no two adjacent houses have the same color and maximizes the number of red houses.\n",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 156,
+  "analysis_truncated": false,
+  "context_token_count": 574,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -8.508527755737305,
+  "logprob_margin_valid_minus_invalid": 8.499999986961484,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_afa6f5c84dad7288",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.008527768775820732,
+  "valid_score": 0.9997965730192929,
+  "variant": "solver_first",
+  "verdict": "VALID"
+}

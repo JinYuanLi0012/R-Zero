@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and the full answer is objectively checkable. The conditions are sufficient and consistent, a solution exists, and the complete answer is objectively gradable. The problem asks for all positive integers \\( n \\) such that the polynomial \\( P(x) = x^n + 3x + 2 \\) can be factored into the product of two non-constant polynomials with integer coefficients. This is a well-defined problem with a clear objective. The answer is objectively gradable as it requires identifying all such \\( n \\) and providing a factorization for each. Therefore, the problem is valid.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": null,
+  "analysis_token_count": 125,
+  "analysis_truncated": false,
+  "context_token_count": 468,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.506855010986328,
+  "logprob_margin_valid_minus_invalid": 9.500000420026481,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_f101c428f2a17d43",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.006854590959846973,
+  "valid_score": 0.9999251538039244,
+  "variant": "direct",
+  "verdict": "VALID"
+}

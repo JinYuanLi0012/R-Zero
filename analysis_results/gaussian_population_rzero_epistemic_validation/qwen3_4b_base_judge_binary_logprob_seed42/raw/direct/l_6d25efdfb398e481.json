@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem asks to prove the existence of a positive integer not expressible as the sum of two or more consecutive positive integers. This is a well-defined mathematical statement. The conditions are sufficient, and the problem is consistent. The existence of such an integer can be proven using properties of numbers and their representations as sums of consecutive integers. The complete answer, which is a proof, is objectively gradable based on the correctness and clarity of the argument. Therefore, the problem is valid.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 99,
+  "analysis_truncated": false,
+  "context_token_count": 485,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.509259223937988,
+  "logprob_margin_valid_minus_invalid": 9.499999847263098,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_6d25efdfb398e481",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.009259376674890518,
+  "valid_score": 0.9999251537610585,
+  "variant": "direct",
+  "verdict": "VALID"
+}

@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is well-defined with a clear recurrence relation and initial conditions. The task is to find all positive integers \\( n \\) for which \\( a_n \\) is a power of 2. The recurrence relation and initial conditions are sufficient to generate the sequence, and the solution can be objectively verified by checking each term to see if it is a power of 2. Therefore, the problem is valid.\n",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 85,
+  "analysis_truncated": false,
+  "context_token_count": 479,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -10.129895210266113,
+  "logprob_margin_valid_minus_invalid": 10.125000317115337,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_1901593106be0cb1",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.004894893150776625,
+  "valid_score": 0.9999599363204751,
+  "variant": "direct",
+  "verdict": "VALID"
+}

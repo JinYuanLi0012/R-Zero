@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete, consistent, and has a clear answer. The sum can be calculated by finding the sum of all integers divisible by 3, the sum of all integers divisible by 5, and then subtracting the sum of all integers divisible by both 3 and 5 (i.e., divisible by 15). This can be done using the formula for the sum of an arithmetic series. The complete answer is objectively gradable.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 93,
+  "analysis_truncated": false,
+  "context_token_count": 417,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -10.128875732421875,
+  "logprob_margin_valid_minus_invalid": 10.125000010244548,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_41f373fc18382d45",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.0038757221773266792,
+  "valid_score": 0.9999599363081811,
+  "variant": "direct",
+  "verdict": "VALID"
+}

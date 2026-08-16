@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem provides sufficient information about the triangle and the ratio of the segments on side \\(BC\\). The conditions are consistent, and a solution exists. The measure of \\(\\angle BAD\\) can be determined using geometric properties and the given ratio, and the answer is objectively gradable. Therefore, the problem is well-defined and solvable.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 71,
+  "analysis_truncated": false,
+  "context_token_count": 427,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.754687309265137,
+  "logprob_margin_valid_minus_invalid": 9.749999560415745,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_dd2ba14c7c11cc57",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.004687748849391937,
+  "valid_score": 0.9999417087087163,
+  "variant": "direct",
+  "verdict": "VALID"
+}

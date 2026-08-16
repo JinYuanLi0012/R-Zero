@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem provides specific values for the polynomial at two points, which can be used to determine the form of the polynomial. However, the problem does not specify the degree of the polynomial or any other constraints that would limit the number of integer roots. Without additional information, it is impossible to determine the exact number of integer roots, as the polynomial could have any number of integer roots depending on its degree and the specific form of the polynomial. Therefore, the conditions are insufficient to determine a unique solution.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 102,
+  "analysis_truncated": false,
+  "context_token_count": 453,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -0.004010136239230633,
+  "logprob_margin_valid_minus_invalid": -7.000000064261258,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_5ea7031801656fc5",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -7.004010200500488,
+  "valid_score": 0.0009110511359086895,
+  "variant": "direct",
+  "verdict": "INVALID"
+}

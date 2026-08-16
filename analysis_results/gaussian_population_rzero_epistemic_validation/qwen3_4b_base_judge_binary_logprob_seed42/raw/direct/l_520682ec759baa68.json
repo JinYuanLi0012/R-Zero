@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem provides sufficient information to determine the length of \\(AD\\). Given that \\(AB = AC\\), triangle \\(ABC\\) is isosceles, and the angle bisectors intersect at the incenter \\(I\\). The perpendicular from \\(I\\) to \\(BC\\) creates two equal segments \\(BD\\) and \\(DC\\), each of length \\(x\\). Since \\(I\\) is the incenter, it is equidistant from all sides of the triangle, and the perpendicular from \\(I\\) to \\(BC\\) is the inradius. The length of \\(AD\\) can be found using the properties of the incenter and the given conditions. The complete answer is objectively gradable.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 144,
+  "analysis_truncated": false,
+  "context_token_count": 518,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -10.253181457519531,
+  "logprob_margin_valid_minus_invalid": 10.249999821651727,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_520682ec759baa68",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.003181635867804289,
+  "valid_score": 0.9999646437429528,
+  "variant": "direct",
+  "verdict": "VALID"
+}

@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem provides specific conditions and asks for a unique solution. The conditions are sufficient and consistent, and the answer can be objectively graded. The problem is well-defined and solvable with the given information.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 43,
+  "analysis_truncated": false,
+  "context_token_count": 427,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.75492000579834,
+  "logprob_margin_valid_minus_invalid": 9.749999726656824,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_c05f51199bcd3584",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.004920279141515493,
+  "valid_score": 0.9999417087184064,
+  "variant": "direct",
+  "verdict": "VALID"
+}

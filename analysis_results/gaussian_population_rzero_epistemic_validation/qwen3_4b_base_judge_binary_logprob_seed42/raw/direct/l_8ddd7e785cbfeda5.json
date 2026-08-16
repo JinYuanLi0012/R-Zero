@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and the full answer is objectively checkable. The conditions are sufficient to find the smallest positive integer \\( n \\) that satisfies the equation \\( n^2 + 15n + 56 = k^2 \\) for some integer \\( k \\). By solving the quadratic equation and checking for integer solutions, we can determine the smallest \\( n \\). The problem is well-defined and has a unique solution.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 91,
+  "analysis_truncated": false,
+  "context_token_count": 418,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -10.252679824829102,
+  "logprob_margin_valid_minus_invalid": 10.250000374391675,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_8ddd7e785cbfeda5",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.002679450437426567,
+  "valid_score": 0.9999646437624948,
+  "variant": "direct",
+  "verdict": "VALID"
+}

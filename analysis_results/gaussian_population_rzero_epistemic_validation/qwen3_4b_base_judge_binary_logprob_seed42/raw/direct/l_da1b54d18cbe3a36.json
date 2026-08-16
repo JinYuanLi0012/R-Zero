@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is well-defined with clear conditions. The sequence is defined recursively, and each term is determined by the previous two terms. The problem asks for the 10th term of the sequence, and the answer can be objectively verified by following the recursive definition. The conditions are sufficient, and a solution exists. The complete answer is objectively gradable.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 74,
+  "analysis_truncated": false,
+  "context_token_count": 463,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -10.503897666931152,
+  "logprob_margin_valid_minus_invalid": 10.500000213971362,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_da1b54d18cbe3a36",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.003897452959790826,
+  "valid_score": 0.9999724643147772,
+  "variant": "direct",
+  "verdict": "VALID"
+}

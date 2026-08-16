@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is well-defined and asks for the existence of a specific type of integer. The conditions are sufficient to determine the existence of such an integer, and the answer is objectively gradable. The problem is valid as written.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 48,
+  "analysis_truncated": false,
+  "context_token_count": 448,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.008919715881348,
+  "logprob_margin_valid_minus_invalid": 8.999999728053808,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_dd8e8498c407852b",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.008919987827539444,
+  "valid_score": 0.9998766053904613,
+  "variant": "direct",
+  "verdict": "VALID"
+}

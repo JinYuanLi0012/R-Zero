@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and the full answer is objectively checkable. The conditions are sufficient to find the number of ordered pairs \\((a, b)\\) that satisfy the equation \\(a^2 + b^2 = 10a + 12b\\) and the inequality \\(a < b\\). The problem is well-defined and the solution can be verified by checking all possible pairs of positive integers that meet the criteria. Therefore, the problem is valid as written.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": null,
+  "analysis_token_count": 97,
+  "analysis_truncated": false,
+  "context_token_count": 438,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.505635261535645,
+  "logprob_margin_valid_minus_invalid": 9.500000171363354,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_23375f12394c1dc4",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.005635090172290802,
+  "valid_score": 0.9999251537853143,
+  "variant": "direct",
+  "verdict": "VALID"
+}

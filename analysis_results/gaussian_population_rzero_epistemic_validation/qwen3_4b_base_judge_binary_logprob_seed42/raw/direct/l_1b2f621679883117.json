@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and the full answer is objectively checkable. We need to find all integers \\( n \\) for which \\( 2^n + 3^n \\) is a perfect square. Let's analyze the possible values of \\( n \\):\n\n1. **For \\( n = 0 \\):**\n   \\[\n   2^0 + 3^0 = 1 + 1 = 2\n   \\]\n   2 is not a perfect square.\n\n2. **For \\( n = 1 \\):**\n   \\[\n   2^1 + 3^1 = 2 + 3 = 5\n   \\]\n   5 is not a perfect square.\n\n3. **For \\( n = 2 \\):**\n   \\[\n   2^2 + 3^2 = 4 + 9 = 13\n   \\]\n   13 is not a perfect square.\n\n4. **For \\( n = 3 \\):**\n   \\[\n   2^3 + 3^3 = 8 + 27 = 35\n   \\]\n   35 is not a perfect square.\n\n5. **For \\( n = 4 \\):**\n   \\[\n   2^4 + 3^4 = 16 + 81 = 97\n   \\]\n   97 is not a perfect square.\n\n6. **For \\( n = 5 \\):**\n   \\[\n   2^5 + 3^5 = 32 + 243 = 275\n   \\]\n   275 is not a perfect square.\n\n7. **For \\( n = 6 \\):**\n   \\[\n   2^6 + 3^6 = 64 + 729 = 793\n   \\]\n   793 is not a perfect square.\n\n8. **For \\( n = 7 \\):**\n   \\[\n   2^7 + 3^7 = 128 + 2187 = 2315\n   \\]\n   2315 is not a perfect square.\n\n9. **For \\( n = 8 \\):**\n   \\[\n   2^8 + 3^8 = 256 + 6561 = 6817\n   \\]\n   6817 is not a perfect square.\n\n10. **For \\( n = 9 \\):**\n    \\[\n    2^9 + 3^9 = 512 + 19683 = 20195\n    \\]\n    20195 is not a perfect square.\n\n11. **For \\( n = 10 \\):**\n    \\[\n    2^{10} + 3^{10} = 1024 + 59049 = 60073\n    \\]\n    60073 is not a perfect square.\n\nFrom the above calculations, we can see that for \\( n \\geq 0 \\), \\( 2^n + 3^n \\) is not a perfect square. Therefore, there are no integers \\( n \\) such that \\( 2^n + 3^n \\) is a perfect square.\n",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 714,
+  "analysis_truncated": false,
+  "context_token_count": 1033,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -0.5485628843307495,
+  "logprob_margin_valid_minus_invalid": -0.375,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_1b2f621679883117",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.9235628843307495,
+  "valid_score": 0.4073334000459302,
+  "variant": "direct",
+  "verdict": "INVALID"
+}

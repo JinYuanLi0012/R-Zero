@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem provides the side lengths of a convex quadrilateral and asks for the sum of the squares of its diagonals. The conditions are sufficient and consistent, as the side lengths are given, and the problem is well-defined. The solution involves applying the Law of Cosines to the triangles formed by the diagonals, and the final answer \\(x^2 + y^2\\) can be objectively graded. Therefore, the problem is valid.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 91,
+  "analysis_truncated": false,
+  "context_token_count": 464,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.382711410522461,
+  "logprob_margin_valid_minus_invalid": 9.374999652151018,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_73823efbd8dabacb",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.007711758371442556,
+  "valid_score": 0.9999151889287775,
+  "variant": "direct",
+  "verdict": "VALID"
+}

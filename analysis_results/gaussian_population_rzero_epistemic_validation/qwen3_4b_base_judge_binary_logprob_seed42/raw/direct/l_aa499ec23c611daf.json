@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is complete and the full answer is objectively checkable. The conditions are sufficient and consistent, and a solution exists. The problem asks for all positive integers \\( n \\) and \\( m \\) that satisfy the equation \\( n^2 + 3n + 2 = 2^m \\). To determine if such solutions exist, we can analyze the equation. The left-hand side, \\( n^2 + 3n + 2 \\), is a quadratic expression that can be factored as \\( (n+1)(n+2) \\). For this product to equal a power of 2, both \\( n+1 \\) and \\( n+2 \\) must be powers of 2. Since \\( n+1 \\) and \\( n+2 \\) are consecutive integers, the only way they can both be powers of 2 is if one of them is 1 and the other is 2. This gives us the solutions \\( n = 1 \\) and \\( m = 3 \\), and \\( n = 0 \\) and \\( m = 1 \\). However, since the problem specifies positive integers, we discard \\( n = 0 \\). Therefore, the only valid solution is \\( n = 1 \\) and \\( m = 3 \\). The complete answer is objectively gradable.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 279,
+  "analysis_truncated": false,
+  "context_token_count": 607,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.127861976623535,
+  "logprob_margin_valid_minus_invalid": 9.125000402797014,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_aa499ec23c611daf",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.002861573826521635,
+  "valid_score": 0.999891103133832,
+  "variant": "direct",
+  "verdict": "VALID"
+}

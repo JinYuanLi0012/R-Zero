@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is clear and well-defined. It asks for the maximum number of non-overlapping unit squares that can be placed on a $10 \\times 10$ grid without any two squares touching at any point, including vertices. The conditions are sufficient, and a solution exists. The complete answer, which is the maximum number of such squares, can be objectively graded. Therefore, the problem is valid as written.\n",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 88,
+  "analysis_truncated": false,
+  "context_token_count": 423,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.754585266113281,
+  "logprob_margin_valid_minus_invalid": 9.749999918974936,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_5fc3bfb1249392f4",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.0045853471383452415,
+  "valid_score": 0.9999417087296161,
+  "variant": "direct",
+  "verdict": "VALID"
+}

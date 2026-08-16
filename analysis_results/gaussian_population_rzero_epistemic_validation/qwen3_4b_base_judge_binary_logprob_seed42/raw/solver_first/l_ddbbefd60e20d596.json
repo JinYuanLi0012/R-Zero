@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem provides specific conditions and constraints that can be used to determine the number of floors in each house. The sum of the floors of houses with even numbers is twice the sum of the floors of houses with odd numbers, and the product of the floors of houses numbered with prime numbers is 210. These conditions are sufficient and consistent, and a solution exists. The problem asks for the number of floors in each house, and the answer can be objectively graded. Therefore, the problem is valid.\n",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 104,
+  "analysis_truncated": false,
+  "context_token_count": 545,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.884787559509277,
+  "logprob_margin_valid_minus_invalid": 9.874999659135938,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_ddbbefd60e20d596",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.009787900373339653,
+  "valid_score": 0.9999485577687239,
+  "variant": "solver_first",
+  "verdict": "VALID"
+}

@@ -1,0 +1,27 @@
+{
+  "analysis": " The question is complete, consistent, and has one clear answer. The problem is well-defined and the answer is objectively gradable. The smallest positive integer that can be expressed as the sum of two cubes in two different ways is 1729, which is known as the Hardy-Ramanujan number. It can be expressed as 1^3 + 12^3 and 9^3 + 10^3. Therefore, the problem is valid as written.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 102,
+  "analysis_truncated": false,
+  "context_token_count": 418,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.50753116607666,
+  "logprob_margin_valid_minus_invalid": 9.500000413041562,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_52b08cf00e26c35a",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.007530753035098314,
+  "valid_score": 0.9999251538034016,
+  "variant": "direct",
+  "verdict": "VALID"
+}

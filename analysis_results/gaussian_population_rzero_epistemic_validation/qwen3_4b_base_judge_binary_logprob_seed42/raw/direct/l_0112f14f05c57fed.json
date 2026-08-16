@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is well-defined, with a clear objective to find the maximum number of directly connected towns after the king's decision. The conditions are sufficient, as the problem specifies the initial setup of 2021 towns, each connected to every other town, and the rule for closing roads based on the number of roads leading directly to each town. The solution involves understanding the implications of the king's decision and determining the maximum number of directly connected towns under the new conditions. The answer is objectively gradable, as it can be verified by checking the logic and calculations involved in the solution. Therefore, the problem is valid as written.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 130,
+  "analysis_truncated": false,
+  "context_token_count": 496,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.509902954101562,
+  "logprob_margin_valid_minus_invalid": 9.49999996367842,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_0112f14f05c57fed",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.00990299042314291,
+  "valid_score": 0.9999251537697711,
+  "variant": "direct",
+  "verdict": "VALID"
+}

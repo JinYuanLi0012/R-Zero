@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is well-defined and asks for a specific condition to be checked. The set \\( S \\) is clearly defined as the set of all positive integers that can be expressed as the sum of distinct powers of 3. The task is to determine if 2023 can be represented as an element of \\( S \\). If it can, the problem further asks to find the smallest positive integer \\( n \\) such that \\( 2023 + n \\) cannot be represented as an element of \\( S \\). This is a clear and specific request, and the answer can be objectively graded based on the correctness of the representation and the value of \\( n \\). Therefore, the problem is valid.\n",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 148,
+  "analysis_truncated": false,
+  "context_token_count": 525,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -10.005120277404785,
+  "logprob_margin_valid_minus_invalid": 9.999999543651938,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_2169ee2963108dba",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.005120733752846718,
+  "valid_score": 0.9999546021105813,
+  "variant": "direct",
+  "verdict": "VALID"
+}

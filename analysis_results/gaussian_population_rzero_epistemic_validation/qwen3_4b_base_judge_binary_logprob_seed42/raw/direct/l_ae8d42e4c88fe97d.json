@@ -1,0 +1,27 @@
+{
+  "analysis": " The question is complete, consistent, and has one clear answer. The smallest positive integer divisible by all integers from 1 to 10 is the least common multiple (LCM) of these numbers. The LCM of 1 through 10 is 2520, which is objectively gradable as the correct answer.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 71,
+  "analysis_truncated": false,
+  "context_token_count": 387,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -9.007711410522461,
+  "logprob_margin_valid_minus_invalid": 9.000000243540853,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_ae8d42e4c88fe97d",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.0077111669816076756,
+  "valid_score": 0.9998766054540618,
+  "variant": "direct",
+  "verdict": "VALID"
+}

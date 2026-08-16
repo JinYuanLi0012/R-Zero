@@ -1,0 +1,27 @@
+{
+  "analysis": " The problem is well-defined, and the set \\( S \\) is clearly specified. The task is to find the smallest positive integer that cannot be expressed as the sum of distinct Fibonacci numbers. This is a valid mathematical problem with a clear objective and a unique solution. The answer can be objectively graded based on the correctness of the identified integer.",
+  "analysis_finish_reason": "stop",
+  "analysis_stop_reason": "\nVerdict:",
+  "analysis_token_count": 71,
+  "analysis_truncated": false,
+  "context_token_count": 427,
+  "experiment_version": "binary-fewshot-logprob-v2",
+  "invalid_candidate_token_ids": [
+    32269
+  ],
+  "invalid_logprob": -10.254836082458496,
+  "logprob_margin_valid_minus_invalid": 10.25000014854595,
+  "max_analysis_tokens": 1024,
+  "model": "Qwen/Qwen3-4B-Base",
+  "opaque_binary_judge_id": "l_0bf6b6755d5e19f1",
+  "status": "success",
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "valid_candidate_token_ids": [
+    43291
+  ],
+  "valid_logprob": -0.004835933912545443,
+  "valid_score": 0.99996464375451,
+  "variant": "direct",
+  "verdict": "VALID"
+}
