@@ -6,6 +6,8 @@ RUN_ROOT=""
 MODEL="Qwen/Qwen3-4B-Base"
 GPU_IDS="0,1,2,3"
 SCORE_BATCH_SIZE=1
+MAX_ANALYSIS_TOKENS=1024
+OUTPUT_NAME="base_judge_binary_logprob"
 RESUME=0
 
 while [[ $# -gt 0 ]]; do
@@ -14,6 +16,8 @@ while [[ $# -gt 0 ]]; do
     --model) MODEL="$2"; shift 2 ;;
     --gpu-ids) GPU_IDS="$2"; shift 2 ;;
     --score-batch-size) SCORE_BATCH_SIZE="$2"; shift 2 ;;
+    --max-analysis-tokens) MAX_ANALYSIS_TOKENS="$2"; shift 2 ;;
+    --output-name) OUTPUT_NAME="$2"; shift 2 ;;
     --resume) RESUME=1; shift ;;
     *) echo "Unknown argument: $1" >&2; exit 2 ;;
   esac
@@ -26,7 +30,7 @@ fi
 
 SOURCE="$RUN_ROOT/prepared/all_samples.jsonl"
 TERRA="$RUN_ROOT/judge/judge_results.jsonl"
-OUTPUT="$RUN_ROOT/base_judge_binary_logprob"
+OUTPUT="$RUN_ROOT/$OUTPUT_NAME"
 if [[ ! -f "$SOURCE" || ! -f "$TERRA" ]]; then
   echo "Missing prepared questions or Terra reference under $RUN_ROOT" >&2
   exit 1
@@ -37,7 +41,8 @@ COMMAND=(python "$HERE/binary_logprob_judge.py"
   --output-dir "$OUTPUT"
   --model "$MODEL"
   --gpu-ids "$GPU_IDS"
-  --score-batch-size "$SCORE_BATCH_SIZE")
+  --score-batch-size "$SCORE_BATCH_SIZE"
+  --max-analysis-tokens "$MAX_ANALYSIS_TOKENS")
 if [[ "$RESUME" -eq 1 ]]; then
   COMMAND+=(--resume)
 fi

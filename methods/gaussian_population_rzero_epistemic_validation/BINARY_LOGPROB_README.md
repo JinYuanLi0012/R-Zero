@@ -39,6 +39,18 @@ Defaults are four single-GPU shards (`0,1,2,3`), temperature 0, 1024 maximum
 analysis tokens, and analysis-generation batch size 16. Candidate logprob
 scoring uses a separate one-question micro-batch because prompt-token logprobs
 materialize a large full-vocabulary tensor. Atomic artifacts allow safe resume.
+Resume additionally checks the configured analysis-token limit.
+
+To retain the 1024-token run and repeat the experiment with a doubled limit:
+
+```bash
+bash methods/gaussian_population_rzero_epistemic_validation/run_binary_logprob_judge.sh \
+  --run-root "$RUN_ROOT" \
+  --model Qwen/Qwen3-4B-Base \
+  --max-analysis-tokens 2048 \
+  --output-name base_judge_binary_logprob_2048 \
+  --resume
+```
 
 Outputs:
 

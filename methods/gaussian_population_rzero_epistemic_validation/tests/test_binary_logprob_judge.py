@@ -16,7 +16,7 @@ from binary_logprob_common import (  # noqa: E402
     build_prompt, candidate_logprob, paired_probability,
 )
 from binary_logprob_analyze import main as analyze_main  # noqa: E402
-from binary_logprob_worker import score_candidates  # noqa: E402
+from binary_logprob_worker import completed, score_candidates  # noqa: E402
 
 
 class FakeLogprob:
@@ -157,6 +157,24 @@ class RuntimeConfigurationTests(unittest.TestCase):
         launcher = (METHOD / "binary_logprob_judge.py").read_text(encoding="utf-8")
         self.assertIn('parser.add_argument("--score-batch-size", type=int, default=1)', worker)
         self.assertIn('parser.add_argument("--score-batch-size", type=int, default=1)', launcher)
+
+    def test_resume_rejects_a_different_generation_length(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "artifact.json"
+            path.write_text(
+                json.dumps(
+                    {
+                        "status": "success",
+                        "model": "Qwen/Qwen3-4B-Base",
+                        "variant": "solver_first",
+                        "experiment_version": "binary-fewshot-logprob-v2",
+                        "max_analysis_tokens": 1024,
+                    }
+                ),
+                encoding="utf-8",
+            )
+            self.assertTrue(completed(path, "Qwen/Qwen3-4B-Base", "solver_first", 1024))
+            self.assertFalse(completed(path, "Qwen/Qwen3-4B-Base", "solver_first", 2048))
 
 
 if __name__ == "__main__":

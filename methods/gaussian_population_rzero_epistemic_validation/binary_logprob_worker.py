@@ -33,7 +33,7 @@ def arguments() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def completed(path: Path, model: str, variant: str) -> bool:
+def completed(path: Path, model: str, variant: str, max_analysis_tokens: int) -> bool:
     if not path.is_file():
         return False
     try:
@@ -43,6 +43,7 @@ def completed(path: Path, model: str, variant: str) -> bool:
             and artifact.get("model") == model
             and artifact.get("variant") == variant
             and artifact.get("experiment_version") == EXPERIMENT_VERSION
+            and artifact.get("max_analysis_tokens") == max_analysis_tokens
         )
     except (OSError, json.JSONDecodeError):
         return False
@@ -116,7 +117,10 @@ def main() -> None:
         variant_dir = args.output_dir / variant
         for item in items:
             path = variant_dir / f"{item['opaque_binary_judge_id']}.json"
-            if not (args.resume and completed(path, args.model, variant)):
+            if not (
+                args.resume
+                and completed(path, args.model, variant, args.max_analysis_tokens)
+            ):
                 work.append((variant, item, path))
     if not work:
         return
