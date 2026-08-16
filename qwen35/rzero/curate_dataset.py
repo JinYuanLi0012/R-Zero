@@ -40,6 +40,29 @@ def repeat_for_integration(records: list[dict], minimum_rows: int) -> list[dict]
     return expanded
 
 
+def filter_candidates(
+    rows: list[dict], minimum: float, maximum: float, deduplicate_questions: bool = False
+) -> tuple[list[dict], int, int]:
+    """Apply released difficulty/answer filtering, optionally deduplicating.
+
+    Released R-Zero preserves every accepted row in shard order. Deduplication
+    remains an explicit integration-only option and is never enabled formally.
+    """
+    accepted = [
+        item
+        for item in rows
+        if minimum <= float(item.get("score", -1)) <= maximum
+        and item.get("answer") not in {"", "None", None}
+    ]
+    if not deduplicate_questions:
+        return accepted, len(accepted), 0
+    unique: dict[str, dict] = {}
+    for item in accepted:
+        key = " ".join(str(item["question"]).split())
+        unique.setdefault(key, item)
+    return list(unique.values()), len(accepted), len(accepted) - len(unique)
+
+
 def curate(
     inputs: list[Path],
     output: Path,
@@ -48,25 +71,17 @@ def curate(
     fallback: Path | None = None,
     minimum_rows: int = 1,
     repeat_to_minimum: bool = False,
+    deduplicate_questions: bool = False,
 ) -> dict[str, int | bool]:
     rows = []
     for path in inputs:
         rows.extend(json.loads(path.read_text(encoding="utf-8")))
-    accepted = [
-        item
-        for item in rows
-        if minimum <= float(item.get("score", -1)) <= maximum
-        and item.get("answer") not in {"", "None", None}
-    ]
-    # The migration plan requires merge-time de-duplication. Keep first occurrence
-    # so shard ordering makes the result deterministic.
-    unique: dict[str, dict] = {}
-    for item in accepted:
-        key = " ".join(str(item["question"]).split())
-        unique.setdefault(key, item)
+    selected, accepted_count, duplicates_removed = filter_candidates(
+        rows, minimum, maximum, deduplicate_questions
+    )
     records = [
         solver_record(item["question"], item["answer"], float(item["score"]), index)
-        for index, item in enumerate(unique.values())
+        for index, item in enumerate(selected)
     ]
     from datasets import Dataset, load_dataset
 
@@ -92,8 +107,10 @@ def curate(
     os.replace(temporary, output)
     return {
         "scored": len(rows),
-        "accepted": len(accepted),
+        "accepted": accepted_count,
         "deduplicated": unique_rows,
+        "deduplication_enabled": deduplicate_questions,
+        "duplicates_removed": duplicates_removed,
         "training_rows": len(records),
         "repeated_for_integration": len(records) - unique_rows,
         "used_smoke_fallback": used_fallback,
@@ -110,6 +127,7 @@ def main() -> None:
     parser.add_argument("--fallback", type=Path)
     parser.add_argument("--minimum-rows", type=int, default=1)
     parser.add_argument("--repeat-to-minimum", action="store_true")
+    parser.add_argument("--deduplicate-questions", action="store_true")
     args = parser.parse_args()
     metadata = curate(
         args.input,
@@ -119,6 +137,7 @@ def main() -> None:
         args.fallback,
         args.minimum_rows,
         args.repeat_to_minimum,
+        args.deduplicate_questions,
     )
     if args.metadata:
         args.metadata.parent.mkdir(parents=True, exist_ok=True)

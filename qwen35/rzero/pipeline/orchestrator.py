@@ -369,7 +369,7 @@ class Pipeline:
                                 self.python, "-m", "qwen35.rzero.generate_candidates",
                                 "--model", str(model), "--output", str(output),
                                 "--samples", str(cfg["generation"]["samples_per_shard"]),
-                                "--seed", str(cfg["algorithm"]["seed"] + shard),
+                                "--seed", str(shard),
                                 "--temperature", str(cfg["generation"]["temperature"]),
                                 "--top-p", str(cfg["generation"]["top_p"]),
                                 "--max-tokens", str(cfg["generation"]["max_tokens"]),
@@ -393,7 +393,7 @@ class Pipeline:
                                 self.python, "-m", "qwen35.rzero.evaluate_candidates",
                                 "--model", str(model), "--input", str(source), "--output", str(output),
                                 "--samples", str(cfg["algorithm"]["candidate_vote_samples"]),
-                                "--seed", str(cfg["algorithm"]["seed"] + shard),
+                                "--seed", str(shard),
                             ],
                             rd / "logs" / f"evaluate_{shard}.log",
                             env={"CUDA_VISIBLE_DEVICES": str(shard), "VLLM_USE_V1": "1"},
@@ -416,10 +416,12 @@ class Pipeline:
             ])
             if cfg.get("profile", "formal") != "formal":
                 curate_command.append("--repeat-to-minimum")
+            if cfg.get("curation", {}).get("deduplicate_questions", False):
+                curate_command.append("--deduplicate-questions")
             if cfg.get("curation", {}).get("allow_smoke_fallback", False):
                 curate_command.extend(["--fallback", str(self.seed_data / "solver_val.parquet")])
             scored_inputs = [Artifact(round_dir / "scored" / f"shard_{shard}.json", "json") for shard in range(cfg["generation"]["shards"])]
-            stages.append(Stage(f"{prefix}.curate", [Artifact(dataset), Artifact(metadata, "json")], lambda command=curate_command, rd=round_dir: self._run(command, rd / "logs" / "curate.log"), "merge, filter and deduplicate local Parquet", scored_inputs))
+            stages.append(Stage(f"{prefix}.curate", [Artifact(dataset), Artifact(metadata, "json")], lambda command=curate_command, rd=round_dir: self._run(command, rd / "logs" / "curate.log"), "merge and filter local Parquet while preserving released ordering", scored_inputs))
             s_stage_key = f"{prefix}.solver_train"
             stages.append(Stage(s_stage_key, [Artifact(s_actor, "checkpoint")], lambda n=round_number, model=solver_model, key=s_stage_key: self._train_solver(n, model, key), "train Solver on all four GPUs", [Artifact(dataset), Artifact(solver_model, "model"), Artifact(self.seed_data / "solver_val.parquet")]))
             stages.append(Stage(f"{prefix}.solver_export", [Artifact(s_export, "model")], lambda root=s_checkpoints, target=s_export, rd=round_dir: self._export(root, cfg["algorithm"]["solver_steps"], target, rd / "logs" / "solver_export.log"), "merge Solver FSDP checkpoint", [Artifact(s_actor, "checkpoint")]))

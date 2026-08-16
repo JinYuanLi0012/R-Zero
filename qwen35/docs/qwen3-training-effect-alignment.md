@@ -33,6 +33,10 @@ mini-batch 实际包含 `16 × 4 = 64` trajectories；每个外层 batch 是
 | Questioner PPO mini-batch（prompts） | 16 | 4 | 否 | **16** | 新旧 verl 都按 `n` 展开；4 会多做四倍 optimizer mini-batch | 效果等价回归测试 |
 | Questioner trajectories/update | 64 | 16 | 否 | **64** | `ppo_mini × n` | 回归测试 |
 | Questioner mini-batches/outer step | 32 | 128 | 否 | **32** | `prompt_batch / ppo_mini` | 回归测试 |
+| PPO clip low/high | 0.2 / 0.3 | 0.2 / 0.2（verl 默认） | 否 | **0.2 / 0.3** | 直接改变 vanilla policy objective | 命令与配置 invariant |
+| dual-clip constant | 3.0 | 3.0（新字段 `clip_ratio_c`） | 字段改名 | **3.0** | 旧 `clip_ratio_dual` 映射到新 `clip_ratio_c` | 命令回归测试 |
+| GRPO rollout temperature/top-p | 1.0 / 0.99 | 1.0 / 1.0（verl 默认） | 否 | **1.0 / 0.99** | 影响 Questioner/Solver 训练 trajectories | 命令回归测试 |
+| GRPO rollout seed | 1 | 42（verl 默认） | 否 | **1** | 与 data seed 分离，必须显式覆盖 | 命令回归测试 |
 | Questioner update micro/GPU | 2 | 1 | 是，Qwen3.5 稳定性 | 先保留 1 | 锁定 verl 的 Qwen3.5 FSDP recipe 使用 1；只影响内存拆分 | 独立测试 1→2，记录峰值显存/吞吐 |
 | ref/rollout log-prob micro/GPU | 8 | 1 | 是，Qwen3.5 稳定性 | 先保留 1 | 官方 Qwen3.5 FSDP recipe 使用 1；较小值可能增加前向开销 | 独立测试 1→2→4→8 |
 | max response length | 4096 | 4096 | 否 | 4096 | penalty 脚本覆盖默认值 | 命令回归测试 |
@@ -44,6 +48,8 @@ mini-batch 实际包含 `16 × 4 = 64` trajectories；每个外层 batch 是
 | rollout tensor parallel | 2 | 1 | 拓扑相关 | 暂不改 | 不能脱离 2+2 Questioner/Solver 拓扑机械对齐 | 独立拓扑/吞吐验证 |
 | 在线 Solver samples | 10 | 10 | 否 | 10 | Challenger 奖励采样语义 | reward service 测试 |
 | Challenger population | 2048 | 2048 | 否 | 2048 | `512 × 4`，BLEU 聚类必须覆盖完整 population | population manager 测试 |
+| 离线 shard seeds | 0,1,2,3 | 1,2,3,4 | 否 | **0,1,2,3** | 原版以 GPU suffix 直接作为 vLLM seed | pipeline 命令测试 |
+| 正式 curation 去重 | 不去重 | 规范空白后保留首次 | 否 | **不去重** | 去重会改变 Solver 数据集大小和采样分布 | duplicate parity test |
 | Solver prompt/rollout/mini | 512 / 5 / 128 | 512 / 5 / 128 | 否 | 保持 | 640 trajectories/update；本次没有相反证据 | 配置及命令回归测试 |
 | 下游 checkpoint | Q step 5 / S step 15 | 相同 | 否 | 保持 | 发布流程语义 | 配置与 pipeline 测试 |
 

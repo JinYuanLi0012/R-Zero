@@ -1,9 +1,30 @@
 import unittest
 
-from qwen35.rzero.curate_dataset import repeat_for_integration
+from qwen35.rzero.curate_dataset import filter_candidates, repeat_for_integration
 
 
 class CurateDatasetTests(unittest.TestCase):
+    def test_released_filter_preserves_duplicate_questions_and_order(self):
+        rows = [
+            {"question": "same question", "answer": "1", "score": 0.4},
+            {"question": "same   question", "answer": "2", "score": 0.6},
+            {"question": "too hard", "answer": "3", "score": 0.9},
+        ]
+        selected, accepted, removed = filter_candidates(rows, 0.3, 0.8)
+        self.assertEqual(selected, rows[:2])
+        self.assertEqual(accepted, 2)
+        self.assertEqual(removed, 0)
+
+    def test_deduplication_remains_explicit_and_keeps_first(self):
+        rows = [
+            {"question": "same question", "answer": "1", "score": 0.4},
+            {"question": "same   question", "answer": "2", "score": 0.6},
+        ]
+        selected, accepted, removed = filter_candidates(rows, 0.3, 0.8, True)
+        self.assertEqual(selected, rows[:1])
+        self.assertEqual(accepted, 2)
+        self.assertEqual(removed, 1)
+
     def test_integration_repeat_is_deterministic_and_preserves_sources(self):
         records = [
             {"prompt": "a", "extra_info": {"index": 0}},

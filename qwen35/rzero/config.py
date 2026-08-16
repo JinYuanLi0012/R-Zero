@@ -99,6 +99,13 @@ def validate_config(config: dict[str, Any]) -> None:
         "solver_prompt_batch_size": 512,
         "questioner_update_batch_size": 16,
         "solver_update_batch_size": 128,
+        "ppo_clip_ratio": 0.2,
+        "ppo_clip_ratio_low": 0.2,
+        "ppo_clip_ratio_high": 0.3,
+        "ppo_clip_ratio_c": 3.0,
+        "training_rollout_temperature": 1.0,
+        "training_rollout_top_p": 0.99,
+        "training_rollout_seed": 1,
         "questioner_solver_samples": 10,
         "candidate_vote_samples": 9,
         "difficulty_min": 0.3,
@@ -114,3 +121,5 @@ def validate_config(config: dict[str, Any]) -> None:
         raise ConfigError(f"formal candidate count must be 8000, got {total}")
     if config["checkpoint"].get("save_freq") != 1 or config["checkpoint"].get("keep") != 2:
         raise ConfigError("checkpoint policy must save every step and retain two")
+    if config.get("curation", {}).get("deduplicate_questions") is not False:
+        raise ConfigError("formal curation must preserve duplicate questions like released R-Zero")

@@ -159,6 +159,29 @@ class PipelineTests(unittest.TestCase):
             minimum_index = smoke_calls[0].index("--minimum-rows")
             self.assertEqual(smoke_calls[0][minimum_index + 1], "4")
 
+    def test_formal_shard_seeds_and_curation_match_released_pipeline(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            pipeline = Pipeline(self.args(Path(temporary) / "formal"))
+            calls = []
+            pipeline._run = lambda command, *args, **kwargs: calls.append(command)
+            stages = {stage.key: stage for stage in pipeline.stages()}
+            for shard in range(4):
+                stages[f"round_01.generate.{shard}"].action()
+                stages[f"round_01.evaluate.{shard}"].action()
+            stages["round_01.curate"].action()
+
+            generate_calls = calls[:8:2]
+            evaluate_calls = calls[1:8:2]
+            self.assertEqual(
+                [command[command.index("--seed") + 1] for command in generate_calls],
+                ["0", "1", "2", "3"],
+            )
+            self.assertEqual(
+                [command[command.index("--seed") + 1] for command in evaluate_calls],
+                ["0", "1", "2", "3"],
+            )
+            self.assertNotIn("--deduplicate-questions", calls[-1])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -98,6 +98,12 @@ sbatch qwen35/scripts/ris_formal.sbatch
 训练。不要更换正式 run directory，也不要对它使用 smoke 配置。正式 curation 若不足
 512 条会在 Solver 训练前明确失败，禁止用 integration repeat 补齐正式数据。
 
+2026-08-16 的效果语义复审又固定了四项发布代码条件：PPO clip low/high
+`0.2/0.3` 与 dual-clip `3.0`、GRPO rollout `top_p=0.99`/seed 1、离线 shard
+seed `0,1,2,3`，以及正式 curation 不去重。它们均进入正式 config fingerprint。
+任何基于旧 fingerprint 创建的 `runs/rzero-qwen35-formal` 都不得续跑；若旧正式
+作业已经启动，应取消，并改用修复后的空正式 run directory。
+
 curation 现始终检查输出至少能组成一个 Solver training batch。正式 profile 不足
 512 行会在 curate 阶段提前失败，绝不重复训练题；只有非正式集成 profile 才允许
 确定性重复已有题目到一个 batch，并在 `curation.json` 分别登记唯一题数、训练行数
@@ -579,9 +585,9 @@ Slurm 下默认根目录是：
 
 这些只是可重建缓存。`--run-dir` 必须继续指向 `/storage1` 下的持久目录。
 
-## 下一验收点
+## 历史 Round 0 提交记录（已完成，不再执行）
 
-下一步只提交缩小版四卡 Round 0，不直接开始正式五轮。仓库已经提供
+以下内容记录此前缩小版四卡 Round 0 的提交方法，仅用于追溯，不是当前下一步。仓库提供
 `qwen35/scripts/ris_round0_smoke.sbatch`，固定请求单节点、4 GPU、32 CPU、
 512 GB RAM 和 8 小时。[RIS Compute2 General Guidelines](https://washu.atlassian.net/wiki/spaces/RUD/pages/2140667974/Compute2%2BGeneral%2BGuidelines)
 记录的 `general-gpu` 上限为 15 天，因此该时限合法；

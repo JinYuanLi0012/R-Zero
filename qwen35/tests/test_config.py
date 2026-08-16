@@ -44,6 +44,13 @@ class ConfigTests(unittest.TestCase):
         )
         self.assertEqual(algorithm["questioner_steps"], 5)
         self.assertEqual(algorithm["solver_steps"], 15)
+        self.assertEqual(algorithm["ppo_clip_ratio"], 0.2)
+        self.assertEqual(algorithm["ppo_clip_ratio_low"], 0.2)
+        self.assertEqual(algorithm["ppo_clip_ratio_high"], 0.3)
+        self.assertEqual(algorithm["ppo_clip_ratio_c"], 3.0)
+        self.assertEqual(algorithm["training_rollout_temperature"], 1.0)
+        self.assertEqual(algorithm["training_rollout_top_p"], 0.99)
+        self.assertEqual(algorithm["training_rollout_seed"], 1)
 
     def test_rejects_candidate_scale_drift(self):
         config = load_config(CONFIG)
@@ -85,6 +92,13 @@ class ConfigTests(unittest.TestCase):
             "candidate_vote_samples",
             "difficulty_min",
             "difficulty_max",
+            "ppo_clip_ratio",
+            "ppo_clip_ratio_low",
+            "ppo_clip_ratio_high",
+            "ppo_clip_ratio_c",
+            "training_rollout_temperature",
+            "training_rollout_top_p",
+            "training_rollout_seed",
         )
         for key in retained:
             self.assertEqual(one_step["algorithm"][key], formal["algorithm"][key])
@@ -94,6 +108,15 @@ class ConfigTests(unittest.TestCase):
         self.assertEqual(one_step["generation"]["shards"], 4)
         self.assertEqual(one_step["generation"]["samples_per_shard"], 512)
         self.assertFalse(one_step["curation"]["allow_smoke_fallback"])
+        self.assertFalse(formal["curation"]["deduplicate_questions"])
+        self.assertFalse(one_step["curation"]["deduplicate_questions"])
+
+    def test_rejects_formal_deduplication(self):
+        config = load_config(CONFIG)
+        config = copy.deepcopy({key: value for key, value in config.items() if not key.startswith("_")})
+        config["curation"]["deduplicate_questions"] = True
+        with self.assertRaisesRegex(ConfigError, "preserve duplicate"):
+            validate_config(config)
 
     def test_rejects_update_batch_larger_than_prompt_batch(self):
         config = load_config(SMOKE_CONFIG)

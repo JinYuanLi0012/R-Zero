@@ -17,9 +17,12 @@ adaptation and fault-tolerant orchestration.
   16-prompt optimizer mini-batch (64 trajectories/mini-batch, 32 mini-batches
   per outer batch); Solver uses 512 prompts, `n=5` and a 128-prompt optimizer
   mini-batch (640 trajectories/mini-batch)
+- Released PPO/rollout semantics: asymmetric clip `[-20%, +30%]`, dual-clip
+  constant 3.0, training rollout temperature 1.0, `top_p=0.99` and seed 1
 - Released-code voting: online Challenger Solver `n=10`, candidate curation `m=9`
 - Difficulty interval `[0.3, 0.8]`
-- Four generation shards × 2000 = 8000 raw candidates per round
+- Four generation shards × 2000 = 8000 raw candidates per round, seeded 0–3
+- Formal curation preserves all accepted rows in shard order, including duplicate questions
 - Checkpoint every completed step; retain the latest two complete checkpoints
 
 The Challenger stage uses GPUs 0–1 for Questioner training and GPUs 2–3 for

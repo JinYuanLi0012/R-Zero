@@ -32,6 +32,13 @@
     "seed": 1,
     "kl_coef": 0.01,
     "learning_rate": 0.000001,
+    "ppo_clip_ratio": 0.2,
+    "ppo_clip_ratio_low": 0.2,
+    "ppo_clip_ratio_high": 0.3,
+    "ppo_clip_ratio_c": 3.0,
+    "training_rollout_temperature": 1.0,
+    "training_rollout_top_p": 0.99,
+    "training_rollout_seed": 1,
     "questioner_steps": 5,
     "solver_steps": 15,
     "questioner_rollouts": 4,
@@ -61,7 +68,8 @@
     "max_tokens": 4096
   },
   "curation": {
-    "allow_smoke_fallback": false
+    "allow_smoke_fallback": false,
+    "deduplicate_questions": false
   },
   "checkpoint": {
     "save_freq": 1,
