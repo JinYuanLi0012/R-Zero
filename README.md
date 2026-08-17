@@ -1,5 +1,8 @@
 # *R-Zero*: Self-Evolving Reasoning LLM from Zero Data
 
+The two-pass, blind Terra dataset builder for validity-aware GRPO preparation is
+available under [`methods/validity_rl_terra_dataset`](methods/validity_rl_terra_dataset/README.md).
+
 An offline V1–V3 epistemic-disagreement validation pipeline is available under
 [`methods/gaussian_population_rzero_epistemic_validation`](methods/gaussian_population_rzero_epistemic_validation/README.md).
 

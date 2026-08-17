@@ -4,5 +4,6 @@ tokens.json
 .env
 logs/
 wandb/
+analysis_results/
 __pycache__/
 *.pyc
