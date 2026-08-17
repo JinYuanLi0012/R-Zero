@@ -12,6 +12,11 @@ exposes round, historical score, pseudo-answer, or split. Terra runs two passes:
    `methods/gaussian_population_rzero_epistemic_validation/judge.py`.
 2. A fresh solution and canonical-answer verification for A questions only.
 
+By default both passes use `gpt-5.6-sol` through the OpenAI Batch API's
+`/v1/responses` endpoint. The validity batch must finish before the A-only answer
+batch is constructed. Batch output order is ignored; opaque `custom_id` values
+are used for every join.
+
 A maps to `VALID`; B-F map to `INVALID`. An A question enters `train.jsonl` or
 `validation.jsonl` only if the second pass returns a non-empty verified answer at
 or above the configured confidence threshold (0.8 by default). Other A questions
@@ -29,7 +34,6 @@ export OPENAI_API_KEY=...
 export OUTPUT_DIR=analysis_results/validity_rl_terra_dataset_smoke_50
 export PER_ROUND=10
 export TRAIN_PER_ROUND=8
-export CONCURRENCY=4
 bash methods/validity_rl_terra_dataset/run.sh
 ```
 
@@ -45,15 +49,14 @@ export OPENAI_API_KEY=...
 export OUTPUT_DIR=analysis_results/validity_rl_terra_dataset_v1
 export PER_ROUND=460
 export TRAIN_PER_ROUND=400
-export CONCURRENCY=4
 bash methods/validity_rl_terra_dataset/run.sh
 ```
 
-Defaults are seed 42, model `gpt-5.6-terra`, high reasoning effort, 16,384 maximum
-output tokens, three attempts, and four concurrent calls. Override `MODEL` or
-`CONCURRENCY` through the environment. The terminal prints each pipeline stage
-and Terra completion counters at roughly 1% intervals (every question for the
-50-question smoke run). The five default sources are:
+Defaults are seed 42, model `gpt-5.6-sol`, Batch mode, high reasoning effort,
+16,384 maximum output tokens, three attempts, and a 60-second polling interval.
+Override `MODEL` or `BATCH_POLL_SECONDS` through the environment. The terminal
+prints each pipeline stage plus the OpenAI batch ID, status, completed count, and
+failed count on every poll. The five default sources are:
 
 - `jinyuan222/qwen3_4b_fullrun_authorsettings_solver_v1`
 - `jinyuan222/qwen3_4b_fullrun_authorsettings_solver_v2`
@@ -77,10 +80,20 @@ in `prepare_manifest.json`.
 
 ## Resume and audit behavior
 
-Per-question, per-pass artifacts are written atomically under `artifacts/`.
-Rerunning the same command reuses completed artifacts. A changed model, prompt
-version, or question is rejected instead of silently mixing annotations; use a
-new `OUTPUT_DIR` for a changed experiment.
+Batch IDs and lifecycle state are written atomically under `batch/`. If the
+terminal disconnects, the remote batch continues; rerunning the same command
+retrieves the saved batch ID and resumes polling/downloading. Per-question,
+per-pass artifacts are written atomically under `artifacts/`. Parse errors,
+request errors, expired requests, and unverified answers are resubmitted in a
+smaller follow-up batch, up to three attempts. A failed or cancelled entire
+batch stops the pipeline for inspection instead of blindly resubmitting it.
+
+A changed model, prompt version, question set, or annotation configuration is
+rejected instead of silently mixing annotations; use a new `OUTPUT_DIR` for a
+changed experiment. The Batch API completion window is 24 hours per pass, so the
+two dependent passes can take up to roughly 48 hours. For debugging only, the old
+synchronous path remains available with `ANNOTATION_MODE=sync` and
+`CONCURRENCY=4`.
 
 The final directory contains:
 
@@ -96,6 +109,12 @@ analysis/dataset_statistics.json
 analysis/report.md
 artifacts/validity/*.json
 artifacts/answer/*.json
+batch/validity/state.json
+batch/validity/input_*.jsonl
+batch/validity/output_*.jsonl
+batch/answer/state.json
+batch/answer/input_*.jsonl
+batch/answer/output_*.jsonl
 ```
 
 `terra_raw_results.jsonl` retains every parsed attempt and the complete raw API

@@ -260,7 +260,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--input", type=Path, required=True, help="terra_blind_input.jsonl")
     parser.add_argument("--output-dir", type=Path, required=True)
-    parser.add_argument("--model", default="gpt-5.6-terra")
+    parser.add_argument("--model", default="gpt-5.6-sol")
     parser.add_argument("--reasoning-effort", choices=("low", "medium", "high"), default="high")
     parser.add_argument("--max-output-tokens", type=int, default=16384)
     parser.add_argument("--concurrency", type=int, default=4)
