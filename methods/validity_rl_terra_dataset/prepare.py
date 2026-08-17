@@ -167,7 +167,10 @@ def main() -> None:
     locations = parse_sources(args.source)
     rows_by_round, provenance = {}, {}
     for round_name, location in sorted(locations.items()):
+        print(f"[prepare] loading {round_name.upper()} from {location}", flush=True)
         rows_by_round[round_name], provenance[round_name] = load_source(location, args.revision)
+        print(f"[prepare] loaded {round_name.upper()}: {len(rows_by_round[round_name])} rows", flush=True)
+    print("[prepare] globally deduplicating and sampling questions", flush=True)
     sampled, stats = sample_rows(
         rows_by_round, args.per_round, args.train_per_round, args.seed, args.question_field
     )
@@ -185,6 +188,15 @@ def main() -> None:
         "sampling_statistics": stats,
         "sampled_count": len(sampled),
     })
+    split_counts = {
+        split: sum(row["split"] == split for row in sampled) for split in ("train", "validation")
+    }
+    print(
+        f"[prepare] complete: sampled={len(sampled)} train={split_counts['train']} "
+        f"validation={split_counts['validation']} duplicates_removed="
+        f"{stats['duplicate_occurrences_removed']}",
+        flush=True,
+    )
 
 
 if __name__ == "__main__":

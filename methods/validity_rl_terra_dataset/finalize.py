@@ -152,6 +152,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output-dir", type=Path, required=True)
     args = parser.parse_args()
+    print(f"[finalize] reading annotations from {args.output_dir}", flush=True)
     sampled = read_jsonl(args.output_dir / "sampled_questions.jsonl")
     raw = read_jsonl(args.output_dir / "terra_raw_results.jsonl")
     train, validation, failed, stats = finalize(sampled, raw)
@@ -180,6 +181,11 @@ def main() -> None:
         "annotation_timestamp_utc": datetime.now(timezone.utc).isoformat(),
         "statistics": stats,
     })
+    print(
+        f"[finalize] complete: eligible_train={len(train)} "
+        f"eligible_validation={len(validation)} failed_or_uncertain={len(failed)}",
+        flush=True,
+    )
 
 
 if __name__ == "__main__":

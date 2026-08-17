@@ -49,9 +49,11 @@ export CONCURRENCY=4
 bash methods/validity_rl_terra_dataset/run.sh
 ```
 
-Defaults are seed 42, model `gpt-5.6`, high reasoning effort, 16,384 maximum
+Defaults are seed 42, model `gpt-5.6-terra`, high reasoning effort, 16,384 maximum
 output tokens, three attempts, and four concurrent calls. Override `MODEL` or
-`CONCURRENCY` through the environment. The five default sources are:
+`CONCURRENCY` through the environment. The terminal prints each pipeline stage
+and Terra completion counters at roughly 1% intervals (every question for the
+50-question smoke run). The five default sources are:
 
 - `jinyuan222/qwen3_4b_fullrun_authorsettings_solver_v1`
 - `jinyuan222/qwen3_4b_fullrun_authorsettings_solver_v2`

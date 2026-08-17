@@ -62,7 +62,7 @@ class PipelineTests(unittest.TestCase):
             fixture.write_text(json.dumps({"default": [uncertain, verified]}), encoding="utf-8")
             artifact = run_one(
                 {"id": "q_test", "question": "What is 1+1?"}, "answer", root / "result.json",
-                "gpt-5.6", 3, 0.8, "high", 1024, fixture,
+                "gpt-5.6-terra", 3, 0.8, "high", 1024, fixture,
             )
             self.assertEqual(artifact["status"], "complete")
             self.assertEqual(len(artifact["attempts"]), 2)

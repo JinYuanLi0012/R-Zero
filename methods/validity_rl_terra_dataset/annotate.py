@@ -224,6 +224,16 @@ def run_many(
 ) -> list[dict[str, Any]]:
     artifact_dir.mkdir(parents=True, exist_ok=True)
     results = []
+    total = len(items)
+    report_every = max(1, total // 100)
+    print(
+        f"[terra:{pass_name}] starting {total} questions with concurrency={concurrency}",
+        flush=True,
+    )
+    if total == 0:
+        print(f"[terra:{pass_name}] complete: 0/0", flush=True)
+        return results
+    status_counts = {"complete": 0, "uncertain": 0, "failed": 0}
     with ThreadPoolExecutor(max_workers=concurrency) as executor:
         futures = {
             executor.submit(
@@ -232,7 +242,17 @@ def run_many(
             ): item for item in items
         }
         for future in as_completed(futures):
-            results.append(future.result())
+            result = future.result()
+            results.append(result)
+            status_counts[result["status"]] = status_counts.get(result["status"], 0) + 1
+            completed = len(results)
+            if completed == total or completed % report_every == 0:
+                print(
+                    f"[terra:{pass_name}] {completed}/{total} ({completed / total:.0%}) "
+                    f"complete={status_counts['complete']} "
+                    f"uncertain={status_counts['uncertain']} failed={status_counts['failed']}",
+                    flush=True,
+                )
     return sorted(results, key=lambda row: row["id"])
 
 
@@ -240,7 +260,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--input", type=Path, required=True, help="terra_blind_input.jsonl")
     parser.add_argument("--output-dir", type=Path, required=True)
-    parser.add_argument("--model", default="gpt-5.6")
+    parser.add_argument("--model", default="gpt-5.6-terra")
     parser.add_argument("--reasoning-effort", choices=("low", "medium", "high"), default="high")
     parser.add_argument("--max-output-tokens", type=int, default=16384)
     parser.add_argument("--concurrency", type=int, default=4)
