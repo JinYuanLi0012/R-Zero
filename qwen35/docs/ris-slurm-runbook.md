@@ -104,6 +104,16 @@ token 文件不属于训练依赖，也不设置 `HF_TOKEN`；固定评估在五
 训练。不要更换正式 run directory，也不要对它使用 smoke 配置。正式 curation 若不足
 512 条会在 Solver 训练前明确失败，禁止用 integration repeat 补齐正式数据。
 
+2026-08-17 首次正式运行完成 Round 1 Questioner 训练和导出后，候选生成的 GPU 0/1
+shard 正常启动，而 GPU 2/3 shard 启动时只剩约 7.7 GiB 空闲显存。占用与前一阶段
+GPU 2/3 上两个冻结 Solver vLLM 服务一致：orchestrator 只终止 Flask 父进程，未将
+vLLM 以 `spawn` 创建的 EngineCore 子进程纳入生命周期，导致子进程继续持有 CUDA
+context。Solver 服务现各自在独立 POSIX session/process group 中启动；Questioner
+训练结束后先同时向两组发送 SIGTERM，等待整组退出，30 秒后仍存活才升级为
+SIGKILL。该修复不改变模型、采样、GPU 拓扑或 run fingerprint。失败的 Slurm step
+退出后其 cgroup 已清理残留进程；更新代码后对同一正式 run directory 普通
+`--resume`，已提交 stage/shard 会跳过，只重跑缺失 shard。
+
 2026-08-16 的效果语义复审又固定了四项发布代码条件：PPO clip low/high
 `0.2/0.3` 与 dual-clip `3.0`、GRPO rollout `top_p=0.99`/seed 1、离线 shard
 seed `0,1,2,3`，以及正式 curation 不去重。它们均进入正式 config fingerprint。

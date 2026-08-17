@@ -1,6 +1,7 @@
 import argparse
 import io
 import json
+import signal
 import tempfile
 import unittest
 from contextlib import redirect_stdout
@@ -119,7 +120,12 @@ class PipelineTests(unittest.TestCase):
 
     def test_questioner_solver_services_use_os_assigned_ports(self):
         class FakeProcess:
+            next_pid = 41000
             returncode = None
+
+            def __init__(self):
+                type(self).next_pid += 1
+                self.pid = type(self).next_pid
 
             def poll(self):
                 return self.returncode
@@ -136,22 +142,33 @@ class PipelineTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             pipeline = Pipeline(self.args(Path(temporary) / "run"))
             service_commands = []
+            service_options = []
             training_calls = []
             endpoints = iter(["http://127.0.0.1:41001", "http://127.0.0.1:41002"])
 
             def fake_popen(command, **kwargs):
                 service_commands.append(command)
+                service_options.append(kwargs)
                 return FakeProcess()
 
             pipeline._wait_for_service_receipt = lambda receipt, process: next(endpoints)
             pipeline._run = lambda command, *args, **kwargs: training_calls.append((command, kwargs))
-            with patch("qwen35.rzero.pipeline.orchestrator.subprocess.Popen", side_effect=fake_popen):
+            with (
+                patch("qwen35.rzero.pipeline.orchestrator.subprocess.Popen", side_effect=fake_popen),
+                patch("qwen35.rzero.pipeline.orchestrator._process_group_alive", return_value=False),
+                patch("qwen35.rzero.pipeline.orchestrator.os.killpg") as killpg,
+            ):
                 pipeline._train_questioner(1, Path("/questioner"), Path("/solver"), "round_01.questioner_train")
 
             self.assertEqual(len(service_commands), 2)
             for command in service_commands:
                 self.assertEqual(command[command.index("--port") + 1], "0")
                 self.assertIn("--port-file", command)
+            self.assertTrue(all(options["start_new_session"] for options in service_options))
+            self.assertEqual(
+                [call.args[1] for call in killpg.call_args_list],
+                [signal.SIGTERM, signal.SIGTERM],
+            )
             self.assertEqual(
                 training_calls[0][1]["env"]["RZERO_SOLVER_ENDPOINTS"],
                 "http://127.0.0.1:41001,http://127.0.0.1:41002",

@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import signal
 import shutil
 import subprocess
 import sys
@@ -19,6 +20,47 @@ from typing import Callable
 from qwen35.rzero.config import load_config
 from qwen35.rzero.official_verl import build_pythonpath, verl_source_root
 from qwen35.rzero.pipeline.state import Artifact, RunState, StateError, atomic_write_json, canonical_hash, validate_artifact
+
+
+def _process_group_alive(process_group: int) -> bool:
+    try:
+        os.killpg(process_group, 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+    return True
+
+
+def _terminate_process_groups(processes: list[subprocess.Popen], timeout: float = 30) -> None:
+    """Stop service parents and spawned vLLM EngineCore children together."""
+    groups = {process.pid: process for process in processes}
+    for process_group in groups:
+        try:
+            os.killpg(process_group, signal.SIGTERM)
+        except ProcessLookupError:
+            pass
+
+    deadline = time.monotonic() + timeout
+    remaining = {process_group for process_group in groups if _process_group_alive(process_group)}
+    while remaining and time.monotonic() < deadline:
+        for process in groups.values():
+            process.poll()
+        time.sleep(0.2)
+        remaining = {process_group for process_group in remaining if _process_group_alive(process_group)}
+
+    for process_group in remaining:
+        try:
+            os.killpg(process_group, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
+
+    for process in groups.values():
+        try:
+            process.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            process.kill()
+            process.wait()
 
 
 @dataclass
@@ -144,6 +186,7 @@ class Pipeline:
                     env=env,
                     stdout=handle,
                     stderr=subprocess.STDOUT,
+                    start_new_session=True,
                 )
                 processes.append((process, handle))
                 endpoints.append(self._wait_for_service_receipt(port_file, process))
@@ -180,15 +223,8 @@ class Pipeline:
                 cwd=self.verl_root,
             )
         finally:
-            for process, _ in processes:
-                if process.poll() is None:
-                    process.terminate()
-            for process, handle in processes:
-                try:
-                    process.wait(timeout=30)
-                except subprocess.TimeoutExpired:
-                    process.kill()
-                    process.wait()
+            _terminate_process_groups([process for process, _ in processes])
+            for _, handle in processes:
                 handle.close()
 
     def _train_solver(self, round_number: int, solver_model: Path, stage_key: str) -> None:
