@@ -4,9 +4,9 @@ This method gives `Qwen/Qwen3-4B-Base` the option to finish normal mathematical
 solutions with `\boxed{answer}` and genuinely invalid problems with
 `\boxed{INVALID}`. It reuses R-Zero's existing dataset loader, rollout workers,
 GRPO advantage computation, reference-policy KL loss, reward manager, and
-checkpoint manager. It does not add a classifier, new benchmark, or validity
-evaluator. The launch wrapper documented below only reuses R-Zero's existing
-math benchmarks.
+checkpoint manager. It does not add a separate validity classifier. The
+independent Terra evaluator documented below adds a held-out validity benchmark
+without changing R-Zero's existing math evaluation.
 
 ## Dataset mapping
 
@@ -99,6 +99,92 @@ Formal checkpoints are:
 Set `VALIDITY_DRY_RUN=1` to print the fully resolved command. All important
 settings have `VALIDITY_*` environment overrides; see
 `train_validity_grpo.sh` for their names.
+
+## Terra held-out validity evaluation
+
+`evaluate_terra_validation.py` evaluates the published 297-row `validation`
+split as a normal solver task, not as a VALID/INVALID classifier. It renders
+the same `validity_solver.jinja` instruction used during training and exactly
+matches the original R-Zero math generation protocol:
+
+- one response per question (`n=1`, pass@1)
+- `temperature=0.0`
+- `max_tokens=4096`
+- vLLM generation stopped by the tokenizer EOS token
+
+Only the final boxed content is scored. On Terra-INVALID rows, only a final
+normalized `\boxed{INVALID}` is correct. On Terra-VALID rows,
+`mathruler.grade_answer()` runs first; only locally incorrect non-empty math
+answers go to the existing style of Yes/No API equivalence recheck. The API is
+never asked to decide whether a problem is valid.
+
+First merge steps 5, 10, and 15 into Hugging Face format as described below.
+Then run Base and all three checkpoints under one timestamped result tag:
+
+```bash
+cd /storage1/jiaxinh/Active/jinyuan/R-zero
+git pull --ff-only
+source env_rzero.sh
+
+export STORAGE_PATH=/engrfs/project/jiaxinh/jinyuan/R-zero-storage
+RUN_ROOT="${STORAGE_PATH}/models/qwen3_4b_validity_rl_terra_v1"
+read -rsp "OpenAI API key: " OPENAI_API_KEY
+echo
+export OPENAI_API_KEY
+
+export VALIDITY_TERRA_EVAL_TAG="terra_pass1_$(date +%Y%m%d_%H%M%S)"
+bash methods/validity_rl/evaluate_terra_validation.sh
+```
+
+The wrapper preflights every requested merged checkpoint and then evaluates
+`Qwen/Qwen3-4B-Base`, step 5, step 10, and step 15 sequentially with the same
+297 examples and settings. By default it uses GPUs `0,1,2,3` as one vLLM
+tensor-parallel group. Useful overrides are:
+
+```bash
+# Print the commands without loading a model or calling the API.
+VALIDITY_TERRA_DRY_RUN=1 \
+bash methods/validity_rl/evaluate_terra_validation.sh
+
+# Evaluate only Base, or only selected checkpoints.
+VALIDITY_TERRA_MODELS="base" \
+bash methods/validity_rl/evaluate_terra_validation.sh
+
+VALIDITY_TERRA_MODELS="5 10 15" \
+bash methods/validity_rl/evaluate_terra_validation.sh
+
+# Use a single GPU instead of the four-GPU default.
+VALIDITY_TERRA_GPU_IDS=0 \
+VALIDITY_TERRA_TENSOR_PARALLEL_SIZE=1 \
+bash methods/validity_rl/evaluate_terra_validation.sh
+```
+
+The API judge defaults to the same cost-sensitive configuration used by the
+Validity-RL math wrapper: `gpt-5.6-luna`, reasoning effort `none`, and an
+eight-token completion cap. Override it with `RECHECK_JUDGE_MODEL`,
+`RECHECK_REASONING_EFFORT`, and `RECHECK_MAX_COMPLETION_TOKENS`. Setting
+`VALIDITY_TERRA_SKIP_API_RECHECK=1` is available for a local-only diagnostic,
+but that run no longer follows the full R-Zero recheck protocol.
+
+Results are written under the formal model run root:
+
+```text
+${RUN_ROOT}/evaluations/terra_validation_<tag>/base/results.jsonl
+${RUN_ROOT}/evaluations/terra_validation_<tag>/base/summary.json
+${RUN_ROOT}/evaluations/terra_validation_<tag>/step_5/results.jsonl
+${RUN_ROOT}/evaluations/terra_validation_<tag>/step_5/summary.json
+${RUN_ROOT}/evaluations/terra_validation_<tag>/step_10/results.jsonl
+${RUN_ROOT}/evaluations/terra_validation_<tag>/step_10/summary.json
+${RUN_ROOT}/evaluations/terra_validation_<tag>/step_15/results.jsonl
+${RUN_ROOT}/evaluations/terra_validation_<tag>/step_15/summary.json
+${RUN_ROOT}/evaluations/terra_validation_<tag>/comparison.json
+```
+
+Each JSONL line keeps the raw response, extracted final answer, local/API score
+decisions, and final correctness. Each summary contains overall accuracy,
+VALID math accuracy, INVALID recall and precision, false-INVALID rate, the
+requested counts, and a simple per-round breakdown. The wrapper prints the
+four-model comparison table when it finishes.
 
 ## Checkpoint locations and standard math evaluation
 
