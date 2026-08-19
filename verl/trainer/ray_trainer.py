@@ -491,9 +491,9 @@ class RayPPOTrainer:
 
         for _ in tqdm(range(self.config.trainer.total_epochs), desc="Epoch", position=0):
             for batch_dict in tqdm(self.train_dataloader, desc="Running step", position=1):
-                self.global_step += 1
-                if self.global_step > self.training_steps:
+                if self.global_step >= self.training_steps:
                     break
+                self.global_step += 1
 
                 metrics, timing_raw = {}, {}
                 batch: DataProto = DataProto.from_single_dict(batch_dict)
@@ -631,6 +631,9 @@ class RayPPOTrainer:
                 metrics.update(compute_throughout_metrics(batch=batch, timing_raw=timing_raw, num_gpus=num_gpus))
 
                 self.logger.log(data=metrics, step=self.global_step)
+
+            if self.global_step >= self.training_steps:
+                break
 
         # perform validation after training
         if self.val_reward_fn is not None:
