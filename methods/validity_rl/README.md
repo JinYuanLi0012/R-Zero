@@ -135,13 +135,17 @@ echo
 export OPENAI_API_KEY
 
 export VALIDITY_TERRA_EVAL_TAG="terra_pass1_$(date +%Y%m%d_%H%M%S)"
+VALIDITY_TERRA_GPU_IDS=0 \
+VALIDITY_TERRA_TENSOR_PARALLEL_SIZE=1 \
 bash methods/validity_rl/evaluate_terra_validation.sh
 ```
 
 The wrapper preflights every requested merged checkpoint and then evaluates
 `Qwen/Qwen3-4B-Base`, step 5, step 10, and step 15 sequentially with the same
-297 examples and settings. By default it uses GPUs `0,1,2,3` as one vLLM
-tensor-parallel group. Useful overrides are:
+297 examples and settings. A single A100 is sufficient for Qwen3-4B and is the
+recommended launch configuration above. Using one GPU instead of four changes
+only the inference device count; the prompt, pass@1 generation, scoring, and
+results are unchanged. Useful overrides are:
 
 ```bash
 # Print the commands without loading a model or calling the API.
@@ -150,15 +154,28 @@ bash methods/validity_rl/evaluate_terra_validation.sh
 
 # Evaluate only Base, or only selected checkpoints.
 VALIDITY_TERRA_MODELS="base" \
-bash methods/validity_rl/evaluate_terra_validation.sh
-
-VALIDITY_TERRA_MODELS="5 10 15" \
-bash methods/validity_rl/evaluate_terra_validation.sh
-
-# Use a single GPU instead of the four-GPU default.
 VALIDITY_TERRA_GPU_IDS=0 \
 VALIDITY_TERRA_TENSOR_PARALLEL_SIZE=1 \
 bash methods/validity_rl/evaluate_terra_validation.sh
+
+VALIDITY_TERRA_MODELS="5 10 15" \
+VALIDITY_TERRA_GPU_IDS=0 \
+VALIDITY_TERRA_TENSOR_PARALLEL_SIZE=1 \
+bash methods/validity_rl/evaluate_terra_validation.sh
+```
+
+The wrapper's unset defaults remain GPUs `0,1,2,3` with tensor parallel size 4.
+On servers where `env_rzero.sh` places `TMPDIR` on the shared `/engrfs` file
+system, four vLLM ranks can race during Triton/TorchInductor compilation and
+fail with `OSError: [Errno 16] Device or resource busy` while renaming cache
+files. Prefer the single-GPU command above. If tensor parallelism is required,
+an optional workaround is to keep compilation caches on node-local storage:
+
+```bash
+export TMPDIR="/tmp/rzero-${USER}"
+export TORCHINDUCTOR_CACHE_DIR="${TMPDIR}/torchinductor"
+export TRITON_CACHE_DIR="${TMPDIR}/triton"
+mkdir -p "${TORCHINDUCTOR_CACHE_DIR}" "${TRITON_CACHE_DIR}"
 ```
 
 The API judge defaults to the same cost-sensitive configuration used by the
