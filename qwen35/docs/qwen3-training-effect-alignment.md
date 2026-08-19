@@ -51,6 +51,7 @@ mini-batch 实际包含 `16 × 4 = 64` trajectories；每个外层 batch 是
 | 离线 shard seeds | 0,1,2,3 | 1,2,3,4 | 否 | **0,1,2,3** | 原版以 GPU suffix 直接作为 vLLM seed | pipeline 命令测试 |
 | 正式 curation 去重 | 不去重 | 规范空白后保留首次 | 否 | **不去重** | 去重会改变 Solver 数据集大小和采样分布 | duplicate parity test |
 | 数学等价 grader timeout | 双向调用各 10 秒 | 无 timeout | 否 | **双向各 10 秒** | 极慢符号表达式不能阻塞整个生成/评分 shard | timeout/non-match 回归测试 |
+| 无 boxed 回答的投票 | MathRuler 字符串 `None` 保留在固定 n/m 票中 | 空字符串在投票前删除 | 否 | **直接使用 MathRuler extractor** | 删除会产生 1/8、1/7 等可变分母并改变难度 | sentinel 与调用点回归测试 |
 | Solver prompt/rollout/mini | 512 / 5 / 128 | 512 / 5 / 128 | 否 | 保持 | 640 trajectories/update；本次没有相反证据 | 配置及命令回归测试 |
 | 下游 checkpoint | Q step 5 / S step 15 | 相同 | 否 | 保持 | 发布流程语义 | 配置与 pipeline 测试 |
 

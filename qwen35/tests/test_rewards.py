@@ -27,6 +27,14 @@ class RewardParityTests(unittest.TestCase):
         self.assertEqual((answer, count, len(valid)), ("1/2", 2, 3))
         self.assertTrue(all(call.args[3] == 10.0 for call in timed_grade.call_args_list))
 
+    def test_mathruler_none_sentinel_remains_a_vote(self):
+        def grader(left, right):
+            return left == right
+
+        answer, count, valid = majority_vote(["None", "42", "None"], grader)
+        self.assertEqual(valid, ["None", "42", "None"])
+        self.assertEqual((answer, count), ("None", 2))
+
     def test_grader_timeout_is_a_non_match_in_each_direction(self):
         grader = unittest.mock.Mock()
         with patch(

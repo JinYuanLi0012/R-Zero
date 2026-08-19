@@ -114,6 +114,19 @@ SIGKILL。该修复不改变模型、采样、GPU 拓扑或 run fingerprint。�
 退出后其 cgroup 已清理残留进程；更新代码后对同一正式 run directory 普通
 `--resume`，已提交 stage/shard 会跳过，只重跑缺失 shard。
 
+同一轮首次 curation 显示 8000 道中 7522 道 Questioner 输出可解析，但离线评估仅
+保留 1630 道，并出现 `1/8`、`1/7`、`1/6` 等非固定分母 score。根因是迁移版曾用
+自写 extractor 将无 `\\boxed{}` 的 Solver 输出变成空字符串并在投票前删除；发布版
+直接使用 `mathruler.extract_boxed_content()`，其字符串 `"None"` sentinel 仍属于
+固定的在线 `n=10` 或离线 `m=9` 投票，若最终多数答案是 `"None"` 才在 curation
+排除。在线冻结 Solver 与离线 candidate evaluator 现均恢复为直接使用官方
+MathRuler extractor。已有 scored shard 不能代表修复后的难度，必须显式从 evaluate
+阶段重算；若要求完整效果语义对齐，使用旧在线投票训练出的 Questioner 也必须重算。
+正式 sbatch 接受可选环境变量 `FROM_STAGE` 并原样映射到 pipeline 的
+`--from-stage`；未设置时行为仍是普通 `--resume`。严格重算 Round 1 Questioner 时用
+`FROM_STAGE=round_01.questioner_train`，旧 checkpoint 会先原子移入
+`recompute_backups/` 而不是删除。
+
 2026-08-16 的效果语义复审又固定了四项发布代码条件：PPO clip low/high
 `0.2/0.3` 与 dual-clip `3.0`、GRPO rollout `top_p=0.99`/seed 1、离线 shard
 seed `0,1,2,3`，以及正式 curation 不去重。它们均进入正式 config fingerprint。

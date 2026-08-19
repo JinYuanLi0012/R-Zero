@@ -215,6 +215,13 @@ class PipelineTests(unittest.TestCase):
             )
             self.assertNotIn("--deduplicate-questions", calls[-1])
 
+    def test_solver_voting_uses_official_mathruler_extractor(self):
+        evaluator = (ROOT / "qwen35" / "rzero" / "evaluate_candidates.py").read_text(encoding="utf-8")
+        service = (ROOT / "qwen35" / "rzero" / "solver_service.py").read_text(encoding="utf-8")
+        for source in (evaluator, service):
+            self.assertIn("from mathruler.grader import extract_boxed_content, grade_answer", source)
+            self.assertIn("answers.append(extract_boxed_content(output.text))", source)
+
 
 if __name__ == "__main__":
     unittest.main()

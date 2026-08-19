@@ -8,7 +8,7 @@ from pathlib import Path
 
 from qwen35.rzero.generate_candidates import atomic_json
 from qwen35.rzero.prompts import solver_messages
-from qwen35.rzero.rewards.common import extract_boxed, majority_vote
+from qwen35.rzero.rewards.common import majority_vote
 
 
 def main() -> None:
@@ -20,7 +20,7 @@ def main() -> None:
     parser.add_argument("--seed", type=int, required=True)
     args = parser.parse_args()
 
-    from mathruler.grader import grade_answer
+    from mathruler.grader import extract_boxed_content, grade_answer
     from transformers import AutoTokenizer
     from vllm import LLM, SamplingParams
 
@@ -51,8 +51,9 @@ def main() -> None:
     for source_item, response in zip(valid, responses):
         answers = []
         for output in response.outputs:
-            boxed = extract_boxed(output.text)
-            answers.append(boxed[-1] if boxed else "")
+            # Preserve released MathRuler semantics: an output without a box is
+            # the literal sentinel "None" and remains one of the fixed m votes.
+            answers.append(extract_boxed_content(output.text))
         majority, count, extracted = majority_vote(answers, grade_answer)
         if not extracted:
             continue
@@ -63,9 +64,9 @@ def main() -> None:
             {
                 "question": question,
                 "answer": majority,
-                # Released candidate-evaluation code removes empty boxed answers
-                # before computing the vote denominator (unlike the online
-                # Challenger Solver service, which keeps n=10 as denominator).
+                # MathRuler returns the truthy sentinel "None" for an unboxed
+                # output, so released evaluation retains all m=9 votes here.
+                # Curation later rejects a majority answer equal to "None".
                 "score": count / len(extracted),
                 "results": extracted,
             }

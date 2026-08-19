@@ -41,6 +41,8 @@ class RisSlurmScriptTests(unittest.TestCase):
         self.assertIn('CONTAINER_RUN_DIR="/workspace/R-Zero/', script)
         self.assertIn('--run-dir "${CONTAINER_RUN_DIR}"', script)
         self.assertIn("--resume", script)
+        self.assertIn('FROM_STAGE=${FROM_STAGE:-}', script)
+        self.assertIn('pipeline_args+=(--from-stage "${FROM_STAGE}")', script)
         self.assertNotIn("smoke.yaml", script)
         self.assertNotIn("solver_gate.sh", script)
 

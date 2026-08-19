@@ -18,6 +18,7 @@ RUN_DIR=${RUN_DIR:-${PROJECT}/runs/rzero-qwen35-formal}
 HF_CACHE=${HF_CACHE:-/scratch2/fs1/jiaxinh/${USER}/hf-cache}
 IMAGE=${IMAGE:-/scratch2/fs1/jiaxinh/${USER}/images/rzero-qwen35-bdc8b2c29981.sqsh}
 EXPECTED_IMAGE_SHA256=${EXPECTED_IMAGE_SHA256:-26e47958e9b689f21eb63b730fff88c5d13854d407fff592cdddcda87f329ec5}
+FROM_STAGE=${FROM_STAGE:-}
 
 PYXIS_XDG_CACHE_HOME=/scratch2/fs1/jiaxinh/${USER}/pyxis-cache
 PYXIS_XDG_DATA_HOME=/tmp/${USER}/pyxis-data-${SLURM_JOB_ID}
@@ -55,6 +56,16 @@ echo "image=${IMAGE}"
 echo "image_sha256=${image_checksum}"
 nvidia-smi --query-gpu=index,name,memory.total,driver_version --format=csv,noheader
 
+pipeline_args=(
+  --run-dir "${CONTAINER_RUN_DIR}"
+  --config /workspace/R-Zero/qwen35/configs/a100_4x_qwen35_4b_base.yaml
+  --resume
+)
+if [[ -n "${FROM_STAGE}" ]]; then
+  pipeline_args+=(--from-stage "${FROM_STAGE}")
+  echo "from_stage=${FROM_STAGE}"
+fi
+
 srun \
   --nodes=1 \
   --ntasks=1 \
@@ -67,7 +78,4 @@ srun \
     HF_HOME=/root/.cache/huggingface \
     VLLM_USE_V1=1 \
     VLLM_NO_USAGE_STATS=1 \
-  bash /workspace/R-Zero/qwen35/scripts/run.sh \
-    --run-dir "${CONTAINER_RUN_DIR}" \
-    --config /workspace/R-Zero/qwen35/configs/a100_4x_qwen35_4b_base.yaml \
-    --resume
+  bash /workspace/R-Zero/qwen35/scripts/run.sh "${pipeline_args[@]}"

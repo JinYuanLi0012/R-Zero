@@ -9,12 +9,12 @@ from pathlib import Path
 from typing import Any
 
 from qwen35.rzero.prompts import solver_messages
-from qwen35.rzero.rewards.common import extract_boxed, majority_vote
+from qwen35.rzero.rewards.common import majority_vote
 
 
 def create_app(model_path: str, samples: int, gpu_memory_utilization: float):
     from flask import Flask, jsonify, request
-    from mathruler.grader import grade_answer
+    from mathruler.grader import extract_boxed_content, grade_answer
     from transformers import AutoTokenizer
     from vllm import LLM, SamplingParams
 
@@ -58,8 +58,8 @@ def create_app(model_path: str, samples: int, gpu_memory_utilization: float):
         for position, response in zip(valid_positions, responses):
             answers = []
             for output in response.outputs:
-                boxed = extract_boxed(output.text)
-                answers.append(boxed[-1] if boxed else "")
+                # Keep the released MathRuler "None" sentinel as a real vote.
+                answers.append(extract_boxed_content(output.text))
             majority, count, valid = majority_vote(answers, grade_answer)
             denominator = len(answers)
             results[position] = {
