@@ -3,7 +3,7 @@
 # Source this from the R-Zero repo root:
 #   source env_rzero.sh
 
-conda activate /scratch/project/envs/rzero-py310
+conda activate /ib-scratch/jiaxinh01/project/envs/rzero-py310
 
 export CUDA_HOME="${CONDA_PREFIX}"
 export PATH="${CUDA_HOME}/bin:${PATH}"
@@ -26,7 +26,7 @@ mkdir -p \
   "${WANDB_DIR}" \
   "${TMPDIR}"
 
-export CUDA_VISIBLE_DEVICES="4,5,6,7"
+export CUDA_VISIBLE_DEVICES="0,1,2,3"
 
 # Set this before training, for example:
 #   export HUGGINGFACENAME="your-hf-username"
