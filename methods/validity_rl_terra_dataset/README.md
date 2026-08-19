@@ -122,3 +122,70 @@ response for audit. Each eligible row has `validity_rl_target`, equal to the
 canonical math answer for VALID or the literal `INVALID` for INVALID.
 `train.jsonl` and `validation.jsonl` contain no historical R-Zero answer or score.
 Do not rebalance or resample after seeing Terra labels.
+
+## VALID-answer consistency audit
+
+After the full dataset has been finalized, run the independent third-pass audit
+to screen all Terra A/VALID answers before using them for reward computation.
+The audit reads `terra_raw_results.jsonl`, joins question/round/split metadata
+from `sampled_questions.jsonl`, and verifies the expected accounting (2,300 raw,
+983 VALID, 973 verified canonical answers, and 10 preexisting unverified).
+
+Only the 973 verified rows are submitted. The exact blind model input is saved
+in `audit_input.jsonl` and contains only opaque `id`, `question`, Pass 1
+`derived_answer`, and Pass 2 `canonical_final_answer`. Round, split, historical
+score/answer, pseudo-answer, labels, and known problem IDs are never sent. The
+remaining 10 VALID rows are recorded directly as `PREEXISTING_UNVERIFIED`
+suspects, so final accounting still covers all 983 VALID questions.
+
+From the repository root on Linux:
+
+```bash
+export OPENAI_API_KEY="..."
+export CONSISTENCY_MODEL=gpt-5.6-luna
+export CONSISTENCY_OUTPUT_DIR=analysis_results/validity_rl_terra_dataset_v1_answer_consistency_audit_v1
+
+bash methods/validity_rl_terra_dataset/run_answer_consistency_audit.sh \
+  analysis_results/validity_rl_terra_dataset_v1
+```
+
+The defaults are high reasoning effort, 8,192 maximum output tokens, a 0.8 PASS
+confidence threshold, three attempts, and a 60-second poll interval. Override
+them with `CONSISTENCY_REASONING_EFFORT`, `CONSISTENCY_MAX_OUTPUT_TOKENS`,
+`CONSISTENCY_CONFIDENCE_THRESHOLD`, `CONSISTENCY_MAX_ATTEMPTS`, and
+`BATCH_POLL_SECONDS`. If `gpt-5.6-luna` is unavailable, set
+`CONSISTENCY_MODEL=gpt-5.6-terra`.
+
+Batch input/output/error files and `batch/state.json` are durable. Rerunning the
+same command resumes an already-submitted batch by ID; parse failures and
+per-request failures enter smaller retry batches and output order is joined by
+`custom_id`. Cached state is rejected if the model, reasoning effort, token
+limit, attempt limit, confidence threshold, prompt, question text, either input
+answer, or complete audited ID set changes. Use a new output directory for a
+changed experiment.
+
+The audit writes:
+
+```text
+audit_input.jsonl
+audit_results.jsonl
+suspect.jsonl
+passed.jsonl
+preexisting_unverified.jsonl
+manifest.json
+batch/state.json
+batch/input_*.jsonl
+batch/output_*.jsonl
+batch/errors_*.jsonl
+artifacts/q_*.json
+analysis/statistics.json
+analysis/report.md
+```
+
+Only rows satisfying the deterministic PASS rule are placed in `passed.jsonl`:
+the question is clear, the canonical answer is correct and responsive, the two
+answers do not conflict, deep review is not requested, parsing succeeded, and
+confidence meets the threshold. `NOT_COMPARABLE` and a missing derived answer do
+not fail an otherwise high-confidence canonical verification. This stage only
+reports suspects; it does not modify train/validation files, replace answers,
+call Sol, vote, upload a dataset, or start GRPO.
