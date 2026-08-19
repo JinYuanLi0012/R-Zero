@@ -189,3 +189,58 @@ confidence meets the threshold. `NOT_COMPARABLE` and a missing derived answer do
 not fail an otherwise high-confidence canonical verification. This stage only
 reports suspects; it does not modify train/validation files, replace answers,
 call Sol, vote, upload a dataset, or start GRPO.
+
+## Sol deep review of consistency suspects
+
+After the consistency audit finishes, use the independent Sol pass to review
+all 113 rows in its `suspect.jsonl`, including the 29 final Luna parse failures
+and 10 preexisting unverified answers. The Sol request remains blind: it contains
+only opaque `id`, `question`, `derived_answer`, and `canonical_final_answer`.
+Luna judgments, suspect reasons, round/split, and known conclusions are retained
+locally for reporting but are not included in Batch input.
+
+```bash
+export OPENAI_API_KEY="..."
+export DEEP_REVIEW_MODEL=gpt-5.6-sol
+export DEEP_REVIEW_OUTPUT_DIR=analysis_results/validity_rl_terra_dataset_v1_answer_deep_review_v1
+
+bash methods/validity_rl_terra_dataset/run_suspect_deep_review.sh \
+  analysis_results/validity_rl_terra_dataset_v1_answer_consistency_audit_v1
+```
+
+Defaults are high reasoning effort, 16,384 maximum output tokens, a 0.9
+high-confidence threshold, three attempts, and a 60-second polling interval.
+Override these with `DEEP_REVIEW_REASONING_EFFORT`,
+`DEEP_REVIEW_MAX_OUTPUT_TOKENS`, `DEEP_REVIEW_CONFIDENCE_THRESHOLD`,
+`DEEP_REVIEW_MAX_ATTEMPTS`, and `DEEP_REVIEW_POLL_SECONDS`.
+
+The same atomic Batch state, `custom_id` joins, retry, resume, raw-response
+artifacts, and full input/config hashing are used. Outputs are:
+
+```text
+deep_review_input.jsonl
+deep_review_results.jsonl
+keep.jsonl
+replacement_candidates.jsonl
+exclude.jsonl
+human_review.jsonl
+manifest.json
+batch/state.json
+batch/input_*.jsonl
+batch/output_*.jsonl
+batch/errors_*.jsonl
+artifacts/q_*.json
+analysis/statistics.json
+analysis/report.md
+```
+
+The code applies a conservative deterministic policy rather than trusting the
+model's recommendation. `KEEP_CANONICAL` requires a clear question and an
+independently verified, high-confidence Sol answer that agrees or is equivalent
+to the canonical answer, without a conflict against the derived answer. A
+`REPLACEMENT_CANDIDATE` additionally requires the derived answer to corroborate
+Sol and no conflicting preferred answer from the earlier screening result.
+Other answer conflicts go to `HUMAN_REVIEW`; materially ambiguous or invalid
+questions go to `EXCLUDE`. Replacement candidates are never applied
+automatically. This program does not edit train/validation files, overwrite
+canonical answers, upload Hugging Face data, or start GRPO.
