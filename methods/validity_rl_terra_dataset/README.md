@@ -244,3 +244,28 @@ Other answer conflicts go to `HUMAN_REVIEW`; materially ambiguous or invalid
 questions go to `EXCLUDE`. Replacement candidates are never applied
 automatically. This program does not edit train/validation files, overwrite
 canonical answers, upload Hugging Face data, or start GRPO.
+
+## Build the conservative clean dataset
+
+After deep review, build a new dataset that retains all 1,317 INVALID rows and
+only the 870 consistency-PASS plus 46 `KEEP_CANONICAL` VALID rows. All other 67
+VALID suspects are excluded, including replacement candidates. No answer is
+rewritten, and the original split is preserved.
+
+```bash
+export CLEAN_DATASET_OUTPUT_DIR=analysis_results/validity_rl_terra_dataset_v1_clean_v1
+
+bash methods/validity_rl_terra_dataset/run_build_clean_dataset.sh \
+  analysis_results/validity_rl_terra_dataset_v1 \
+  analysis_results/validity_rl_terra_dataset_v1_answer_consistency_audit_v1 \
+  analysis_results/validity_rl_terra_dataset_v1_answer_deep_review_v1
+```
+
+Production accounting is strict: the command exits instead of publishing an
+unexpected composition unless it obtains 2,233 rows total (916 VALID and 1,317
+INVALID). It writes `train.jsonl`, `validation.jsonl`, `excluded_valid.jsonl`,
+`manifest.json`, `analysis/statistics.json`, and `analysis/report.md` under the
+new output directory. Input file hashes and absolute source directories are
+recorded in the manifest. The source dataset is never modified, and this command
+does not upload to Hugging Face or start GRPO. For small local fixtures only,
+invoke the Python builder directly with `--allow-nonstandard-counts`.
