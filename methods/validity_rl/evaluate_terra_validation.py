@@ -193,12 +193,12 @@ class MathAnswerRechecker:
         self.timeout = timeout
         self.session = requests.Session()
 
-    def check(self, prediction: str, canonical_answer: str) -> tuple[bool, str]:
+    def check(self, model_response: str, canonical_answer: str) -> tuple[bool, str]:
         prompt = (
-            "Decide only whether the predicted mathematical answer is equivalent to the "
-            "canonical mathematical answer. Do not assess whether the underlying problem is "
-            "valid or invalid. Return only Yes or No.\n\n"
-            f"Predicted answer: {prediction}\n"
+            "Decide only whether the mathematical answer given in the model response is "
+            "equivalent to the canonical mathematical answer. Do not assess whether the "
+            "underlying problem is valid or invalid. Return only Yes or No.\n\n"
+            f"Model response: {model_response}\n"
             f"Canonical answer: {canonical_answer}"
         )
         payload: dict[str, Any] = {
@@ -243,19 +243,29 @@ def score_response(
     api_rechecked = False
     api_math_correct: bool | None = None
     api_verdict: str | None = None
+    api_error: str | None = None
 
     if terra_validity == "INVALID":
         final_correct = pred_invalid
     elif pred_invalid:
         final_correct = False
     else:
-        local_math_correct = bool(extracted_answer) and bool(
-            grade_answer(extracted_answer, canonical)
-        )
+        try:
+            local_math_correct = bool(extracted_answer) and bool(
+                grade_answer(extracted_answer, canonical)
+            )
+        except Exception as error:
+            print(f"Local grader failed for {row['id']}: {error}", file=sys.stderr)
+            local_math_correct = False
         final_correct = local_math_correct
-        if not local_math_correct and rechecker is not None and extracted_answer:
+        if not local_math_correct and rechecker is not None:
             api_rechecked = True
-            api_math_correct, api_verdict = rechecker.check(extracted_answer, canonical)
+            try:
+                api_math_correct, api_verdict = rechecker.check(response, canonical)
+            except Exception as error:
+                api_error = str(error)
+                api_math_correct = False
+                print(f"API recheck failed for {row['id']}: {error}", file=sys.stderr)
             final_correct = api_math_correct
 
     return {
@@ -270,6 +280,7 @@ def score_response(
         "api_rechecked": api_rechecked,
         "api_math_correct": api_math_correct,
         "api_verdict": api_verdict,
+        "api_error": api_error,
         "final_correct": bool(final_correct),
     }
 
@@ -281,7 +292,7 @@ def metrics_for(results: list[dict[str, Any]]) -> dict[str, Any]:
     valid_false_invalid = sum(result["pred_invalid"] for result in valid)
     invalid_correct = sum(result["pred_invalid"] for result in invalid)
     pred_invalid = valid_false_invalid + invalid_correct
-    valid_wrong_math = len(valid) - valid_correct - valid_false_invalid
+    valid_wrong_math_or_other = len(valid) - valid_correct - valid_false_invalid
     return {
         "n": len(results),
         "n_valid": len(valid),
@@ -293,7 +304,7 @@ def metrics_for(results: list[dict[str, Any]]) -> dict[str, Any]:
         "false_invalid_rate": safe_divide(valid_false_invalid, len(valid)),
         "counts": {
             "valid_correct_math": valid_correct,
-            "valid_wrong_math": valid_wrong_math,
+            "valid_wrong_math_or_other": valid_wrong_math_or_other,
             "valid_to_invalid": valid_false_invalid,
             "invalid_to_invalid": invalid_correct,
             "invalid_to_math_or_other": len(invalid) - invalid_correct,
@@ -319,7 +330,7 @@ def build_summary(args: argparse.Namespace, results: list[dict[str, Any]]) -> di
         "api_recheck": {
             "enabled": not args.skip_api_recheck,
             "judge_model": args.judge_model if not args.skip_api_recheck else None,
-            "scope": "locally incorrect non-empty mathematical answers on VALID rows only",
+            "scope": "all locally incorrect VALID responses except explicit INVALID predictions",
         },
         "metrics": metrics_for(results),
         "per_round": {

@@ -114,9 +114,11 @@ matches the original R-Zero math generation protocol:
 
 Only the final boxed content is scored. On Terra-INVALID rows, only a final
 normalized `\boxed{INVALID}` is correct. On Terra-VALID rows,
-`mathruler.grade_answer()` runs first; only locally incorrect non-empty math
-answers go to the existing style of Yes/No API equivalence recheck. The API is
-never asked to decide whether a problem is valid.
+`mathruler.grade_answer()` runs first; locally incorrect responses go to the
+existing style of Yes/No API equivalence recheck using the complete model
+response, including responses that omitted the required box.
+An explicit final `INVALID` prediction on a VALID row remains wrong without an
+API call. The API is never asked to decide whether a problem is valid.
 
 First merge steps 5, 10, and 15 into Hugging Face format as described below.
 Then run Base and all three checkpoints under one timestamped result tag:
