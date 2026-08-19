@@ -58,7 +58,8 @@ def create_app(model_path: str, samples: int, gpu_memory_utilization: float):
         for position, response in zip(valid_positions, responses):
             answers = []
             for output in response.outputs:
-                # Keep the released MathRuler "None" sentinel as a real vote.
+                # Keep the released truthy "None" sentinel as a real vote;
+                # majority_vote still removes explicit empty-box results.
                 answers.append(extract_boxed_content(output.text))
             majority, count, valid = majority_vote(answers, grade_answer)
             denominator = len(answers)

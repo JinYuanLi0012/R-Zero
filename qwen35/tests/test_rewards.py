@@ -35,6 +35,14 @@ class RewardParityTests(unittest.TestCase):
         self.assertEqual(valid, ["None", "42", "None"])
         self.assertEqual((answer, count), ("None", 2))
 
+    def test_explicit_empty_box_is_dropped_but_none_remains(self):
+        def grader(left, right):
+            return left == right
+
+        answer, count, valid = majority_vote(["None", "", "42"], grader)
+        self.assertEqual(valid, ["None", "42"])
+        self.assertEqual((answer, count), ("None", 1))
+
     def test_grader_timeout_is_a_non_match_in_each_direction(self):
         grader = unittest.mock.Mock()
         with patch(

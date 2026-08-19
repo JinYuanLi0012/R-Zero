@@ -52,7 +52,8 @@ def main() -> None:
         answers = []
         for output in response.outputs:
             # Preserve released MathRuler semantics: an output without a box is
-            # the literal sentinel "None" and remains one of the fixed m votes.
+            # the truthy sentinel "None" and remains a vote, while an explicit
+            # empty ``\\boxed{}`` is falsy and is removed by majority_vote.
             answers.append(extract_boxed_content(output.text))
         majority, count, extracted = majority_vote(answers, grade_answer)
         if not extracted:
@@ -64,9 +65,10 @@ def main() -> None:
             {
                 "question": question,
                 "answer": majority,
-                # MathRuler returns the truthy sentinel "None" for an unboxed
-                # output, so released evaluation retains all m=9 votes here.
-                # Curation later rejects a majority answer equal to "None".
+                # The model always samples m=9 completions, but the released
+                # evaluator divides by non-empty extracted results. Missing-box
+                # "None" votes remain; explicit empty boxes do not. Curation
+                # later rejects a majority answer equal to "None".
                 "score": count / len(extracted),
                 "results": extracted,
             }

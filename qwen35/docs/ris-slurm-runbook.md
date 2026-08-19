@@ -115,10 +115,11 @@ SIGKILL。该修复不改变模型、采样、GPU 拓扑或 run fingerprint。�
 `--resume`，已提交 stage/shard 会跳过，只重跑缺失 shard。
 
 同一轮首次 curation 显示 8000 道中 7522 道 Questioner 输出可解析，但离线评估仅
-保留 1630 道，并出现 `1/8`、`1/7`、`1/6` 等非固定分母 score。根因是迁移版曾用
-自写 extractor 将无 `\\boxed{}` 的 Solver 输出变成空字符串并在投票前删除；发布版
-直接使用 `mathruler.extract_boxed_content()`，其字符串 `"None"` sentinel 仍属于
-固定的在线 `n=10` 或离线 `m=9` 投票，若最终多数答案是 `"None"` 才在 curation
+保留 1630 道。根因是迁移版曾用自写 extractor，把无 `\\boxed{}` 与显式空
+`\\boxed{}` 都变成空字符串；发布版直接使用 `mathruler.extract_boxed_content()`：
+无 box 返回的真值字符串 `"None"` 保留参与投票，显式空 box 返回的空字符串则仍会
+被删除。模型固定采样在线 `n=10` 或离线 `m=9` 次，但离线难度分母是非空提取数，
+所以 `1/8`、`1/7`、`1/6` 等分母符合发布代码；多数答案为 `"None"` 时才在 curation
 排除。在线冻结 Solver 与离线 candidate evaluator 现均恢复为直接使用官方
 MathRuler extractor。已有 scored shard 不能代表修复后的难度，必须显式从 evaluate
 阶段重算；若要求完整效果语义对齐，使用旧在线投票训练出的 Questioner 也必须重算。
