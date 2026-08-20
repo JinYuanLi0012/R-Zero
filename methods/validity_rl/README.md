@@ -241,8 +241,8 @@ Solver settings rather than the deterministic pass@1 settings above:
 temperature=1.0, top_p=1.0, top_k=40, max_tokens=4096
 ```
 
-After merging steps 5, 10, and 15, run Base and all checkpoints sequentially
-on one GPU:
+After merging steps 5, 10, and 15, run all four models in parallel, one model
+per GPU:
 
 ```bash
 cd /storage1/jiaxinh/Active/jinyuan/R-zero
@@ -256,10 +256,23 @@ read -rsp "OpenAI API key: " OPENAI_API_KEY
 echo
 export OPENAI_API_KEY
 
-VALIDITY_VOTE_GPU_IDS=0 \
+VALIDITY_VOTE_GPU_IDS=0,1,2,3 \
 VALIDITY_VOTE_TENSOR_PARALLEL_SIZE=1 \
 bash methods/validity_rl/simulate_terra_majority_vote.sh
 ```
+
+The assignment follows `VALIDITY_VOTE_MODELS` order, so the default launch is
+GPU 0 = Base, GPU 1 = step 5, GPU 2 = step 10, and GPU 3 = step 15. Each vLLM
+process uses tensor parallel size 1; parallelism changes only scheduling, not
+the sampling or scoring protocol. The wrapper waits for every process and
+builds the comparison only if all four succeed. Per-model logs are written to
+`<output-root>/logs/`.
+
+Each process also receives an isolated node-local compile cache under
+`/tmp/rzero_validity_vote_<tag>/<model>`. This avoids the Triton/TorchInductor
+`Device or resource busy` failures seen when multiple ranks compile into a
+shared `/engrfs` cache. Override its parent with `VALIDITY_VOTE_CACHE_ROOT` if
+needed.
 
 The full run generates many more responses than pass@1. Run one model first if
 desired, while retaining the formal 8+8 and 16-rollout protocol:
@@ -278,7 +291,8 @@ bash methods/validity_rl/simulate_terra_majority_vote.sh
 Useful overrides are `VALIDITY_VOTE_MODELS`, `VALIDITY_VOTE_GPU_IDS`,
 `VALIDITY_VOTE_TENSOR_PARALLEL_SIZE`, `VALIDITY_VOTE_SEED`,
 `VALIDITY_VOTE_BATCH_SIZE`, `VALIDITY_VOTE_MAX_TOKENS`,
-`VALIDITY_VOTE_RUN_ROOT`, `VALIDITY_VOTE_OUTPUT_ROOT`, `RECHECK_JUDGE_MODEL`,
+`VALIDITY_VOTE_RUN_ROOT`, `VALIDITY_VOTE_OUTPUT_ROOT`,
+`VALIDITY_VOTE_CACHE_ROOT`, `RECHECK_JUDGE_MODEL`,
 `RECHECK_REASONING_EFFORT`, and `RECHECK_MAX_COMPLETION_TOKENS`. Keep
 `VALIDITY_VOTE_MAX_TOKENS=4096` and the same judge configuration as the pass@1
 Terra evaluation for formal comparisons. `VALIDITY_VOTE_SKIP_API_RECHECK=1`
