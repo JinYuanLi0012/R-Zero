@@ -193,11 +193,18 @@ class MathAnswerRechecker:
         self.timeout = timeout
         self.session = requests.Session()
 
-    def check(self, model_response: str, canonical_answer: str) -> tuple[bool, str]:
+    def check(
+        self,
+        model_response: str,
+        canonical_answer: str,
+        question: str | None = None,
+    ) -> tuple[bool, str]:
+        question_context = f"Problem: {question}\n" if question else ""
         prompt = (
             "Decide only whether the mathematical answer given in the model response is "
             "equivalent to the canonical mathematical answer. Do not assess whether the "
             "underlying problem is valid or invalid. Return only Yes or No.\n\n"
+            f"{question_context}"
             f"Model response: {model_response}\n"
             f"Canonical answer: {canonical_answer}"
         )

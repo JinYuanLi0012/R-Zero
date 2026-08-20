@@ -99,3 +99,53 @@ def test_one_stage_and_aggregate_metrics():
         assert metrics["false_invalid_rate"] == 0.0
         assert sum(metrics["vote_statistics"]["terra_valid"].values()) == 1
         assert sum(metrics["vote_statistics"]["terra_invalid"].values()) == 1
+
+
+def test_api_is_authoritative_only_for_valid_final_math():
+    class Judge:
+        def __init__(self):
+            self.calls = []
+
+        def check(self, prediction, canonical, question=None):
+            self.calls.append((prediction, canonical, question))
+            return False, "No"
+
+    judge = Judge()
+    valid_row = {
+        "id": "valid",
+        "question": "What is one plus one?",
+        "terra_validity": "VALID",
+        "canonical_final_answer": "2",
+    }
+    valid_result = build_one_stage_result(
+        valid_row,
+        [r"\boxed{2}"] * 16,
+        judge,
+    )
+    assert valid_result["local_math_correct"] is True
+    assert valid_result["api_rechecked"] is True
+    assert valid_result["api_math_correct"] is False
+    assert valid_result["correct"] is False
+    assert judge.calls == [("2", "2", "What is one plus one?")]
+
+    invalid_row = {
+        "id": "invalid",
+        "question": "Broken problem",
+        "terra_validity": "INVALID",
+        "canonical_final_answer": None,
+    }
+    invalid_result = build_one_stage_result(
+        invalid_row,
+        [r"\boxed{INVALID}"] * 9 + [r"\boxed{2}"] * 7,
+        judge,
+    )
+    tied_result = build_one_stage_result(
+        valid_row,
+        [r"\boxed{INVALID}"] * 8 + [r"\boxed{2}"] * 8,
+        judge,
+    )
+    assert invalid_result["correct"] is True
+    assert invalid_result["api_rechecked"] is False
+    assert tied_result["final_prediction_type"] == "TIE"
+    assert tied_result["api_rechecked"] is False
+    assert len(judge.calls) == 1

@@ -22,6 +22,8 @@ from transformers import AutoTokenizer
 from methods.gaussian_population_rzero.grading import answers_equivalent, extract_answer
 from methods.validity_rl.evaluate_terra_validation import (
     DEFAULT_DATASET,
+    DEFAULT_JUDGE_MODEL,
+    MathAnswerRechecker,
     build_prompts as build_validity_prompts,
     normalize_invalid,
     safe_divide,
@@ -62,6 +64,25 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--gpu-memory-utilization", type=float, default=0.85)
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--max-tokens", type=int, default=DEFAULT_MAX_TOKENS)
+    parser.add_argument(
+        "--judge-model",
+        default=os.getenv("RECHECK_JUDGE_MODEL", DEFAULT_JUDGE_MODEL),
+    )
+    parser.add_argument(
+        "--judge-reasoning-effort",
+        default=os.getenv("RECHECK_REASONING_EFFORT", "none"),
+    )
+    parser.add_argument(
+        "--judge-max-completion-tokens",
+        type=int,
+        default=int(os.getenv("RECHECK_MAX_COMPLETION_TOKENS", "8")),
+    )
+    parser.add_argument("--api-timeout", type=float, default=30.0)
+    parser.add_argument(
+        "--skip-api-recheck",
+        action="store_true",
+        help="Use local mathruler only. This is not the formal comparable protocol.",
+    )
     parser.add_argument(
         "--batch-size",
         type=int,
@@ -213,30 +234,73 @@ def cluster_math_answers(extracted_outputs: list[str]) -> dict[str, Any]:
     }
 
 
-def final_math_correct(prediction: str, canonical_answer: Any, row_id: str) -> bool:
-    if not prediction or canonical_answer is None:
-        return False
+def score_final_math(
+    prediction: str,
+    row: dict[str, Any],
+    rechecker: MathAnswerRechecker | None,
+) -> dict[str, Any]:
+    local_math_correct = False
+    api_rechecked = False
+    api_math_correct: bool | None = None
+    api_verdict: str | None = None
+    api_error: str | None = None
     try:
-        return bool(grade_answer(prediction, canonical_answer))
+        local_math_correct = bool(grade_answer(prediction, row["canonical_final_answer"]))
     except Exception as error:
-        print(f"Final math grading failed for {row_id}: {error}", file=sys.stderr)
-        return False
+        print(f"Final math grading failed for {row['id']}: {error}", file=sys.stderr)
+
+    if rechecker is None:
+        final_correct = local_math_correct
+    else:
+        api_rechecked = True
+        try:
+            api_math_correct, api_verdict = rechecker.check(
+                prediction,
+                row["canonical_final_answer"],
+                question=row["question"],
+            )
+        except Exception as error:
+            api_error = str(error)
+            api_math_correct = False
+            print(f"API recheck failed for {row['id']}: {error}", file=sys.stderr)
+        final_correct = bool(api_math_correct)
+    return {
+        "local_math_correct": local_math_correct,
+        "api_rechecked": api_rechecked,
+        "api_math_correct": api_math_correct,
+        "api_verdict": api_verdict,
+        "api_error": api_error,
+        "final_correct": final_correct,
+    }
 
 
 def attach_outcome(
-    method_result: dict[str, Any], row: dict[str, Any], final_type: str, prediction: str
+    method_result: dict[str, Any],
+    row: dict[str, Any],
+    final_type: str,
+    prediction: str,
+    rechecker: MathAnswerRechecker | None,
 ) -> dict[str, Any]:
     terra_validity = row["terra_validity"]
+    scoring = {
+        "local_math_correct": False,
+        "api_rechecked": False,
+        "api_math_correct": None,
+        "api_verdict": None,
+        "api_error": None,
+    }
     if terra_validity == "INVALID":
         correct = final_type == "INVALID"
+    elif final_type == "MATH":
+        scoring = score_final_math(prediction, row, rechecker)
+        correct = scoring.pop("final_correct")
     else:
-        correct = final_type == "MATH" and final_math_correct(
-            prediction, row["canonical_final_answer"], row["id"]
-        )
+        correct = False
     method_result.update(
         {
             "final_prediction_type": final_type,
             "final_prediction": prediction,
+            **scoring,
             "correct": correct,
         }
     )
@@ -247,6 +311,7 @@ def build_two_stage_result(
     row: dict[str, Any],
     stage1_responses: list[str],
     stage2_responses: list[str] | None,
+    rechecker: MathAnswerRechecker | None = None,
 ) -> dict[str, Any]:
     stage1_outputs = [clean_extracted_answer(response) for response in stage1_responses]
     invalid_votes = sum(normalize_invalid(answer) for answer in stage1_outputs)
@@ -264,9 +329,9 @@ def build_two_stage_result(
         "math_vote_tied": False,
     }
     if decision == "INVALID":
-        return attach_outcome(result, row, "INVALID", "INVALID")
+        return attach_outcome(result, row, "INVALID", "INVALID", rechecker)
     if decision == "TIE":
-        return attach_outcome(result, row, "TIE", "TIE")
+        return attach_outcome(result, row, "TIE", "TIE", rechecker)
     if stage2_responses is None:
         raise RuntimeError(f"missing stage-2 responses for VALID decision on {row['id']}")
 
@@ -284,11 +349,13 @@ def build_two_stage_result(
     )
     majority = clustered["majority_answer"]
     final_type = "MATH" if majority else "NO_ANSWER"
-    return attach_outcome(result, row, final_type, majority)
+    return attach_outcome(result, row, final_type, majority, rechecker)
 
 
 def build_one_stage_result(
-    row: dict[str, Any], unified_responses: list[str]
+    row: dict[str, Any],
+    unified_responses: list[str],
+    rechecker: MathAnswerRechecker | None = None,
 ) -> dict[str, Any]:
     extracted_outputs = [clean_extracted_answer(response) for response in unified_responses]
     invalid_votes = sum(normalize_invalid(answer) for answer in extracted_outputs)
@@ -305,9 +372,9 @@ def build_one_stage_result(
         "math_vote_tied": False,
     }
     if decision == "INVALID":
-        return attach_outcome(result, row, "INVALID", "INVALID")
+        return attach_outcome(result, row, "INVALID", "INVALID", rechecker)
     if decision == "TIE":
-        return attach_outcome(result, row, "TIE", "TIE")
+        return attach_outcome(result, row, "TIE", "TIE", rechecker)
 
     clustered = cluster_math_answers(math_candidates)
     result.update(
@@ -320,7 +387,7 @@ def build_one_stage_result(
     )
     majority = clustered["majority_answer"]
     final_type = "MATH" if majority else "NO_ANSWER"
-    return attach_outcome(result, row, final_type, majority)
+    return attach_outcome(result, row, final_type, majority, rechecker)
 
 
 def vote_histogram(values: Iterable[int], maximum: int) -> dict[str, int]:
@@ -372,6 +439,10 @@ def metrics_for(records: list[dict[str, Any]], method: str) -> dict[str, Any]:
             "true_invalid": true_invalid,
             "false_invalid": false_invalid,
             "valid_math_correct": valid_math_correct,
+            "local_math_correct": sum(result["local_math_correct"] for result in results),
+            "api_rechecked": sum(result["api_rechecked"] for result in results),
+            "api_math_correct": sum(result["api_math_correct"] is True for result in results),
+            "api_errors": sum(bool(result["api_error"]) for result in results),
             "ties": ties,
             "no_answer": sum(result["final_prediction_type"] == "NO_ANSWER" for result in results),
             "math_vote_ties": sum(result["math_vote_tied"] for result in results),
@@ -437,7 +508,23 @@ def build_summary(args: argparse.Namespace, records: list[dict[str, Any]]) -> di
             },
             "validity_ties": "preserved as TIE",
             "math_cluster_ties": "first representative wins, matching R-Zero",
-            "final_math_grader": "local mathruler.grade_answer",
+            "final_math_grader": {
+                "local_diagnostic": "mathruler.grade_answer",
+                "authoritative": (
+                    "API mathematical-equivalence judge"
+                    if not args.skip_api_recheck
+                    else "local mathruler only (non-formal diagnostic)"
+                ),
+                "judge_model": args.judge_model if not args.skip_api_recheck else None,
+                "reasoning_effort": (
+                    args.judge_reasoning_effort if not args.skip_api_recheck else None
+                ),
+                "max_completion_tokens": (
+                    args.judge_max_completion_tokens if not args.skip_api_recheck else None
+                ),
+                "api_scope": "Terra VALID with final_prediction_type == MATH only",
+                "api_context": "question, canonical answer, and majority prediction",
+            },
         },
         "methods": methods,
     }
@@ -554,6 +641,17 @@ def main() -> None:
         "Sampling: temperature=1.0, top_p=1.0, top_k=40, "
         f"max_tokens={args.max_tokens}, seed={args.seed}"
     )
+    rechecker = None
+    if not args.skip_api_recheck:
+        rechecker = MathAnswerRechecker(
+            model=args.judge_model,
+            reasoning_effort=args.judge_reasoning_effort,
+            max_completion_tokens=args.judge_max_completion_tokens,
+            timeout=args.api_timeout,
+        )
+        print(f"Final math judge: {args.judge_model}")
+    else:
+        print("Final math judge: local-only diagnostic (API recheck disabled)")
 
     import vllm
 
@@ -626,9 +724,14 @@ def main() -> None:
                 "terra_source_label": row.get("terra_label"),
                 "terra_answer": row["canonical_final_answer"],
                 "two_stage": build_two_stage_result(
-                    row, stage1_responses[index], stage2_by_index.get(index)
+                    row,
+                    stage1_responses[index],
+                    stage2_by_index.get(index),
+                    rechecker,
                 ),
-                "one_stage": build_one_stage_result(row, unified_responses[index]),
+                "one_stage": build_one_stage_result(
+                    row, unified_responses[index], rechecker
+                ),
             }
             output_records.append(record)
             handle.write(json.dumps(record, ensure_ascii=False) + "\n")

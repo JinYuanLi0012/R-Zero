@@ -224,8 +224,14 @@ VERL, training, or the R-Zero loop:
 Validity-vote ties are never silently assigned to either class. Mathematical
 cluster ties retain the earliest representative, matching R-Zero's existing
 deterministic `max()` behavior, and are flagged in the per-question artifact.
-All final mathematical answers are scored locally with
-`mathruler.grade_answer`; this simulation does not call Terra or an API judge.
+For Terra-VALID rows with a final majority math answer, local
+`mathruler.grade_answer` is retained as a diagnostic and the same API
+mathematical-equivalence judge as the pass@1 Terra evaluation makes the final
+correctness decision. It receives only the question, Terra canonical answer,
+and majority prediction, and is explicitly forbidden from judging problem
+validity. Terra-INVALID rows are scored directly from the final INVALID action;
+`TIE` and missing math answers fail without an API call. The simulation never
+calls Terra or changes its labels.
 
 This is a population-vote experiment, so generation uses R-Zero's sampled
 Solver settings rather than the deterministic pass@1 settings above:
@@ -245,6 +251,9 @@ source env_rzero.sh
 export STORAGE_PATH=/engrfs/project/jiaxinh/jinyuan/R-zero-storage
 RUN_ROOT="${STORAGE_PATH}/models/qwen3_4b_validity_rl_terra_v1"
 export VALIDITY_VOTE_EVAL_TAG="terra_vote_$(date +%Y%m%d_%H%M%S)"
+read -rsp "OpenAI API key: " OPENAI_API_KEY
+echo
+export OPENAI_API_KEY
 
 VALIDITY_VOTE_GPU_IDS=0 \
 VALIDITY_VOTE_TENSOR_PARALLEL_SIZE=1 \
@@ -268,8 +277,11 @@ bash methods/validity_rl/simulate_terra_majority_vote.sh
 Useful overrides are `VALIDITY_VOTE_MODELS`, `VALIDITY_VOTE_GPU_IDS`,
 `VALIDITY_VOTE_TENSOR_PARALLEL_SIZE`, `VALIDITY_VOTE_SEED`,
 `VALIDITY_VOTE_BATCH_SIZE`, `VALIDITY_VOTE_MAX_TOKENS`,
-`VALIDITY_VOTE_RUN_ROOT`, and `VALIDITY_VOTE_OUTPUT_ROOT`. Keep
-`VALIDITY_VOTE_MAX_TOKENS=4096` for formal comparisons.
+`VALIDITY_VOTE_RUN_ROOT`, `VALIDITY_VOTE_OUTPUT_ROOT`, `RECHECK_JUDGE_MODEL`,
+`RECHECK_REASONING_EFFORT`, and `RECHECK_MAX_COMPLETION_TOKENS`. Keep
+`VALIDITY_VOTE_MAX_TOKENS=4096` and the same judge configuration as the pass@1
+Terra evaluation for formal comparisons. `VALIDITY_VOTE_SKIP_API_RECHECK=1`
+enables a local-only diagnostic, but its accuracy is not formally comparable.
 
 Artifacts are stored under:
 
@@ -285,6 +297,8 @@ ${RUN_ROOT}/evaluations/terra_vote_simulation_<tag>/comparison.md
 
 Each question records both methods' extracted rollout outputs, INVALID vote
 counts, validity decision, answer clusters, final prediction, and correctness.
+For final math predictions it also records the local score, API verdict, and
+any API error.
 Each model summary reports final outcome accuracy, valid-math accuracy, INVALID
 recall and precision, false-INVALID rate, tie rate, average INVALID votes, vote
 histograms for VALID and INVALID gold, rollout cost, and V1–V5 breakdowns.

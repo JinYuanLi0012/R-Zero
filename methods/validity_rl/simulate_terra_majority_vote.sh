@@ -21,10 +21,21 @@ OUTPUT_ROOT=${VALIDITY_VOTE_OUTPUT_ROOT:-${RUN_ROOT}/evaluations/terra_vote_simu
 SEED=${VALIDITY_VOTE_SEED:-0}
 MAX_TOKENS=${VALIDITY_VOTE_MAX_TOKENS:-4096}
 BATCH_SIZE=${VALIDITY_VOTE_BATCH_SIZE:-0}
+JUDGE_MODEL=${RECHECK_JUDGE_MODEL:-gpt-5.6-luna}
+JUDGE_EFFORT=${RECHECK_REASONING_EFFORT:-none}
+JUDGE_MAX_TOKENS=${RECHECK_MAX_COMPLETION_TOKENS:-8}
+SKIP_API_RECHECK=${VALIDITY_VOTE_SKIP_API_RECHECK:-0}
 
 read -r -a MODEL_KEYS <<< "${MODELS_STRING}"
 if [[ ${#MODEL_KEYS[@]} -eq 0 ]]; then
     echo "VALIDITY_VOTE_MODELS did not contain any models." >&2
+    exit 2
+fi
+if [[ "${VALIDITY_VOTE_DRY_RUN:-0}" != "1" \
+    && "${SKIP_API_RECHECK}" != "1" \
+    && -z "${OPENAI_API_KEY:-}" ]]; then
+    echo "Set OPENAI_API_KEY for the formal final-math equivalence judge." >&2
+    echo "For a non-formal local-only diagnostic, set VALIDITY_VOTE_SKIP_API_RECHECK=1." >&2
     exit 2
 fi
 
@@ -61,6 +72,7 @@ echo "GPUs: ${GPU_IDS} (tensor parallel size ${TENSOR_PARALLEL_SIZE})"
 echo "Protocols: Two-stage 8+8 vs One-stage 16"
 echo "Sampling: temperature=1.0, top_p=1.0, top_k=40, max_tokens=${MAX_TOKENS}"
 echo "Seed: ${SEED}"
+echo "Final math judge: ${JUDGE_MODEL} (reasoning_effort=${JUDGE_EFFORT})"
 echo "Output root: ${OUTPUT_ROOT}"
 
 for index in "${!MODEL_LABELS[@]}"; do
@@ -75,7 +87,13 @@ for index in "${!MODEL_LABELS[@]}"; do
         --seed "${SEED}"
         --max-tokens "${MAX_TOKENS}"
         --batch-size "${BATCH_SIZE}"
+        --judge-model "${JUDGE_MODEL}"
+        --judge-reasoning-effort "${JUDGE_EFFORT}"
+        --judge-max-completion-tokens "${JUDGE_MAX_TOKENS}"
     )
+    if [[ "${SKIP_API_RECHECK}" == "1" ]]; then
+        COMMAND+=(--skip-api-recheck)
+    fi
     if [[ "${VALIDITY_VOTE_ALLOW_EXISTING:-0}" == "1" ]]; then
         COMMAND+=(--allow-existing)
     fi
