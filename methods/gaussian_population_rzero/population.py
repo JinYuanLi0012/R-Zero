@@ -16,13 +16,22 @@ from typing import Sequence
 
 import torch
 
-from population_spec import (
-    ExpertSpec,
-    allocate_quotas,
-    assign_experts,
-    make_expert_specs,
-    stable_seed,
-)
+if __package__:
+    from .population_spec import (
+        ExpertSpec,
+        allocate_quotas,
+        assign_experts,
+        make_expert_specs,
+        stable_seed,
+    )
+else:  # Support direct execution from this method directory.
+    from population_spec import (
+        ExpertSpec,
+        allocate_quotas,
+        assign_experts,
+        make_expert_specs,
+        stable_seed,
+    )
 
 
 def _named_unique_parameters(model: torch.nn.Module) -> list[tuple[str, torch.nn.Parameter]]:
