@@ -101,14 +101,14 @@ def test_one_stage_and_aggregate_metrics():
         assert sum(metrics["vote_statistics"]["terra_invalid"].values()) == 1
 
 
-def test_api_is_authoritative_only_for_valid_final_math():
+def test_api_is_fallback_only_for_locally_wrong_valid_math():
     class Judge:
         def __init__(self):
             self.calls = []
 
         def check(self, prediction, canonical, question=None):
             self.calls.append((prediction, canonical, question))
-            return False, "No"
+            return True, "Yes"
 
     judge = Judge()
     valid_row = {
@@ -123,10 +123,21 @@ def test_api_is_authoritative_only_for_valid_final_math():
         judge,
     )
     assert valid_result["local_math_correct"] is True
-    assert valid_result["api_rechecked"] is True
-    assert valid_result["api_math_correct"] is False
-    assert valid_result["correct"] is False
-    assert judge.calls == [("2", "2", "What is one plus one?")]
+    assert valid_result["api_rechecked"] is False
+    assert valid_result["api_math_correct"] is None
+    assert valid_result["correct"] is True
+    assert judge.calls == []
+
+    rescued_result = build_one_stage_result(
+        valid_row,
+        [r"\boxed{3}"] * 16,
+        judge,
+    )
+    assert rescued_result["local_math_correct"] is False
+    assert rescued_result["api_rechecked"] is True
+    assert rescued_result["api_math_correct"] is True
+    assert rescued_result["correct"] is True
+    assert judge.calls == [("3", "2", "What is one plus one?")]
 
     invalid_row = {
         "id": "invalid",

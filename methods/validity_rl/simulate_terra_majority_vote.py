@@ -249,7 +249,7 @@ def score_final_math(
     except Exception as error:
         print(f"Final math grading failed for {row['id']}: {error}", file=sys.stderr)
 
-    if rechecker is None:
+    if local_math_correct or rechecker is None:
         final_correct = local_math_correct
     else:
         api_rechecked = True
@@ -509,9 +509,9 @@ def build_summary(args: argparse.Namespace, records: list[dict[str, Any]]) -> di
             "validity_ties": "preserved as TIE",
             "math_cluster_ties": "first representative wins, matching R-Zero",
             "final_math_grader": {
-                "local_diagnostic": "mathruler.grade_answer",
+                "local_grader": "mathruler.grade_answer",
                 "authoritative": (
-                    "API mathematical-equivalence judge"
+                    "local mathruler with API fallback for locally incorrect answers"
                     if not args.skip_api_recheck
                     else "local mathruler only (non-formal diagnostic)"
                 ),
@@ -522,7 +522,9 @@ def build_summary(args: argparse.Namespace, records: list[dict[str, Any]]) -> di
                 "max_completion_tokens": (
                     args.judge_max_completion_tokens if not args.skip_api_recheck else None
                 ),
-                "api_scope": "Terra VALID with final_prediction_type == MATH only",
+                "api_scope": (
+                    "Terra VALID with final_prediction_type == MATH and local_math_correct == false"
+                ),
                 "api_context": "question, canonical answer, and majority prediction",
             },
         },

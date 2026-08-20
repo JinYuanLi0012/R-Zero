@@ -224,14 +224,15 @@ VERL, training, or the R-Zero loop:
 Validity-vote ties are never silently assigned to either class. Mathematical
 cluster ties retain the earliest representative, matching R-Zero's existing
 deterministic `max()` behavior, and are flagged in the per-question artifact.
-For Terra-VALID rows with a final majority math answer, local
-`mathruler.grade_answer` is retained as a diagnostic and the same API
-mathematical-equivalence judge as the pass@1 Terra evaluation makes the final
-correctness decision. It receives only the question, Terra canonical answer,
-and majority prediction, and is explicitly forbidden from judging problem
-validity. Terra-INVALID rows are scored directly from the final INVALID action;
-`TIE` and missing math answers fail without an API call. The simulation never
-calls Terra or changes its labels.
+For Terra-VALID rows with a final majority math answer, scoring exactly matches
+the pass@1 Terra protocol: `mathruler.grade_answer` runs first; locally correct
+answers are accepted directly, while locally incorrect answers go to the same
+API mathematical-equivalence judge for a possible rescue. The judge receives
+only the question, Terra canonical answer, and majority prediction, and is
+explicitly forbidden from judging problem validity. Terra-INVALID rows are
+scored directly from the final INVALID action; `TIE` and missing math answers
+fail without an API call. The simulation never calls Terra or changes its
+labels.
 
 This is a population-vote experiment, so generation uses R-Zero's sampled
 Solver settings rather than the deterministic pass@1 settings above:
@@ -297,8 +298,8 @@ ${RUN_ROOT}/evaluations/terra_vote_simulation_<tag>/comparison.md
 
 Each question records both methods' extracted rollout outputs, INVALID vote
 counts, validity decision, answer clusters, final prediction, and correctness.
-For final math predictions it also records the local score, API verdict, and
-any API error.
+For final math predictions it also records the local score and, when a locally
+incorrect result triggers recheck, the API verdict and any API error.
 Each model summary reports final outcome accuracy, valid-math accuracy, INVALID
 recall and precision, false-INVALID rate, tie rate, average INVALID votes, vote
 histograms for VALID and INVALID gold, rollout cost, and V1–V5 breakdowns.
