@@ -205,6 +205,91 @@ VALID math accuracy, INVALID recall and precision, false-INVALID rate, the
 requested counts, and a simple per-round breakdown. The wrapper prints the
 four-model comparison table when it finishes.
 
+## Terra majority-vote architecture simulation
+
+`simulate_terra_majority_vote.py` is an independent inference experiment for
+choosing between two possible future R-Zero integrations. It does not modify
+VERL, training, or the R-Zero loop:
+
+- **Two-stage 8+8:** eight validity-aware rollouts vote INVALID versus
+  non-INVALID. More than four INVALID votes stops with `INVALID`, exactly four
+  produces `TIE`, and fewer than four runs eight additional rollouts using the
+  original pure-math R-Zero prompt. The second-stage boxed answers are clustered
+  by R-Zero mathematical equivalence before selecting the majority answer.
+- **One-stage 16:** sixteen validity-aware rollouts vote together. More than
+  eight INVALID votes stops with `INVALID`, exactly eight produces `TIE`, and
+  fewer than eight discards INVALID outputs and clusters the remaining boxed
+  mathematical answers.
+
+Validity-vote ties are never silently assigned to either class. Mathematical
+cluster ties retain the earliest representative, matching R-Zero's existing
+deterministic `max()` behavior, and are flagged in the per-question artifact.
+All final mathematical answers are scored locally with
+`mathruler.grade_answer`; this simulation does not call Terra or an API judge.
+
+This is a population-vote experiment, so generation uses R-Zero's sampled
+Solver settings rather than the deterministic pass@1 settings above:
+
+```text
+temperature=1.0, top_p=1.0, top_k=40, max_tokens=4096
+```
+
+After merging steps 5, 10, and 15, run Base and all checkpoints sequentially
+on one GPU:
+
+```bash
+cd /storage1/jiaxinh/Active/jinyuan/R-zero
+git pull --ff-only
+source env_rzero.sh
+
+export STORAGE_PATH=/engrfs/project/jiaxinh/jinyuan/R-zero-storage
+RUN_ROOT="${STORAGE_PATH}/models/qwen3_4b_validity_rl_terra_v1"
+export VALIDITY_VOTE_EVAL_TAG="terra_vote_$(date +%Y%m%d_%H%M%S)"
+
+VALIDITY_VOTE_GPU_IDS=0 \
+VALIDITY_VOTE_TENSOR_PARALLEL_SIZE=1 \
+bash methods/validity_rl/simulate_terra_majority_vote.sh
+```
+
+The full run generates many more responses than pass@1. Run one model first if
+desired, while retaining the formal 8+8 and 16-rollout protocol:
+
+```bash
+VALIDITY_VOTE_MODELS="base" \
+VALIDITY_VOTE_GPU_IDS=0 \
+VALIDITY_VOTE_TENSOR_PARALLEL_SIZE=1 \
+bash methods/validity_rl/simulate_terra_majority_vote.sh
+
+# Print all resolved commands without loading a model.
+VALIDITY_VOTE_DRY_RUN=1 \
+bash methods/validity_rl/simulate_terra_majority_vote.sh
+```
+
+Useful overrides are `VALIDITY_VOTE_MODELS`, `VALIDITY_VOTE_GPU_IDS`,
+`VALIDITY_VOTE_TENSOR_PARALLEL_SIZE`, `VALIDITY_VOTE_SEED`,
+`VALIDITY_VOTE_BATCH_SIZE`, `VALIDITY_VOTE_MAX_TOKENS`,
+`VALIDITY_VOTE_RUN_ROOT`, and `VALIDITY_VOTE_OUTPUT_ROOT`. Keep
+`VALIDITY_VOTE_MAX_TOKENS=4096` for formal comparisons.
+
+Artifacts are stored under:
+
+```text
+${RUN_ROOT}/evaluations/terra_vote_simulation_<tag>/base/results.jsonl
+${RUN_ROOT}/evaluations/terra_vote_simulation_<tag>/base/summary.json
+${RUN_ROOT}/evaluations/terra_vote_simulation_<tag>/step_5/{results.jsonl,summary.json}
+${RUN_ROOT}/evaluations/terra_vote_simulation_<tag>/step_10/{results.jsonl,summary.json}
+${RUN_ROOT}/evaluations/terra_vote_simulation_<tag>/step_15/{results.jsonl,summary.json}
+${RUN_ROOT}/evaluations/terra_vote_simulation_<tag>/comparison.json
+${RUN_ROOT}/evaluations/terra_vote_simulation_<tag>/comparison.md
+```
+
+Each question records both methods' extracted rollout outputs, INVALID vote
+counts, validity decision, answer clusters, final prediction, and correctness.
+Each model summary reports final outcome accuracy, valid-math accuracy, INVALID
+recall and precision, false-INVALID rate, tie rate, average INVALID votes, vote
+histograms for VALID and INVALID gold, rollout cost, and V1–V5 breakdowns.
+`comparison.md` contains the requested overall and per-checkpoint tables.
+
 ## Checkpoint locations and standard math evaluation
 
 This section is the durable runbook for finding, merging, and evaluating this
