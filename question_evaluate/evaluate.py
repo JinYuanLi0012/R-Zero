@@ -31,7 +31,9 @@ import stopit  # Use the robust, thread-safe stopit library for timeouts
 from jinja2 import Template
 from mathruler.grader import extract_boxed_content, grade_answer
 
-from methods.validity_rzero.gating import PHASE_B_MATH_VOTES, evaluate_validity_responses, valid_positions
+validity_rzero_enabled = os.getenv("VALIDITY_RZERO_ENABLED", "0") == "1"
+if validity_rzero_enabled:
+    from methods.validity_rzero.gating import PHASE_B_MATH_VOTES, evaluate_validity_responses, valid_positions
 
 # --- Argument Parsing ---
 parser = argparse.ArgumentParser(description="Evaluate generated questions using vLLM.")
@@ -91,7 +93,6 @@ model = vllm.LLM(
     gpu_memory_utilization=0.85,
     seed=int(args.suffix),
 )
-validity_rzero_enabled = os.getenv("VALIDITY_RZERO_ENABLED", "0") == "1"
 math_sample_params = vllm.SamplingParams(
     max_tokens=4096,
     temperature=1.0,

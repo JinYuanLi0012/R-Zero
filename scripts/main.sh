@@ -221,8 +221,13 @@ if os.environ.get("VALIDITY_RZERO_ENABLED") == "1":
 PY
 }
 
+# BEGIN initial model selection
 CURRENT_QUESTIONER=$BASE_MODEL
-CURRENT_SOLVER=${VALIDITY_RZERO_INITIAL_SOLVER:-$BASE_MODEL}
+CURRENT_SOLVER=$BASE_MODEL
+if [ "$VALIDITY_RZERO_ENABLED" = "1" ]; then
+    CURRENT_SOLVER=$VALIDITY_RZERO_INITIAL_SOLVER
+fi
+# END initial model selection
 
 if [ "$VALIDITY_RZERO_ENABLED" = "1" ]; then
     echo "Validity R-Zero: run=$MODEL_ABBR rounds=$NUM_ROUNDS initial_solver=$CURRENT_SOLVER candidates_per_round=$((SOLVER_GENERATE_SAMPLES * SOLVER_GPU_COUNT))"

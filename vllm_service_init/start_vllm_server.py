@@ -27,7 +27,9 @@ from mathruler.grader import extract_boxed_content, grade_answer
 from jinja2 import Template
 import stopit  # 1. Import the thread-safe 'stopit' library
 
-from methods.validity_rzero.gating import PHASE_A_MATH_VOTES, evaluate_validity_responses, valid_positions
+VALIDITY_RZERO_ENABLED = os.getenv("VALIDITY_RZERO_ENABLED", "0") == "1"
+if VALIDITY_RZERO_ENABLED:
+    from methods.validity_rzero.gating import PHASE_A_MATH_VOTES, evaluate_validity_responses, valid_positions
 
 # ------------------------- Command-Line Arguments ------------------------- #
 # (This section remains unchanged)
@@ -49,7 +51,6 @@ model = vllm.LLM(
     gpu_memory_utilization=args.gpu_mem_util,
 )
 
-VALIDITY_RZERO_ENABLED = os.getenv("VALIDITY_RZERO_ENABLED", "0") == "1"
 math_sample_params = vllm.SamplingParams(
     max_tokens=int(os.getenv("VLLM_SERVER_MAX_TOKENS", "4096")),
     temperature=1.0,
