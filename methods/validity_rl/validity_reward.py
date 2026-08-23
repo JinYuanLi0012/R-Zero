@@ -30,6 +30,11 @@ def _is_invalid(answer: str) -> bool:
     return answer.strip().casefold() == INVALID_TARGET.casefold()
 
 
+# Shared public helpers for validity-gated pipelines.
+extract_final_answer = _extract_final_answer
+is_invalid_answer = _is_invalid
+
+
 def compute_score(predicts: List[str], ground_truths: List[str]) -> List[Dict[str, float]]:
     """Score a batch using the fixed validity-aware reward table.
 

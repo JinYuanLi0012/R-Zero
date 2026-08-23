@@ -28,7 +28,10 @@ import argparse
 import re
 import os
 import stopit  # Use the robust, thread-safe stopit library for timeouts
+from jinja2 import Template
 from mathruler.grader import extract_boxed_content, grade_answer
+
+from methods.validity_rzero.gating import PHASE_B_MATH_VOTES, evaluate_validity_responses, valid_positions
 
 # --- Argument Parsing ---
 parser = argparse.ArgumentParser(description="Evaluate generated questions using vLLM.")
@@ -88,13 +91,14 @@ model = vllm.LLM(
     gpu_memory_utilization=0.85,
     seed=int(args.suffix),
 )
-sample_params = vllm.SamplingParams(
+validity_rzero_enabled = os.getenv("VALIDITY_RZERO_ENABLED", "0") == "1"
+math_sample_params = vllm.SamplingParams(
     max_tokens=4096,
     temperature=1.0,
     top_p=1.0,
     top_k=40,
     stop_token_ids=[tokenizer.eos_token_id],
-    n=args.num_samples,
+    n=PHASE_B_MATH_VOTES if validity_rzero_enabled else args.num_samples,
 )
 
 # 3. Generate Responses
@@ -106,14 +110,75 @@ if tokenizer.chat_template:
 else:
     prompts = ["system: " + chat[0]["content"] + '\n' + "user: " + chat[1]["content"] for chat in chats]
 
-responses = model.generate(prompts, sampling_params=sample_params, use_tqdm=True)
+gates = None
+math_response_by_index = None
+if validity_rzero_enabled:
+    prompt_path = os.getenv(
+        "VALIDITY_RZERO_PROMPT",
+        os.path.join(os.path.dirname(__file__), "..", "methods", "validity_rl", "validity_solver.jinja"),
+    )
+    with open(prompt_path, encoding="utf-8") as handle:
+        validity_template = Template(handle.read().strip())
+    validity_chats = [[{
+        "role": "user",
+        "content": validity_template.render(content=question).strip(),
+    }] for question in questions]
+    if tokenizer.chat_template:
+        validity_prompts = [
+            tokenizer.apply_chat_template(
+                chat, tokenize=False, add_generation_prompt=True, add_special_tokens=True
+            )
+            for chat in validity_chats
+        ]
+    else:
+        validity_prompts = [f"user: {chat[0]['content']}" for chat in validity_chats]
+    validity_params = vllm.SamplingParams(
+        max_tokens=4096,
+        temperature=1.0,
+        top_p=1.0,
+        top_k=40,
+        stop_token_ids=[tokenizer.eos_token_id],
+        n=9,
+    )
+    validity_responses = model.generate(validity_prompts, sampling_params=validity_params, use_tqdm=True)
+    gates = [
+        evaluate_validity_responses([output.text for output in response.outputs])
+        for response in validity_responses
+    ]
+    del validity_responses
+    valid_indices = valid_positions(gates)
+    math_responses = model.generate(
+        [prompts[index] for index in valid_indices], sampling_params=math_sample_params, use_tqdm=True
+    ) if valid_indices else []
+    math_response_by_index = dict(zip(valid_indices, math_responses))
+else:
+    responses = model.generate(prompts, sampling_params=math_sample_params, use_tqdm=True)
 print(f"[{args.suffix}] Generation complete.")
 
 # 4. Process and Grade Responses
 results_all = []
 print(f"[{args.suffix}] Grading responses...")
-for response, golden_answer, question in zip(responses, answers, questions):
+for index, (golden_answer, question) in enumerate(zip(answers, questions)):
     try:
+        gate = gates[index] if gates is not None else None
+        if gate is not None and gate["validity_decision"] == "INVALID":
+            item = {
+                "question": question,
+                "answer": "",
+                "score": None,
+                "results": [],
+                "discarded_by_validity": True,
+                **gate,
+            }
+            results_all.append(item)
+            print(f"[{args.suffix}] [validity_rzero][phase_b] " + json.dumps({
+                key: item[key] for key in (
+                    "invalid_votes", "total_votes", "validity_decision", "discarded_by_validity"
+                )
+            }))
+            continue
+
+        response = math_response_by_index[index] if math_response_by_index is not None else responses[index]
         # Extract the boxed content from all generated samples
         results = [extract_boxed_content(output.text) for output in response.outputs]
         results = [res for res in results if res] # Filter out None/empty results
@@ -169,12 +234,23 @@ for response, golden_answer, question in zip(responses, answers, questions):
         if "证明" in question or 'box' in question.lower() or 'text' in majority_answer.lower():
             continue
 
-        results_all.append({
+        item = {
             "question": question,
             "answer": majority_answer,
             "score": score,
             'results': results
-        })
+        }
+        if gate is not None:
+            item.update({"discarded_by_validity": False, **gate})
+            print(f"[{args.suffix}] [validity_rzero][phase_b] " + json.dumps({
+                "invalid_votes": item["invalid_votes"],
+                "total_votes": item["total_votes"],
+                "validity_decision": item["validity_decision"],
+                "discarded_by_validity": False,
+                "math_majority": majority_answer,
+                "original_rzero_score": score,
+            }))
+        results_all.append(item)
 
     except Exception as e:
         print(f"[{args.suffix}] CRITICAL ERROR processing question '{question[:50]}...': {e}")

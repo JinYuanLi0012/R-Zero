@@ -137,11 +137,36 @@ def compute_score(predicts: List[str], ground_truths: List[str], format_weight: 
     # print(penalty)
     assert len(penalty) == len(final_results)
     scores = []
+    validity_rzero_enabled = os.getenv("VALIDITY_RZERO_ENABLED", "0") == "1"
     for i in range(len(final_results)):
-        final_score = (min(final_results[i]["score"],1-final_results[i]["score"]) if final_results[i]['question'] else -1)-penalty[i]
-        scores.append({"overall": final_score,"format": 1 if final_results[i]['question'] else 0,"accuracy": penalty[i]})
+        if validity_rzero_enabled and final_results[i].get("question"):
+            item = final_results[i]
+            base_reward = float(item["questioner_base_reward"])
+            final_score = base_reward - penalty[i]
+            print("[validity_rzero][questioner_reward] " + json.dumps({
+                "invalid_votes": item["invalid_votes"],
+                "total_votes": item["total_votes"],
+                "validity_decision": item["validity_decision"],
+                "validity_penalty": item["validity_penalty"],
+                "math_frontier_score": item["math_frontier_score"],
+                "similarity_penalty": penalty[i],
+                "final_questioner_reward": final_score,
+            }))
+            scores.append({
+                "overall": final_score,
+                "format": 1.0,
+                "accuracy": penalty[i],
+                "invalid_votes": float(item["invalid_votes"]),
+                "validity_invalid": float(item["validity_decision"] == "INVALID"),
+                "validity_valid": float(item["validity_decision"] == "VALID"),
+                "validity_penalty": float(item["validity_penalty"]),
+                "math_frontier_score": float(item["math_frontier_score"]),
+                "similarity_penalty": float(penalty[i]),
+            })
+        else:
+            final_score = (min(final_results[i]["score"],1-final_results[i]["score"]) if final_results[i]['question'] else -1)-penalty[i]
+            scores.append({"overall": final_score,"format": 1 if final_results[i]['question'] else 0,"accuracy": penalty[i]})
     return scores
-
 
 
 

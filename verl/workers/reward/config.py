@@ -17,7 +17,7 @@ Reward config
 
 import os
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import Optional, Tuple
 
 
 @dataclass
@@ -25,6 +25,7 @@ class RewardConfig:
     reward_type: str = "batch"
     reward_function: Optional[str] = None
     reward_function_kwargs: dict = field(default_factory=dict)
+    reward_function_data_keys: Tuple[str, ...] = ()
     skip_special_tokens: bool = True
     num_cpus: int = 1
     """auto keys"""

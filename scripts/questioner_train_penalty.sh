@@ -6,6 +6,12 @@ questioner_model_path=$2
 save_path=$3
 QUESTIONER_OUTPUT_DIR=${QUESTIONER_OUTPUT_DIR:-${STORAGE_PATH}/models/$save_path}
 mkdir -p logs
+if [ "${VALIDITY_RZERO_ENABLED:-0}" = "1" ] && [ -n "${VALIDITY_RZERO_ARTIFACT_DIR:-}" ]; then
+    QUESTIONER_ARTIFACT_DIR=${VALIDITY_RZERO_ARTIFACT_DIR}/${save_path}
+    mkdir -p "$QUESTIONER_ARTIFACT_DIR"
+    QUESTIONER_LOG_FILE=${QUESTIONER_LOG_FILE:-${QUESTIONER_ARTIFACT_DIR}/questioner_$(date +%Y%m%d_%H%M%S).log}
+    VLLM_LOG_DIR=${VLLM_LOG_DIR:-${QUESTIONER_ARTIFACT_DIR}/vllm}
+fi
 QUESTIONER_LOG_FILE=${QUESTIONER_LOG_FILE:-logs/questioner_${save_path}_$(date +%Y%m%d_%H%M%S).log}
 exec > >(tee -a "$QUESTIONER_LOG_FILE") 2>&1
 echo "logging to $QUESTIONER_LOG_FILE"

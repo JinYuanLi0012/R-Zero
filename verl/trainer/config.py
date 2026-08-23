@@ -17,7 +17,7 @@ PPO config
 
 import os
 from dataclasses import asdict, dataclass, field, fields, is_dataclass
-from typing import Optional, Tuple
+from typing import Dict, Optional, Tuple
 
 from ..workers.config import WorkerConfig
 
@@ -43,6 +43,9 @@ class DataConfig:
     rollout_batch_size: int = 512
     val_batch_size: int = -1
     format_prompt: Optional[str] = None
+    format_prompt_source_key: Optional[str] = None
+    format_prompt_by_source: Dict[str, str] = field(default_factory=dict)
+    default_source: Optional[str] = None
     override_chat_template: Optional[str] = None
     shuffle: bool = True
     seed: int = 1
@@ -56,6 +59,12 @@ class DataConfig:
                 self.format_prompt = os.path.abspath(self.format_prompt)
             else:
                 self.format_prompt = None
+        resolved = {}
+        for source, path in self.format_prompt_by_source.items():
+            if not os.path.exists(path):
+                raise FileNotFoundError(f"format prompt for source {source!r} not found: {path}")
+            resolved[source] = os.path.abspath(path)
+        self.format_prompt_by_source = resolved
 
 
 @dataclass

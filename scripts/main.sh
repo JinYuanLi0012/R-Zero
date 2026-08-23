@@ -37,6 +37,13 @@ fi
 
 BASE_MODEL=${POSITIONAL[0]}
 MODEL_ABBR=${POSITIONAL[1]}
+VALIDITY_RZERO_ENABLED=${VALIDITY_RZERO_ENABLED:-0}
+if [ "$VALIDITY_RZERO_ENABLED" = "1" ]; then
+    NO_EVAL=1
+    : "${VALIDITY_RZERO_INITIAL_SOLVER:?set VALIDITY_RZERO_INITIAL_SOLVER}"
+    : "${TERRA_REPLAY_DATASET:?set TERRA_REPLAY_DATASET}"
+    : "${TERRA_REPLAY_RATIO:?set TERRA_REPLAY_RATIO}"
+fi
 if ! [[ "$NUM_ROUNDS" =~ ^[1-9][0-9]*$ ]]; then
     echo "--rounds must be a positive integer" >&2
     exit 2
@@ -47,6 +54,16 @@ fi
 REPO_ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 cd "$REPO_ROOT"
 export PYTHONPATH="$REPO_ROOT:${PYTHONPATH:-}"
+
+if [ "$VALIDITY_RZERO_ENABLED" = "1" ]; then
+    python3 scripts/validate_hf_checkpoint.py "$VALIDITY_RZERO_INITIAL_SOLVER" >/dev/null
+    python3 - "$TERRA_REPLAY_RATIO" <<'PY'
+import sys
+value = float(sys.argv[1])
+if not 0.0 < value < 1.0:
+    raise SystemExit("TERRA_REPLAY_RATIO must be in (0, 1)")
+PY
+fi
 
 # Reproducible base-R-Zero defaults. All remain environment-overridable, but
 # the fingerprint prevents changing them while resuming the same MODEL_ABBR.
@@ -70,6 +87,7 @@ export SOLVER_SAVE_FREQ=${SOLVER_SAVE_FREQ:-1}
 export SOLVER_SAVE_LIMIT=${SOLVER_SAVE_LIMIT:-1}
 export SOLVER_MAX_RESPONSE_LENGTH=${SOLVER_MAX_RESPONSE_LENGTH:-4096}
 export SOLVER_TOTAL_EPOCHS=${SOLVER_TOTAL_EPOCHS:-100}
+export SOLVER_ROLLOUT_BATCH_SIZE=${SOLVER_ROLLOUT_BATCH_SIZE:-512}
 export SOLVER_VAL_FREQ=${SOLVER_VAL_FREQ:-4}
 export SOLVER_SKIP_FINAL_EVAL=1
 export SOLVER_SKIP_MERGE=0
@@ -87,9 +105,25 @@ fi
 QUESTIONER_GPU_COUNT=$(awk -F',' '{print NF}' <<< "$QUESTIONER_TRAIN_GPU_IDS")
 SOLVER_GPU_COUNT=$(awk -F',' '{print NF}' <<< "$QUESTION_GPU_IDS")
 RUN_ROOT=${RZERO_RUN_ROOT:-$STORAGE_PATH/rzero_runs/$MODEL_ABBR}
+if [ "$VALIDITY_RZERO_ENABLED" = "1" ]; then
+    export VALIDITY_RZERO_ARTIFACT_DIR=${VALIDITY_RZERO_ARTIFACT_DIR:-$RUN_ROOT/artifacts}
+fi
 STATE_DIR=$RUN_ROOT/state
 STATE_FILE=$STATE_DIR/run_state.json
 SUMMARY_FILE=$RUN_ROOT/summary.json
+
+FINGERPRINT_EXTRA=()
+if [ "$VALIDITY_RZERO_ENABLED" = "1" ]; then
+    FINGERPRINT_EXTRA+=(
+        --field "validity_rzero_enabled=1"
+        --field "initial_solver=${VALIDITY_RZERO_INITIAL_SOLVER}"
+        --field "terra_replay_dataset=${TERRA_REPLAY_DATASET}"
+        --field "terra_replay_config=${TERRA_REPLAY_CONFIG:-default}"
+        --field "terra_replay_ratio=${TERRA_REPLAY_RATIO}"
+        --field "terra_replay_seed=${TERRA_REPLAY_SEED:-1}"
+        --field "solver_rollout_batch_size=${SOLVER_ROLLOUT_BATCH_SIZE}"
+    )
+fi
 
 if [ -e "$STATE_FILE" ] && [ "$RESUME" != "1" ]; then
     echo "Run already exists at $RUN_ROOT. Re-run with --resume or choose a new MODEL_ABBR." >&2
@@ -101,6 +135,7 @@ FINGERPRINT=$(python3 scripts/rzero_pipeline_state.py init \
     --state "$STATE_FILE" \
     --field "pipeline_version=1" \
     --field "base_model=$BASE_MODEL" \
+    "${FINGERPRINT_EXTRA[@]}" \
     --field "model_abbr=$MODEL_ABBR" \
     --field "num_rounds=$NUM_ROUNDS" \
     --field "huggingface_name=$HUGGINGFACENAME" \
@@ -171,6 +206,7 @@ checkpoint_valid() {
 dataset_receipt_valid() {
     python3 - "$1" "$2" <<'PY' >/dev/null 2>&1
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -178,13 +214,21 @@ receipt = Path(sys.argv[1])
 payload = json.loads(receipt.read_text(encoding="utf-8"))
 if payload.get("dataset_id") != sys.argv[2] or int(payload.get("filtered_count", 0)) <= 0:
     raise SystemExit(1)
+if os.environ.get("VALIDITY_RZERO_ENABLED") == "1":
+    required = {"rzero_sample_count", "terra_replay_sample_count", "actual_replay_ratio", "phase_b_audit"}
+    if required.difference(payload) or not Path(payload["phase_b_audit"]).is_file():
+        raise SystemExit(1)
 PY
 }
 
 CURRENT_QUESTIONER=$BASE_MODEL
-CURRENT_SOLVER=$BASE_MODEL
+CURRENT_SOLVER=${VALIDITY_RZERO_INITIAL_SOLVER:-$BASE_MODEL}
 
-echo "Base R-Zero: run=$MODEL_ABBR rounds=$NUM_ROUNDS candidates_per_round=$((SOLVER_GENERATE_SAMPLES * SOLVER_GPU_COUNT))"
+if [ "$VALIDITY_RZERO_ENABLED" = "1" ]; then
+    echo "Validity R-Zero: run=$MODEL_ABBR rounds=$NUM_ROUNDS initial_solver=$CURRENT_SOLVER candidates_per_round=$((SOLVER_GENERATE_SAMPLES * SOLVER_GPU_COUNT))"
+else
+    echo "Base R-Zero: run=$MODEL_ABBR rounds=$NUM_ROUNDS candidates_per_round=$((SOLVER_GENERATE_SAMPLES * SOLVER_GPU_COUNT))"
+fi
 if [ "$NO_EVAL" != "1" ]; then
     BASE_EVAL_STAGE=base/evaluation
     BASE_EVAL_DIR=$RUN_ROOT/evaluations/base
@@ -244,7 +288,11 @@ for ((round=1; round<=NUM_ROUNDS; round++)); do
     SOLVER_NAME=${MODEL_ABBR}_solver_v${round}
     DATASET_STAGE=round_${round}/dataset
     DATASET_RECEIPT=$RUN_ROOT/datasets/round_${round}.json
-    if stage_done "$DATASET_STAGE" "$DATASET_RECEIPT"; then
+    DATASET_ARTIFACTS=("$DATASET_RECEIPT")
+    if [ "$VALIDITY_RZERO_ENABLED" = "1" ]; then
+        DATASET_ARTIFACTS+=("${DATASET_RECEIPT%.json}_phase_b.jsonl")
+    fi
+    if stage_done "$DATASET_STAGE" "${DATASET_ARTIFACTS[@]}"; then
         echo "[resume] skip completed stage $DATASET_STAGE"
     else
         if [ "$RESUME" = "1" ] && dataset_receipt_valid "$DATASET_RECEIPT" "$HUGGINGFACENAME/$SOLVER_NAME"; then
@@ -257,7 +305,7 @@ for ((round=1; round<=NUM_ROUNDS; round++)); do
             SOLVER_PREPARE_ONLY=1 SOLVER_DATASET_READY=0 SOLVER_SKIP_MERGE=1 \
                 bash scripts/solver_train.sh "$CURRENT_SOLVER" "$CURRENT_QUESTIONER" "$SOLVER_NAME"
         fi
-        complete_stage "$DATASET_STAGE" "$DATASET_RECEIPT"
+        complete_stage "$DATASET_STAGE" "${DATASET_ARTIFACTS[@]}"
     fi
 
     SOLVER_DIR=$STORAGE_PATH/models/$SOLVER_NAME
@@ -313,7 +361,7 @@ for ((round=1; round<=NUM_ROUNDS; round++)); do
     fi
 done
 
-python3 - "$SUMMARY_FILE" "$BASE_MODEL" "$CURRENT_QUESTIONER" "$CURRENT_SOLVER" "$NUM_ROUNDS" <<'PY'
+python3 - "$SUMMARY_FILE" "$BASE_MODEL" "$CURRENT_QUESTIONER" "$CURRENT_SOLVER" "$NUM_ROUNDS" "$VALIDITY_RZERO_ENABLED" "${VALIDITY_RZERO_INITIAL_SOLVER:-$BASE_MODEL}" <<'PY'
 import json
 import os
 import sys
@@ -321,12 +369,15 @@ from pathlib import Path
 
 path = Path(sys.argv[1])
 temporary = path.with_name(f"{path.name}.tmp-{os.getpid()}")
-temporary.write_text(json.dumps({
+payload = {
     "base_model": sys.argv[2],
     "final_questioner": sys.argv[3],
     "final_solver": sys.argv[4],
     "rounds": int(sys.argv[5]),
-}, indent=2) + "\n", encoding="utf-8")
+}
+if sys.argv[6] == "1":
+    payload["initial_solver"] = sys.argv[7]
+temporary.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
 os.replace(temporary, path)
 PY
 

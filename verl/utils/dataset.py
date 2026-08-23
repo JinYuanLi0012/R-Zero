@@ -92,6 +92,9 @@ class RLHFDataset(Dataset):
         max_prompt_length: int = 1024,
         truncation: str = "error",
         format_prompt: Optional[str] = None,
+        format_prompt_source_key: Optional[str] = None,
+        format_prompt_by_source: Optional[Dict[str, str]] = None,
+        default_source: Optional[str] = None,
         max_pixels: Optional[int] = None,
         min_pixels: Optional[int] = None,
         filter_overlong_prompts: bool = True,
@@ -106,6 +109,8 @@ class RLHFDataset(Dataset):
         self.max_pixels = max_pixels
         self.min_pixels = min_pixels
         self.filter_overlong_prompts = filter_overlong_prompts
+        self.format_prompt_source_key = format_prompt_source_key
+        self.default_source = default_source
 
         if "@" in data_path:
             data_path, data_split = data_path.split("@")
@@ -125,6 +130,10 @@ class RLHFDataset(Dataset):
         if format_prompt:
             with open(format_prompt, encoding="utf-8") as f:
                 self.format_prompt = f.read()
+        self.format_prompt_by_source = {}
+        for source, path in (format_prompt_by_source or {}).items():
+            with open(path, encoding="utf-8") as f:
+                self.format_prompt_by_source[source] = f.read()
 
         if "questioner_format_with_persona" in self.format_prompt:
             print("load personas")
@@ -136,7 +145,11 @@ class RLHFDataset(Dataset):
 
     def _build_messages(self, example: Dict[str, Any]) -> List[Dict[str, Any]]:
         prompt_str: str = example[self.prompt_key]
-        if "questioner_format_with_persona" in self.format_prompt:
+        format_prompt = self.format_prompt
+        if self.format_prompt_source_key:
+            source = example.get(self.format_prompt_source_key, self.default_source)
+            format_prompt = self.format_prompt_by_source.get(source, format_prompt)
+        if "questioner_format_with_persona" in format_prompt:
             print("load personas")
             return [
                 {
@@ -164,7 +177,7 @@ class RLHFDataset(Dataset):
                     )
                 }
             ]
-        if "questioner_format" in self.format_prompt:
+        if "questioner_format" in format_prompt:
             # print('detected questioner_format')
             return [
                 {
@@ -192,11 +205,11 @@ class RLHFDataset(Dataset):
                     )
                 }
             ]
-        if "solver_format" in self.format_prompt:
+        if "solver_format" in format_prompt:
             return [{"role": "system", "content": r"Please reason step by step, and put your final answer within \boxed{}."},{"role": "user", "content": prompt_str}]
-        if self.format_prompt:
-            format_prompt = Template(self.format_prompt.strip())
-            prompt_str = format_prompt.render(content=prompt_str)
+        if format_prompt:
+            format_template = Template(format_prompt.strip())
+            prompt_str = format_template.render(content=prompt_str)
         
         if self.image_key in example:
             # https://huggingface.co/docs/transformers/en/tasks/image_text_to_text
@@ -230,6 +243,8 @@ class RLHFDataset(Dataset):
 
     def __getitem__(self, index):
         example: dict = self.dataset[index]
+        if self.format_prompt_source_key and self.default_source:
+            example.setdefault(self.format_prompt_source_key, self.default_source)
         messages = self._build_messages(example)
 
         if self.image_key in example:

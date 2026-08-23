@@ -65,6 +65,15 @@ class FunctionRewardManager(ABC):
         self.config = config
         self.tokenizer = tokenizer
 
+    def reward_data(self, data: DataProto, index: Optional[int] = None) -> dict:
+        values = {}
+        for key in self.config.reward_function_data_keys:
+            if key not in data.non_tensor_batch:
+                raise KeyError(f"reward data key {key!r} is missing from the batch")
+            value = data.non_tensor_batch[key]
+            values[key] = value[index] if index is not None else value.tolist()
+        return values
+
     @abstractmethod
     def compute_reward(self, data: DataProto) -> Tuple[torch.Tensor, Dict[str, List[float]]]:
         """Compute reward for a batch of data."""
@@ -86,7 +95,7 @@ class SequentialFunctionRewardManager(FunctionRewardManager):
             )
             ground_truth = data.non_tensor_batch["ground_truth"][i]
 
-            score = self.reward_fn(response_str, ground_truth)
+            score = self.reward_fn(response_str, ground_truth, **self.reward_data(data, i))
             reward_tensor[i, response_length[i] - 1] = score["overall"]
             for key, value in score.items():
                 reward_metrics[key].append(value)
@@ -108,7 +117,7 @@ class BatchFunctionRewardManager(FunctionRewardManager):
             )
             ground_truth.append(data.non_tensor_batch["ground_truth"][i])
 
-        scores = self.reward_fn(response_str, ground_truth)
+        scores = self.reward_fn(response_str, ground_truth, **self.reward_data(data))
         reward_tensor = torch.zeros_like(data.batch["responses"], dtype=torch.float32)
         reward_metrics = defaultdict(list)
         for i, score in enumerate(scores):

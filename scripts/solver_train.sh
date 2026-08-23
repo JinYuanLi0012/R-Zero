@@ -6,6 +6,11 @@ questioner_model_path=$2
 experiment_name=$3
 
 mkdir -p logs
+if [ "${VALIDITY_RZERO_ENABLED:-0}" = "1" ] && [ -n "${VALIDITY_RZERO_ARTIFACT_DIR:-}" ]; then
+    SOLVER_ARTIFACT_DIR=${VALIDITY_RZERO_ARTIFACT_DIR}/${experiment_name}
+    mkdir -p "$SOLVER_ARTIFACT_DIR"
+    SOLVER_LOG_FILE=${SOLVER_LOG_FILE:-${SOLVER_ARTIFACT_DIR}/solver_$(date +%Y%m%d_%H%M%S).log}
+fi
 SOLVER_LOG_FILE=${SOLVER_LOG_FILE:-logs/solver_${experiment_name}_$(date +%Y%m%d_%H%M%S).log}
 exec > >(tee -a "$SOLVER_LOG_FILE") 2>&1
 echo "logging to $SOLVER_LOG_FILE"
@@ -41,18 +46,39 @@ SOLVER_SAVE_LIMIT=${SOLVER_SAVE_LIMIT:-3}
 SOLVER_KEEP_LATEST_RESUME_STATE_ONLY=${SOLVER_KEEP_LATEST_RESUME_STATE_ONLY:-false}
 SOLVER_LOAD_CHECKPOINT=${SOLVER_LOAD_CHECKPOINT:-}
 SOLVER_DATASET_RECEIPT=${SOLVER_DATASET_RECEIPT:-}
+SOLVER_ROLLOUT_BATCH_SIZE=${SOLVER_ROLLOUT_BATCH_SIZE:-512}
+VALIDITY_RZERO_ENABLED=${VALIDITY_RZERO_ENABLED:-0}
 echo "solver config: samples=$SOLVER_GENERATE_SAMPLES label_timeout=${QUESTION_EVAL_TIMEOUT_SECONDS}s max_steps=$SOLVER_MAX_STEPS val_freq=$SOLVER_VAL_FREQ merge_step=$SOLVER_MERGE_STEP"
 if [ "$SOLVER_DATASET_READY" != "1" ]; then
     echo 'start generate question'
     bash question_generate/question_generate.bash $questioner_model_path $SOLVER_GENERATE_SAMPLES $experiment_name
     echo 'start evaluate generated question'
     bash question_evaluate/evaluate.sh $solver_model_path $experiment_name
-    echo 'start upload'
-    UPLOAD_ARGS=(--repo_name "${experiment_name}" --max_score "${SOLVER_UPLOAD_MAX_SCORE}" --min_score "${SOLVER_UPLOAD_MIN_SCORE}" --experiment_name "${experiment_name}" --num_shards "${QUESTION_NUM_SHARDS}")
-    if [ -n "$SOLVER_DATASET_RECEIPT" ]; then
-        UPLOAD_ARGS+=(--receipt "$SOLVER_DATASET_RECEIPT")
+    if [ "$VALIDITY_RZERO_ENABLED" = "1" ]; then
+        : "${TERRA_REPLAY_DATASET:?set TERRA_REPLAY_DATASET for validity-RZero}"
+        : "${TERRA_REPLAY_RATIO:?set TERRA_REPLAY_RATIO for validity-RZero}"
+        : "${SOLVER_DATASET_RECEIPT:?set SOLVER_DATASET_RECEIPT for validity-RZero}"
+        echo 'start validity-RZero dataset mixing and upload'
+        python methods/validity_rzero/prepare_solver_dataset.py \
+            --repo-name "${experiment_name}" \
+            --experiment-name "${experiment_name}" \
+            --num-shards "${QUESTION_NUM_SHARDS}" \
+            --max-score "${SOLVER_UPLOAD_MAX_SCORE}" \
+            --min-score "${SOLVER_UPLOAD_MIN_SCORE}" \
+            --terra-dataset "${TERRA_REPLAY_DATASET}" \
+            --terra-config "${TERRA_REPLAY_CONFIG:-default}" \
+            --replay-ratio "${TERRA_REPLAY_RATIO}" \
+            --seed "${TERRA_REPLAY_SEED:-1}" \
+            --min-train-rows "${SOLVER_ROLLOUT_BATCH_SIZE}" \
+            --receipt "${SOLVER_DATASET_RECEIPT}"
+    else
+        echo 'start upload'
+        UPLOAD_ARGS=(--repo_name "${experiment_name}" --max_score "${SOLVER_UPLOAD_MAX_SCORE}" --min_score "${SOLVER_UPLOAD_MIN_SCORE}" --experiment_name "${experiment_name}" --num_shards "${QUESTION_NUM_SHARDS}")
+        if [ -n "$SOLVER_DATASET_RECEIPT" ]; then
+            UPLOAD_ARGS+=(--receipt "$SOLVER_DATASET_RECEIPT")
+        fi
+        python question_evaluate/upload.py "${UPLOAD_ARGS[@]}"
     fi
-    python question_evaluate/upload.py "${UPLOAD_ARGS[@]}"
 else
     echo "dataset already prepared: ${HUGGINGFACENAME}/${experiment_name}"
 fi
@@ -70,6 +96,19 @@ if [ -n "$SOLVER_LOAD_CHECKPOINT" ]; then
     RESUME_ARGS+=(trainer.load_checkpoint_path="$SOLVER_LOAD_CHECKPOINT")
 fi
 
+EXTRA_TRAIN_ARGS=()
+if [ "$VALIDITY_RZERO_ENABLED" = "1" ]; then
+    EXTRA_TRAIN_ARGS+=(
+        data.format_prompt_source_key=source
+        data.default_source=rzero
+        data.format_prompt_by_source.rzero=./examples/format_prompt/solver.jinja
+        data.format_prompt_by_source.terra=./methods/validity_rl/validity_solver.jinja
+        data.rollout_batch_size=${SOLVER_ROLLOUT_BATCH_SIZE}
+        worker.reward.reward_function=./methods/validity_rzero/mixed_reward.py:compute_score
+        'worker.reward.reward_function_data_keys=[source]'
+    )
+fi
+
 CUDA_VISIBLE_DEVICES=${QUESTION_GPU_IDS} python3 -m verl.trainer.main \
     config=examples/config.yaml \
     data.max_response_length=${SOLVER_MAX_RESPONSE_LENGTH} \
@@ -84,6 +123,7 @@ CUDA_VISIBLE_DEVICES=${QUESTION_GPU_IDS} python3 -m verl.trainer.main \
     trainer.keep_latest_resume_state_only=${SOLVER_KEEP_LATEST_RESUME_STATE_ONLY} \
     "${RESUME_ARGS[@]}" \
     data.format_prompt=./examples/format_prompt/solver.jinja \
+    "${EXTRA_TRAIN_ARGS[@]}" \
     trainer.val_freq=${SOLVER_VAL_FREQ} \
     trainer.n_gpus_per_node=${QUESTION_NUM_SHARDS} \
     worker.actor.micro_batch_size_per_device_for_update=1 \
