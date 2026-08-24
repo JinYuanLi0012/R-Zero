@@ -46,6 +46,14 @@ def build_record(index: int, output: Any, max_tokens: int) -> dict[str, Any]:
     placeholder_question = _is_placeholder_question(parsed["question"])
     heuristic_meta_reasoning = _has_meta_reasoning(raw_response)
     parse_success = bool(parsed["question"] and parsed["answer"])
+    think_end = raw_response.rfind("</think>")
+    question_start = raw_response.rfind("<question>")
+    question_end = raw_response.rfind("</question>")
+    answer_start = raw_response.rfind(r"\boxed{")
+    valid_formatted_completion = bool(
+        parse_success
+        and 0 <= think_end < question_start < question_end < answer_start
+    )
     heuristic_real_question = bool(
         parse_success
         and not literal_final_answer
@@ -65,6 +73,7 @@ def build_record(index: int, output: Any, max_tokens: int) -> dict[str, Any]:
         "parsed_answer": parsed["answer"],
         "closed_think": "</think>" in raw_response,
         "parse_success": parse_success,
+        "valid_formatted_completion": valid_formatted_completion,
         "literal_final_answer": literal_final_answer,
         "placeholder_question": placeholder_question,
         # These two fields are triage hints, not ground-truth labels. The raw
@@ -94,6 +103,7 @@ def summarize(records: list[dict[str, Any]], provenance: dict[str, Any]) -> dict
         "hit_4096": sum(record["hit_max_tokens"] for record in records),
         "closed_think": sum(record["closed_think"] for record in records),
         "parse_success": sum(record["parse_success"] for record in records),
+        "valid_formatted_completion": sum(record["valid_formatted_completion"] for record in records),
         "literal_final_answer": sum(record["literal_final_answer"] for record in records),
         "placeholder_question": sum(record["placeholder_question"] for record in records),
         "heuristic_meta_reasoning": sum(record["heuristic_meta_reasoning"] for record in records),
@@ -116,17 +126,26 @@ def summarize(records: list[dict[str, Any]], provenance: dict[str, Any]) -> dict
     return summary
 
 
-def main() -> None:
+def build_parser(default_samples: int = 128) -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--expected-revision", default="1001bb4")
-    parser.add_argument("--samples", type=int, default=128)
+    parser.add_argument("--samples", type=int, default=default_samples)
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--temperature", type=float, default=1.0)
     parser.add_argument("--top-p", type=float, default=0.95)
     parser.add_argument("--max-tokens", type=int, default=4096)
-    args = parser.parse_args()
+    return parser
+
+
+def run_diagnostic(
+    args: argparse.Namespace,
+    questioner_messages: list[dict[str, str]],
+    raw_filename: str,
+    summary_filename: str,
+    prompt_variant: str,
+) -> None:
 
     revision_path = args.model / "RZERO_MODEL_REVISION"
     if not revision_path.is_file():
@@ -143,7 +162,7 @@ def main() -> None:
         raise RuntimeError(f"expected qwen3_5 Base model, found {config.model_type!r}")
     tokenizer = AutoTokenizer.from_pretrained(args.model)
     prompt = tokenizer.apply_chat_template(
-        QUESTIONER_MESSAGES,
+        questioner_messages,
         tokenize=False,
         add_generation_prompt=True,
     )
@@ -177,6 +196,7 @@ def main() -> None:
         "model_revision": revision,
         "model_type": config.model_type,
         "model_state": "immutable_untrained_base",
+        "prompt_variant": prompt_variant,
         "samples": args.samples,
         "seed": args.seed,
         "temperature": args.temperature,
@@ -189,16 +209,27 @@ def main() -> None:
         "im_end_token_id": tokenizer.convert_tokens_to_ids("<|im_end|>"),
         "prompt_sha256": hashlib.sha256(prompt.encode("utf-8")).hexdigest(),
         "rendered_prompt": prompt,
-        "questioner_messages": QUESTIONER_MESSAGES,
+        "questioner_messages": questioner_messages,
     }
 
     args.output_dir.mkdir(parents=True, exist_ok=True)
-    raw_path = args.output_dir / "qwen35_base_questioner_raw_128.json"
-    summary_path = args.output_dir / "qwen35_base_questioner_summary.json"
+    raw_path = args.output_dir / raw_filename
+    summary_path = args.output_dir / summary_filename
     atomic_json(raw_path, records)
     atomic_json(summary_path, summarize(records, provenance))
     print(f"raw_output={raw_path}")
     print(f"summary_output={summary_path}")
+
+
+def main() -> None:
+    args = build_parser().parse_args()
+    run_diagnostic(
+        args,
+        QUESTIONER_MESSAGES,
+        "qwen35_base_questioner_raw_128.json",
+        "qwen35_base_questioner_summary.json",
+        "released_rzero",
+    )
 
 
 if __name__ == "__main__":
