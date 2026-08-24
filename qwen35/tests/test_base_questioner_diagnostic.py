@@ -93,6 +93,19 @@ class BaseQuestionerDiagnosticTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "mislabeled diagnostic"):
             validate_rendered_prompt("<|im_start|>assistant\n", False)
 
+    def test_thinking_off_counts_prefilled_closure_and_response_only_format(self):
+        text = "<question>What is 17 times 23?</question>\\boxed{391}"
+        record = build_record(
+            0,
+            self.output(text),
+            4096,
+            thinking_prefilled_closed=True,
+        )
+        self.assertTrue(record["closed_think"])
+        self.assertFalse(record["generated_closed_think"])
+        self.assertTrue(record["thinking_prefilled_closed"])
+        self.assertTrue(record["valid_formatted_completion"])
+
 
 if __name__ == "__main__":
     unittest.main()

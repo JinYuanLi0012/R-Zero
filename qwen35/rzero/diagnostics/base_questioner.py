@@ -48,7 +48,12 @@ def validate_rendered_prompt(prompt: str, enable_thinking: bool | None) -> None:
         )
 
 
-def build_record(index: int, output: Any, max_tokens: int) -> dict[str, Any]:
+def build_record(
+    index: int,
+    output: Any,
+    max_tokens: int,
+    thinking_prefilled_closed: bool = False,
+) -> dict[str, Any]:
     raw_response = output.text
     parsed = parse_questioner_response(raw_response)
     finish_reason = str(output.finish_reason) if output.finish_reason is not None else None
@@ -61,10 +66,13 @@ def build_record(index: int, output: Any, max_tokens: int) -> dict[str, Any]:
     question_start = raw_response.rfind("<question>")
     question_end = raw_response.rfind("</question>")
     answer_start = raw_response.rfind(r"\boxed{")
-    valid_formatted_completion = bool(
-        parse_success
-        and 0 <= think_end < question_start < question_end < answer_start
-    )
+    generated_closed_think = think_end >= 0
+    closed_think = thinking_prefilled_closed or generated_closed_think
+    if thinking_prefilled_closed:
+        valid_order = 0 <= question_start < question_end < answer_start
+    else:
+        valid_order = 0 <= think_end < question_start < question_end < answer_start
+    valid_formatted_completion = bool(parse_success and valid_order)
     heuristic_real_question = bool(
         parse_success
         and not literal_final_answer
@@ -82,7 +90,9 @@ def build_record(index: int, output: Any, max_tokens: int) -> dict[str, Any]:
         "token_count": token_count,
         "parsed_question": parsed["question"],
         "parsed_answer": parsed["answer"],
-        "closed_think": "</think>" in raw_response,
+        "closed_think": closed_think,
+        "generated_closed_think": generated_closed_think,
+        "thinking_prefilled_closed": thinking_prefilled_closed,
         "parse_success": parse_success,
         "valid_formatted_completion": valid_formatted_completion,
         "literal_final_answer": literal_final_answer,
@@ -204,7 +214,12 @@ def run_diagnostic(
         raise RuntimeError(f"generated {len(completions)} rows, expected {args.samples}")
 
     records = [
-        build_record(index, completion.outputs[0], args.max_tokens)
+        build_record(
+            index,
+            completion.outputs[0],
+            args.max_tokens,
+            thinking_prefilled_closed=enable_thinking is False,
+        )
         for index, completion in enumerate(completions)
     ]
     provenance = {
@@ -217,6 +232,7 @@ def run_diagnostic(
         # None means no template override was supplied and therefore preserves
         # the exact behavior used by the two earlier diagnostic baselines.
         "enable_thinking_override": enable_thinking,
+        "thinking_prefilled_closed": enable_thinking is False,
         "samples": args.samples,
         "seed": args.seed,
         "temperature": args.temperature,
