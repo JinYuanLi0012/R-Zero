@@ -1,7 +1,13 @@
 import unittest
+from unittest.mock import MagicMock, patch
 from types import SimpleNamespace
 
-from qwen35.rzero.diagnostics.base_questioner import build_record, summarize
+from qwen35.rzero.diagnostics.base_questioner import (
+    THINKING_OFF_GENERATION_SUFFIX,
+    build_record,
+    summarize,
+    validate_rendered_prompt,
+)
 from qwen35.rzero.diagnostics.base_questioner_no_meta import (
     QUESTIONER_NO_EXPLICIT_META_THINKING_MESSAGES,
 )
@@ -62,6 +68,30 @@ class BaseQuestionerDiagnosticTests(unittest.TestCase):
             QUESTIONER_NO_EXPLICIT_META_THINKING_MESSAGES[1],
             QUESTIONER_MESSAGES[1],
         )
+
+    def test_thinking_off_variant_uses_released_prompt_and_only_overrides_template(self):
+        from qwen35.rzero.diagnostics import base_questioner_thinking_off
+
+        with (
+            patch.object(base_questioner_thinking_off, "build_parser") as build_parser,
+            patch.object(base_questioner_thinking_off, "run_diagnostic") as run_diagnostic,
+        ):
+            build_parser.return_value.parse_args.return_value = MagicMock()
+            base_questioner_thinking_off.main()
+
+        build_parser.assert_called_once_with(default_samples=32)
+        call = run_diagnostic.call_args
+        self.assertIs(call.args[1], QUESTIONER_MESSAGES)
+        self.assertEqual(call.args[2], "qwen35_base_questioner_thinking_off_raw_32.json")
+        self.assertEqual(call.args[3], "qwen35_base_questioner_thinking_off_summary.json")
+        self.assertEqual(call.args[4], "released_rzero_thinking_off")
+        self.assertIs(call.kwargs["enable_thinking"], False)
+
+    def test_thinking_off_requires_the_official_empty_thinking_prefix(self):
+        validate_rendered_prompt("prefix" + THINKING_OFF_GENERATION_SUFFIX, False)
+        validate_rendered_prompt("<|im_start|>assistant\n", None)
+        with self.assertRaisesRegex(RuntimeError, "mislabeled diagnostic"):
+            validate_rendered_prompt("<|im_start|>assistant\n", False)
 
 
 if __name__ == "__main__":

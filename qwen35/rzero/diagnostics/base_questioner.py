@@ -23,6 +23,7 @@ META_REASONING_PATTERNS = (
     ),
     re.compile(r"\b(?:brainstorm|candidate problem|problem setter|the prompt|the instructions?)\b", re.IGNORECASE),
 )
+THINKING_OFF_GENERATION_SUFFIX = "<|im_start|>assistant\n<think>\n\n</think>\n\n"
 
 
 def _is_placeholder_question(question: str) -> bool:
@@ -35,6 +36,16 @@ def _is_placeholder_question(question: str) -> bool:
 
 def _has_meta_reasoning(text: str) -> bool:
     return any(pattern.search(text) for pattern in META_REASONING_PATTERNS)
+
+
+def validate_rendered_prompt(prompt: str, enable_thinking: bool | None) -> None:
+    """Fail closed if the pinned template ignores the diagnostic override."""
+
+    if enable_thinking is False and not prompt.endswith(THINKING_OFF_GENERATION_SUFFIX):
+        raise RuntimeError(
+            "enable_thinking=False was not rendered as the expected empty thinking block; "
+            "refusing to run a mislabeled diagnostic"
+        )
 
 
 def build_record(index: int, output: Any, max_tokens: int) -> dict[str, Any]:
@@ -145,6 +156,7 @@ def run_diagnostic(
     raw_filename: str,
     summary_filename: str,
     prompt_variant: str,
+    enable_thinking: bool | None = None,
 ) -> None:
 
     revision_path = args.model / "RZERO_MODEL_REVISION"
@@ -161,11 +173,16 @@ def run_diagnostic(
     if config.model_type != "qwen3_5":
         raise RuntimeError(f"expected qwen3_5 Base model, found {config.model_type!r}")
     tokenizer = AutoTokenizer.from_pretrained(args.model)
+    template_kwargs: dict[str, Any] = {}
+    if enable_thinking is not None:
+        template_kwargs["enable_thinking"] = enable_thinking
     prompt = tokenizer.apply_chat_template(
         questioner_messages,
         tokenize=False,
         add_generation_prompt=True,
+        **template_kwargs,
     )
+    validate_rendered_prompt(prompt, enable_thinking)
 
     model = LLM(
         model=str(args.model),
@@ -197,6 +214,9 @@ def run_diagnostic(
         "model_type": config.model_type,
         "model_state": "immutable_untrained_base",
         "prompt_variant": prompt_variant,
+        # None means no template override was supplied and therefore preserves
+        # the exact behavior used by the two earlier diagnostic baselines.
+        "enable_thinking_override": enable_thinking,
         "samples": args.samples,
         "seed": args.seed,
         "temperature": args.temperature,
