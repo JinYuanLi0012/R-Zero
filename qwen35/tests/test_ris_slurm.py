@@ -46,6 +46,20 @@ class RisSlurmScriptTests(unittest.TestCase):
         self.assertNotIn("smoke.yaml", script)
         self.assertNotIn("solver_gate.sh", script)
 
+    def test_questioner_thinking_off_gate_is_detached_and_stops_before_solver_training(self):
+        repo_root = Path(__file__).resolve().parents[2]
+        script = (repo_root / "qwen35/scripts/ris_questioner_thinking_off_one_step.sbatch").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("#SBATCH --account=compute2-jiaxinh", script)
+        self.assertIn("#SBATCH --partition=general-gpu", script)
+        self.assertIn("#SBATCH --gpus=4", script)
+        self.assertIn("#SBATCH --time=7-00:00:00", script)
+        self.assertIn("a100_4x_qwen35_4b_base_one_step_thinking_off.yaml", script)
+        self.assertIn("qwen35.rzero.diagnostics.questioner_one_step", script)
+        self.assertNotIn("solver_gate.sh", script)
+        self.assertNotIn("qwen35/scripts/run.sh", script)
+
     def test_round0_smoke_uses_pinned_topology_and_isolated_profile(self):
         repo_root = Path(__file__).resolve().parents[2]
         script = (repo_root / "qwen35/scripts/ris_round0_smoke.sbatch").read_text(encoding="utf-8")

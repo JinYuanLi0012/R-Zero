@@ -45,6 +45,7 @@ def build_command(args: argparse.Namespace) -> list[str]:
     algorithm = config["algorithm"]
     data = config["data"]
     checkpoint = config["checkpoint"]
+    diagnostics = config.get("diagnostics", {})
     is_questioner = args.role == "questioner"
 
     steps = algorithm["questioner_steps"] if is_questioner else algorithm["solver_steps"]
@@ -165,6 +166,12 @@ def build_command(args: argparse.Namespace) -> list[str]:
                 "reward.reward_manager.module.path": str(population_manager_path.resolve()),
             }
         )
+        if "questioner_enable_thinking" in diagnostics:
+            overrides["+data.apply_chat_template_kwargs.enable_thinking"] = diagnostics[
+                "questioner_enable_thinking"
+            ]
+        if diagnostics.get("capture_questioner_rollouts"):
+            overrides["trainer.rollout_data_dir"] = str(round_dir / "diagnostics" / "training_rollouts")
     return [
         sys.executable,
         "-m",

@@ -19,6 +19,7 @@ from qwen35.rzero.train_grpo import build_command, sanitize_nvidia_visibility_en
 ROOT = Path(__file__).resolve().parents[2]
 CONFIG = ROOT / "qwen35" / "configs" / "a100_4x_qwen35_4b_base.yaml"
 SMOKE_CONFIG = ROOT / "qwen35" / "configs" / "a100_4x_qwen35_4b_base_smoke.yaml"
+THINKING_OFF_CONFIG = ROOT / "qwen35" / "configs" / "a100_4x_qwen35_4b_base_one_step_thinking_off.yaml"
 
 
 class TrainCommandTests(unittest.TestCase):
@@ -69,6 +70,8 @@ class TrainCommandTests(unittest.TestCase):
         self.assertIn("+actor_rollout_ref.rollout.engine_kwargs.vllm.language_model_only=true", rendered)
         self.assertIn("hydra.run.dir=/logs/hydra/test/${now:%Y-%m-%d_%H-%M-%S}", rendered)
         self.assertIn("hydra.job.chdir=false", rendered)
+        self.assertNotIn("apply_chat_template_kwargs.enable_thinking", rendered)
+        self.assertNotIn("trainer.rollout_data_dir", rendered)
 
     def test_formal_population_fits_reward_actor_concurrency(self):
         class Config:
@@ -193,6 +196,14 @@ class TrainCommandTests(unittest.TestCase):
         self.assertIn("data.train_batch_size=4", solver)
         self.assertIn("actor_rollout_ref.actor.ppo_mini_batch_size=4", solver)
         self.assertIn("actor_rollout_ref.rollout.agent.num_workers=4", solver)
+
+    def test_thinking_off_gate_reaches_verl_dataset_and_captures_real_rollouts(self):
+        questioner = "\n".join(build_command(self.args("questioner", THINKING_OFF_CONFIG)))
+        solver = "\n".join(build_command(self.args("solver", THINKING_OFF_CONFIG)))
+        self.assertIn("+data.apply_chat_template_kwargs.enable_thinking=false", questioner)
+        self.assertIn("trainer.rollout_data_dir=/diagnostics/training_rollouts", questioner)
+        self.assertNotIn("apply_chat_template_kwargs.enable_thinking", solver)
+        self.assertNotIn("trainer.rollout_data_dir", solver)
 
     def test_training_subprocess_removes_rocm_visibility_on_nvidia(self):
         original = {

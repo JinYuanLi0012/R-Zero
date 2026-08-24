@@ -154,6 +154,22 @@ qwen35/scripts/run.sh \
 The exact Compute1 Enroot wrapper and the Ray/FSDP GPU-isolation recovery notes
 are recorded in [`docs/ris-slurm-runbook.md`](docs/ris-slurm-runbook.md).
 
+The Qwen3.5 Base Questioner thinking-compatibility gate is intentionally not a
+full pipeline smoke. It runs the released 512-prompt/4-rollout Questioner batch
+for one real GRPO step, keeps the frozen Solver at `n=10`, changes only verl's
+dataset chat-template kwarg to `enable_thinking=false`, dumps all 2048 real
+training trajectories and rewards, exports step 1, and generates 64 raw
+thinking-off candidates. On RIS Compute2 submit it with:
+
+```bash
+sbatch qwen35/scripts/ris_questioner_thinking_off_one_step.sbatch
+```
+
+It uses the independent run directory
+`runs/rzero-qwen35-questioner-thinking-off-one-step` and never runs curation or
+Solver training. The original one-step baseline and formal run directories are
+not read except for immutable Base model and seed-data inputs.
+
 Because a one-step Base-model Questioner may produce no parseable candidate,
 the smoke profile may seed Solver training from eight rows of the fixed
 validation Parquet. This is recorded as `used_smoke_fallback` in curation

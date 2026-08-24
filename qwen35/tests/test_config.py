@@ -10,6 +10,7 @@ ROOT = Path(__file__).resolve().parents[2]
 CONFIG = ROOT / "qwen35" / "configs" / "a100_4x_qwen35_4b_base.yaml"
 SMOKE_CONFIG = ROOT / "qwen35" / "configs" / "a100_4x_qwen35_4b_base_smoke.yaml"
 ONE_STEP_CONFIG = ROOT / "qwen35" / "configs" / "a100_4x_qwen35_4b_base_one_step.yaml"
+THINKING_OFF_CONFIG = ROOT / "qwen35" / "configs" / "a100_4x_qwen35_4b_base_one_step_thinking_off.yaml"
 
 
 class ConfigTests(unittest.TestCase):
@@ -129,6 +130,17 @@ class ConfigTests(unittest.TestCase):
         self.assertFalse(one_step["curation"]["allow_smoke_fallback"])
         self.assertFalse(formal["curation"]["deduplicate_questions"])
         self.assertFalse(one_step["curation"]["deduplicate_questions"])
+
+    def test_thinking_off_gate_changes_only_diagnostic_controls_and_candidate_count(self):
+        baseline = load_config(ONE_STEP_CONFIG)
+        gate = load_config(THINKING_OFF_CONFIG)
+        self.assertEqual(gate["algorithm"], baseline["algorithm"])
+        self.assertEqual(gate["data"], baseline["data"])
+        self.assertEqual(gate["checkpoint"], baseline["checkpoint"])
+        self.assertEqual(gate["generation"]["samples_per_shard"], 64)
+        self.assertEqual(gate["generation"]["shards"], 1)
+        self.assertIs(gate["diagnostics"]["questioner_enable_thinking"], False)
+        self.assertTrue(gate["diagnostics"]["capture_questioner_rollouts"])
 
     def test_rejects_formal_deduplication(self):
         config = load_config(CONFIG)

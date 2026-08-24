@@ -1,0 +1,86 @@
+{
+  "schema_version": 1,
+  "profile": "smoke",
+  "model": {
+    "id": "Qwen/Qwen3.5-4B-Base",
+    "revision": "1001bb4",
+    "trust_remote_code": false,
+    "language_model_only": true
+  },
+  "runtime": {
+    "python": "3.12",
+    "cuda": "13.0.2",
+    "torch": "2.11.0",
+    "vllm": "0.24.0",
+    "transformers": "5.5.3",
+    "verl_ref": "4a2cba76f7f605d2b9f56e640faaeaa71c2c7f71",
+    "base_image": "verlai/verl:vllm024.dev2",
+    "base_image_digest": "sha256:b867883b0dd011363e69ab2ab344922a28c5bd0409e2a324e3ee70fb27ca7543",
+    "verl_source_root": "/opt/verl",
+    "training_backend": "fsdp2",
+    "rollout_backend": "vllm"
+  },
+  "hardware": {
+    "gpus": [0, 1, 2, 3],
+    "questioner_training_gpus": [0, 1],
+    "questioner_solver_gpus": [2, 3],
+    "solver_training_gpus": [0, 1, 2, 3],
+    "solver_service_ports": [5000, 5001]
+  },
+  "algorithm": {
+    "rounds": 1,
+    "seed": 1,
+    "kl_coef": 0.01,
+    "learning_rate": 0.000001,
+    "ppo_clip_ratio": 0.2,
+    "ppo_clip_ratio_low": 0.2,
+    "ppo_clip_ratio_high": 0.3,
+    "ppo_clip_ratio_c": 3.0,
+    "training_rollout_temperature": 1.0,
+    "training_rollout_top_p": 0.99,
+    "training_rollout_seed": 1,
+    "questioner_steps": 1,
+    "solver_steps": 1,
+    "questioner_rollouts": 4,
+    "solver_rollouts": 5,
+    "questioner_prompt_batch_size": 512,
+    "solver_prompt_batch_size": 512,
+    "questioner_update_batch_size": 16,
+    "solver_update_batch_size": 128,
+    "questioner_solver_samples": 10,
+    "candidate_vote_samples": 9,
+    "difficulty_min": 0.3,
+    "difficulty_max": 0.8,
+    "bleu_distance_threshold": 0.5
+  },
+  "data": {
+    "seed_dataset": "hiyouga/math12k",
+    "seed_train_split": "train[:512]",
+    "seed_val_split": "test[:32]",
+    "max_prompt_length": 2048,
+    "max_response_length": 4096
+  },
+  "generation": {
+    "shards": 1,
+    "samples_per_shard": 64,
+    "temperature": 1.0,
+    "top_p": 0.95,
+    "max_tokens": 4096
+  },
+  "curation": {
+    "allow_smoke_fallback": false,
+    "deduplicate_questions": false
+  },
+  "checkpoint": {
+    "save_freq": 1,
+    "keep": 2,
+    "resume_mode": "auto"
+  },
+  "benchmark": {"enabled": false},
+  "publishing": {"enabled": false, "repo_id": ""},
+  "diagnostics": {
+    "questioner_enable_thinking": false,
+    "capture_questioner_rollouts": true,
+    "post_train_samples": 64
+  }
+}

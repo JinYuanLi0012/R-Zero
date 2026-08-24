@@ -66,6 +66,19 @@ def validate_config(config: dict[str, Any]) -> None:
         raise ConfigError("questioner training and frozen Solver GPUs must be disjoint")
 
     algorithm = config["algorithm"]
+    diagnostics = config.get("diagnostics", {})
+    if "questioner_enable_thinking" in diagnostics:
+        if config.get("profile", "formal") == "formal":
+            raise ConfigError("Questioner thinking override is diagnostic-only")
+        if diagnostics["questioner_enable_thinking"] is not False:
+            raise ConfigError("diagnostic Questioner thinking override must be false")
+    if diagnostics.get("capture_questioner_rollouts") and "questioner_enable_thinking" not in diagnostics:
+        raise ConfigError("rollout capture diagnostic must declare Questioner thinking behavior")
+    if "post_train_samples" in diagnostics:
+        if diagnostics.get("post_train_samples") != 64:
+            raise ConfigError("Questioner compatibility gate must generate exactly 64 post-train candidates")
+        if not diagnostics.get("capture_questioner_rollouts"):
+            raise ConfigError("post-train diagnostic requires captured training rollouts")
     batch_pairs = (
         ("questioner_prompt_batch_size", "questioner_update_batch_size"),
         ("solver_prompt_batch_size", "solver_update_batch_size"),
