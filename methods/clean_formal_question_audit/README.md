@@ -6,8 +6,9 @@ This pipeline samples 300 globally unique questions from each Phase-B audit in
 1. question validity under the strict Terra A–F rubric;
 2. correctness of the source nine-solver majority answer on Terra-VALID questions.
 
-It uses `gpt-5.6-sol`, high reasoning, structured Responses, and the discounted
-OpenAI Batch API by default. It only analyzes data; it does not alter the source
+It uses `gpt-5.6-terra`, high reasoning, structured Responses, and eight concurrent
+standard Responses API calls by default. This avoids the Batch queue and prints
+continuous per-pass progress. It only analyzes data; it does not alter the source
 files, publish a dataset, or start training.
 
 ## Protocol
@@ -19,10 +20,10 @@ questions. Duplicate and conflicting-answer counts are recorded in the manifest.
 Empty question strings are retained as malformed questioner outputs (and globally
 deduplicated like any other text) rather than silently removed.
 
-The three dependent Batch passes are:
+The three dependent annotation passes are:
 
 1. **Validity:** opaque ID + question only. A means VALID; B–F mean INVALID.
-2. **Canonical answer:** only A questions; opaque ID + question only. Sol solves
+2. **Canonical answer:** only A questions; opaque ID + question only. Terra solves
    independently and verifies the answer without seeing source votes or answers.
 3. **Majority judge:** only verified VALID questions with a non-empty source
    majority answer. It sees opaque ID, question, canonical answer, and majority
@@ -41,19 +42,33 @@ git pull --ff-only
 export OPENAI_API_KEY="..."
 
 export DATA_DIR=/engrfs/project/jiaxinh/jinyuan/R-zero-storage/rzero_runs/qwen3_4b_validity_rzero_clean_formal_v1/datasets
-export OUTPUT_DIR=analysis_results/clean_formal_v1_question_audit_300
+export OUTPUT_DIR=analysis_results/clean_formal_v1_question_audit_terra_sync_300
 export PER_ROUND=300
 export SEED=42
+export ANNOTATION_MODE=sync
+export MODEL=gpt-5.6-terra
+export CONCURRENCY=8
 
 bash methods/clean_formal_question_audit/run.sh
 ```
 
 For a 40-question smoke run, use a fresh output directory and `PER_ROUND=10`.
-Rerunning the same command with the same output directory resumes saved Batch IDs,
-downloads completed output, and retries individual parse/request/uncertain results
-up to three attempts. Every poll prints the active batch ID and its own
-completed/total/failed counters. A small denominator on a later line is a retry
-batch, not the total sample.
+Rerunning the same command with the same model and output directory reuses completed
+per-question artifacts. Each pass prints completed/total plus complete, uncertain,
+and failed counts. `CONCURRENCY` can be lowered if the project encounters API rate
+limits.
+
+The former discounted Batch path remains available as an explicit fallback:
+
+```bash
+export ANNOTATION_MODE=batch
+bash methods/clean_formal_question_audit/run.sh
+```
+
+Use a new `OUTPUT_DIR` when switching model or mode for an existing run. Standard
+Responses calls do not receive the Batch discount; the default instead saves cost
+by using the lower-cost Terra model and saves wall-clock queue time through direct
+concurrent calls.
 
 ## Metrics
 
@@ -85,7 +100,7 @@ manifest.json
 analysis/dataset_statistics.json
 analysis/report.md
 artifacts/{validity,answer,majority}/*.json
-batch/{validity,answer,majority}/{state.json,input_*.jsonl,output_*.jsonl,errors_*.jsonl}
+batch/{validity,answer,majority}/{state.json,input_*.jsonl,output_*.jsonl,errors_*.jsonl}  # Batch mode only
 ```
 
 `sampled_questions.jsonl` and `annotated_sample.jsonl` retain source vote metadata

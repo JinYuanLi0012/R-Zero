@@ -26,6 +26,7 @@ finalize = load_local_module("finalize").finalize
 majority_module = load_local_module("majority_judge")
 make_batch_row = majority_module.make_batch_row
 run_majority_pass = majority_module.run_majority_pass
+run_one_sync = majority_module.run_one_sync
 
 
 def write_jsonl(path: Path, rows: list[dict]) -> None:
@@ -201,6 +202,34 @@ class PipelineTests(unittest.TestCase):
             self.assertEqual(results[0]["result"]["majority_answer_status"], "CORRECT")
             self.assertEqual(len(results[0]["attempts"]), 2)
             self.assertEqual(client.batches.created, 2)
+
+    def test_majority_sync_retries_uncertain_result(self):
+        calls = []
+        original = majority_module.sync_api_call
+
+        def fake_call(item, model, reasoning_effort, max_output_tokens):
+            calls.append((item["id"], model, reasoning_effort, max_output_tokens))
+            first = len(calls) == 1
+            return ({
+                "majority_answer_status": "UNABLE_TO_VERIFY" if first else "CORRECT",
+                "mathematically_equivalent": None if first else True,
+                "confidence": 0.5 if first else 0.99,
+                "reasoning_summary": "retry" if first else "equivalent",
+            }, {"fixture": True})
+
+        majority_module.sync_api_call = fake_call
+        try:
+            with tempfile.TemporaryDirectory() as directory:
+                result = run_one_sync({
+                    "id": "q_one", "question": "What is 1+1?",
+                    "canonical_final_answer": "2", "majority_answer": "2.0",
+                }, Path(directory) / "q_one.json", "gpt-5.6-terra", "high", 16384, 3, 0.8)
+            self.assertEqual(result["status"], "complete")
+            self.assertEqual(result["result"]["majority_answer_status"], "CORRECT")
+            self.assertEqual(len(result["attempts"]), 2)
+            self.assertEqual(len(calls), 2)
+        finally:
+            majority_module.sync_api_call = original
 
     def test_finalize_defines_strict_and_judged_accuracy(self):
         with tempfile.TemporaryDirectory() as directory:

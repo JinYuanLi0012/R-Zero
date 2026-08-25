@@ -5,7 +5,9 @@ from __future__ import annotations
 import hashlib
 import json
 import sys
+import time
 from collections import Counter
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -174,6 +176,102 @@ def validate_cached(artifact: dict[str, Any], item: dict[str, str], model: str) 
         or artifact.get("input_hashes") != item_hashes(item)
     ):
         raise RuntimeError(f"cached majority artifact mismatch for {item['id']}")
+
+
+def sync_api_call(
+    item: dict[str, str], model: str, reasoning_effort: str, max_output_tokens: int,
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Call the Responses API directly for one majority comparison."""
+    from openai import OpenAI
+
+    response = OpenAI().responses.create(
+        **request_body(item, model, reasoning_effort, max_output_tokens)
+    )
+    raw = response.model_dump(mode="json")
+    return validate_result(json.loads(response.output_text)), raw
+
+
+def run_one_sync(
+    item: dict[str, str], destination: Path, model: str, reasoning_effort: str,
+    max_output_tokens: int, max_attempts: int, confidence_threshold: float,
+) -> dict[str, Any]:
+    attempts: list[dict[str, Any]] = []
+    if destination.is_file():
+        existing = json.loads(destination.read_text(encoding="utf-8"))
+        validate_cached(existing, item, model)
+        if existing.get("status") == "complete" or len(existing.get("attempts", [])) >= max_attempts:
+            return existing
+        attempts = list(existing.get("attempts", []))
+
+    while len(attempts) < max_attempts:
+        attempt_number = len(attempts) + 1
+        raw = None
+        try:
+            parsed, raw = sync_api_call(item, model, reasoning_effort, max_output_tokens)
+            attempts.append({
+                "attempt": attempt_number, "parsed": parsed, "raw_response": raw,
+            })
+        except Exception as error:
+            failed_attempt: dict[str, Any] = {
+                "attempt": attempt_number, "error_type": type(error).__name__,
+                "error": str(error),
+            }
+            if raw is not None:
+                failed_attempt["raw_response"] = raw
+            attempts.append(failed_attempt)
+
+        artifact = artifact_for(item, model, attempts, confidence_threshold)
+        atomic_json(destination, artifact)
+        if artifact["status"] == "complete":
+            return artifact
+        if len(attempts) < max_attempts:
+            time.sleep(2 ** (attempt_number - 1))
+    return artifact_for(item, model, attempts, confidence_threshold)
+
+
+def run_majority_pass_sync(
+    items: list[dict[str, str]], output_dir: Path, model: str,
+    reasoning_effort: str, max_output_tokens: int, max_attempts: int,
+    confidence_threshold: float, concurrency: int,
+) -> list[dict[str, Any]]:
+    artifact_dir = output_dir / "artifacts" / "majority"
+    artifact_dir.mkdir(parents=True, exist_ok=True)
+    if len({item["id"] for item in items}) != len(items):
+        raise ValueError("majority inputs contain duplicate IDs")
+
+    total = len(items)
+    report_every = max(1, total // 100)
+    print(
+        f"[terra:majority] starting {total} questions with concurrency={concurrency}",
+        flush=True,
+    )
+    if total == 0:
+        print("[terra:majority] complete: 0/0", flush=True)
+        return []
+
+    results: list[dict[str, Any]] = []
+    status_counts = {"complete": 0, "uncertain": 0, "failed": 0}
+    with ThreadPoolExecutor(max_workers=concurrency) as executor:
+        futures = {
+            executor.submit(
+                run_one_sync, item, artifact_dir / f"{item['id']}.json", model,
+                reasoning_effort, max_output_tokens, max_attempts, confidence_threshold,
+            ): item
+            for item in items
+        }
+        for future in as_completed(futures):
+            result = future.result()
+            results.append(result)
+            status_counts[result["status"]] = status_counts.get(result["status"], 0) + 1
+            completed = len(results)
+            if completed == total or completed % report_every == 0:
+                print(
+                    f"[terra:majority] {completed}/{total} ({completed / total:.0%}) "
+                    f"complete={status_counts['complete']} "
+                    f"uncertain={status_counts['uncertain']} failed={status_counts['failed']}",
+                    flush=True,
+                )
+    return sorted(results, key=lambda row: row["id"])
 
 
 def pending_items(
