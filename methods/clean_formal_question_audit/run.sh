@@ -7,6 +7,7 @@ OUTPUT_DIR=${OUTPUT_DIR:-analysis_results/clean_formal_v1_v5_raw_row_audit_terra
 PER_ROUND=${PER_ROUND:-200}
 ROUNDS=${ROUNDS:-1,2,3,4,5}
 SEED=${SEED:-42}
+SAMPLING_PROTOCOL=${SAMPLING_PROTOCOL:-raw_row}
 MODEL=${MODEL:-gpt-5.6-terra}
 ANNOTATION_MODE=${ANNOTATION_MODE:-sync}
 CONCURRENCY=${CONCURRENCY:-64}
@@ -16,11 +17,12 @@ MAX_ATTEMPTS=${MAX_ATTEMPTS:-3}
 MIN_CONFIDENCE=${MIN_CONFIDENCE:-0.8}
 BATCH_POLL_SECONDS=${BATCH_POLL_SECONDS:-60}
 
-echo "[pipeline] stage 1/3: sample (data=$DATA_DIR output=$OUTPUT_DIR rounds=$ROUNDS per_round=$PER_ROUND)"
+echo "[pipeline] stage 1/3: sample (data=$DATA_DIR output=$OUTPUT_DIR rounds=$ROUNDS per_round=$PER_ROUND protocol=$SAMPLING_PROTOCOL)"
 python3 "$METHOD_DIR/prepare.py" \
   --data-dir "$DATA_DIR" \
   --output-dir "$OUTPUT_DIR" \
   --rounds "$ROUNDS" \
+  --sampling-protocol "$SAMPLING_PROTOCOL" \
   --per-round "$PER_ROUND" \
   --seed "$SEED"
 

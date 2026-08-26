@@ -20,6 +20,13 @@ or cross-round question deduplication: repeated questions participate once per
 source occurrence and can appear multiple times in the 1,000-row sample. Empty
 question strings are likewise retained as raw questioner outputs.
 
+`SAMPLING_PROTOCOL` selects the sampling population:
+
+- `raw_row` (default): no deduplication; every source occurrence is eligible.
+- `unique_question`: normalize question text, deduplicate within and across rounds
+  in round order, and assign each repeated question to its earliest round and first
+  source row before sampling. This is the novel/unique-question analysis protocol.
+
 Each ID contains round, original zero-based source index, and a short question hash,
 for example `q_v5_000012_ab12cd34`. This keeps repeated question rows distinct. The
 Terra validity and answer inputs contain exactly `id` and `question`; source answer,
@@ -58,6 +65,25 @@ export CONCURRENCY=64
 
 bash methods/clean_formal_question_audit/run.sh
 ```
+
+For the ten-round `r10_initstep15_v1` unique-question experiment:
+
+```bash
+export DATA_DIR=/engrfs/project/jiaxinh/jinyuan/R-zero-storage/rzero_runs/qwen3_4b_validity_rzero_clean_formal_r10_initstep15_v1/datasets
+export OUTPUT_DIR=analysis_results/clean_formal_r10_initstep15_v1_unique_question_terra_sync_200
+export ROUNDS=1,2,3,4,5,6,7,8,9,10
+export PER_ROUND=200
+export SEED=42
+export SAMPLING_PROTOCOL=unique_question
+export MODEL=gpt-5.6-terra
+export ANNOTATION_MODE=sync
+export CONCURRENCY=64
+
+bash methods/clean_formal_question_audit/run.sh
+```
+
+The unique-question manifest records `sampling_unit=unique_question` and
+`deduplication=normalized_question_text_within_and_across_rounds`.
 
 To annotate only V5, select just that round and still use a new output directory:
 

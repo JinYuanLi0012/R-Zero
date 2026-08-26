@@ -142,6 +142,44 @@ class PipelineTests(unittest.TestCase):
             self.assertEqual(manifest["sampling_unit"], "raw_row")
             self.assertEqual(manifest["deduplication"], "none")
 
+    def test_prepare_unique_question_deduplicates_within_and_across_rounds(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            data = root / "data"
+            data.mkdir()
+            rows_by_round = {
+                1: [source_row("shared"), source_row("shared"), source_row("v1 only")],
+                2: [source_row("shared"), source_row("v2 one"), source_row("v2 two")],
+            }
+            for round_number, rows in rows_by_round.items():
+                write_jsonl(data / f"round_{round_number}_phase_b.jsonl", rows)
+                (data / f"round_{round_number}.json").write_text(
+                    json.dumps({"evaluated_candidate_count": len(rows)}), encoding="utf-8"
+                )
+
+            output = root / "unique"
+            sampled = prepare(
+                data, output, per_round=2, seed=42, rounds=(1, 2),
+                sampling_protocol="unique_question",
+            )
+            self.assertEqual(len(sampled), 4)
+            self.assertEqual(len({row["question"] for row in sampled}), 4)
+            self.assertEqual(
+                {name: sum(row["round"] == name for row in sampled) for name in ("v1", "v2")},
+                {"v1": 2, "v2": 2},
+            )
+            manifest = json.loads((output / "prepare_manifest.json").read_text())
+            self.assertEqual(manifest["sampling_protocol"], "unique_question")
+            self.assertEqual(manifest["sampling_unit"], "unique_question")
+            self.assertEqual(
+                manifest["deduplication"],
+                "normalized_question_text_within_and_across_rounds",
+            )
+            self.assertEqual(
+                manifest["statistics"]["duplicate_occurrences_removed_by_round"],
+                {"v1": 1, "v2": 1},
+            )
+
     def test_majority_request_exposes_only_comparison_inputs(self):
         row = make_batch_row({
             "id": "q_opaque", "question": "What is 1+1?",
