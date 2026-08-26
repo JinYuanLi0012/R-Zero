@@ -4,7 +4,11 @@ import os
 from pathlib import Path
 import random
 import requests
-from tqdm import tqdm
+
+try:
+    from evaluation.recheck_common import recheck_concurrency, recheck_rows
+except ModuleNotFoundError:  # Support `python evaluation/recheck_resume.py`.
+    from recheck_common import recheck_concurrency, recheck_rows
 
 DEFAULT_DATASETS = ["math", "gsm8k", "amc", "minerva", "olympiad", "aime2024", "aime2025"]
 
@@ -20,8 +24,9 @@ def load_openai_key(token_file: Path):
 
 
 def judge_model_response(api_url, api_key, gold_answer, model_response):
+    judge_model = os.getenv("RECHECK_JUDGE_MODEL", "gpt-4o")
     payload = {
-        "model": os.getenv("RECHECK_JUDGE_MODEL", "gpt-4o"),
+        "model": judge_model,
         "messages": [
             {"role": "system", "content": "You are a math answer checker."},
             {
@@ -34,8 +39,16 @@ def judge_model_response(api_url, api_key, gold_answer, model_response):
                 ),
             },
         ],
-        "temperature": 0.1,
     }
+    if judge_model.startswith("gpt-5"):
+        payload["max_completion_tokens"] = int(
+            os.getenv("RECHECK_MAX_COMPLETION_TOKENS", "8")
+        )
+        reasoning_effort = os.getenv("RECHECK_REASONING_EFFORT")
+        if reasoning_effort:
+            payload["reasoning_effort"] = reasoning_effort
+    else:
+        payload["temperature"] = 0.1
     if "api.openai.com" in api_url or api_url.rstrip("/").endswith("/chat/completions"):
         headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
     else:
@@ -67,22 +80,21 @@ def model_eval_dir(storage_path: Path, model: str):
     return storage_path / "evaluation" / model.replace("/", "_")
 
 
-def recheck_dataset(storage_path, model, dataset, api_url, api_key):
+def recheck_dataset(storage_path, model, dataset, api_url, api_key, concurrency):
     result_file = model_eval_dir(storage_path, model) / f"results_{dataset}.json"
     if not result_file.exists():
         raise FileNotFoundError(result_file)
     results = json.loads(result_file.read_text())
     rows = results[:-1]
     if api_url and api_key:
-        for row in tqdm(rows, desc=f"{dataset}"):
-            if float(row.get("score", 0)) < 0.5:
-                try:
-                    verdict = judge_model_response(api_url, api_key, row["answer"], row["response"])
-                except Exception as exc:
-                    print(f"judge error on {model} {dataset}: {exc}", flush=True)
-                    verdict = "No"
-                if "yes" in verdict.lower():
-                    row["score"] = 1
+        recheck_rows(
+            rows,
+            lambda answer, response: judge_model_response(
+                api_url, api_key, answer, response
+            ),
+            concurrency,
+            f"{model} {dataset}",
+        )
     else:
         print("No API key configured; using local raw scores.", flush=True)
     return round(sum(float(row.get("score", 0)) for row in rows) / len(rows) * 100, 2)
@@ -96,6 +108,7 @@ def main():
     parser.add_argument("--token_file", default="tokens.json")
     parser.add_argument("--dry_run", action="store_true")
     args = parser.parse_args()
+    concurrency = recheck_concurrency()
 
     storage_env = os.getenv("STORAGE_PATH")
     if not storage_env:
@@ -118,6 +131,7 @@ def main():
     pending = [(model, dataset) for model in models for dataset in datasets if (model, dataset) not in completed]
     print(f"completed before start: {len(completed)}/{total}", flush=True)
     print(f"pending: {len(pending)}/{total}", flush=True)
+    print(f"recheck concurrency: {concurrency}", flush=True)
     for model, dataset in pending:
         print(f"PENDING: {model} {dataset}", flush=True)
     if args.dry_run:
@@ -128,7 +142,9 @@ def main():
                 print(f"SKIP done: {model} {dataset}", flush=True)
                 continue
             print(f"RUN: {model} {dataset}", flush=True)
-            score = recheck_dataset(storage_path, model, dataset, api_url, api_key)
+            score = recheck_dataset(
+                storage_path, model, dataset, api_url, api_key, concurrency
+            )
             record = {"model": model, "dataset": dataset, "score": score}
             with output_file.open("a") as f:
                 json.dump(record, f)

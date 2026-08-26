@@ -1,15 +1,13 @@
 import json
-from mathruler.grader import extract_boxed_content, grade_answer
-import openai
 import requests
-from tqdm import tqdm
 import random
 import argparse
 import os
 
-parser = argparse.ArgumentParser()
-parser.add_argument("--model_name", type=str, default="Qwen/Qwen2.5-7B-Instruct")
-args = parser.parse_args()
+try:
+    from evaluation.recheck_common import recheck_concurrency, recheck_rows
+except ModuleNotFoundError:  # Support `python evaluation/results_recheck.py`.
+    from recheck_common import recheck_concurrency, recheck_rows
 
 STORAGE_PATH = os.getenv("STORAGE_PATH")
 FINAL_RESULTS_FILE = os.getenv("FINAL_RESULTS_FILE", "final_results.jsonl")
@@ -61,43 +59,56 @@ def process_example(answer, response):
     except Exception as e:
         print(e)
         return "No"
-new_results = []
-print(f"Recheck judge model: {RECHECK_JUDGE_MODEL}")
-if RECHECK_REASONING_EFFORT:
-    print(f"Recheck reasoning effort: {RECHECK_REASONING_EFFORT}")
-for model_name in [args.model_name]:
-    for dataset in [
-    "math",
-    "gsm8k", 
-    "amc",
-    "minerva",
-    "olympiad",
-    "aime2024",
-    "aime2025",
-    ]:
-        with open(f'{STORAGE_PATH}/evaluation/{model_name.replace("/","_")}/results_{dataset}.json', 'r') as f:
-            results = json.load(f)
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--model_name", type=str, default="Qwen/Qwen2.5-7B-Instruct")
+    args = parser.parse_args()
+    concurrency = recheck_concurrency()
 
-        if api_urls and api_keys:
-            for i in tqdm(range(len(results)-1)):
-                    if results[i]['score'] < 0.5:
-                        gpt_check = process_example(results[i]['answer'],results[i]['response'])
-                        if "yes" in gpt_check.lower():
-                            results[i]['score']=1
-        else:
-            print("No API urls configured; skipping GPT recheck and using local scores.")
-        new_results.append({
-            'model': model_name,
-            'dataset': dataset,
-            'score': round(sum([result['score'] for result in results[:-1]])/len(results[:-1])*100, 2)
-        })
-        print(new_results)
-        with open(FINAL_RESULTS_FILE, 'a') as f:
-            json.dump({
+    new_results = []
+    print(f"Recheck judge model: {RECHECK_JUDGE_MODEL}")
+    print(f"Recheck concurrency: {concurrency}")
+    if RECHECK_REASONING_EFFORT:
+        print(f"Recheck reasoning effort: {RECHECK_REASONING_EFFORT}")
+    for model_name in [args.model_name]:
+        for dataset in [
+            "math",
+            "gsm8k",
+            "amc",
+            "minerva",
+            "olympiad",
+            "aime2024",
+            "aime2025",
+        ]:
+            with open(f'{STORAGE_PATH}/evaluation/{model_name.replace("/","_")}/results_{dataset}.json', 'r') as f:
+                results = json.load(f)
+
+            rows = results[:-1]
+            if api_urls and api_keys:
+                recheck_rows(
+                    rows,
+                    process_example,
+                    concurrency,
+                    f"{model_name} {dataset}",
+                )
+            else:
+                print("No API urls configured; skipping GPT recheck and using local scores.")
+            score = round(sum(result['score'] for result in rows) / len(rows) * 100, 2)
+            new_results.append({
                 'model': model_name,
                 'dataset': dataset,
-                'score': round(sum([result['score'] for result in results[:-1]])/len(results[:-1])*100, 2)
-            }, f)
-            f.write('\n')
+                'score': score,
+            })
+            print(new_results)
+            with open(FINAL_RESULTS_FILE, 'a') as f:
+                json.dump({
+                    'model': model_name,
+                    'dataset': dataset,
+                    'score': score,
+                }, f)
+                f.write('\n')
 
+
+if __name__ == "__main__":
+    main()
 

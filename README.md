@@ -156,6 +156,7 @@ Useful evaluation environment variables:
 | `EVAL_CHUNK_SIZE` | `512` | Chunk size used by SuperGPQA/BBEH/MMLU-Pro generation. Lower it if vLLM is unstable. |
 | `EVAL_GPU_MEMORY_UTILIZATION` | `0.85` | vLLM GPU memory utilization for the large evaluation tasks. |
 | `EVAL_TENSOR_PARALLEL_SIZE` | number of eval GPUs | Tensor parallel size for SuperGPQA/BBEH/MMLU-Pro. |
+| `RECHECK_CONCURRENCY` | `32` | Concurrent API requests for locally incorrect math answers; independent of GPU settings. |
 
 The seven math-task raw outputs are written to:
 
@@ -165,7 +166,7 @@ $STORAGE_PATH/evaluation/<model_name_with_slashes_replaced>/
 
 The summary is appended to `final_results.jsonl` in the current working directory.
 
-Note: `evaluation/results_recheck.py` can use an OpenAI-compatible judge to recheck locally incorrect math answers. Recheck scores may differ from raw `results_*.json` scores. For clean bookkeeping, run evaluation or recheck from a dedicated output directory if you do not want to append to the repository-root `final_results.jsonl`.
+Note: `evaluation/results_recheck.py` can use an OpenAI-compatible judge to recheck locally incorrect math answers. It sends up to 32 requests concurrently by default; set `RECHECK_CONCURRENCY` to a different positive integer if required by your API rate limit. Recheck scores may differ from raw `results_*.json` scores. For clean bookkeeping, run evaluation or recheck from a dedicated output directory if you do not want to append to the repository-root `final_results.jsonl`.
 
 ### 5. Task-Vector R-Zero (experimental)
 
