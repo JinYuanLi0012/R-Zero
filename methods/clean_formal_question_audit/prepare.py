@@ -19,7 +19,7 @@ sys.path.insert(0, str(TERRA_DIR))
 from common import atomic_json, normalize_question, question_hash, stable_int, write_jsonl
 
 
-ROUNDS = (1, 2, 3, 4)
+DEFAULT_ROUNDS = (1, 2, 3, 4)
 REQUIRED_FIELDS = {
     "answer", "discarded_by_validity", "invalid_votes", "passed_rzero_filter",
     "question", "results", "score", "total_votes", "validity_decision",
@@ -78,7 +78,20 @@ def load_round(data_dir: Path, round_number: int) -> tuple[list[dict[str, Any]],
     }
 
 
-def prepare(data_dir: Path, output_dir: Path, per_round: int, seed: int) -> list[dict[str, Any]]:
+def parse_rounds(value: str) -> tuple[int, ...]:
+    try:
+        rounds = tuple(sorted({int(part.strip()) for part in value.split(",") if part.strip()}))
+    except ValueError as error:
+        raise argparse.ArgumentTypeError("rounds must be comma-separated positive integers") from error
+    if not rounds or any(round_number < 1 for round_number in rounds):
+        raise argparse.ArgumentTypeError("rounds must contain positive integers")
+    return rounds
+
+
+def prepare(
+    data_dir: Path, output_dir: Path, per_round: int, seed: int,
+    rounds: tuple[int, ...] = DEFAULT_ROUNDS,
+) -> list[dict[str, Any]]:
     if per_round < 1:
         raise ValueError("per-round must be positive")
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -94,7 +107,10 @@ def prepare(data_dir: Path, output_dir: Path, per_round: int, seed: int) -> list
         "empty_question_rows_by_round": {},
     }
 
-    for round_number in ROUNDS:
+    selected_rounds = set(rounds)
+    # Always scan every preceding round so a V5-only run still excludes questions
+    # already emitted in V1-V4. Only requested rounds are sampled or annotated.
+    for round_number in range(1, max(rounds) + 1):
         rows, source = load_round(data_dir, round_number)
         round_name = f"v{round_number}"
         sources[round_name] = source
@@ -118,13 +134,15 @@ def prepare(data_dir: Path, output_dir: Path, per_round: int, seed: int) -> list
             seen.add(normalized)
             owned.append(entries[0])
             removed += len(entries) - 1
-        if len(owned) < per_round:
+        if round_number in selected_rounds and len(owned) < per_round:
             raise ValueError(
                 f"round {round_number} has only {len(owned)} globally unique questions; "
                 f"cannot sample {per_round}"
             )
-        rng = random.Random(stable_int(seed, round_name, "clean-formal-question-audit"))
-        sampled = rng.sample(owned, per_round)
+        sampled = []
+        if round_number in selected_rounds:
+            rng = random.Random(stable_int(seed, round_name, "clean-formal-question-audit"))
+            sampled = rng.sample(owned, per_round)
         for source_index, row in sampled:
             item_id = f"q_{question_hash(row['question'])[:16]}"
             selected.append({
@@ -174,12 +192,17 @@ def prepare(data_dir: Path, output_dir: Path, per_round: int, seed: int) -> list
     )
     atomic_json(output_dir / "prepare_manifest.json", {
         "data_dir": str(data_dir.resolve()), "sampling_seed": seed,
+        "selected_rounds": [f"v{round_number}" for round_number in rounds],
+        "deduplication_reference_rounds": [
+            f"v{round_number}" for round_number in range(1, max(rounds) + 1)
+        ],
         "per_round": per_round, "sampled_count": len(selected),
         "deduplication": "normalized question text; earliest round and first row own duplicates",
         "sources": sources, "statistics": stats,
     })
     print(
-        f"[prepare] complete: sampled={len(selected)} per_round={per_round} "
+        f"[prepare] complete: rounds={','.join(f'v{value}' for value in rounds)} "
+        f"sampled={len(selected)} per_round={per_round} "
         f"duplicates_removed={stats['total_duplicate_occurrences_removed']}",
         flush=True,
     )
@@ -192,8 +215,12 @@ def main() -> None:
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--per-round", type=int, default=300)
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--rounds", type=parse_rounds, default=DEFAULT_ROUNDS)
     args = parser.parse_args()
-    prepare(args.data_dir.resolve(), args.output_dir.resolve(), args.per_round, args.seed)
+    prepare(
+        args.data_dir.resolve(), args.output_dir.resolve(), args.per_round, args.seed,
+        args.rounds,
+    )
 
 
 if __name__ == "__main__":

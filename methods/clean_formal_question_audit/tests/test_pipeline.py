@@ -112,6 +112,32 @@ class PipelineTests(unittest.TestCase):
                 (second / "sampled_questions.jsonl").read_text(),
             )
 
+    def test_prepare_v5_only_uses_prior_rounds_for_deduplication(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            data = root / "data"
+            data.mkdir()
+            for round_number in range(1, 6):
+                rows = [source_row(f"round {round_number} unique {index}") for index in range(4)]
+                if round_number == 5:
+                    rows[0] = source_row("round 4 unique 0")
+                write_jsonl(data / f"round_{round_number}_phase_b.jsonl", rows)
+                (data / f"round_{round_number}.json").write_text(
+                    json.dumps({"evaluated_candidate_count": len(rows)}), encoding="utf-8"
+                )
+
+            output = root / "v5"
+            sampled = prepare(data, output, per_round=2, seed=42, rounds=(5,))
+            self.assertEqual(len(sampled), 2)
+            self.assertTrue(all(row["round"] == "v5" for row in sampled))
+            self.assertNotIn("round 4 unique 0", {row["question"] for row in sampled})
+            manifest = json.loads((output / "prepare_manifest.json").read_text())
+            self.assertEqual(manifest["selected_rounds"], ["v5"])
+            self.assertEqual(
+                manifest["deduplication_reference_rounds"],
+                ["v1", "v2", "v3", "v4", "v5"],
+            )
+
     def test_majority_request_exposes_only_comparison_inputs(self):
         row = make_batch_row({
             "id": "q_opaque", "question": "What is 1+1?",

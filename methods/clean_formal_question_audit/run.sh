@@ -5,6 +5,7 @@ METHOD_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 DATA_DIR=${DATA_DIR:-/engrfs/project/jiaxinh/jinyuan/R-zero-storage/rzero_runs/qwen3_4b_validity_rzero_clean_formal_v1/datasets}
 OUTPUT_DIR=${OUTPUT_DIR:-analysis_results/clean_formal_v1_question_audit_terra_sync_300}
 PER_ROUND=${PER_ROUND:-300}
+ROUNDS=${ROUNDS:-1,2,3,4}
 SEED=${SEED:-42}
 MODEL=${MODEL:-gpt-5.6-terra}
 ANNOTATION_MODE=${ANNOTATION_MODE:-sync}
@@ -15,10 +16,11 @@ MAX_ATTEMPTS=${MAX_ATTEMPTS:-3}
 MIN_CONFIDENCE=${MIN_CONFIDENCE:-0.8}
 BATCH_POLL_SECONDS=${BATCH_POLL_SECONDS:-60}
 
-echo "[pipeline] stage 1/3: sample (data=$DATA_DIR output=$OUTPUT_DIR per_round=$PER_ROUND)"
+echo "[pipeline] stage 1/3: sample (data=$DATA_DIR output=$OUTPUT_DIR rounds=$ROUNDS per_round=$PER_ROUND)"
 python3 "$METHOD_DIR/prepare.py" \
   --data-dir "$DATA_DIR" \
   --output-dir "$OUTPUT_DIR" \
+  --rounds "$ROUNDS" \
   --per-round "$PER_ROUND" \
   --seed "$SEED"
 

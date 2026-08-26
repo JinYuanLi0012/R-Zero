@@ -161,8 +161,12 @@ def percentage(value: float | None) -> str:
 
 def make_report(stats: dict[str, Any]) -> str:
     overall = stats["overall"]
+    round_names = sorted(stats["by_round"], key=lambda value: int(value[1:]))
+    round_title = "–".join(value.upper() for value in (round_names[0], round_names[-1]))
+    if len(round_names) == 1:
+        round_title = round_names[0].upper()
     lines = [
-        "# Clean-formal V1–V4 question validity and majority-answer audit",
+        f"# Clean-formal {round_title} question validity and majority-answer audit",
         "", "## Accounting", "",
         f"- Sampled questions: {overall['sampled']}",
         f"- Terra VALID / INVALID / UNKNOWN: {overall['terra_valid']} / "
@@ -183,7 +187,7 @@ def make_report(stats: dict[str, Any]) -> str:
         "| Round | Sampled | VALID | Invalid | Valid rate | Verified ref | Present | Judged | Correct | Strict acc. | Judged acc. |",
         "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
     ]
-    for round_name in ("v1", "v2", "v3", "v4"):
+    for round_name in round_names:
         row = stats["by_round"][round_name]
         lines.append(
             f"| {round_name.upper()} | {row['sampled']} | {row['terra_valid']} | "

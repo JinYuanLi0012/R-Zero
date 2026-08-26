@@ -1,6 +1,6 @@
 # Clean-formal V1–V4 question audit
 
-This pipeline samples 300 globally unique questions from each Phase-B audit in
+This pipeline samples globally unique questions from selected Phase-B rounds in
 `qwen3_4b_validity_rzero_clean_formal_v1` and measures two things independently:
 
 1. question validity under the strict Terra A–F rubric;
@@ -44,6 +44,7 @@ export OPENAI_API_KEY="..."
 export DATA_DIR=/engrfs/project/jiaxinh/jinyuan/R-zero-storage/rzero_runs/qwen3_4b_validity_rzero_clean_formal_v1/datasets
 export OUTPUT_DIR=analysis_results/clean_formal_v1_question_audit_terra_sync_300
 export PER_ROUND=300
+export ROUNDS=1,2,3,4
 export SEED=42
 export ANNOTATION_MODE=sync
 export MODEL=gpt-5.6-terra
@@ -51,6 +52,24 @@ export CONCURRENCY=8
 
 bash methods/clean_formal_question_audit/run.sh
 ```
+
+To annotate only 200 V5 questions after an earlier V1–V4 run, use a separate
+output directory:
+
+```bash
+export OUTPUT_DIR=analysis_results/clean_formal_v1_question_audit_v5_terra_sync_200
+export ROUNDS=5
+export PER_ROUND=200
+export ANNOTATION_MODE=sync
+export MODEL=gpt-5.6-terra
+export CONCURRENCY=64
+
+bash methods/clean_formal_question_audit/run.sh
+```
+
+`ROUNDS=5` still scans V1–V4 locally before sampling, so V5 questions duplicated
+from earlier rounds are excluded. Only the 200 selected V5 questions are sent to
+the API; the preceding rounds are not re-annotated.
 
 For a 40-question smoke run, use a fresh output directory and `PER_ROUND=10`.
 Rerunning the same command with the same model and output directory reuses completed
