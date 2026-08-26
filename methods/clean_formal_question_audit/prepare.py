@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Deterministically sample unique questions from clean-formal Phase-B audits."""
+"""Deterministically sample raw rows from clean-formal Phase-B audits."""
 from __future__ import annotations
 
 import argparse
@@ -19,7 +19,7 @@ sys.path.insert(0, str(TERRA_DIR))
 from common import atomic_json, normalize_question, question_hash, stable_int, write_jsonl
 
 
-DEFAULT_ROUNDS = (1, 2, 3, 4)
+DEFAULT_ROUNDS = (1, 2, 3, 4, 5)
 REQUIRED_FIELDS = {
     "answer", "discarded_by_validity", "invalid_votes", "passed_rzero_filter",
     "question", "results", "score", "total_votes", "validity_decision",
@@ -95,56 +95,39 @@ def prepare(
     if per_round < 1:
         raise ValueError("per-round must be positive")
     output_dir.mkdir(parents=True, exist_ok=True)
-    seen: set[str] = set()
-    global_occurrences: Counter[str] = Counter()
-    global_answers: dict[str, set[str]] = defaultdict(set)
     selected: list[dict[str, Any]] = []
     sources: dict[str, Any] = {}
     stats: dict[str, Any] = {
-        "raw_rows_by_round": {}, "owned_unique_questions_by_round": {},
-        "duplicate_occurrences_removed_by_round": {},
+        "raw_rows_by_round": {}, "sampled_rows_by_round": {},
+        "duplicate_question_groups_by_round": {},
+        "duplicate_question_occurrences_by_round": {},
         "duplicate_answer_conflict_groups_by_round": {},
         "empty_question_rows_by_round": {},
     }
 
-    selected_rounds = set(rounds)
-    # Always scan every preceding round so a V5-only run still excludes questions
-    # already emitted in V1-V4. Only requested rounds are sampled or annotated.
-    for round_number in range(1, max(rounds) + 1):
+    for round_number in rounds:
         rows, source = load_round(data_dir, round_number)
         round_name = f"v{round_number}"
         sources[round_name] = source
-        groups: dict[str, list[tuple[int, dict[str, Any]]]] = defaultdict(list)
+        groups: dict[str, list[dict[str, Any]]] = defaultdict(list)
         for source_index, row in enumerate(rows):
             normalized = normalize_question(row["question"])
-            groups[normalized].append((source_index, row))
-            global_occurrences[normalized] += 1
-            global_answers[normalized].add(row["answer"].strip())
+            groups[normalized].append(row)
         conflict_groups = sum(
-            len({entry[1]["answer"].strip() for entry in entries}) > 1
+            len({entry["answer"].strip() for entry in entries}) > 1
             for entries in groups.values() if len(entries) > 1
         )
-
-        owned: list[tuple[int, dict[str, Any]]] = []
-        removed = 0
-        for normalized, entries in groups.items():
-            if normalized in seen:
-                removed += len(entries)
-                continue
-            seen.add(normalized)
-            owned.append(entries[0])
-            removed += len(entries) - 1
-        if round_number in selected_rounds and len(owned) < per_round:
+        if len(rows) < per_round:
             raise ValueError(
-                f"round {round_number} has only {len(owned)} globally unique questions; "
+                f"round {round_number} has only {len(rows)} raw rows; "
                 f"cannot sample {per_round}"
             )
-        sampled = []
-        if round_number in selected_rounds:
-            rng = random.Random(stable_int(seed, round_name, "clean-formal-question-audit"))
-            sampled = rng.sample(owned, per_round)
+        rng = random.Random(stable_int(seed, round_name, "clean-formal-raw-row-audit"))
+        sampled = rng.sample(list(enumerate(rows)), per_round)
         for source_index, row in sampled:
-            item_id = f"q_{question_hash(row['question'])[:16]}"
+            item_id = (
+                f"q_{round_name}_{source_index:06d}_{question_hash(row['question'])[:8]}"
+            )
             selected.append({
                 "id": item_id,
                 "round": round_name,
@@ -163,8 +146,13 @@ def prepare(
                 "source_passed_rzero_filter": row["passed_rzero_filter"],
             })
         stats["raw_rows_by_round"][round_name] = len(rows)
-        stats["owned_unique_questions_by_round"][round_name] = len(owned)
-        stats["duplicate_occurrences_removed_by_round"][round_name] = removed
+        stats["sampled_rows_by_round"][round_name] = len(sampled)
+        stats["duplicate_question_groups_by_round"][round_name] = sum(
+            len(entries) > 1 for entries in groups.values()
+        )
+        stats["duplicate_question_occurrences_by_round"][round_name] = sum(
+            len(entries) - 1 for entries in groups.values()
+        )
         stats["duplicate_answer_conflict_groups_by_round"][round_name] = conflict_groups
         stats["empty_question_rows_by_round"][round_name] = sum(
             not row["question"].strip() for row in rows
@@ -173,37 +161,26 @@ def prepare(
     ids = [row["id"] for row in selected]
     if len(set(ids)) != len(ids):
         raise RuntimeError("opaque ID collision")
-    selected.sort(key=lambda row: (int(row["round"][1:]), row["id"]))
+    selected.sort(key=lambda row: (int(row["round"][1:]), row["source_index"]))
     write_jsonl(output_dir / "sampled_questions.jsonl", selected)
     write_jsonl(
         output_dir / "terra_blind_input.jsonl",
         ({"id": row["id"], "question": row["question"]} for row in selected),
     )
     stats["sampled_by_round"] = dict(Counter(row["round"] for row in selected))
-    stats["global_unique_questions"] = len(seen)
-    stats["global_duplicate_question_groups"] = sum(
-        count > 1 for count in global_occurrences.values()
-    )
-    stats["global_duplicate_answer_conflict_groups"] = sum(
-        len(answers) > 1 for answers in global_answers.values()
-    )
-    stats["total_duplicate_occurrences_removed"] = sum(
-        stats["duplicate_occurrences_removed_by_round"].values()
-    )
     atomic_json(output_dir / "prepare_manifest.json", {
         "data_dir": str(data_dir.resolve()), "sampling_seed": seed,
         "selected_rounds": [f"v{round_number}" for round_number in rounds],
-        "deduplication_reference_rounds": [
-            f"v{round_number}" for round_number in range(1, max(rounds) + 1)
-        ],
         "per_round": per_round, "sampled_count": len(selected),
-        "deduplication": "normalized question text; earliest round and first row own duplicates",
+        "sampling_unit": "raw_row",
+        "sampling_method": "uniform random.sample over original (source_index, row) pairs per round",
+        "deduplication": "none",
         "sources": sources, "statistics": stats,
     })
     print(
         f"[prepare] complete: rounds={','.join(f'v{value}' for value in rounds)} "
-        f"sampled={len(selected)} per_round={per_round} "
-        f"duplicates_removed={stats['total_duplicate_occurrences_removed']}",
+        f"sampled={len(selected)} per_round={per_round} sampling_unit=raw_row "
+        "deduplication=none",
         flush=True,
     )
     return selected
@@ -213,7 +190,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--data-dir", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
-    parser.add_argument("--per-round", type=int, default=300)
+    parser.add_argument("--per-round", type=int, default=200)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--rounds", type=parse_rounds, default=DEFAULT_ROUNDS)
     args = parser.parse_args()

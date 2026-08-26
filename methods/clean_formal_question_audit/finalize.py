@@ -161,6 +161,11 @@ def percentage(value: float | None) -> str:
 
 def make_report(stats: dict[str, Any]) -> str:
     overall = stats["overall"]
+    sampled_label = (
+        "Sampled raw rows"
+        if stats["sampling_protocol"]["sampling_unit"] == "raw_row"
+        else "Sampled questions"
+    )
     round_names = sorted(stats["by_round"], key=lambda value: int(value[1:]))
     round_title = "–".join(value.upper() for value in (round_names[0], round_names[-1]))
     if len(round_names) == 1:
@@ -168,7 +173,9 @@ def make_report(stats: dict[str, Any]) -> str:
     lines = [
         f"# Clean-formal {round_title} question validity and majority-answer audit",
         "", "## Accounting", "",
-        f"- Sampled questions: {overall['sampled']}",
+        f"- Sampling unit: {stats['sampling_protocol']['sampling_unit']}",
+        f"- Deduplication: {stats['sampling_protocol']['deduplication']}",
+        f"- {sampled_label}: {overall['sampled']}",
         f"- Terra VALID / INVALID / UNKNOWN: {overall['terra_valid']} / "
         f"{overall['terra_invalid']} / {overall['terra_unknown']}",
         f"- Terra valid rate: {percentage(overall['terra_valid_rate'])}",
@@ -261,6 +268,7 @@ def make_report(stats: dict[str, Any]) -> str:
 def finalize(output_dir: Path) -> dict[str, Any]:
     sampled = read_jsonl(output_dir / "sampled_questions.jsonl")
     raw = read_jsonl(output_dir / "terra_raw_results.jsonl")
+    prepare_manifest = json.loads((output_dir / "prepare_manifest.json").read_text(encoding="utf-8"))
     sampled_by_id = unique_by_id(sampled, "sampled_questions")
     raw_by_id = unique_by_id(raw, "terra_raw_results")
     if set(sampled_by_id) != set(raw_by_id):
@@ -288,6 +296,10 @@ def finalize(output_dir: Path) -> dict[str, Any]:
             comparable += 1
             agreement += int(source == terra)
     stats = {
+        "sampling_protocol": {
+            "sampling_unit": prepare_manifest.get("sampling_unit", "legacy_unique_question"),
+            "deduplication": prepare_manifest.get("deduplication", "legacy/unspecified"),
+        },
         "overall": accuracy_block(annotated),
         "by_round": grouped_accuracy(annotated, lambda row: row["round"]),
         "by_solver_score": grouped_accuracy(annotated, lambda row: bucket_score(row["solver_score"])),
@@ -322,12 +334,13 @@ def finalize(output_dir: Path) -> dict[str, Any]:
     temporary.write_text(report, encoding="utf-8")
     os.replace(temporary, analysis_dir / "report.md")
 
-    prepare_manifest = json.loads((output_dir / "prepare_manifest.json").read_text(encoding="utf-8"))
     annotation_manifest = json.loads(
         (output_dir / "annotation_manifest.json").read_text(encoding="utf-8")
     )
     atomic_json(output_dir / "manifest.json", {
         "completed_at_utc": datetime.now(timezone.utc).isoformat(),
+        "sampling_unit": prepare_manifest.get("sampling_unit", "legacy_unique_question"),
+        "deduplication": prepare_manifest.get("deduplication", "legacy/unspecified"),
         "prepare": prepare_manifest, "annotation": annotation_manifest,
         "statistics": stats,
     })

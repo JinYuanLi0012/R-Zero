@@ -3,13 +3,13 @@ set -euo pipefail
 
 METHOD_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 DATA_DIR=${DATA_DIR:-/engrfs/project/jiaxinh/jinyuan/R-zero-storage/rzero_runs/qwen3_4b_validity_rzero_clean_formal_v1/datasets}
-OUTPUT_DIR=${OUTPUT_DIR:-analysis_results/clean_formal_v1_question_audit_terra_sync_300}
-PER_ROUND=${PER_ROUND:-300}
-ROUNDS=${ROUNDS:-1,2,3,4}
+OUTPUT_DIR=${OUTPUT_DIR:-analysis_results/clean_formal_v1_v5_raw_row_audit_terra_sync_200}
+PER_ROUND=${PER_ROUND:-200}
+ROUNDS=${ROUNDS:-1,2,3,4,5}
 SEED=${SEED:-42}
 MODEL=${MODEL:-gpt-5.6-terra}
 ANNOTATION_MODE=${ANNOTATION_MODE:-sync}
-CONCURRENCY=${CONCURRENCY:-8}
+CONCURRENCY=${CONCURRENCY:-64}
 REASONING_EFFORT=${REASONING_EFFORT:-high}
 MAX_OUTPUT_TOKENS=${MAX_OUTPUT_TOKENS:-16384}
 MAX_ATTEMPTS=${MAX_ATTEMPTS:-3}

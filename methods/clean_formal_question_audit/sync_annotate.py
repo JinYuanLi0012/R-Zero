@@ -45,7 +45,7 @@ def main() -> None:
     parser.add_argument("--max-output-tokens", type=int, default=16384)
     parser.add_argument("--max-attempts", type=int, default=3)
     parser.add_argument("--min-confidence", type=float, default=0.8)
-    parser.add_argument("--concurrency", type=int, default=8)
+    parser.add_argument("--concurrency", type=int, default=64)
     args = parser.parse_args()
     args.input = args.input.resolve()
     args.sampled = args.sampled.resolve()
