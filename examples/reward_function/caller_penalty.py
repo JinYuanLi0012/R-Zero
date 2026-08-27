@@ -138,18 +138,27 @@ def compute_score(predicts: List[str], ground_truths: List[str], format_weight: 
     assert len(penalty) == len(final_results)
     scores = []
     validity_rzero_enabled = os.getenv("VALIDITY_RZERO_ENABLED", "0") == "1"
+    diversity_lambda = (
+        float(os.getenv("VALIDITY_RZERO_DIVERSITY_LAMBDA", "5.0"))
+        if validity_rzero_enabled
+        else None
+    )
     for i in range(len(final_results)):
         if validity_rzero_enabled and final_results[i].get("question"):
             item = final_results[i]
             base_reward = float(item["questioner_base_reward"])
-            final_score = base_reward - penalty[i]
+            similarity_penalty = float(penalty[i])
+            diversity_penalty = min(0.5, diversity_lambda * similarity_penalty)
+            final_score = base_reward - diversity_penalty
             print("[validity_rzero][questioner_reward] " + json.dumps({
                 "invalid_votes": item["invalid_votes"],
                 "total_votes": item["total_votes"],
                 "validity_decision": item["validity_decision"],
                 "validity_penalty": item["validity_penalty"],
                 "math_frontier_score": item["math_frontier_score"],
-                "similarity_penalty": penalty[i],
+                "similarity_penalty": similarity_penalty,
+                "diversity_lambda": diversity_lambda,
+                "diversity_penalty": diversity_penalty,
                 "final_questioner_reward": final_score,
             }))
             scores.append({
@@ -161,13 +170,14 @@ def compute_score(predicts: List[str], ground_truths: List[str], format_weight: 
                 "validity_valid": float(item["validity_decision"] == "VALID"),
                 "validity_penalty": float(item["validity_penalty"]),
                 "math_frontier_score": float(item["math_frontier_score"]),
-                "similarity_penalty": float(penalty[i]),
+                "similarity_penalty": similarity_penalty,
+                "diversity_lambda": diversity_lambda,
+                "diversity_penalty": diversity_penalty,
             })
         else:
             final_score = (min(final_results[i]["score"],1-final_results[i]["score"]) if final_results[i]['question'] else -1)-penalty[i]
             scores.append({"overall": final_score,"format": 1 if final_results[i]['question'] else 0,"accuracy": penalty[i]})
     return scores
-
 
 
 

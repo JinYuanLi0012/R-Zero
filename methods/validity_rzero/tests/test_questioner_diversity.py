@@ -1,0 +1,121 @@
+import ast
+from contextlib import redirect_stdout
+from io import StringIO
+import json
+import os
+from pathlib import Path
+import re
+import tempfile
+from typing import Dict, List
+from unittest.mock import patch
+
+
+CALLER_PENALTY = Path(__file__).parents[3] / "examples" / "reward_function" / "caller_penalty.py"
+
+
+def _load_compute_score(final_results, penalties):
+    tree = ast.parse(CALLER_PENALTY.read_text(encoding="utf-8"), filename=str(CALLER_PENALTY))
+    function = next(
+        node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "compute_score"
+    )
+    module = ast.Module(body=[function], type_ignores=[])
+    namespace = {
+        "Dict": Dict,
+        "List": List,
+        "cluster_share_per_problem": lambda *_args, **_kwargs: penalties,
+        "extract_boxed_content": lambda _text: "answer",
+        "generate_results": lambda *_args, **_kwargs: final_results,
+        "json": json,
+        "os": os,
+        "re": re,
+    }
+    exec(compile(module, str(CALLER_PENALTY), "exec"), namespace)
+    return namespace["compute_score"]
+
+
+def _run_compute_score(final_results, penalties, environment):
+    compute_score = _load_compute_score(final_results, penalties)
+    previous_cwd = os.getcwd()
+    try:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            os.chdir(temporary_directory)
+            output = StringIO()
+            with patch.dict(os.environ, environment, clear=True), redirect_stdout(output):
+                scores = compute_score(
+                    ["<question>question</question> \\boxed{answer}"] * len(final_results),
+                    ["answer"] * len(final_results),
+                )
+    finally:
+        os.chdir(previous_cwd)
+    return scores, output.getvalue()
+
+
+def _validity_result(base_reward=0.4, decision="VALID", invalid_votes=0):
+    return {
+        "question": "question",
+        "questioner_base_reward": base_reward,
+        "invalid_votes": invalid_votes,
+        "total_votes": 9,
+        "validity_decision": decision,
+        "validity_penalty": base_reward if decision == "INVALID" else 0.0,
+        "math_frontier_score": base_reward if decision == "VALID" else 0.0,
+    }
+
+
+def test_validity_diversity_penalty_scales_and_caps():
+    similarities = [0.02, 0.09, 0.20]
+    scores, log_output = _run_compute_score(
+        [_validity_result()] * len(similarities),
+        similarities,
+        {
+            "VALIDITY_RZERO_ENABLED": "1",
+        },
+    )
+
+    expected_penalties = [0.10, 0.45, 0.50]
+    for score, similarity, expected_penalty in zip(scores, similarities, expected_penalties):
+        assert abs(score["similarity_penalty"] - similarity) < 1e-12
+        assert score["diversity_lambda"] == 5.0
+        assert abs(score["diversity_penalty"] - expected_penalty) < 1e-12
+        assert abs(score["overall"] - (0.4 - expected_penalty)) < 1e-12
+
+    logged = [
+        json.loads(line.split(" ", 1)[1])
+        for line in log_output.splitlines()
+        if line.startswith("[validity_rzero][questioner_reward] ")
+    ]
+    assert [item["similarity_penalty"] for item in logged] == similarities
+    assert [item["diversity_lambda"] for item in logged] == [5.0, 5.0, 5.0]
+    assert all(
+        abs(item["diversity_penalty"] - expected) < 1e-12
+        for item, expected in zip(logged, expected_penalties)
+    )
+
+
+def test_baseline_reward_is_unchanged_when_validity_is_disabled():
+    scores, _ = _run_compute_score(
+        [{"question": "question", "score": 0.3}],
+        [0.09],
+        {
+            "VALIDITY_RZERO_ENABLED": "0",
+            "VALIDITY_RZERO_DIVERSITY_LAMBDA": "not-a-number",
+        },
+    )
+
+    assert abs(scores[0]["overall"] - (min(0.3, 1 - 0.3) - 0.09)) < 1e-12
+    assert scores[0]["accuracy"] == 0.09
+    assert "diversity_penalty" not in scores[0]
+
+
+def test_invalid_majority_keeps_negative_base_reward_and_subtracts_diversity():
+    base_reward = 0.5 - 5 / 9
+    scores, _ = _run_compute_score(
+        [_validity_result(base_reward=base_reward, decision="INVALID", invalid_votes=5)],
+        [0.20],
+        {
+            "VALIDITY_RZERO_ENABLED": "1",
+        },
+    )
+
+    assert abs(scores[0]["diversity_penalty"] - 0.5) < 1e-12
+    assert abs(scores[0]["overall"] - (base_reward - 0.5)) < 1e-12
