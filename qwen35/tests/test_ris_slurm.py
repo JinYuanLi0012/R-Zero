@@ -77,6 +77,44 @@ class RisSlurmScriptTests(unittest.TestCase):
         self.assertNotIn("train_grpo", gate)
         self.assertNotIn("curate_dataset", gate)
 
+    def test_solver_thinking_off_gate_is_a_strict_detached_single_gpu_ab(self):
+        repo_root = Path(__file__).resolve().parents[2]
+        batch = (repo_root / "qwen35/scripts/ris_solver_thinking_off_gate.sbatch").read_text(
+            encoding="utf-8"
+        )
+        gate = (repo_root / "qwen35/scripts/solver_thinking_off_gate.sh").read_text(
+            encoding="utf-8"
+        )
+        diagnostic = (
+            repo_root / "qwen35/rzero/diagnostics/evaluate_solver_thinking_off.py"
+        ).read_text(encoding="utf-8")
+        self.assertIn("#SBATCH --account=compute2-jiaxinh", batch)
+        self.assertIn("#SBATCH --gpus=1", batch)
+        self.assertIn("#SBATCH --time=7-00:00:00", batch)
+        self.assertIn("solver_n9_gate/candidates.json", batch)
+        self.assertIn("solver_n9_thinking_off_gate", batch)
+        self.assertIn("solver_thinking_off_gate.sh", batch)
+        self.assertIn("/tmp/rzero-qwen35-${UID}/${cache_scope}", gate)
+        for expected in (
+            "--samples 9",
+            "--seed 0",
+            "--temperature 1.0",
+            "--top-p 1.0",
+            "--top-k 40",
+            "--max-tokens 4096",
+            "--min-score 0.3",
+            "--max-score 0.8",
+            "--expected-total-candidates 64",
+            "--expected-parseable-candidates 60",
+        ):
+            self.assertIn(expected, gate)
+        self.assertIn("solver_messages(item[\"question\"])", diagnostic)
+        self.assertIn("enable_thinking=False", diagnostic)
+        self.assertIn("stop_token_ids=[tokenizer.eos_token_id]", diagnostic)
+        self.assertNotIn("train_grpo", gate)
+        self.assertNotIn("curate_dataset", gate)
+        self.assertNotIn("repeat_for_integration", diagnostic)
+
     def test_round0_smoke_uses_pinned_topology_and_isolated_profile(self):
         repo_root = Path(__file__).resolve().parents[2]
         script = (repo_root / "qwen35/scripts/ris_round0_smoke.sbatch").read_text(encoding="utf-8")

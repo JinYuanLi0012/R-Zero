@@ -181,6 +181,24 @@ sbatch qwen35/scripts/ris_questioner_candidate_gate.sbatch
 The result is written to
 `round_01/diagnostics/solver_n9_gate/{candidates.json,scored_n9.json,summary.json}`.
 
+If that unchanged Solver gate is dominated by missing-box `"None"` votes, run
+the strict Solver thinking-off A/B on the exact same `candidates.json`:
+
+```bash
+sbatch qwen35/scripts/ris_solver_thinking_off_gate.sbatch
+```
+
+This diagnostic changes only the official tokenizer chat-template setting to
+`enable_thinking=false`. It keeps the frozen Base Solver, `n=9`, seed 0,
+temperature 1.0, top-p 1.0, top-k 40, 4096-token limit, EOS, MathRuler,
+majority vote, released evaluator filters, and difficulty interval unchanged.
+It performs no training or curation. Its independent output directory is
+`round_01/diagnostics/solver_n9_thinking_off_gate/`, containing
+`raw_rollouts.json`, `scored_n9.json`, and the last-written commit marker
+`summary.json`. Every Solver rollout retains its raw response, finish/stop
+reason, token count, and extracted answer, so a completed output can be audited
+and safely skipped on resubmission.
+
 Because a one-step Base-model Questioner may produce no parseable candidate,
 the smoke profile may seed Solver training from eight rows of the fixed
 validation Parquet. This is recorded as `used_smoke_fallback` in curation
