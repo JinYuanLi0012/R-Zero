@@ -199,6 +199,25 @@ It performs no training or curation. Its independent output directory is
 reason, token count, and extracted answer, so a completed output can be audited
 and safely skipped on resubmission.
 
+To isolate the effect of Solver output budget after the complete 4K gate has
+finished, submit the full 60-question by 9-rollout thinking-off 16K comparison:
+
+```bash
+sbatch qwen35/scripts/ris_solver_thinking_off_16k_gate.sbatch
+```
+
+It reuses the same immutable candidate file and evaluator. Before loading the
+model, it reads the completed 4K `summary.json` and requires the candidate SHA,
+model revision/config hash, thinking mode, sampling controls, stop semantics,
+scoring interval, and completed 64/60/540 counts to match; only the output
+budget may differ. The only sampling change is `max_tokens=16384`; it does not
+add a presence penalty or alter the prompt, stop semantics, sampling seed,
+`n=9`, MathRuler, voting, or filtering.
+It writes all 540 raw rollouts plus `scored_n9.json` and `summary.json` under
+`round_01/diagnostics/solver_n9_thinking_off_16k_gate/`. The existing 4K JSON
+files remain the authoritative baseline; its summary is read-only and none of
+the three baseline files is overwritten.
+
 Because a one-step Base-model Questioner may produce no parseable candidate,
 the smoke profile may seed Solver training from eight rows of the fixed
 validation Parquet. This is recorded as `used_smoke_fallback` in curation

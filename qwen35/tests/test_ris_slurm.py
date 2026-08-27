@@ -101,19 +101,49 @@ class RisSlurmScriptTests(unittest.TestCase):
             "--temperature 1.0",
             "--top-p 1.0",
             "--top-k 40",
-            "--max-tokens 4096",
             "--min-score 0.3",
             "--max-score 0.8",
             "--expected-total-candidates 64",
             "--expected-parseable-candidates 60",
         ):
             self.assertIn(expected, gate)
+        self.assertIn("--max-tokens 4096", batch)
         self.assertIn("solver_messages(item[\"question\"])", diagnostic)
         self.assertIn("enable_thinking=False", diagnostic)
         self.assertIn("stop_token_ids=[tokenizer.eos_token_id]", diagnostic)
         self.assertNotIn("train_grpo", gate)
         self.assertNotIn("curate_dataset", gate)
         self.assertNotIn("repeat_for_integration", diagnostic)
+
+    def test_solver_16k_gate_changes_only_the_output_budget_and_destination(self):
+        repo_root = Path(__file__).resolve().parents[2]
+        baseline = (repo_root / "qwen35/scripts/ris_solver_thinking_off_gate.sbatch").read_text(
+            encoding="utf-8"
+        )
+        extended = (
+            repo_root / "qwen35/scripts/ris_solver_thinking_off_16k_gate.sbatch"
+        ).read_text(encoding="utf-8")
+        gate = (repo_root / "qwen35/scripts/solver_thinking_off_gate.sh").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("#SBATCH --account=compute2-jiaxinh", extended)
+        self.assertIn("#SBATCH --gpus=1", extended)
+        self.assertIn("#SBATCH --time=7-00:00:00", extended)
+        self.assertIn("solver_n9_gate/candidates.json", extended)
+        self.assertIn("solver_n9_thinking_off_gate/summary.json", extended)
+        self.assertIn("solver_n9_thinking_off_16k_gate", extended)
+        self.assertIn("--max-tokens 4096", baseline)
+        self.assertIn("--max-tokens 16384", extended)
+        self.assertIn("--comparison-baseline", extended)
+        self.assertIn("--max-tokens \"${max_tokens}\"", gate)
+        self.assertIn("--samples 9", gate)
+        self.assertIn("--seed 0", gate)
+        self.assertIn("--temperature 1.0", gate)
+        self.assertIn("--top-p 1.0", gate)
+        self.assertIn("--top-k 40", gate)
+        self.assertNotIn("presence_penalty", gate)
+        self.assertNotIn("train_grpo", extended)
+        self.assertNotIn("curate_dataset", extended)
 
     def test_round0_smoke_uses_pinned_topology_and_isolated_profile(self):
         repo_root = Path(__file__).resolve().parents[2]

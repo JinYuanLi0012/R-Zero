@@ -5,23 +5,42 @@ repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 candidates=
 solver_model=
 output_dir=
+max_tokens=4096
+comparison_baseline=
 
 while (($#)); do
   case "$1" in
     --candidates) candidates=$2; shift 2 ;;
     --solver-model) solver_model=$2; shift 2 ;;
     --output-dir) output_dir=$2; shift 2 ;;
+    --max-tokens) max_tokens=$2; shift 2 ;;
+    --comparison-baseline) comparison_baseline=$2; shift 2 ;;
     *) echo "unknown argument: $1" >&2; exit 2 ;;
   esac
 done
 
 if [[ -z "${candidates}" || -z "${solver_model}" || -z "${output_dir}" ]]; then
-  echo "usage: solver_thinking_off_gate.sh --candidates JSON --solver-model MODEL --output-dir OUTPUT" >&2
+  echo "usage: solver_thinking_off_gate.sh --candidates JSON --solver-model MODEL --output-dir OUTPUT [--max-tokens N]" >&2
+  exit 2
+fi
+if [[ ! "${max_tokens}" =~ ^[1-9][0-9]*$ ]]; then
+  echo "max-tokens must be a positive integer: ${max_tokens}" >&2
   exit 2
 fi
 for required in "${candidates}" "${solver_model}/config.json" "${solver_model}/RZERO_MODEL_REVISION"; do
   [[ -s "${required}" ]] || { echo "missing Solver thinking-off gate input: ${required}" >&2; exit 2; }
 done
+comparison_args=()
+if [[ -n "${comparison_baseline}" ]]; then
+  [[ -s "${comparison_baseline}" ]] || {
+    echo "missing authoritative 4K comparison summary: ${comparison_baseline}" >&2
+    exit 2
+  }
+  comparison_args+=(
+    --comparison-baseline "${comparison_baseline}"
+    --expected-baseline-max-tokens 4096
+  )
+fi
 
 export VERL_SOURCE_ROOT=${VERL_SOURCE_ROOT:-/opt/verl}
 export PYTHONPATH="${VERL_SOURCE_ROOT}:${repo_root}${PYTHONPATH:+:${PYTHONPATH}}"
@@ -52,12 +71,13 @@ python3.12 -m qwen35.rzero.diagnostics.evaluate_solver_thinking_off \
   --temperature 1.0 \
   --top-p 1.0 \
   --top-k 40 \
-  --max-tokens 4096 \
+  --max-tokens "${max_tokens}" \
   --min-score 0.3 \
   --max-score 0.8 \
   --expected-total-candidates 64 \
   --expected-parseable-candidates 60 \
   --expected-revision 1001bb4 \
+  "${comparison_args[@]}" \
   --resume 2>&1 | tee -a "${output_dir}/logs/evaluate.log"
 
 echo "RZERO_SOLVER_THINKING_OFF_GATE_OK"

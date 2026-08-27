@@ -7,6 +7,7 @@ from qwen35.rzero.diagnostics.evaluate_solver_thinking_off import (
     _existing_complete,
     build_summary,
     score_responses,
+    validate_comparison_baseline,
 )
 
 
@@ -81,13 +82,21 @@ class SolverThinkingOffGateTests(unittest.TestCase):
         ]
         scored = [{"question": "Q", "answer": "2", "score": 0.5, "results": ["2", "None"]}]
         summary = build_summary(
-            [{"score": 0}, {"score": -1}], evidence, scored, {"enable_thinking": False}, 0.3, 0.8
+            [{"score": 0}, {"score": -1}],
+            evidence,
+            scored,
+            {"enable_thinking": False},
+            0.3,
+            0.8,
+            16384,
         )
         self.assertEqual(summary["total_candidates"], 2)
         self.assertEqual(summary["parseable_candidates"], 1)
         self.assertEqual(summary["total_solver_rollouts"], 3)
         self.assertEqual(summary["finish_reasons"], {"length": 1, "stop": 2})
-        self.assertEqual(summary["hit_4096"], 1)
+        self.assertEqual(summary["max_tokens"], 16384)
+        self.assertEqual(summary["hit_max_tokens"], 1)
+        self.assertNotIn("hit_4096", summary)
         self.assertEqual(summary["valid_boxed_answers"], 1)
         self.assertEqual(summary["missing_box_none_answers"], 1)
         self.assertEqual(summary["explicit_empty_box_answers"], 1)
@@ -123,6 +132,46 @@ class SolverThinkingOffGateTests(unittest.TestCase):
             )
             with self.assertRaisesRegex(RuntimeError, "different inputs"):
                 _existing_complete(summary, evidence, scored, {"input_sha256": "other"})
+
+    def test_16k_comparison_requires_every_4k_invariant_to_match(self):
+        import json
+
+        invariant = {
+            "input_sha256": "candidate-hash",
+            "solver_config_sha256": "config-hash",
+            "solver_revision": "1001bb4",
+            "enable_thinking": False,
+            "samples": 9,
+            "seed": 0,
+            "temperature": 1.0,
+            "top_p": 1.0,
+            "top_k": 40,
+            "stop_semantics": "tokenizer.eos_token_id_only",
+            "minimum_score": 0.3,
+            "maximum_score": 0.8,
+            "expected_total_candidates": 64,
+            "expected_parseable_candidates": 60,
+        }
+        with tempfile.TemporaryDirectory() as temporary:
+            baseline_path = Path(temporary) / "summary.json"
+            baseline_path.write_text(
+                json.dumps(
+                    {
+                        "provenance": {**invariant, "max_tokens": 4096},
+                        "total_candidates": 64,
+                        "parseable_candidates": 60,
+                        "total_solver_rollouts": 540,
+                    }
+                ),
+                encoding="utf-8",
+            )
+            comparison = validate_comparison_baseline(baseline_path, invariant, 4096)
+            self.assertEqual(comparison["max_tokens"], 4096)
+            self.assertEqual(len(comparison["summary_sha256"]), 64)
+
+            changed = {**invariant, "input_sha256": "different-candidates"}
+            with self.assertRaisesRegex(RuntimeError, "single-variable match"):
+                validate_comparison_baseline(baseline_path, changed, 4096)
 
 
 if __name__ == "__main__":

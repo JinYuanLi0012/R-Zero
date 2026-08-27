@@ -94,6 +94,7 @@ def build_summary(
     provenance: dict[str, Any],
     minimum: float,
     maximum: float,
+    max_tokens: int,
 ) -> dict[str, Any]:
     rollouts = [rollout for item in evidence for rollout in item["rollouts"]]
     accepted, accepted_count, _ = filter_candidates(
@@ -114,9 +115,10 @@ def build_summary(
         "scored_candidates": len(scored),
         "dropped_during_evaluation": len(evidence) - len(scored),
         "total_solver_rollouts": len(rollouts),
+        "max_tokens": max_tokens,
         "finish_reasons": dict(sorted(finish_reasons.items())),
         "stop_reasons": dict(sorted(stop_reasons.items())),
-        "hit_4096": sum(item["hit_max_tokens"] for item in rollouts),
+        "hit_max_tokens": sum(item["hit_max_tokens"] for item in rollouts),
         "valid_boxed_answers": valid_boxed,
         "valid_boxed_answer_fraction": valid_boxed / len(rollouts) if rollouts else 0.0,
         "missing_box_none_answers": sum(item["extracted_answer"] == "None" for item in rollouts),
@@ -165,6 +167,67 @@ def _existing_complete(
     )
 
 
+def validate_comparison_baseline(
+    baseline_path: Path,
+    current_provenance: dict[str, Any],
+    expected_max_tokens: int,
+) -> dict[str, Any]:
+    """Prove that a prior completed gate differs only in output budget."""
+
+    baseline = json.loads(baseline_path.read_text(encoding="utf-8"))
+    baseline_provenance = baseline.get("provenance")
+    if not isinstance(baseline_provenance, dict):
+        raise RuntimeError("comparison baseline is missing provenance")
+    if baseline_provenance.get("max_tokens") != expected_max_tokens:
+        raise RuntimeError(
+            "comparison baseline max_tokens mismatch: "
+            f"found {baseline_provenance.get('max_tokens')!r}, expected {expected_max_tokens}"
+        )
+    invariant_keys = (
+        "input_sha256",
+        "solver_config_sha256",
+        "solver_revision",
+        "enable_thinking",
+        "samples",
+        "seed",
+        "temperature",
+        "top_p",
+        "top_k",
+        "stop_semantics",
+        "minimum_score",
+        "maximum_score",
+        "expected_total_candidates",
+        "expected_parseable_candidates",
+    )
+    mismatches = {
+        key: (baseline_provenance.get(key), current_provenance.get(key))
+        for key in invariant_keys
+        if baseline_provenance.get(key) != current_provenance.get(key)
+    }
+    if mismatches:
+        raise RuntimeError(f"comparison baseline is not a single-variable match: {mismatches}")
+    expected_rollouts = (
+        current_provenance["expected_parseable_candidates"] * current_provenance["samples"]
+    )
+    expected_counts = {
+        "total_candidates": current_provenance["expected_total_candidates"],
+        "parseable_candidates": current_provenance["expected_parseable_candidates"],
+        "total_solver_rollouts": expected_rollouts,
+    }
+    count_mismatches = {
+        key: (baseline.get(key), expected)
+        for key, expected in expected_counts.items()
+        if baseline.get(key) != expected
+    }
+    if count_mismatches:
+        raise RuntimeError(f"comparison baseline is incomplete: {count_mismatches}")
+    return {
+        "summary_path": str(baseline_path.resolve()),
+        "summary_sha256": file_hash(baseline_path),
+        "max_tokens": expected_max_tokens,
+    }
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", type=Path, required=True)
@@ -181,6 +244,8 @@ def main() -> None:
     parser.add_argument("--expected-total-candidates", type=int, default=64)
     parser.add_argument("--expected-parseable-candidates", type=int, default=60)
     parser.add_argument("--expected-revision", default="1001bb4")
+    parser.add_argument("--comparison-baseline", type=Path)
+    parser.add_argument("--expected-baseline-max-tokens", type=int, default=4096)
     parser.add_argument("--resume", action="store_true")
     args = parser.parse_args()
 
@@ -221,6 +286,12 @@ def main() -> None:
         "expected_total_candidates": args.expected_total_candidates,
         "expected_parseable_candidates": args.expected_parseable_candidates,
     }
+    if args.comparison_baseline:
+        provenance["comparison_baseline"] = validate_comparison_baseline(
+            args.comparison_baseline,
+            provenance,
+            args.expected_baseline_max_tokens,
+        )
     evidence_path = args.output_dir / "raw_rollouts.json"
     scored_path = args.output_dir / "scored_n9.json"
     summary_path = args.output_dir / "summary.json"
@@ -261,7 +332,15 @@ def main() -> None:
     )
     responses = model.generate(prompts, sampling_params=sampling, use_tqdm=True) if prompts else []
     evidence, scored = score_responses(valid, responses, extract_boxed_content, grade_answer, args.max_tokens)
-    summary = build_summary(all_candidates, evidence, scored, provenance, args.min_score, args.max_score)
+    summary = build_summary(
+        all_candidates,
+        evidence,
+        scored,
+        provenance,
+        args.min_score,
+        args.max_score,
+        args.max_tokens,
+    )
     expected_rollouts = len(valid) * args.samples
     if summary["total_solver_rollouts"] != expected_rollouts:
         raise RuntimeError(
