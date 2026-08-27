@@ -170,6 +170,17 @@ It uses the independent run directory
 Solver training. The original one-step baseline and formal run directories are
 not read except for immutable Base model and seed-data inputs.
 
+After that gate completes, score its 64 raw step-1 candidates with the unchanged
+Q1 frozen Base Solver and released `n=9` evaluator, without creating or repeating
+a Solver dataset:
+
+```bash
+sbatch qwen35/scripts/ris_questioner_candidate_gate.sbatch
+```
+
+The result is written to
+`round_01/diagnostics/solver_n9_gate/{candidates.json,scored_n9.json,summary.json}`.
+
 Because a one-step Base-model Questioner may produce no parseable candidate,
 the smoke profile may seed Solver training from eight rows of the fixed
 validation Parquet. This is recorded as `used_smoke_fallback` in curation

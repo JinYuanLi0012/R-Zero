@@ -60,6 +60,23 @@ class RisSlurmScriptTests(unittest.TestCase):
         self.assertNotIn("solver_gate.sh", script)
         self.assertNotIn("qwen35/scripts/run.sh", script)
 
+    def test_questioner_candidate_gate_reuses_official_n9_evaluator_without_training(self):
+        repo_root = Path(__file__).resolve().parents[2]
+        batch = (repo_root / "qwen35/scripts/ris_questioner_candidate_gate.sbatch").read_text(
+            encoding="utf-8"
+        )
+        gate = (repo_root / "qwen35/scripts/questioner_candidate_gate.sh").read_text(encoding="utf-8")
+        self.assertIn("#SBATCH --account=compute2-jiaxinh", batch)
+        self.assertIn("#SBATCH --gpus=1", batch)
+        self.assertIn("#SBATCH --time=7-00:00:00", batch)
+        self.assertIn("questioner_candidate_gate.sh", batch)
+        self.assertIn("qwen35.rzero.evaluate_candidates", gate)
+        self.assertIn("--samples 9", gate)
+        self.assertIn("--min-score 0.3", gate)
+        self.assertIn("--max-score 0.8", gate)
+        self.assertNotIn("train_grpo", gate)
+        self.assertNotIn("curate_dataset", gate)
+
     def test_round0_smoke_uses_pinned_topology_and_isolated_profile(self):
         repo_root = Path(__file__).resolve().parents[2]
         script = (repo_root / "qwen35/scripts/ris_round0_smoke.sbatch").read_text(encoding="utf-8")

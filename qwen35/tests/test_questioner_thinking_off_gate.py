@@ -5,6 +5,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from qwen35.rzero.diagnostics.analyze_questioner_rollouts import analyze
+from qwen35.rzero.diagnostics.questioner_candidate_gate import prepare_candidates, summarize_gate
 from qwen35.rzero.diagnostics.questioner_one_step import configure_node_caches
 
 
@@ -15,6 +16,35 @@ class FakeTokenizer:
 
 
 class QuestionerThinkingOffGateTests(unittest.TestCase):
+    def test_raw_diagnostic_records_adapt_to_released_candidate_schema(self):
+        candidates = prepare_candidates(
+            [
+                {"parsed_question": "What is 2+3?", "parsed_answer": "5", "raw_response": "raw valid"},
+                {"parsed_question": "", "parsed_answer": "", "raw_response": "raw invalid"},
+            ]
+        )
+        self.assertEqual(candidates[0], {"question": "What is 2+3?", "answer": "5", "score": 0})
+        self.assertEqual(candidates[1], {"question": "raw invalid", "answer": "", "score": -1})
+
+    def test_candidate_gate_reports_none_votes_and_released_difficulty_filter(self):
+        candidates = [
+            {"question": "q0", "answer": "a", "score": 0},
+            {"question": "q1", "answer": "b", "score": 0},
+            {"question": "bad", "answer": "", "score": -1},
+        ]
+        scored = [
+            {"question": "q0", "answer": "42", "score": 1 / 3, "results": ["42"] * 9},
+            {"question": "q1", "answer": "None", "score": 7 / 9, "results": ["None"] * 9},
+        ]
+        summary = summarize_gate(candidates, scored)
+        self.assertEqual(summary["parseable_candidates"], 2)
+        self.assertEqual(summary["scored_candidates"], 2)
+        self.assertEqual(summary["majority_none"], 1)
+        self.assertEqual(summary["accepted_0.3_to_0.8"], 1)
+        self.assertEqual(summary["accepted_questions"], ["q0"])
+        self.assertFalse(summary["semantics"]["deduplication"])
+        self.assertFalse(summary["semantics"]["repeat_to_minimum"])
+
     def test_gate_redirects_compiler_caches_to_job_local_root(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary) / "job-cache"
