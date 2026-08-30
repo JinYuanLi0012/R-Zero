@@ -43,6 +43,12 @@ if [ "$VALIDITY_RZERO_ENABLED" = "1" ]; then
     : "${VALIDITY_RZERO_INITIAL_SOLVER:?set VALIDITY_RZERO_INITIAL_SOLVER}"
     : "${TERRA_REPLAY_DATASET:?set TERRA_REPLAY_DATASET}"
     : "${TERRA_REPLAY_RATIO:?set TERRA_REPLAY_RATIO}"
+    VALIDITY_RZERO_DIVERSITY_MODE=${VALIDITY_RZERO_DIVERSITY_MODE:-bleu_lambda5}
+    case "$VALIDITY_RZERO_DIVERSITY_MODE" in
+        bleu_legacy|bleu_lambda5|semantic_mc) ;;
+        *) echo "Unsupported VALIDITY_RZERO_DIVERSITY_MODE=$VALIDITY_RZERO_DIVERSITY_MODE" >&2; exit 2 ;;
+    esac
+    export VALIDITY_RZERO_DIVERSITY_MODE
 fi
 if ! [[ "$NUM_ROUNDS" =~ ^[1-9][0-9]*$ ]]; then
     echo "--rounds must be a positive integer" >&2
@@ -122,7 +128,21 @@ if [ "$VALIDITY_RZERO_ENABLED" = "1" ]; then
         --field "terra_replay_ratio=${TERRA_REPLAY_RATIO}"
         --field "terra_replay_seed=${TERRA_REPLAY_SEED:-1}"
         --field "solver_rollout_batch_size=${SOLVER_ROLLOUT_BATCH_SIZE}"
+        --field "validity_diversity_mode=${VALIDITY_RZERO_DIVERSITY_MODE}"
     )
+    if [ "$VALIDITY_RZERO_DIVERSITY_MODE" = "semantic_mc" ]; then
+        FINGERPRINT_EXTRA+=(
+            --field "semantic_model=${VALIDITY_RZERO_SEMANTIC_MODEL:-Qwen/Qwen3-4B-Base}"
+            --field "semantic_panel_size=${VALIDITY_RZERO_SEMANTIC_PANEL_SIZE:-128}"
+            --field "semantic_panel_seed=${VALIDITY_RZERO_SEMANTIC_PANEL_SEED:-43}"
+            --field "semantic_sampling_protocol=generative_v3_max1024_seed42"
+        )
+    elif [ "$VALIDITY_RZERO_DIVERSITY_MODE" = "bleu_lambda5" ]; then
+        FINGERPRINT_EXTRA+=(
+            --field "validity_diversity_lambda=${VALIDITY_RZERO_DIVERSITY_LAMBDA:-5.0}"
+            --field "validity_diversity_cap=0.5"
+        )
+    fi
 fi
 
 if [ -e "$STATE_FILE" ] && [ "$RESUME" != "1" ]; then

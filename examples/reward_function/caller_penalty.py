@@ -133,22 +133,81 @@ def compute_score(predicts: List[str], ground_truths: List[str], format_weight: 
             results.append({"question": "", "answer": ""})
 
     final_results = generate_results(results, num_services=num_services, port_base=port_base)
-    penalty = cluster_share_per_problem([result['question'] for result in final_results], distance_threshold=0.5)
-    # print(penalty)
-    assert len(penalty) == len(final_results)
-    scores = []
     validity_rzero_enabled = os.getenv("VALIDITY_RZERO_ENABLED", "0") == "1"
+    diversity_mode = (
+        os.getenv("VALIDITY_RZERO_DIVERSITY_MODE", "bleu_lambda5")
+        if validity_rzero_enabled
+        else "baseline"
+    )
+    supported_modes = {"bleu_legacy", "bleu_lambda5", "semantic_mc"}
+    if validity_rzero_enabled and diversity_mode not in supported_modes:
+        raise ValueError(
+            f"unsupported VALIDITY_RZERO_DIVERSITY_MODE={diversity_mode!r}; "
+            f"expected one of {sorted(supported_modes)}"
+        )
+    semantic_stats = None
+    if validity_rzero_enabled and diversity_mode == "semantic_mc":
+        # Importing this module can resolve/load the frozen semantic judge, so the
+        # pure R-Zero path must never import it.
+        from methods.validity_rzero.semantic_mc_online import compute_online_semantic_penalties
+        semantic_stats = compute_online_semantic_penalties(
+            [result.get("question", "") for result in final_results]
+        )
+        penalty = None
+    else:
+        penalty = cluster_share_per_problem(
+            [result['question'] for result in final_results], distance_threshold=0.5
+        )
+        assert len(penalty) == len(final_results)
+    scores = []
     diversity_lambda = (
         float(os.getenv("VALIDITY_RZERO_DIVERSITY_LAMBDA", "5.0"))
-        if validity_rzero_enabled
+        if validity_rzero_enabled and diversity_mode == "bleu_lambda5"
         else None
     )
     for i in range(len(final_results)):
-        if validity_rzero_enabled and final_results[i].get("question"):
+        if validity_rzero_enabled and diversity_mode == "semantic_mc" and final_results[i].get("question"):
+            item = final_results[i]
+            base_reward = float(item["questioner_base_reward"])
+            stats = semantic_stats[i]
+            semantic_penalty = float(stats["semantic_penalty"])
+            final_score = base_reward - semantic_penalty
+            print("[validity_rzero][questioner_reward] " + json.dumps({
+                "invalid_votes": item["invalid_votes"],
+                "total_votes": item["total_votes"],
+                "validity_decision": item["validity_decision"],
+                "validity_penalty": item["validity_penalty"],
+                "math_frontier_score": item["math_frontier_score"],
+                "diversity_mode": diversity_mode,
+                "same_count": stats["same_count"],
+                "compared_count": stats["compared_count"],
+                "parse_failure_count": stats["parse_failure_count"],
+                "semantic_penalty": semantic_penalty,
+                "final_questioner_reward": final_score,
+            }))
+            scores.append({
+                "overall": final_score,
+                "format": 1.0,
+                "accuracy": semantic_penalty,
+                "invalid_votes": float(item["invalid_votes"]),
+                "validity_invalid": float(item["validity_decision"] == "INVALID"),
+                "validity_valid": float(item["validity_decision"] == "VALID"),
+                "validity_penalty": float(item["validity_penalty"]),
+                "math_frontier_score": float(item["math_frontier_score"]),
+                "same_count": float(stats["same_count"]),
+                "compared_count": float(stats["compared_count"]),
+                "parse_failure_count": float(stats["parse_failure_count"]),
+                "semantic_penalty": semantic_penalty,
+            })
+        elif validity_rzero_enabled and final_results[i].get("question"):
             item = final_results[i]
             base_reward = float(item["questioner_base_reward"])
             similarity_penalty = float(penalty[i])
-            diversity_penalty = min(0.5, diversity_lambda * similarity_penalty)
+            diversity_penalty = (
+                similarity_penalty
+                if diversity_mode == "bleu_legacy"
+                else min(0.5, diversity_lambda * similarity_penalty)
+            )
             final_score = base_reward - diversity_penalty
             print("[validity_rzero][questioner_reward] " + json.dumps({
                 "invalid_votes": item["invalid_votes"],
@@ -156,6 +215,7 @@ def compute_score(predicts: List[str], ground_truths: List[str], format_weight: 
                 "validity_decision": item["validity_decision"],
                 "validity_penalty": item["validity_penalty"],
                 "math_frontier_score": item["math_frontier_score"],
+                "diversity_mode": diversity_mode,
                 "similarity_penalty": similarity_penalty,
                 "diversity_lambda": diversity_lambda,
                 "diversity_penalty": diversity_penalty,
@@ -175,10 +235,15 @@ def compute_score(predicts: List[str], ground_truths: List[str], format_weight: 
                 "diversity_penalty": diversity_penalty,
             })
         else:
-            final_score = (min(final_results[i]["score"],1-final_results[i]["score"]) if final_results[i]['question'] else -1)-penalty[i]
-            scores.append({"overall": final_score,"format": 1 if final_results[i]['question'] else 0,"accuracy": penalty[i]})
+            if validity_rzero_enabled and diversity_mode == "semantic_mc":
+                final_score = -1.0
+                scores.append({"overall": final_score, "format": 0, "accuracy": 0.0})
+            else:
+                # Original pure R-Zero reward. Keep this branch byte-for-byte in
+                # behavior when VALIDITY_RZERO_ENABLED is not 1.
+                final_score = (min(final_results[i]["score"],1-final_results[i]["score"]) if final_results[i]['question'] else -1)-penalty[i]
+                scores.append({"overall": final_score,"format": 1 if final_results[i]['question'] else 0,"accuracy": penalty[i]})
     return scores
-
 
 
 

@@ -5,7 +5,9 @@ import json
 import os
 from pathlib import Path
 import re
+import sys
 import tempfile
+from types import ModuleType
 from typing import Dict, List
 from unittest.mock import patch
 
@@ -33,14 +35,22 @@ def _load_compute_score(final_results, penalties):
     return namespace["compute_score"]
 
 
-def _run_compute_score(final_results, penalties, environment):
+def _run_compute_score(final_results, penalties, environment, semantic_stats=None):
     compute_score = _load_compute_score(final_results, penalties)
+    semantic_module = ModuleType("methods.validity_rzero.semantic_mc_online")
+    semantic_module.compute_online_semantic_penalties = (
+        lambda _questions: semantic_stats
+        if semantic_stats is not None
+        else (_ for _ in ()).throw(AssertionError("semantic dependency must not be used"))
+    )
     previous_cwd = os.getcwd()
     try:
         with tempfile.TemporaryDirectory() as temporary_directory:
             os.chdir(temporary_directory)
             output = StringIO()
-            with patch.dict(os.environ, environment, clear=True), redirect_stdout(output):
+            with patch.dict(os.environ, environment, clear=True), \
+                 patch.dict(sys.modules, {semantic_module.__name__: semantic_module}), \
+                 redirect_stdout(output):
                 scores = compute_score(
                     ["<question>question</question> \\boxed{answer}"] * len(final_results),
                     ["answer"] * len(final_results),
@@ -119,3 +129,48 @@ def test_invalid_majority_keeps_negative_base_reward_and_subtracts_diversity():
 
     assert abs(scores[0]["diversity_penalty"] - 0.5) < 1e-12
     assert abs(scores[0]["overall"] - (base_reward - 0.5)) < 1e-12
+
+
+def test_legacy_bleu_mode_remains_reproducible_without_scaling():
+    scores, _ = _run_compute_score(
+        [_validity_result()], [0.20],
+        {"VALIDITY_RZERO_ENABLED": "1", "VALIDITY_RZERO_DIVERSITY_MODE": "bleu_legacy"},
+    )
+    assert scores[0]["diversity_lambda"] is None
+    assert scores[0]["diversity_penalty"] == 0.20
+    assert abs(scores[0]["overall"] - 0.20) < 1e-12
+
+
+def test_semantic_mode_subtracts_same_over_successfully_parsed_for_valid_and_invalid():
+    invalid_base = 0.5 - 5 / 9
+    stats = [
+        {"same_count": 2, "compared_count": 4, "parse_failure_count": 1, "semantic_penalty": 0.5},
+        {"same_count": 1, "compared_count": 4, "parse_failure_count": 0, "semantic_penalty": 0.25},
+    ]
+    scores, logs = _run_compute_score(
+        [
+            _validity_result(base_reward=0.4),
+            _validity_result(base_reward=invalid_base, decision="INVALID", invalid_votes=5),
+        ],
+        [999, 999],
+        {"VALIDITY_RZERO_ENABLED": "1", "VALIDITY_RZERO_DIVERSITY_MODE": "semantic_mc"},
+        semantic_stats=stats,
+    )
+    assert abs(scores[0]["overall"] - (0.4 - 2 / 4)) < 1e-12
+    assert abs(scores[1]["overall"] - (invalid_base - 1 / 4)) < 1e-12
+    assert scores[0]["same_count"] == 2
+    assert scores[0]["compared_count"] == 4
+    assert scores[0]["parse_failure_count"] == 1
+    assert '"diversity_mode": "semantic_mc"' in logs
+
+
+def test_disabled_baseline_never_imports_semantic_even_if_mode_is_set():
+    scores, _ = _run_compute_score(
+        [{"question": "question", "score": 0.3}], [0.09],
+        {
+            "VALIDITY_RZERO_ENABLED": "0",
+            "VALIDITY_RZERO_DIVERSITY_MODE": "semantic_mc",
+            "VALIDITY_RZERO_SEMANTIC_MODEL": "must-not-load",
+        },
+    )
+    assert abs(scores[0]["overall"] - (0.3 - 0.09)) < 1e-12

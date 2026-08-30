@@ -32,6 +32,16 @@ QUESTIONER_TRAIN_GPU_COUNT=$(echo "$QUESTIONER_TRAIN_GPU_IDS" | awk -F',' '{prin
 export VLLM_SERVICE_COUNT
 export QUESTIONER_VLLM_PID_FILE=${QUESTIONER_VLLM_PID_FILE:-${STORAGE_PATH}/temp_results/questioner_vllm_${RUN_ID}.pids}
 export VLLM_LOG_DIR=${VLLM_LOG_DIR:-logs}
+export VALIDITY_RZERO_DIVERSITY_MODE=${VALIDITY_RZERO_DIVERSITY_MODE:-bleu_lambda5}
+if [ "${VALIDITY_RZERO_ENABLED:-0}" = "1" ] && [ "$VALIDITY_RZERO_DIVERSITY_MODE" = "semantic_mc" ]; then
+    export VALIDITY_RZERO_REPO_ROOT
+    VALIDITY_RZERO_REPO_ROOT=$(pwd)
+    export VALIDITY_RZERO_SOLVER_MODEL_PATH=$solver_model_path
+    export VALIDITY_RZERO_SOLVER_RUN_ID=$RUN_ID
+    export VALIDITY_RZERO_SEMANTIC_MODEL=${VALIDITY_RZERO_SEMANTIC_MODEL:-Qwen/Qwen3-4B-Base}
+    export VALIDITY_RZERO_SEMANTIC_PID_FILE=${VALIDITY_RZERO_SEMANTIC_PID_FILE:-${STORAGE_PATH}/temp_results/questioner_semantic_${RUN_ID}.pids}
+    echo "semantic MC enabled: Solver and frozen judge will sequentially reuse GPUs $VLLM_GPU_IDS"
+fi
 bash vllm_service_init/start.sh $solver_model_path $RUN_ID
 echo "vLLM services started with RUN_ID=$RUN_ID on GPUs $VLLM_GPU_IDS and ports starting at $VLLM_PORT_BASE"
 echo "Questioner training will use GPUs $QUESTIONER_TRAIN_GPU_IDS"
@@ -47,22 +57,29 @@ if [ -n "$QUESTIONER_LOAD_CHECKPOINT" ]; then
     RESUME_ARGS+=(trainer.load_checkpoint_path="$QUESTIONER_LOAD_CHECKPOINT")
 fi
 
-cleanup_vllm() {
-    if [ -f "$QUESTIONER_VLLM_PID_FILE" ]; then
+cleanup_pid_file() {
+    local pid_file=$1
+    if [ -f "$pid_file" ]; then
         while read -r pid; do
             if kill -0 "$pid" 2>/dev/null; then
                 kill -- "-$pid" 2>/dev/null || true
                 kill "$pid" 2>/dev/null || true
             fi
-        done < "$QUESTIONER_VLLM_PID_FILE"
+        done < "$pid_file"
         sleep 3
         while read -r pid; do
             if kill -0 "$pid" 2>/dev/null; then
                 kill -9 -- "-$pid" 2>/dev/null || true
                 kill -9 "$pid" 2>/dev/null || true
             fi
-        done < "$QUESTIONER_VLLM_PID_FILE"
+        done < "$pid_file"
     fi
+}
+cleanup_vllm() {
+    if [ -n "${VALIDITY_RZERO_SEMANTIC_PID_FILE:-}" ]; then
+        cleanup_pid_file "$VALIDITY_RZERO_SEMANTIC_PID_FILE"
+    fi
+    cleanup_pid_file "$QUESTIONER_VLLM_PID_FILE"
 }
 trap cleanup_vllm EXIT
 

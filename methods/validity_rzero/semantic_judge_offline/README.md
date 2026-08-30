@@ -7,6 +7,61 @@ The repository's raw 4B base model is `Qwen/Qwen3-4B-Base` (see
 `scripts/run_qwen3_4b_full.sh` and `methods/validity_rzero/run.sh`). Do not replace
 it with the Step-15 validity Solver, an Instruct model, or another checkpoint.
 
+## Round-4 2048x128 semantic-MC smoke
+
+This is the required feasibility smoke before enabling the online treatment.
+It samples all 2,048 candidates from the full Round-4 Phase-B file (seed 42),
+then samples one shared 128-index panel from those candidates (seed 43). It does
+not filter by validity, score, or Phase-B pass status and does not deduplicate
+question text. Only the same row index is skipped as self; cached exact-text
+pairs are expanded back to their original pair-instance multiplicity.
+
+```bash
+cd /storage1/jiaxinh/Active/jinyuan/R-zero
+git pull --ff-only
+git rev-parse --short HEAD
+source env_rzero.sh
+
+SEMANTIC_SMOKE_INPUT=/engrfs/project/jiaxinh/jinyuan/R-zero-storage/rzero_runs/qwen3_4b_validity_rzero_clean_formal_r10_initstep15_divlambda5_v1/datasets/round_4_phase_b.jsonl
+SEMANTIC_SMOKE_OUTPUT=/engrfs/project/jiaxinh/jinyuan/R-zero-storage/rzero_runs/round4_semantic_mc_smoke_2048x128_v1
+
+python methods/validity_rzero/semantic_judge_offline/run_round4_semantic_smoke.py \
+  --input "$SEMANTIC_SMOKE_INPUT" \
+  --output-dir "$SEMANTIC_SMOKE_OUTPUT" \
+  --model Qwen/Qwen3-4B-Base \
+  --candidate-count 2048 \
+  --panel-count 128 \
+  --candidate-seed 42 \
+  --panel-seed 43 \
+  --sampling-seed 42 \
+  --max-tokens 1024 \
+  --gpu-ids 2,3 \
+  --local-files-only
+```
+
+The two workers each load one frozen Base replica; no Solver is loaded. The
+runner writes `semantic_smoke_manifest.json`,
+`semantic_smoke_per_question.jsonl`, and `semantic_smoke_report.md`. It also
+keeps a successful exact-pair cache in the output directory so an interrupted
+rerun can avoid already completed inference while preserving multiplicity.
+
+Inspect the fixed pair-count invariant, final retry parse rate, reward summary,
+and per-question records before starting training:
+
+```bash
+python - "$SEMANTIC_SMOKE_OUTPUT/semantic_smoke_manifest.json" <<'PY'
+import json, sys
+manifest = json.load(open(sys.argv[1]))
+feasibility = manifest["feasibility"]
+assert feasibility["total_pair_instances"] == 262_016, feasibility
+print(json.dumps(feasibility, indent=2))
+print(json.dumps(manifest["reward_signal"], indent=2))
+PY
+
+sed -n '1,160p' "$SEMANTIC_SMOKE_OUTPUT/semantic_smoke_report.md"
+wc -l "$SEMANTIC_SMOKE_OUTPUT/semantic_smoke_per_question.jsonl"
+```
+
 ## Controlled v4 direct-label ablation
 
 V4 measures the accuracy and cost effect of removing the brief-analysis request.

@@ -11,10 +11,16 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from run_pair_judge import (
-    atomic_json, atomic_jsonl, git_head, looks_nonbase, read_blind, resolve_dtype,
-    sha256_bytes, sha256_file,
-)
+try:
+    from .run_pair_judge import (
+        atomic_json, atomic_jsonl, git_head, looks_nonbase, read_blind, resolve_dtype,
+        sha256_bytes, sha256_file,
+    )
+except ImportError:  # Direct script execution.
+    from run_pair_judge import (
+        atomic_json, atomic_jsonl, git_head, looks_nonbase, read_blind, resolve_dtype,
+        sha256_bytes, sha256_file,
+    )
 
 
 PROMPT_VERSION = "semantic-pair-generative-v2"

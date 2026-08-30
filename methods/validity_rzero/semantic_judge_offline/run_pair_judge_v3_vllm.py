@@ -13,11 +13,18 @@ import time
 from pathlib import Path
 from typing import Any
 
-from run_pair_judge import (
-    atomic_json, atomic_jsonl, git_head, looks_nonbase, read_blind,
-    sha256_bytes, sha256_file,
-)
-from run_pair_judge_v2 import ORDERS, PROMPT_TEMPLATE, make_conditions
+try:
+    from .run_pair_judge import (
+        atomic_json, atomic_jsonl, git_head, looks_nonbase, read_blind,
+        sha256_bytes, sha256_file,
+    )
+    from .run_pair_judge_v2 import ORDERS, PROMPT_TEMPLATE, make_conditions
+except ImportError:  # Direct script execution.
+    from run_pair_judge import (
+        atomic_json, atomic_jsonl, git_head, looks_nonbase, read_blind,
+        sha256_bytes, sha256_file,
+    )
+    from run_pair_judge_v2 import ORDERS, PROMPT_TEMPLATE, make_conditions
 
 
 PROMPT_VERSION = "semantic-pair-generative-v3-vllm"

@@ -1,0 +1,108 @@
+"""Launch evenly sharded single-GPU frozen-base semantic workers."""
+
+from __future__ import annotations
+
+import json
+import os
+from pathlib import Path
+import signal
+import subprocess
+import sys
+import time
+from typing import Iterable
+
+from .semantic_judge_offline.run_pair_judge import atomic_jsonl
+from .semantic_mc import UniquePairTask
+
+
+def terminate_process_groups(processes: Iterable[subprocess.Popen]) -> None:
+    processes = list(processes)
+    for process in processes:
+        if process.poll() is None:
+            try:
+                os.killpg(process.pid, signal.SIGTERM)
+            except ProcessLookupError:
+                pass
+    for process in processes:
+        if process.poll() is None:
+            try:
+                process.wait(timeout=10)
+            except subprocess.TimeoutExpired:
+                try:
+                    os.killpg(process.pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+                process.wait(timeout=10)
+
+
+def run_gpu_tasks(
+    tasks: list[UniquePairTask],
+    model: str,
+    gpu_ids: list[str],
+    work_dir: Path,
+    max_tokens: int = 1024,
+    seed: int = 42,
+    gpu_memory_utilization: float = 0.85,
+    batch_size: int = 512,
+) -> tuple[dict[str, dict], dict]:
+    if not gpu_ids:
+        raise ValueError("at least one semantic GPU is required")
+    if not tasks:
+        return {}, {"wall_seconds": 0.0, "workers": []}
+    work_dir.mkdir(parents=True, exist_ok=True)
+    shards = [tasks[index::len(gpu_ids)] for index in range(len(gpu_ids))]
+    processes: list[subprocess.Popen] = []
+    pid_file_value = os.getenv("VALIDITY_RZERO_SEMANTIC_PID_FILE")
+    pid_file = Path(pid_file_value) if pid_file_value else None
+    output_paths: list[Path] = []
+    metric_paths: list[Path] = []
+    wall_start = time.perf_counter()
+    try:
+        for shard_index, (gpu_id, shard) in enumerate(zip(gpu_ids, shards)):
+            input_path = work_dir / f"semantic_tasks_{shard_index}.jsonl"
+            output_path = work_dir / f"semantic_results_{shard_index}.jsonl"
+            metric_path = work_dir / f"semantic_metrics_{shard_index}.json"
+            atomic_jsonl(input_path, (
+                {"cache_key": task.cache_key, "prompt": task.prompt} for task in shard
+            ))
+            env = os.environ.copy()
+            env["CUDA_VISIBLE_DEVICES"] = str(gpu_id)
+            command = [
+                sys.executable, "-m", "methods.validity_rzero.semantic_mc_worker",
+                "--input", str(input_path), "--output", str(output_path),
+                "--metrics", str(metric_path), "--model", model,
+                "--max-tokens", str(max_tokens), "--seed", str(seed),
+                "--gpu-memory-utilization", str(gpu_memory_utilization),
+                "--batch-size", str(batch_size),
+            ]
+            processes.append(subprocess.Popen(command, env=env, start_new_session=True))
+            if pid_file is not None:
+                pid_file.parent.mkdir(parents=True, exist_ok=True)
+                pid_file.write_text(
+                    "".join(f"{process.pid}\n" for process in processes), encoding="utf-8"
+                )
+            output_paths.append(output_path)
+            metric_paths.append(metric_path)
+        return_codes = [process.wait() for process in processes]
+        if any(code != 0 for code in return_codes):
+            raise RuntimeError(f"semantic GPU worker failures: {return_codes}")
+    except BaseException:
+        terminate_process_groups(processes)
+        if pid_file is not None:
+            pid_file.write_text("", encoding="utf-8")
+        raise
+    if pid_file is not None:
+        pid_file.write_text("", encoding="utf-8")
+    wall_seconds = time.perf_counter() - wall_start
+    judgments: dict[str, dict] = {}
+    worker_metrics = []
+    for output_path, metric_path in zip(output_paths, metric_paths):
+        with output_path.open(encoding="utf-8") as handle:
+            for line in handle:
+                if line.strip():
+                    row = json.loads(line)
+                    judgments[row["cache_key"]] = row
+        worker_metrics.append(json.loads(metric_path.read_text(encoding="utf-8")))
+    if len(judgments) != len(tasks):
+        raise RuntimeError(f"semantic result coverage mismatch: {len(judgments)} vs {len(tasks)}")
+    return judgments, {"wall_seconds": wall_seconds, "workers": worker_metrics}
