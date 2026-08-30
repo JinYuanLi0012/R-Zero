@@ -7,7 +7,84 @@ The repository's raw 4B base model is `Qwen/Qwen3-4B-Base` (see
 `scripts/run_qwen3_4b_full.sh` and `methods/validity_rzero/run.sh`). Do not replace
 it with the Step-15 validity Solver, an Instruct model, or another checkpoint.
 
-## Current protocol: generative v2 diagnostic rerun
+## Current protocol: generative v3/vLLM diagnostic rerun
+
+V3 keeps the user-confirmed v2 prompt byte-for-byte unchanged, but replaces the
+greedy Transformers loop with one batched vLLM call over all 100 ordered
+conditions. It also stops as soon as either complete canonical box is generated,
+retains the stop string in the output, relaxes parsing only for boxed-label
+surface variants, and records model-load, generation, total runtime, token counts,
+and throughput. This is still a **diagnostic rerun on the same 50 pairs**, not a
+new held-out validation.
+
+The sampling protocol was selected only after inspecting these sources:
+
+- The exact `Qwen/Qwen3-4B-Base` `generation_config.json` says
+  `do_sample=false` and `max_new_tokens=2048`. V2 exposed the repetition failure
+  of that greedy choice. V3 reads the actual local cached file again at runtime
+  and stores both its path and JSON in the manifest. Source:
+  <https://huggingface.co/Qwen/Qwen3-4B-Base/blob/main/generation_config.json>.
+- This repository's Questioner uses `temperature=1.0, top_p=0.95` in
+  `question_generate/question_generate.py`; its Solver service uses
+  `temperature=1.0, top_p=1.0, top_k=40` in
+  `vllm_service_init/start_vllm_server.py`.
+- Qwen's official Qwen3 best practices explicitly warn that greedy decoding can
+  cause endless repetitions. Their thinking-mode preset is `temperature=0.6`,
+  `top_p=0.95`, `top_k=20`, `min_p=0`; when endless repetition is observed they
+  recommend `presence_penalty=1.5`. Source:
+  <https://huggingface.co/Qwen/Qwen3-4B#best-practices>.
+
+V3 therefore uses exactly that official sampling preset plus the documented
+anti-repetition penalty, neutral `frequency_penalty=0` and
+`repetition_penalty=1`, fixed `seed=42`, one sample, and the task's 256-token
+limit. The exact `SamplingParams` are serialized in the manifest. The runner
+resolves the cached Hub snapshot while reading `generation_config.json` and
+passes that exact snapshot directory—not a mutable Hub alias—to vLLM.
+
+```bash
+cd /storage1/jiaxinh/Active/jinyuan/R-zero
+git pull --ff-only
+git rev-parse --short HEAD
+git status --short
+source env_rzero.sh
+
+INPUT_ROOT=/engrfs/project/jiaxinh/jinyuan/R-zero-storage/rzero_runs/semantic_judge_offline_50/input
+OUTPUT_ROOT=/engrfs/project/jiaxinh/jinyuan/R-zero-storage/rzero_runs/semantic_judge_offline_50/output
+V3_OUTPUT="${OUTPUT_ROOT}/qwen3_4b_base_generative_v3_vllm_diagnostic"
+
+python methods/validity_rzero/semantic_judge_offline/run_pair_judge_v3_vllm.py \
+  --input "${INPUT_ROOT}/semantic_judge_50_blind.jsonl" \
+  --output-dir "${V3_OUTPUT}" \
+  --model Qwen/Qwen3-4B-Base \
+  --max-tokens 256 \
+  --seed 42 \
+  --tensor-parallel-size 1 \
+  --gpu-memory-utilization 0.85 \
+  --local-files-only
+```
+
+V3 writes `predictions_v3_vllm.jsonl` and `run_manifest_v3_vllm.json`. Each
+prediction includes the full response, finish/stop reason, prompt/output token
+counts, parsed label, and format status. The two complete canonical stop strings
+are `\\boxed{SAME_TYPE}` and `\\boxed{DIFFERENT}`, with
+`include_stop_str_in_output=true`.
+
+After blind generation completes, score it separately:
+
+```bash
+python methods/validity_rzero/semantic_judge_offline/score_pair_judge_v3.py \
+  --predictions "${V3_OUTPUT}/predictions_v3_vllm.jsonl" \
+  --blind "${INPUT_ROOT}/semantic_judge_50_blind.jsonl" \
+  --gold "${INPUT_ROOT}/semantic_judge_50_gold.jsonl" \
+  --output-dir "${V3_OUTPUT}/scored_v3"
+```
+
+The scorer writes `metrics_v3.json`, `errors_v3.jsonl`,
+`order_disagreements_v3.jsonl`, and `report_v3.md`. End-to-end accuracy remains
+primary. Parseable-only accuracy is reported only as an additional diagnostic
+and never replaces failures to produce a usable boxed verdict.
+
+## Preserved generative v2 diagnostic rerun
 
 The forced-choice A/B likelihood implementation below is preserved as v1 for
 reproducibility, but it is not the current intended experiment. Generative v2
