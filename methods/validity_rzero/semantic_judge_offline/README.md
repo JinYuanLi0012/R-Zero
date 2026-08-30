@@ -7,6 +7,49 @@ The repository's raw 4B base model is `Qwen/Qwen3-4B-Base` (see
 `scripts/run_qwen3_4b_full.sh` and `methods/validity_rzero/run.sh`). Do not replace
 it with the Step-15 validity Solver, an Instruct model, or another checkpoint.
 
+## V5 exercise-pattern prompt diagnostic
+
+V5 copies the v4 direct-label framework and changes only the definition of
+`SAME_TYPE` in the prompt. The 50 blind pairs, two question orders, exact frozen
+model snapshot, vLLM/BF16 engine, seed 42, sampling parameters, max_tokens=1024,
+full retained box stops, parser, and runtime accounting remain unchanged. This
+is another diagnostic prompt test on the same 50 pairs, not held-out validation.
+
+The existing set already includes recurrence/remainder coverage in P013, P034,
+and P044, so no supplemental sanity dataset is added.
+
+```bash
+cd /storage1/jiaxinh/Active/jinyuan/R-zero
+git pull --ff-only
+git rev-parse --short HEAD
+source env_rzero.sh
+
+INPUT_ROOT=/engrfs/project/jiaxinh/jinyuan/R-zero-storage/rzero_runs/semantic_judge_offline_50/input
+OUTPUT_ROOT=/engrfs/project/jiaxinh/jinyuan/R-zero-storage/rzero_runs/semantic_judge_offline_50/output
+V5_OUTPUT="${OUTPUT_ROOT}/qwen3_4b_base_v5_exercise_pattern"
+
+python methods/validity_rzero/semantic_judge_offline/run_pair_judge_v5_pattern.py \
+  --input "${INPUT_ROOT}/semantic_judge_50_blind.jsonl" \
+  --output-dir "${V5_OUTPUT}" \
+  --model Qwen/Qwen3-4B-Base \
+  --max-tokens 1024 \
+  --seed 42 \
+  --tensor-parallel-size 1 \
+  --gpu-memory-utilization 0.85 \
+  --local-files-only
+
+python methods/validity_rzero/semantic_judge_offline/score_pair_judge_v5_pattern.py \
+  --predictions "${V5_OUTPUT}/predictions_v5_pattern.jsonl" \
+  --blind "${INPUT_ROOT}/semantic_judge_50_blind.jsonl" \
+  --gold "${INPUT_ROOT}/semantic_judge_50_gold.jsonl" \
+  --output-dir "${V5_OUTPUT}/scored_v5_pattern"
+```
+
+The requested primary artifacts are `predictions_v5_pattern.jsonl`,
+`run_manifest_v5_pattern.json`, and
+`scored_v5_pattern/metrics_v5_pattern.json`. The scorer also writes the usual
+error, order-disagreement, and Markdown diagnostic files.
+
 ## Round-4 2048x128 semantic-MC smoke
 
 This is the required feasibility smoke before enabling the online treatment.
