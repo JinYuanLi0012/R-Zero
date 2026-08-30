@@ -7,6 +7,49 @@ The repository's raw 4B base model is `Qwen/Qwen3-4B-Base` (see
 `scripts/run_qwen3_4b_full.sh` and `methods/validity_rzero/run.sh`). Do not replace
 it with the Step-15 validity Solver, an Instruct model, or another checkpoint.
 
+## Controlled v4 direct-label ablation
+
+V4 measures the accuracy and cost effect of removing the brief-analysis request.
+It uses the same 50 pairs, both orders, frozen model snapshot, vLLM engine, BF16,
+seed, max_tokens=1024, sampling parameters, full box stops, retained stop text,
+parser, and runtime accounting as v3-max1024. The only intended variable is the
+prompt asking for the boxed label directly. This is a diagnostic ablation, not a
+held-out validation.
+
+```bash
+INPUT_ROOT=/engrfs/project/jiaxinh/jinyuan/R-zero-storage/rzero_runs/semantic_judge_offline_50/input
+OUTPUT_ROOT=/engrfs/project/jiaxinh/jinyuan/R-zero-storage/rzero_runs/semantic_judge_offline_50/output
+V3_OUTPUT="${OUTPUT_ROOT}/qwen3_4b_base_generative_v3_vllm_max1024_diagnostic"
+V4_OUTPUT="${OUTPUT_ROOT}/qwen3_4b_base_v4_direct_label_ablation"
+
+python methods/validity_rzero/semantic_judge_offline/run_pair_judge_v4_direct.py \
+  --input "${INPUT_ROOT}/semantic_judge_50_blind.jsonl" \
+  --output-dir "${V4_OUTPUT}" \
+  --model Qwen/Qwen3-4B-Base \
+  --max-tokens 1024 \
+  --seed 42 \
+  --tensor-parallel-size 1 \
+  --gpu-memory-utilization 0.85 \
+  --local-files-only
+
+python methods/validity_rzero/semantic_judge_offline/score_pair_judge_v4_direct.py \
+  --predictions "${V4_OUTPUT}/predictions_v4_direct.jsonl" \
+  --blind "${INPUT_ROOT}/semantic_judge_50_blind.jsonl" \
+  --gold "${INPUT_ROOT}/semantic_judge_50_gold.jsonl" \
+  --output-dir "${V4_OUTPUT}/scored_v4_direct"
+
+python methods/validity_rzero/semantic_judge_offline/compare_v4_direct.py \
+  --baseline-metrics "${V3_OUTPUT}/scored_v3_max1024/metrics_v3.json" \
+  --baseline-manifest "${V3_OUTPUT}/run_manifest_v3_vllm.json" \
+  --direct-metrics "${V4_OUTPUT}/scored_v4_direct/metrics_v4_direct.json" \
+  --direct-manifest "${V4_OUTPUT}/run_manifest_v4_direct.json" \
+  --output-dir "${V4_OUTPUT}/comparison_vs_v3"
+```
+
+The comparison writes `comparison_v4_direct_vs_v3.json` and Markdown, including
+per-order accuracy/format deltas plus mean output-token, throughput, generation
+wall-time, and total-wall-time deltas.
+
 ## Current protocol: generative v3-max1024/vLLM diagnostic rerun
 
 V3 keeps the user-confirmed v2 prompt byte-for-byte unchanged, but replaces the
