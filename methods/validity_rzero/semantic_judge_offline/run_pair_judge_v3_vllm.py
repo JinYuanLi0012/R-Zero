@@ -21,6 +21,7 @@ from run_pair_judge_v2 import ORDERS, PROMPT_TEMPLATE, make_conditions
 
 
 PROMPT_VERSION = "semantic-pair-generative-v3-vllm"
+DEFAULT_MAX_TOKENS = 1024
 STOP_STRINGS = (r"\boxed{SAME_TYPE}", r"\boxed{DIFFERENT}")
 SEMANTIC_BOX = re.compile(
     r"\\boxed\s*\{\s*(?:"
@@ -172,7 +173,7 @@ def arguments() -> argparse.Namespace:
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--model", default="Qwen/Qwen3-4B-Base")
     parser.add_argument("--revision", default=None)
-    parser.add_argument("--max-tokens", type=int, default=256)
+    parser.add_argument("--max-tokens", type=int, default=DEFAULT_MAX_TOKENS)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--tensor-parallel-size", type=int, default=1)
     parser.add_argument("--gpu-memory-utilization", type=float, default=0.85)
@@ -308,6 +309,7 @@ def main() -> None:
             },
         },
         "sampling_params": options,
+        "default_max_tokens": DEFAULT_MAX_TOKENS,
         "seed": args.seed,
         "stop_strings": list(STOP_STRINGS),
         "include_stop_str_in_output": True,

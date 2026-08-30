@@ -12,8 +12,8 @@ sys.path.insert(0, str(METHOD))
 
 from run_pair_judge_v2 import PROMPT_TEMPLATE as V2_PROMPT_TEMPLATE  # noqa: E402
 from run_pair_judge_v3_vllm import (  # noqa: E402
-    PROMPT_TEMPLATE, STOP_STRINGS, load_generation_config, parse_response_v3,
-    runtime_metrics, sampling_options,
+    DEFAULT_MAX_TOKENS, PROMPT_TEMPLATE, STOP_STRINGS, load_generation_config,
+    parse_response_v3, runtime_metrics, sampling_options,
 )
 from score_pair_judge_v3 import analyze, validate_and_join  # noqa: E402
 
@@ -57,7 +57,9 @@ class ParserV3Tests(unittest.TestCase):
 
 class SamplingAndRuntimeTests(unittest.TestCase):
     def test_vllm_stop_strings_are_complete_and_retained(self):
-        options = sampling_options(256, 42)
+        self.assertEqual(DEFAULT_MAX_TOKENS, 1024)
+        options = sampling_options(DEFAULT_MAX_TOKENS, 42)
+        self.assertEqual(options["max_tokens"], 1024)
         self.assertEqual(options["stop"], list(STOP_STRINGS))
         self.assertEqual(options["stop"], [r"\boxed{SAME_TYPE}", r"\boxed{DIFFERENT}"])
         self.assertTrue(options["include_stop_str_in_output"])

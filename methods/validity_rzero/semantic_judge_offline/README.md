@@ -7,7 +7,7 @@ The repository's raw 4B base model is `Qwen/Qwen3-4B-Base` (see
 `scripts/run_qwen3_4b_full.sh` and `methods/validity_rzero/run.sh`). Do not replace
 it with the Step-15 validity Solver, an Instruct model, or another checkpoint.
 
-## Current protocol: generative v3/vLLM diagnostic rerun
+## Current protocol: generative v3-max1024/vLLM diagnostic rerun
 
 V3 keeps the user-confirmed v2 prompt byte-for-byte unchanged, but replaces the
 greedy Transformers loop with one batched vLLM call over all 100 ordered
@@ -36,7 +36,7 @@ The sampling protocol was selected only after inspecting these sources:
 
 V3 therefore uses exactly that official sampling preset plus the documented
 anti-repetition penalty, neutral `frequency_penalty=0` and
-`repetition_penalty=1`, fixed `seed=42`, one sample, and the task's 256-token
+`repetition_penalty=1`, fixed `seed=42`, one sample, and a 1,024-token
 limit. The exact `SamplingParams` are serialized in the manifest. The runner
 resolves the cached Hub snapshot while reading `generation_config.json` and
 passes that exact snapshot directory—not a mutable Hub alias—to vLLM.
@@ -50,13 +50,13 @@ source env_rzero.sh
 
 INPUT_ROOT=/engrfs/project/jiaxinh/jinyuan/R-zero-storage/rzero_runs/semantic_judge_offline_50/input
 OUTPUT_ROOT=/engrfs/project/jiaxinh/jinyuan/R-zero-storage/rzero_runs/semantic_judge_offline_50/output
-V3_OUTPUT="${OUTPUT_ROOT}/qwen3_4b_base_generative_v3_vllm_diagnostic"
+V3_OUTPUT="${OUTPUT_ROOT}/qwen3_4b_base_generative_v3_vllm_max1024_diagnostic"
 
 python methods/validity_rzero/semantic_judge_offline/run_pair_judge_v3_vllm.py \
   --input "${INPUT_ROOT}/semantic_judge_50_blind.jsonl" \
   --output-dir "${V3_OUTPUT}" \
   --model Qwen/Qwen3-4B-Base \
-  --max-tokens 256 \
+  --max-tokens 1024 \
   --seed 42 \
   --tensor-parallel-size 1 \
   --gpu-memory-utilization 0.85 \
@@ -76,7 +76,7 @@ python methods/validity_rzero/semantic_judge_offline/score_pair_judge_v3.py \
   --predictions "${V3_OUTPUT}/predictions_v3_vllm.jsonl" \
   --blind "${INPUT_ROOT}/semantic_judge_50_blind.jsonl" \
   --gold "${INPUT_ROOT}/semantic_judge_50_gold.jsonl" \
-  --output-dir "${V3_OUTPUT}/scored_v3"
+  --output-dir "${V3_OUTPUT}/scored_v3_max1024"
 ```
 
 The scorer writes `metrics_v3.json`, `errors_v3.jsonl`,
