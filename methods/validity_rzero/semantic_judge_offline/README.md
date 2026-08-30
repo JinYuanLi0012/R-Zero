@@ -7,6 +7,58 @@ The repository's raw 4B base model is `Qwen/Qwen3-4B-Base` (see
 `scripts/run_qwen3_4b_full.sh` and `methods/validity_rzero/run.sh`). Do not replace
 it with the Step-15 validity Solver, an Instruct model, or another checkpoint.
 
+## Current protocol: generative v2 diagnostic rerun
+
+The forced-choice A/B likelihood implementation below is preserved as v1 for
+reproducibility, but it is not the current intended experiment. Generative v2
+uses the frozen base model as a plain completion model, deterministically
+generates a short justification, and strictly parses one final boxed semantic
+label. Because the prompt was revised after examining the original protocol,
+running these same 50 pairs is a **diagnostic rerun**, not a new held-out
+validation.
+
+After resolving the model as described below, run v2 in a new output directory:
+
+```bash
+INPUT_ROOT=/engrfs/project/jiaxinh/jinyuan/R-zero-storage/rzero_runs/semantic_judge_offline_50/input
+OUTPUT_ROOT=/engrfs/project/jiaxinh/jinyuan/R-zero-storage/rzero_runs/semantic_judge_offline_50/output
+
+python methods/validity_rzero/semantic_judge_offline/run_pair_judge_v2.py \
+  --input "${INPUT_ROOT}/semantic_judge_50_blind.jsonl" \
+  --output-dir "${OUTPUT_ROOT}/qwen3_4b_base_generative_v2_diagnostic" \
+  --model Qwen/Qwen3-4B-Base \
+  --device cuda:0 \
+  --dtype bfloat16 \
+  --batch-size 4 \
+  --max-new-tokens 256 \
+  --local-files-only
+```
+
+This writes `predictions_v2.jsonl` and `run_manifest_v2.json`. Every pair is
+generated in `q1_q2` and `q2_q1` order. There is no A/B label mapping and no
+conditional-likelihood scoring. The full continuation is retained as
+`raw_response`. Exactly one `\\boxed{SAME_TYPE}` or `\\boxed{DIFFERENT}` must
+occur at the end; a missing, non-final, repeated, or conflicting boxed label is
+recorded as `FORMAT_ERROR` without guessing from ordinary prose.
+
+Score v2 only after blind generation finishes:
+
+```bash
+python methods/validity_rzero/semantic_judge_offline/score_pair_judge_v2.py \
+  --predictions "${OUTPUT_ROOT}/qwen3_4b_base_generative_v2_diagnostic/predictions_v2.jsonl" \
+  --blind "${INPUT_ROOT}/semantic_judge_50_blind.jsonl" \
+  --gold "${INPUT_ROOT}/semantic_judge_50_gold.jsonl" \
+  --output-dir "${OUTPUT_ROOT}/qwen3_4b_base_generative_v2_diagnostic/scored_v2"
+```
+
+The scorer writes `metrics_v2.json`, `errors_v2.jsonl`,
+`order_disagreements_v2.jsonl`, and `report_v2.md`. It reports each order's
+confusion matrix, accuracy, false negatives, false positives, format errors,
+stratum splits, and order stability. It intentionally does not declare this
+rerun a new held-out pass or authorize reward integration.
+
+The remaining sections document the preserved v1 protocol.
+
 ## 1. Resolve the model before running
 
 From the Linux repository:
