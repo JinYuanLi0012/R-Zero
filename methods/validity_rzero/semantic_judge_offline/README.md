@@ -64,6 +64,9 @@ It performs no sampling and generates no rationale. It compares conditional
 likelihoods of the continuations ` A` and ` B`. If both have equal token counts,
 it compares summed token log probabilities. If token counts differ, it compares
 mean token log probability so unequal-length raw sums are never mixed. Exact
+joint-string tokenization must equal the separately tokenized prompt plus
+candidate for every condition; the runner fails before inference if a tokenizer
+merges across that boundary. Exact
 candidate token IDs, decoded tokens, scoring rule, prompt hashes, model revision,
 input hash, Git HEAD, software versions, dtype, device, and GPU are saved in
 `run_manifest.json`.
@@ -102,8 +105,9 @@ The primary condition is preregistered as `q1_q2 + A_same`. The result is called
 - primary accuracy is at least 90%;
 - false negatives are at most 2/25;
 - false positives are at most 2/25;
-- primary-mapping question-order disagreements are at most 2/50;
-- primary-order A/B-mapping disagreements are at most 2/50;
+- question-order disagreements are at most 2/50 under each of the two mappings;
+- A/B-mapping disagreements are at most 2/50 under each of the two question
+  orders;
 - at most two of the eight `same_template` pairs are wrong in the primary
   condition (the operational no-collapse check).
 

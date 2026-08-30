@@ -51,6 +51,33 @@ def build_prompt(q1: str, q2: str, mapping: str) -> str:
     return prompt_template(mapping).format(q1=q1, q2=q2)
 
 
+def validate_tokenization_boundary(
+    tokenizer: Any,
+    prompt: str,
+    prompt_ids: list[int],
+    option: str,
+    candidate_ids: list[int],
+) -> None:
+    """Require separate prompt/candidate encoding to equal joint string encoding."""
+    joint_ids = tokenizer.encode(
+        prompt + CANDIDATES[option], add_special_tokens=True,
+    )
+    if joint_ids != prompt_ids + candidate_ids:
+        raise RuntimeError(
+            "prompt/candidate tokenization boundary is not compositional for "
+            f"option {option}: joint tail={joint_ids[-8:]}, "
+            f"separate tail={(prompt_ids + candidate_ids)[-8:]}"
+        )
+
+
+def decode_semantic_label(mapping: str, option: str) -> str:
+    if mapping == "A_same":
+        return "SAME_TYPE" if option == "A" else "DIFFERENT"
+    if mapping == "A_different":
+        return "DIFFERENT" if option == "A" else "SAME_TYPE"
+    raise ValueError(f"unknown mapping: {mapping}")
+
+
 def sha256_bytes(value: bytes) -> str:
     return hashlib.sha256(value).hexdigest()
 
@@ -199,17 +226,12 @@ def score_tasks(
             attention_mask[index, :len(sequence)] = 1
         output = model(input_ids=input_ids, attention_mask=attention_mask, use_cache=False)
         for index, task in enumerate(batch):
-            positions = torch.arange(
-                len(task.prompt_ids) - 1,
-                len(task.prompt_ids) + len(task.candidate_ids) - 1,
-                device=device,
-            )
-            logits = output.logits[index, positions, :].float()
-            targets = torch.tensor(task.candidate_ids, dtype=torch.long, device=device)
-            token_logprobs = torch.log_softmax(logits, dim=-1).gather(
-                1, targets[:, None]
-            ).squeeze(1)
-            values = [float(value) for value in token_logprobs.cpu().tolist()]
+            values = []
+            for offset, target in enumerate(task.candidate_ids):
+                prediction_position = len(task.prompt_ids) - 1 + offset
+                logits = output.logits[index, prediction_position, :].float()
+                token_logprob = torch.log_softmax(logits, dim=-1)[target]
+                values.append(float(token_logprob.item()))
             results[(task.condition_index, task.option)] = {
                 "token_logprobs": values,
                 "sum": sum(values),
@@ -296,6 +318,9 @@ def main() -> None:
         if not prompt_ids:
             raise RuntimeError(f"empty prompt tokenization for condition {index}")
         for option in ("A", "B"):
+            validate_tokenization_boundary(
+                tokenizer, condition.prompt, prompt_ids, option, candidate_ids[option],
+            )
             tasks.append(CandidateTask(index, option, prompt_ids, candidate_ids[option]))
             maximum_sequence_tokens = max(
                 maximum_sequence_tokens, len(prompt_ids) + len(candidate_ids[option]),
@@ -323,10 +348,7 @@ def main() -> None:
         score_a = score_a_raw["sum"] if equal_token_lengths else score_a_raw["mean"]
         score_b = score_b_raw["sum"] if equal_token_lengths else score_b_raw["mean"]
         option = "A" if score_a > score_b else "B"
-        if condition.mapping == "A_same":
-            predicted_label = "SAME_TYPE" if option == "A" else "DIFFERENT"
-        else:
-            predicted_label = "DIFFERENT" if option == "A" else "SAME_TYPE"
+        predicted_label = decode_semantic_label(condition.mapping, option)
         predictions.append({
             "pair_id": condition.pair_id,
             "question_order": condition.question_order,

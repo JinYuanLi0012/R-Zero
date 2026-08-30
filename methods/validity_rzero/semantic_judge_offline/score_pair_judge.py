@@ -211,8 +211,14 @@ def analyze(joined: list[dict[str, Any]], pair_ids: list[str]) -> tuple[dict[str
         "primary_accuracy_at_least_0_90": bool(primary["accuracy"] >= 0.90),
         "primary_false_negatives_at_most_2": primary["false_negatives"] <= 2,
         "primary_false_positives_at_most_2": primary["false_positives"] <= 2,
-        "primary_order_disagreements_at_most_2": order["A_same"]["disagreements"] <= 2,
-        "primary_mapping_disagreements_at_most_2": mapping["q1_q2"]["disagreements"] <= 2,
+        "all_order_disagreements_at_most_2": all(
+            order[answer_mapping]["disagreements"] <= 2
+            for answer_mapping in MAPPINGS
+        ),
+        "all_mapping_disagreements_at_most_2": all(
+            mapping[question_order]["disagreements"] <= 2
+            for question_order in ORDERS
+        ),
         "same_template_errors_at_most_2": same_template_errors <= 2,
     }
     semantic_checks = (
@@ -222,8 +228,8 @@ def analyze(joined: list[dict[str, Any]], pair_ids: list[str]) -> tuple[dict[str
         "same_template_errors_at_most_2",
     )
     stability_checks = (
-        "primary_order_disagreements_at_most_2",
-        "primary_mapping_disagreements_at_most_2",
+        "all_order_disagreements_at_most_2",
+        "all_mapping_disagreements_at_most_2",
     )
     if all(gate_checks.values()):
         conclusion = "promising_enough_for_larger_300_pair_validation"
@@ -279,8 +285,16 @@ def make_report(
         f"- Accuracy: {primary['correct']}/{primary['count']} ({primary['accuracy']:.1%})",
         f"- False negatives: {primary['false_negatives']}/25 ({primary['false_negative_rate']:.1%})",
         f"- False positives: {primary['false_positives']}/25 ({primary['false_positive_rate']:.1%})",
-        f"- Question-order disagreements: {metrics['stability']['question_order']['A_same']['disagreements']}/50",
-        f"- A/B-mapping disagreements: {metrics['stability']['answer_mapping']['q1_q2']['disagreements']}/50",
+        "- Question-order disagreements: "
+        + ", ".join(
+            f"{name}={value['disagreements']}/50"
+            for name, value in metrics["stability"]["question_order"].items()
+        ),
+        "- A/B-mapping disagreements: "
+        + ", ".join(
+            f"{name}={value['disagreements']}/50"
+            for name, value in metrics["stability"]["answer_mapping"].items()
+        ),
         f"- same_template errors: {metrics['same_template']['errors']}/{metrics['same_template']['count']}",
         "", "## Gate checks", "",
     ]
