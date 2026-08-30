@@ -11,15 +11,26 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 
-from run_pair_judge import (
-    atomic_json, atomic_jsonl, git_head, looks_nonbase, read_blind,
-    sha256_bytes, sha256_file,
-)
-from run_pair_judge_v2 import ORDERS
-from run_pair_judge_v3_vllm import (
-    DEFAULT_MAX_TOKENS, STOP_STRINGS, load_generation_config, parse_response_v3,
-    runtime_metrics, sampling_options,
-)
+if __package__ in {None, ""}:
+    from run_pair_judge import (
+        atomic_json, atomic_jsonl, git_head, looks_nonbase, read_blind,
+        sha256_bytes, sha256_file,
+    )
+    from run_pair_judge_v2 import ORDERS
+    from run_pair_judge_v3_vllm import (
+        DEFAULT_MAX_TOKENS, STOP_STRINGS, load_generation_config, parse_response_v3,
+        runtime_metrics, sampling_options,
+    )
+else:
+    from .run_pair_judge import (
+        atomic_json, atomic_jsonl, git_head, looks_nonbase, read_blind,
+        sha256_bytes, sha256_file,
+    )
+    from .run_pair_judge_v2 import ORDERS
+    from .run_pair_judge_v3_vllm import (
+        DEFAULT_MAX_TOKENS, STOP_STRINGS, load_generation_config, parse_response_v3,
+        runtime_metrics, sampling_options,
+    )
 
 
 PROMPT_VERSION = "semantic-pair-v6-exercise-pattern-brief-reasoning"

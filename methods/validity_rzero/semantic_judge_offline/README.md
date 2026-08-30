@@ -7,6 +7,71 @@ The repository's raw 4B base model is `Qwen/Qwen3-4B-Base` (see
 `scripts/run_qwen3_4b_full.sh` and `methods/validity_rzero/run.sh`). Do not replace
 it with the Step-15 validity Solver, an Instruct model, or another checkpoint.
 
+## Round-4 2048x128 semantic-MC smoke with the frozen V6 prompt
+
+This is the distribution-level follow-up to the 50-pair V6 diagnostic. It uses
+the existing Round-4 smoke code path and changes only the semantic judge prompt
+protocol to the frozen V6 exercise-pattern definition with brief reasoning.
+The input, candidate/panel sampling, frozen Base model, sampling parameters,
+parser, one-retry rule, GPU worker implementation, and reward aggregation are
+unchanged from the original smoke.
+
+With the unchanged 7,440-row input, seed 42 samples the same 2,048 candidate row
+indices and seed 43 samples the same shared 128-row panel from those candidates.
+Only equal row indices are skipped, so the invariant remains
+`2048 * 128 - 128 = 262,016` pair instances. Lexicographic question-text
+orientation, exact-text cache expansion, and multiplicity are also unchanged.
+The V6 prompt is included in the cache context, so its cache keys cannot reuse
+judgments generated with the old prompt. This is a repeated Round-4 diagnostic,
+not held-out validation and not a training run.
+
+```bash
+cd /storage1/jiaxinh/Active/jinyuan/R-zero
+git pull --ff-only
+git rev-parse --short HEAD
+source env_rzero.sh
+
+export SEMANTIC_SMOKE_INPUT="/engrfs/project/jiaxinh/jinyuan/R-zero-storage/rzero_runs/qwen3_4b_validity_rzero_clean_formal_r10_initstep15_divlambda5_v1/datasets/round_4_phase_b.jsonl"
+export SEMANTIC_SMOKE_V6_OUTPUT="/engrfs/project/jiaxinh/jinyuan/R-zero-storage/rzero_runs/round4_semantic_mc_smoke_2048x128_v6_pattern_reasoning"
+
+python methods/validity_rzero/semantic_judge_offline/run_round4_semantic_smoke_v6.py \
+  --input "$SEMANTIC_SMOKE_INPUT" \
+  --output-dir "$SEMANTIC_SMOKE_V6_OUTPUT" \
+  --model Qwen/Qwen3-4B-Base \
+  --candidate-count 2048 \
+  --panel-count 128 \
+  --candidate-seed 42 \
+  --panel-seed 43 \
+  --sampling-seed 42 \
+  --max-tokens 1024 \
+  --gpu-ids 2,3 \
+  --local-files-only
+```
+
+Validate the fixed protocol and inspect the signal:
+
+```bash
+python - "$SEMANTIC_SMOKE_V6_OUTPUT/semantic_smoke_v6_pattern_reasoning_manifest.json" <<'PY'
+import json
+import sys
+
+manifest = json.load(open(sys.argv[1]))
+f = manifest["feasibility"]
+assert manifest["prompt_version"] == "semantic-pair-v6-exercise-pattern-brief-reasoning"
+assert f["total_pair_instances"] == 262_016, f
+assert len(manifest["sampled_row_indices"]) == 2048
+assert len(manifest["panel_row_indices"]) == 128
+print(json.dumps(f, indent=2))
+print(json.dumps(manifest["reward_signal"], indent=2))
+PY
+
+wc -l "$SEMANTIC_SMOKE_V6_OUTPUT/semantic_smoke_v6_pattern_reasoning_per_question.jsonl"
+sed -n '1,180p' "$SEMANTIC_SMOKE_V6_OUTPUT/semantic_smoke_v6_pattern_reasoning_report.md"
+```
+
+The line count must be 2,048. The versioned cache, manifest, per-question data,
+and report never overwrite the original smoke artifacts.
+
 ## V6 exercise-pattern brief-reasoning diagnostic
 
 V6 is a strict single-variable follow-up to V5. It keeps the V5 semantic

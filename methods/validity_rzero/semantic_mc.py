@@ -52,11 +52,18 @@ def sample_candidate_and_panel_indices(
     return candidates, panel
 
 
-def cache_context(model_identity: str, max_tokens: int = 1024, seed: int = 42) -> dict[str, Any]:
+def cache_context(
+    model_identity: str,
+    max_tokens: int = 1024,
+    seed: int = 42,
+    *,
+    prompt_version: str = PROMPT_VERSION,
+    prompt_template: str = PROMPT_TEMPLATE,
+) -> dict[str, Any]:
     return {
         "model_identity": model_identity,
-        "prompt_version": PROMPT_VERSION,
-        "prompt_template": PROMPT_TEMPLATE,
+        "prompt_version": prompt_version,
+        "prompt_template": prompt_template,
         "sampling": sampling_options(max_tokens, seed),
         "orientation": "lexicographic_question_text_v1",
     }
@@ -85,6 +92,8 @@ def build_pair_plan(
     candidate_indices: Iterable[int],
     panel_indices: Iterable[int],
     context: Mapping[str, Any],
+    *,
+    prompt_builder: Callable[[str, str], str] = build_prompt,
 ) -> tuple[list[PairInstance], dict[str, UniquePairTask]]:
     candidate_indices = list(candidate_indices)
     panel_indices = list(panel_indices)
@@ -104,7 +113,12 @@ def build_pair_plan(
             instances.append(PairInstance(candidate_index, panel_index, key))
             tasks.setdefault(
                 key,
-                UniquePairTask(key, question_a, question_b, build_prompt(question_a, question_b)),
+                UniquePairTask(
+                    key,
+                    question_a,
+                    question_b,
+                    prompt_builder(question_a, question_b),
+                ),
             )
     return instances, tasks
 

@@ -8,7 +8,7 @@ import json
 import math
 from pathlib import Path
 import sys
-from typing import Any
+from typing import Any, Callable
 
 if __package__ in {None, ""}:  # Support the documented direct-script command.
     sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
@@ -16,7 +16,9 @@ if __package__ in {None, ""}:  # Support the documented direct-script command.
 from methods.validity_rzero.semantic_judge_offline.run_pair_judge import (
     atomic_json, atomic_jsonl, git_head, sha256_bytes, sha256_file,
 )
-from methods.validity_rzero.semantic_judge_offline.run_pair_judge_v2 import PROMPT_TEMPLATE
+from methods.validity_rzero.semantic_judge_offline.run_pair_judge_v2 import (
+    PROMPT_TEMPLATE, build_prompt,
+)
 from methods.validity_rzero.semantic_judge_offline.run_pair_judge_v3_vllm import (
     PROMPT_VERSION, load_generation_config, sampling_options,
 )
@@ -34,8 +36,8 @@ DEFAULT_INPUT = Path(
 )
 
 
-def arguments() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description=__doc__)
+def arguments(description: str | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=description or __doc__)
     parser.add_argument("--input", type=Path, default=DEFAULT_INPUT)
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--model", default="Qwen/Qwen3-4B-Base")
@@ -140,9 +142,17 @@ def example_rows(candidate_indices, instances, judgments, aggregates, questions,
     return output
 
 
-def write_report(path: Path, feasibility: dict, reward: dict, families: list[dict], distinct: list[dict]) -> None:
+def write_report(
+    path: Path,
+    feasibility: dict,
+    reward: dict,
+    families: list[dict],
+    distinct: list[dict],
+    *,
+    title: str = "Round-4 semantic Monte Carlo smoke",
+) -> None:
     lines = [
-        "# Round-4 semantic Monte Carlo smoke", "",
+        f"# {title}", "",
         "## A. Feasibility / integrity", "",
         f"- Total pair instances: {feasibility['total_pair_instances']:,}",
         f"- Unique exact pairs: {feasibility['unique_pairs']:,}",
@@ -172,12 +182,22 @@ def write_report(path: Path, feasibility: dict, reward: dict, families: list[dic
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
-def main() -> None:
-    args = arguments()
-    manifest_path = args.output_dir / "semantic_smoke_manifest.json"
-    per_question_path = args.output_dir / "semantic_smoke_per_question.jsonl"
-    report_path = args.output_dir / "semantic_smoke_report.md"
-    cache_path = args.output_dir / "semantic_smoke_cache.jsonl"
+def run_smoke(
+    args: argparse.Namespace,
+    *,
+    prompt_version: str = PROMPT_VERSION,
+    prompt_template: str = PROMPT_TEMPLATE,
+    prompt_builder: Callable[[str, str], str] = build_prompt,
+    artifact_stem: str = "semantic_smoke",
+    experiment: str = "round4_semantic_mc_smoke_2048x128_v1",
+    controlled_baseline: str | None = None,
+    only_intended_variable: str | None = None,
+    report_title: str = "Round-4 semantic Monte Carlo smoke",
+) -> None:
+    manifest_path = args.output_dir / f"{artifact_stem}_manifest.json"
+    per_question_path = args.output_dir / f"{artifact_stem}_per_question.jsonl"
+    report_path = args.output_dir / f"{artifact_stem}_report.md"
+    cache_path = args.output_dir / f"{artifact_stem}_cache.jsonl"
     if not args.overwrite and any(path.exists() for path in (manifest_path, per_question_path, report_path)):
         raise FileExistsError("semantic smoke output exists; use a new directory or --overwrite")
     rows = read_rows(args.input, args.expected_count)
@@ -188,8 +208,20 @@ def main() -> None:
     generation_config, generation_config_path, resolved_model_path, resolved_revision = (
         load_generation_config(args.model, None, args.local_files_only)
     )
-    context = cache_context(resolved_model_path, args.max_tokens, args.sampling_seed)
-    instances, tasks = build_pair_plan(questions, candidate_indices, panel_indices, context)
+    context = cache_context(
+        resolved_model_path,
+        args.max_tokens,
+        args.sampling_seed,
+        prompt_version=prompt_version,
+        prompt_template=prompt_template,
+    )
+    instances, tasks = build_pair_plan(
+        questions,
+        candidate_indices,
+        panel_indices,
+        context,
+        prompt_builder=prompt_builder,
+    )
     expected_pairs = args.candidate_count * args.panel_count - args.panel_count
     if len(instances) != expected_pairs:
         raise RuntimeError(f"pair-instance invariant failed: {len(instances)} vs {expected_pairs}")
@@ -250,6 +282,10 @@ def main() -> None:
         candidate_indices, instances, judgments, aggregates, questions, "DIFFERENT"
     )
     manifest = {
+        "experiment": experiment,
+        "evaluation_status": "round4_distribution_diagnostic_not_held_out_validation",
+        "controlled_baseline": controlled_baseline,
+        "only_intended_variable": only_intended_variable,
         "git_head": git_head(),
         "input_path": str(args.input.resolve()),
         "input_sha256": sha256_file(args.input),
@@ -264,9 +300,9 @@ def main() -> None:
         "resolved_model_revision": resolved_revision,
         "generation_config_path": generation_config_path,
         "generation_config": generation_config,
-        "prompt_version": PROMPT_VERSION,
-        "prompt_template": PROMPT_TEMPLATE,
-        "prompt_sha256": sha256_bytes(PROMPT_TEMPLATE.encode("utf-8")),
+        "prompt_version": prompt_version,
+        "prompt_template": prompt_template,
+        "prompt_sha256": sha256_bytes(prompt_template.encode("utf-8")),
         "sampling_config": sampling_options(args.max_tokens, args.sampling_seed),
         "gpu_ids": gpu_ids,
         "pair_protocol": {
@@ -280,11 +316,22 @@ def main() -> None:
         "zero_denominator_warnings": warnings,
     }
     atomic_json(manifest_path, manifest)
-    write_report(report_path, feasibility, reward, families, distinct)
+    write_report(
+        report_path,
+        feasibility,
+        reward,
+        families,
+        distinct,
+        title=report_title,
+    )
     print(json.dumps({"feasibility": feasibility, "reward_signal": reward}, indent=2))
     print(f"wrote {manifest_path}")
     print(f"wrote {per_question_path}")
     print(f"wrote {report_path}")
+
+
+def main() -> None:
+    run_smoke(arguments())
 
 
 if __name__ == "__main__":
