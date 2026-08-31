@@ -19,7 +19,9 @@ from methods.validity_rzero.semantic_mc import (
 from methods.validity_rzero.semantic_mc_gpu import (
     aggregate_prefix_cache_metrics, shard_tasks_by_candidate,
 )
-from methods.validity_rzero.semantic_mc_worker import prefix_cache_observation
+from methods.validity_rzero.semantic_mc_worker import (
+    generate_with_deferred_retry, prefix_cache_observation,
+)
 
 
 class Round4SemanticSmokeV6Tests(unittest.TestCase):
@@ -137,6 +139,49 @@ class Round4SemanticSmokeV6Tests(unittest.TestCase):
         self.assertEqual(aggregate["token_hit_rate"], 0.8)
         self.assertFalse(aggregate["metrics_available_for_all_generated_requests"])
 
+    def test_failures_are_retried_only_after_all_first_pass_batches(self):
+        tasks = [
+            {"cache_key": f"k{index}", "prompt": f"p{index}"}
+            for index in range(10)
+        ]
+        calls = []
+        seen = {}
+
+        def generate(prompts):
+            calls.append(list(prompts))
+            responses = []
+            for prompt in prompts:
+                seen[prompt] = seen.get(prompt, 0) + 1
+                responses.append(
+                    "bad"
+                    if prompt in {"p1", "p5", "p9"} and seen[prompt] == 1
+                    else r"\boxed{DIFFERENT}"
+                )
+            return responses
+
+        def parse(response):
+            return {
+                "parsed_label": "DIFFERENT" if "DIFFERENT" in response else None
+            }
+
+        results, metrics = generate_with_deferred_retry(
+            tasks, generate, parse, batch_size=4
+        )
+        self.assertEqual(calls, [
+            ["p0", "p1", "p2", "p3"],
+            ["p4", "p5", "p6", "p7"],
+            ["p8", "p9"],
+            ["p1", "p5", "p9"],
+        ])
+        self.assertEqual(metrics, {
+            "first_pass_batch_count": 3,
+            "first_pass_failure_count": 3,
+            "retry_batch_count": 1,
+            "retried_request_count": 3,
+        })
+        self.assertTrue(all(item["parsed_label"] == "DIFFERENT" for item in results.values()))
+        self.assertEqual([results[f"k{index}"]["attempts"] for index in (1, 5, 9)], [2, 2, 2])
+
     def test_cpu_fixture_writes_versioned_v6_manifest_and_fixed_pair_plan(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -162,7 +207,7 @@ class Round4SemanticSmokeV6Tests(unittest.TestCase):
                 max_tokens=1024,
                 gpu_ids="2,3",
                 gpu_memory_utilization=0.85,
-                worker_batch_size=512,
+                worker_batch_size=8192,
                 local_files_only=True,
                 overwrite=False,
             )
@@ -228,6 +273,14 @@ class Round4SemanticSmokeV6Tests(unittest.TestCase):
             )
             self.assertTrue(
                 manifest["feasibility"]["prefix_cache"]["enabled_explicitly"]
+            )
+            self.assertEqual(
+                manifest["generation_execution"]["worker_submission_batch_size"],
+                8192,
+            )
+            self.assertEqual(
+                manifest["generation_execution"]["retry_policy"],
+                "deferred_once_after_all_first_pass_batches",
             )
             self.assertEqual(len(manifest["sampled_row_indices"]), 3)
             self.assertEqual(len(manifest["panel_row_indices"]), 2)

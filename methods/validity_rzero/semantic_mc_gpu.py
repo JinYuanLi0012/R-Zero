@@ -75,6 +75,18 @@ def aggregate_prefix_cache_metrics(workers: list[dict]) -> dict:
     }
 
 
+def aggregate_retry_metrics(workers: list[dict]) -> dict[str, int]:
+    return {
+        key: sum(int(item.get(key, 0)) for item in workers)
+        for key in (
+            "first_pass_batch_count",
+            "first_pass_failure_count",
+            "retry_batch_count",
+            "retried_request_count",
+        )
+    }
+
+
 def terminate_process_groups(processes: Iterable[subprocess.Popen]) -> None:
     processes = list(processes)
     for process in processes:
@@ -103,7 +115,7 @@ def run_gpu_tasks(
     max_tokens: int = 1024,
     seed: int = 42,
     gpu_memory_utilization: float = 0.85,
-    batch_size: int = 512,
+    batch_size: int = 8192,
 ) -> tuple[dict[str, dict], dict]:
     if not gpu_ids:
         raise ValueError("at least one semantic GPU is required")
@@ -112,6 +124,7 @@ def run_gpu_tasks(
             "wall_seconds": 0.0,
             "workers": [],
             "prefix_cache": aggregate_prefix_cache_metrics([]),
+            "retry": aggregate_retry_metrics([]),
         }
     work_dir.mkdir(parents=True, exist_ok=True)
     shards = shard_tasks_by_candidate(tasks, len(gpu_ids))
@@ -179,4 +192,5 @@ def run_gpu_tasks(
         "wall_seconds": wall_seconds,
         "workers": worker_metrics,
         "prefix_cache": aggregate_prefix_cache_metrics(worker_metrics),
+        "retry": aggregate_retry_metrics(worker_metrics),
     }

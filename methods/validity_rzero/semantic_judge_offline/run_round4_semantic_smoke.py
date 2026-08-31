@@ -27,7 +27,7 @@ from methods.validity_rzero.semantic_mc import (
     sample_candidate_and_panel_indices,
 )
 from methods.validity_rzero.semantic_mc_gpu import (
-    aggregate_prefix_cache_metrics, run_gpu_tasks,
+    aggregate_prefix_cache_metrics, aggregate_retry_metrics, run_gpu_tasks,
 )
 
 
@@ -52,7 +52,7 @@ def arguments(description: str | None = None) -> argparse.Namespace:
     parser.add_argument("--max-tokens", type=int, default=1024)
     parser.add_argument("--gpu-ids", default="2,3")
     parser.add_argument("--gpu-memory-utilization", type=float, default=0.85)
-    parser.add_argument("--worker-batch-size", type=int, default=512)
+    parser.add_argument("--worker-batch-size", type=int, default=8192)
     parser.add_argument("--local-files-only", action="store_true")
     parser.add_argument("--overwrite", action="store_true")
     return parser.parse_args()
@@ -154,6 +154,7 @@ def write_report(
     title: str = "Round-4 semantic Monte Carlo smoke",
 ) -> None:
     prefix_cache = feasibility["prefix_cache"]
+    retry = feasibility["retry"]
     hit_rate = prefix_cache["token_hit_rate"]
     hit_rate_text = "unavailable" if hit_rate is None else f"{hit_rate:.6%}"
     lines = [
@@ -164,6 +165,8 @@ def write_report(
         f"- Exact-pair cache hits: {feasibility['cache_hits']:,}",
         f"- vLLM worker wall time: {feasibility['vllm_wall_seconds']:.2f} s",
         f"- Unique inference pairs/sec: {feasibility['unique_inference_pairs_per_second']:.3f}",
+        f"- Worker submission batch size: {feasibility['worker_submission_batch_size']:,}",
+        f"- Retry policy: {feasibility['retry_policy']}",
         f"- vLLM prefix caching explicitly enabled: {prefix_cache['enabled_explicitly']}",
         f"- Worker vLLM versions: {prefix_cache['vllm_versions']}",
         f"- Worker VLLM_USE_V1 values: {prefix_cache['vllm_use_v1_values']}",
@@ -172,6 +175,10 @@ def write_report(
         f"- Prefix-cache hit tokens: {prefix_cache['hit_tokens']:,} / "
         f"{prefix_cache['observed_prompt_tokens']:,}",
         f"- Prefix-cache token hit rate: {hit_rate_text}",
+        f"- First-pass vLLM calls: {retry['first_pass_batch_count']:,}",
+        f"- First-pass parse failures: {retry['first_pass_failure_count']:,}",
+        f"- Deferred retry vLLM calls: {retry['retry_batch_count']:,}",
+        f"- Retried requests: {retry['retried_request_count']:,}",
         f"- Parse success after retry: {feasibility['parse_success_after_retry']:.6%}",
         f"- Parse failure after retry: {feasibility['parse_failure_after_retry']:.6%}", "",
         "## B. Reward signal", "",
@@ -209,6 +216,8 @@ def run_smoke(
     pair_orientation: str = "lexicographic_question_text_v1",
     inference_order: str = "cache_key_sorted_v1",
 ) -> None:
+    if args.worker_batch_size < 1:
+        raise ValueError("--worker-batch-size must be positive")
     if inference_order not in {"cache_key_sorted_v1", "candidate_grouped_panel_order_v1"}:
         raise ValueError(f"unsupported semantic inference order: {inference_order}")
     manifest_path = args.output_dir / f"{artifact_stem}_manifest.json"
@@ -284,6 +293,9 @@ def run_smoke(
     prefix_cache = runtime.get(
         "prefix_cache", aggregate_prefix_cache_metrics(runtime.get("workers", []))
     )
+    retry = runtime.get(
+        "retry", aggregate_retry_metrics(runtime.get("workers", []))
+    )
     feasibility = {
         "total_pair_instances": len(instances),
         "unique_pairs": len(tasks),
@@ -295,6 +307,9 @@ def run_smoke(
         "parse_failure_after_retry": (len(instances) - compared_total) / len(instances),
         "parse_failure_instances_after_retry": len(instances) - compared_total,
         "prefix_cache": prefix_cache,
+        "retry": retry,
+        "worker_submission_batch_size": args.worker_batch_size,
+        "retry_policy": "deferred_once_after_all_first_pass_batches",
     }
     reward = {
         "mean": sum(penalties) / len(penalties),
@@ -331,6 +346,14 @@ def run_smoke(
         "prompt_template": prompt_template,
         "prompt_sha256": sha256_bytes(prompt_template.encode("utf-8")),
         "sampling_config": sampling_options(args.max_tokens, args.sampling_seed),
+        "generation_execution": {
+            "worker_submission_batch_size": args.worker_batch_size,
+            "retry_policy": "deferred_once_after_all_first_pass_batches",
+            "retry_batch_size": args.worker_batch_size,
+            "final_parse_failure_handling": (
+                "exclude_from_same_count_and_successful_comparison_denominator"
+            ),
+        },
         "gpu_ids": gpu_ids,
         "pair_protocol": {
             "panel_deduplicated": False,

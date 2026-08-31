@@ -57,7 +57,7 @@ def compute_online_semantic_penalties(questions: list[str]) -> list[dict[str, in
                 [tasks[key] for key in sorted(tasks)], resolved_model, list(service.gpu_ids), work_dir,
                 max_tokens=1024, seed=42,
                 gpu_memory_utilization=float(os.getenv("VALIDITY_RZERO_SEMANTIC_GPU_MEMORY_UTILIZATION", "0.85")),
-                batch_size=int(os.getenv("VALIDITY_RZERO_SEMANTIC_WORKER_BATCH_SIZE", "512")),
+                batch_size=int(os.getenv("VALIDITY_RZERO_SEMANTIC_WORKER_BATCH_SIZE", "8192")),
             )
         warnings: list[str] = []
         aggregates = aggregate_semantic_penalties(valid_indices, instances, judgments, warn=warnings.append)

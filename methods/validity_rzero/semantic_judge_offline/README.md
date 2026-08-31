@@ -31,6 +31,15 @@ depending on the V0/V1 default. Each worker records vLLM's request-level
 vLLM version, and `VLLM_USE_V1`; these are aggregated into the manifest and
 report. vLLM 0.9.1 is pinned by `requirements.txt`.
 
+The worker submission batch is 8,192 prompts (64 complete 128-reference
+candidate groups). vLLM still controls actual GPU concurrency and memory-aware
+continuous batching. Parse failures are not retried after each submission
+batch: every first-pass batch finishes first, then all failures are collected
+and retried in deferred batches of up to 8,192. A second failure is still
+excluded from both the semantic numerator and denominator. The manifest records
+first-pass call count, first-pass failures, deferred retry call count, and
+retried request count.
+
 Prompt version, template, and candidate/reference orientation are all included
 in the persistent pair-cache context, so this protocol cannot reuse judgments
 from the old prompt or the earlier lexicographic orientation. This is a repeated
@@ -58,6 +67,7 @@ python methods/validity_rzero/semantic_judge_offline/run_round4_semantic_smoke_v
   --panel-seed 43 \
   --sampling-seed 42 \
   --max-tokens 1024 \
+  --worker-batch-size 8192 \
   --gpu-ids 2,3 \
   --local-files-only
 ```

@@ -27,7 +27,7 @@ def arguments() -> argparse.Namespace:
     parser.add_argument("--max-tokens", type=int, default=1024)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--gpu-memory-utilization", type=float, default=0.85)
-    parser.add_argument("--batch-size", type=int, default=512)
+    parser.add_argument("--batch-size", type=int, default=8192)
     return parser.parse_args()
 
 
@@ -37,23 +37,51 @@ def generate_with_one_retry(
     parse: Callable[[str], dict],
 ) -> dict[str, dict]:
     """Generate all tasks and retry only first-pass strict parse failures once."""
-    first_responses = generate([item["prompt"] for item in tasks])
-    if len(first_responses) != len(tasks):
-        raise RuntimeError("semantic generator returned the wrong number of responses")
+    results, _ = generate_with_deferred_retry(
+        tasks, generate, parse, max(len(tasks), 1)
+    )
+    return results
+
+
+def generate_with_deferred_retry(
+    tasks: list[dict],
+    generate: Callable[[list[str]], list[str]],
+    parse: Callable[[str], dict],
+    batch_size: int,
+) -> tuple[dict[str, dict], dict[str, int]]:
+    """Run every first-pass batch before retrying failures in large batches."""
+    if batch_size < 1:
+        raise ValueError("batch_size must be positive")
     results: dict[str, dict] = {}
     retry: list[dict] = []
-    for item, raw_response in zip(tasks, first_responses):
-        parsed = parse(raw_response)
-        results[item["cache_key"]] = {**parsed, "attempts": 1}
-        if parsed["parsed_label"] is None:
-            retry.append(item)
-    if retry:
-        retry_responses = generate([item["prompt"] for item in retry])
-        if len(retry_responses) != len(retry):
+    first_pass_batch_count = 0
+    retry_batch_count = 0
+    for start in range(0, len(tasks), batch_size):
+        batch = tasks[start:start + batch_size]
+        first_responses = generate([item["prompt"] for item in batch])
+        first_pass_batch_count += 1
+        if len(first_responses) != len(batch):
+            raise RuntimeError("semantic generator returned the wrong number of responses")
+        for item, raw_response in zip(batch, first_responses):
+            parsed = parse(raw_response)
+            results[item["cache_key"]] = {**parsed, "attempts": 1}
+            if parsed["parsed_label"] is None:
+                retry.append(item)
+    first_pass_failure_count = len(retry)
+    for start in range(0, len(retry), batch_size):
+        batch = retry[start:start + batch_size]
+        retry_responses = generate([item["prompt"] for item in batch])
+        retry_batch_count += 1
+        if len(retry_responses) != len(batch):
             raise RuntimeError("semantic retry returned the wrong number of responses")
-        for item, raw_response in zip(retry, retry_responses):
+        for item, raw_response in zip(batch, retry_responses):
             results[item["cache_key"]] = {**parse(raw_response), "attempts": 2}
-    return results
+    return results, {
+        "first_pass_batch_count": first_pass_batch_count,
+        "first_pass_failure_count": first_pass_failure_count,
+        "retry_batch_count": retry_batch_count,
+        "retried_request_count": first_pass_failure_count,
+    }
 
 
 def prefix_cache_observation(requests: list[object]) -> dict[str, int]:
@@ -91,6 +119,10 @@ def main() -> None:
             "prefix_cache_observed_prompt_tokens": 0,
             "prefix_cache_hit_tokens": 0,
             "prefix_cache_token_hit_rate": None,
+            "first_pass_batch_count": 0,
+            "first_pass_failure_count": 0,
+            "retry_batch_count": 0,
+            "retried_request_count": 0,
         })
         return
 
@@ -116,23 +148,23 @@ def main() -> None:
     prefix_cache_observed_request_count = 0
     prefix_cache_observed_prompt_tokens = 0
     prefix_cache_hit_tokens = 0
-    for start in range(0, len(tasks), args.batch_size):
-        batch = tasks[start:start + args.batch_size]
-        def generate(prompts: list[str]) -> list[str]:
-            nonlocal generation_seconds, generated_request_count
-            nonlocal prefix_cache_observed_request_count
-            nonlocal prefix_cache_observed_prompt_tokens, prefix_cache_hit_tokens
-            generation_start = time.perf_counter()
-            generated = model.generate(prompts, sampling_params=sampling, use_tqdm=True)
-            generation_seconds += time.perf_counter() - generation_start
-            generated_request_count += len(generated)
-            observation = prefix_cache_observation(generated)
-            prefix_cache_observed_request_count += observation["observed_request_count"]
-            prefix_cache_observed_prompt_tokens += observation["observed_prompt_tokens"]
-            prefix_cache_hit_tokens += observation["hit_tokens"]
-            return [output.outputs[0].text for output in generated]
+    def generate(prompts: list[str]) -> list[str]:
+        nonlocal generation_seconds, generated_request_count
+        nonlocal prefix_cache_observed_request_count
+        nonlocal prefix_cache_observed_prompt_tokens, prefix_cache_hit_tokens
+        generation_start = time.perf_counter()
+        generated = model.generate(prompts, sampling_params=sampling, use_tqdm=True)
+        generation_seconds += time.perf_counter() - generation_start
+        generated_request_count += len(generated)
+        observation = prefix_cache_observation(generated)
+        prefix_cache_observed_request_count += observation["observed_request_count"]
+        prefix_cache_observed_prompt_tokens += observation["observed_prompt_tokens"]
+        prefix_cache_hit_tokens += observation["hit_tokens"]
+        return [output.outputs[0].text for output in generated]
 
-        results.update(generate_with_one_retry(batch, generate, parse_response_v3))
+    results, retry_metrics = generate_with_deferred_retry(
+        tasks, generate, parse_response_v3, args.batch_size
+    )
     rows = [{"cache_key": item["cache_key"], **results[item["cache_key"]]} for item in tasks]
     atomic_jsonl(args.output, rows)
     atomic_json(args.metrics, {
@@ -150,6 +182,7 @@ def main() -> None:
             prefix_cache_hit_tokens / prefix_cache_observed_prompt_tokens
             if prefix_cache_observed_prompt_tokens else None
         ),
+        **retry_metrics,
         "final_parse_success_count": sum(row["parsed_label"] is not None for row in rows),
         "final_parse_failure_count": sum(row["parsed_label"] is None for row in rows),
     })
