@@ -7,6 +7,84 @@ The repository's raw 4B base model is `Qwen/Qwen3-4B-Base` (see
 `scripts/run_qwen3_4b_full.sh` and `methods/validity_rzero/run.sh`). Do not replace
 it with the Step-15 validity Solver, an Instruct model, or another checkpoint.
 
+## Round-4 2048x128 V7 specificity-guardrail diagnostic
+
+V7 is a prompt-only rerun of the V6 Round-4 smoke. It inserts exactly one
+domain-agnostic guardrail after the existing warning against broad-topic and
+generic-output matches:
+
+```text
+Do not reduce the two problems to a generic task shell.
+The distinctive mathematical construction in the setup must also feel like
+the same recurring exercise pattern.
+
+If the similarity you identified would apply equally well to many unrelated
+math problems, choose DIFFERENT.
+```
+
+Everything else remains fixed: the 7,440-row input, the same 2,048 candidates
+(seed 42), the same shared 128-reference panel (seed 43), all 262,016 logical
+pairs, candidate-then-reference orientation, candidate-grouped scheduling,
+frozen `Qwen/Qwen3-4B-Base`, vLLM/BF16, sampling seed and parameters,
+`max_tokens=1024`, retained full-box stops, parser, 8,192-request worker
+submissions, deferred one-time retry, prefix caching, and reward aggregation.
+The V7 prompt has its own cache namespace and artifact names, so it cannot
+reuse or overwrite V6 judgments. This is another diagnostic rerun, not held-out
+validation and not a training run.
+
+```bash
+cd /storage1/jiaxinh/Active/jinyuan/R-zero
+git pull --ff-only
+git rev-parse --short HEAD
+source env_rzero.sh
+
+export SEMANTIC_SMOKE_INPUT="/engrfs/project/jiaxinh/jinyuan/R-zero-storage/rzero_runs/qwen3_4b_validity_rzero_clean_formal_r10_initstep15_divlambda5_v1/datasets/round_4_phase_b.jsonl"
+export SEMANTIC_SMOKE_V7_OUTPUT="/engrfs/project/jiaxinh/jinyuan/R-zero-storage/rzero_runs/round4_semantic_mc_smoke_2048x128_v7_pattern_guardrail_4gpu_v1"
+
+python methods/validity_rzero/semantic_judge_offline/run_round4_semantic_smoke_v7.py \
+  --input "$SEMANTIC_SMOKE_INPUT" \
+  --output-dir "$SEMANTIC_SMOKE_V7_OUTPUT" \
+  --model Qwen/Qwen3-4B-Base \
+  --candidate-count 2048 \
+  --panel-count 128 \
+  --candidate-seed 42 \
+  --panel-seed 43 \
+  --sampling-seed 42 \
+  --max-tokens 1024 \
+  --worker-batch-size 8192 \
+  --gpu-ids 0,1,2,3 \
+  --gpu-memory-utilization 0.85 \
+  --local-files-only
+```
+
+Validate the fixed protocol and inspect the new signal:
+
+```bash
+python - "$SEMANTIC_SMOKE_V7_OUTPUT/semantic_smoke_v7_pattern_guardrail_manifest.json" <<'PY'
+import json
+import sys
+
+manifest = json.load(open(sys.argv[1]))
+f = manifest["feasibility"]
+assert manifest["prompt_version"] == "semantic-pair-v7-exercise-pattern-specificity-guardrail"
+assert manifest["controlled_baseline"] == "round4_semantic_mc_smoke_2048x128_v6_pattern_reasoning"
+assert manifest["pair_protocol"]["orientation"] == "candidate_then_reference_v1"
+assert manifest["pair_protocol"]["inference_order"] == "candidate_grouped_panel_order_v1"
+assert f["total_pair_instances"] == 262_016, f
+assert len(manifest["sampled_row_indices"]) == 2048
+assert len(manifest["panel_row_indices"]) == 128
+assert f["prefix_cache"]["enabled_explicitly"] is True
+print(json.dumps(f, indent=2))
+print(json.dumps(manifest["reward_signal"], indent=2))
+PY
+
+wc -l "$SEMANTIC_SMOKE_V7_OUTPUT/semantic_smoke_v7_pattern_guardrail_per_question.jsonl"
+sed -n '1,180p' "$SEMANTIC_SMOKE_V7_OUTPUT/semantic_smoke_v7_pattern_guardrail_report.md"
+```
+
+The line count must be 2,048. Preserve the V6 output directory for direct
+pair-level V6-to-V7 comparison.
+
 ## Round-4 2048x128 semantic-MC smoke with the frozen V6 prompt
 
 This is the distribution-level follow-up to the 50-pair V6 diagnostic. It uses
