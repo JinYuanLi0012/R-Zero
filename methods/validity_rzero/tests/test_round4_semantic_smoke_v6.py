@@ -2,6 +2,7 @@ import argparse
 import json
 from pathlib import Path
 import tempfile
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
@@ -12,7 +13,13 @@ from methods.validity_rzero.semantic_judge_offline.run_pair_judge_v6_pattern_rea
     PROMPT_VERSION as V6_PROMPT_VERSION,
     build_prompt as build_v6_prompt,
 )
-from methods.validity_rzero.semantic_mc import build_pair_plan, cache_context
+from methods.validity_rzero.semantic_mc import (
+    UniquePairTask, build_pair_plan, cache_context,
+)
+from methods.validity_rzero.semantic_mc_gpu import (
+    aggregate_prefix_cache_metrics, shard_tasks_by_candidate,
+)
+from methods.validity_rzero.semantic_mc_worker import prefix_cache_observation
 
 
 class Round4SemanticSmokeV6Tests(unittest.TestCase):
@@ -30,6 +37,7 @@ class Round4SemanticSmokeV6Tests(unittest.TestCase):
             42,
             prompt_version=V6_PROMPT_VERSION,
             prompt_template=V6_PROMPT_TEMPLATE,
+            orientation="candidate_then_reference_v1",
         )
         old_instances, old_tasks = build_pair_plan(
             questions, candidates, panel, old_context
@@ -50,13 +58,18 @@ class Round4SemanticSmokeV6Tests(unittest.TestCase):
         self.assertEqual(len(v6_instances), 4)
         self.assertEqual(old_context["model_identity"], v6_context["model_identity"])
         self.assertEqual(old_context["sampling"], v6_context["sampling"])
-        self.assertEqual(old_context["orientation"], v6_context["orientation"])
+        self.assertEqual(old_context["orientation"], "lexicographic_question_text_v1")
+        self.assertEqual(v6_context["orientation"], "candidate_then_reference_v1")
         self.assertTrue(set(old_tasks).isdisjoint(v6_tasks))
         self.assertTrue(all(task.prompt.endswith("Analysis:") for task in v6_tasks.values()))
         self.assertTrue(all(
             task.prompt == build_v6_prompt(task.question_a, task.question_b)
             for task in v6_tasks.values()
         ))
+        for instance in v6_instances:
+            task = v6_tasks[instance.cache_key]
+            self.assertEqual(task.question_a, questions[instance.candidate_index])
+            self.assertEqual(task.question_b, questions[instance.panel_index])
 
     def test_v6_entrypoint_injects_only_the_versioned_prompt_protocol(self):
         sentinel_args = object()
@@ -84,8 +97,45 @@ class Round4SemanticSmokeV6Tests(unittest.TestCase):
         )
         self.assertEqual(
             keywords["only_intended_variable"],
-            "semantic judge prompt changed to V6 brief reasoning",
+            "V6 brief-reasoning judge with canonical candidate-then-reference presentation",
         )
+        self.assertEqual(
+            keywords["pair_orientation"], "candidate_then_reference_v1"
+        )
+        self.assertEqual(
+            keywords["inference_order"], "candidate_grouped_panel_order_v1"
+        )
+
+    def test_candidate_groups_stay_contiguous_and_on_one_worker(self):
+        tasks = [
+            UniquePairTask(str(index), "q", "r", f"p{index}", candidate, index)
+            for index, candidate in enumerate([10, 10, 10, 20, 20, 30])
+        ]
+        shards = shard_tasks_by_candidate(tasks, 2)
+        self.assertEqual(
+            [[task.candidate_index for task in shard] for shard in shards],
+            [[10, 10, 10, 30], [20, 20]],
+        )
+
+    def test_request_level_cached_tokens_are_aggregated(self):
+        observation = prefix_cache_observation([
+            SimpleNamespace(prompt_token_ids=list(range(100)), num_cached_tokens=80),
+            SimpleNamespace(prompt_token_ids=list(range(60)), num_cached_tokens=48),
+            SimpleNamespace(prompt_token_ids=list(range(40)), num_cached_tokens=None),
+        ])
+        self.assertEqual(observation, {
+            "observed_request_count": 2,
+            "observed_prompt_tokens": 160,
+            "hit_tokens": 128,
+        })
+        aggregate = aggregate_prefix_cache_metrics([{
+            "generated_request_count": 3,
+            "prefix_cache_observed_request_count": 2,
+            "prefix_cache_observed_prompt_tokens": 160,
+            "prefix_cache_hit_tokens": 128,
+        }])
+        self.assertEqual(aggregate["token_hit_rate"], 0.8)
+        self.assertFalse(aggregate["metrics_available_for_all_generated_requests"])
 
     def test_cpu_fixture_writes_versioned_v6_manifest_and_fixed_pair_plan(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -154,8 +204,11 @@ class Round4SemanticSmokeV6Tests(unittest.TestCase):
                     experiment="round4_semantic_mc_smoke_2048x128_v6_pattern_reasoning",
                     controlled_baseline="round4_semantic_mc_smoke_2048x128_v1",
                     only_intended_variable=(
-                        "semantic judge prompt changed to V6 brief reasoning"
+                        "V6 brief-reasoning judge with canonical "
+                        "candidate-then-reference presentation"
                     ),
+                    pair_orientation="candidate_then_reference_v1",
+                    inference_order="candidate_grouped_panel_order_v1",
                 )
 
             manifest_path = (
@@ -165,6 +218,17 @@ class Round4SemanticSmokeV6Tests(unittest.TestCase):
             self.assertEqual(manifest["prompt_version"], V6_PROMPT_VERSION)
             self.assertEqual(manifest["prompt_template"], V6_PROMPT_TEMPLATE)
             self.assertEqual(manifest["feasibility"]["total_pair_instances"], 4)
+            self.assertEqual(
+                manifest["pair_protocol"]["orientation"],
+                "candidate_then_reference_v1",
+            )
+            self.assertEqual(
+                manifest["pair_protocol"]["inference_order"],
+                "candidate_grouped_panel_order_v1",
+            )
+            self.assertTrue(
+                manifest["feasibility"]["prefix_cache"]["enabled_explicitly"]
+            )
             self.assertEqual(len(manifest["sampled_row_indices"]), 3)
             self.assertEqual(len(manifest["panel_row_indices"]), 2)
             self.assertTrue(captured_prompts)

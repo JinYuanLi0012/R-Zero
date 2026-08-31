@@ -28,6 +28,8 @@ class UniquePairTask:
     question_a: str
     question_b: str
     prompt: str
+    candidate_index: int | None = None
+    panel_index: int | None = None
 
 
 def uniform_sample_indices(population_size: int, sample_size: int, seed: int) -> list[int]:
@@ -59,13 +61,19 @@ def cache_context(
     *,
     prompt_version: str = PROMPT_VERSION,
     prompt_template: str = PROMPT_TEMPLATE,
+    orientation: str = "lexicographic_question_text_v1",
 ) -> dict[str, Any]:
+    if orientation not in {
+        "lexicographic_question_text_v1",
+        "candidate_then_reference_v1",
+    }:
+        raise ValueError(f"unsupported semantic pair orientation: {orientation}")
     return {
         "model_identity": model_identity,
         "prompt_version": prompt_version,
         "prompt_template": prompt_template,
         "sampling": sampling_options(max_tokens, seed),
-        "orientation": "lexicographic_question_text_v1",
+        "orientation": orientation,
     }
 
 
@@ -108,7 +116,12 @@ def build_pair_plan(
             if candidate_index == panel_index:
                 continue
             panel_question = questions[panel_index]
-            question_a, question_b = _stable_orientation(candidate_question, panel_question)
+            if context["orientation"] == "candidate_then_reference_v1":
+                question_a, question_b = candidate_question, panel_question
+            else:
+                question_a, question_b = _stable_orientation(
+                    candidate_question, panel_question
+                )
             key = _cache_key(context_digest, question_a, question_b)
             instances.append(PairInstance(candidate_index, panel_index, key))
             tasks.setdefault(
@@ -118,6 +131,8 @@ def build_pair_plan(
                     question_a,
                     question_b,
                     prompt_builder(question_a, question_b),
+                    candidate_index,
+                    panel_index,
                 ),
             )
     return instances, tasks

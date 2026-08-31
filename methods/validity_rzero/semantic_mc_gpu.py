@@ -15,6 +15,66 @@ from .semantic_judge_offline.run_pair_judge import atomic_jsonl
 from .semantic_mc import UniquePairTask
 
 
+def shard_tasks_by_candidate(
+    tasks: list[UniquePairTask], shard_count: int
+) -> list[list[UniquePairTask]]:
+    """Keep every candidate's references contiguous and on one worker."""
+    if shard_count < 1:
+        raise ValueError("shard_count must be positive")
+    groups: list[list[UniquePairTask]] = []
+    group_positions: dict[tuple[str, int], int] = {}
+    for task_position, task in enumerate(tasks):
+        group_key = (
+            ("candidate", task.candidate_index)
+            if task.candidate_index is not None
+            else ("ungrouped", task_position)
+        )
+        if group_key not in group_positions:
+            group_positions[group_key] = len(groups)
+            groups.append([])
+        groups[group_positions[group_key]].append(task)
+    shards = [[] for _ in range(shard_count)]
+    for group_position, group in enumerate(groups):
+        shards[group_position % shard_count].extend(group)
+    return shards
+
+
+def aggregate_prefix_cache_metrics(workers: list[dict]) -> dict:
+    request_count = sum(int(item.get("generated_request_count", 0)) for item in workers)
+    observed_requests = sum(
+        int(item.get("prefix_cache_observed_request_count", 0)) for item in workers
+    )
+    prompt_tokens = sum(
+        int(item.get("prefix_cache_observed_prompt_tokens", 0)) for item in workers
+    )
+    cached_tokens = sum(
+        int(item.get("prefix_cache_hit_tokens", 0)) for item in workers
+    )
+    vllm_versions = sorted({
+        str(item["vllm_version"])
+        for item in workers
+        if item.get("vllm_version") is not None
+    })
+    engine_modes = sorted({
+        str(item["vllm_use_v1"])
+        for item in workers
+        if item.get("vllm_use_v1") is not None
+    })
+    return {
+        "enabled_explicitly": True,
+        "vllm_versions": vllm_versions,
+        "vllm_use_v1_values": engine_modes,
+        "generated_request_count_including_retries": request_count,
+        "observed_request_count": observed_requests,
+        "metrics_available_for_all_generated_requests": (
+            observed_requests == request_count if request_count else None
+        ),
+        "observed_prompt_tokens": prompt_tokens,
+        "hit_tokens": cached_tokens,
+        "token_hit_rate": cached_tokens / prompt_tokens if prompt_tokens else None,
+    }
+
+
 def terminate_process_groups(processes: Iterable[subprocess.Popen]) -> None:
     processes = list(processes)
     for process in processes:
@@ -48,9 +108,13 @@ def run_gpu_tasks(
     if not gpu_ids:
         raise ValueError("at least one semantic GPU is required")
     if not tasks:
-        return {}, {"wall_seconds": 0.0, "workers": []}
+        return {}, {
+            "wall_seconds": 0.0,
+            "workers": [],
+            "prefix_cache": aggregate_prefix_cache_metrics([]),
+        }
     work_dir.mkdir(parents=True, exist_ok=True)
-    shards = [tasks[index::len(gpu_ids)] for index in range(len(gpu_ids))]
+    shards = shard_tasks_by_candidate(tasks, len(gpu_ids))
     processes: list[subprocess.Popen] = []
     pid_file_value = os.getenv("VALIDITY_RZERO_SEMANTIC_PID_FILE")
     pid_file = Path(pid_file_value) if pid_file_value else None
@@ -63,7 +127,13 @@ def run_gpu_tasks(
             output_path = work_dir / f"semantic_results_{shard_index}.jsonl"
             metric_path = work_dir / f"semantic_metrics_{shard_index}.json"
             atomic_jsonl(input_path, (
-                {"cache_key": task.cache_key, "prompt": task.prompt} for task in shard
+                {
+                    "cache_key": task.cache_key,
+                    "candidate_index": task.candidate_index,
+                    "panel_index": task.panel_index,
+                    "prompt": task.prompt,
+                }
+                for task in shard
             ))
             env = os.environ.copy()
             env["CUDA_VISIBLE_DEVICES"] = str(gpu_id)
@@ -105,4 +175,8 @@ def run_gpu_tasks(
         worker_metrics.append(json.loads(metric_path.read_text(encoding="utf-8")))
     if len(judgments) != len(tasks):
         raise RuntimeError(f"semantic result coverage mismatch: {len(judgments)} vs {len(tasks)}")
-    return judgments, {"wall_seconds": wall_seconds, "workers": worker_metrics}
+    return judgments, {
+        "wall_seconds": wall_seconds,
+        "workers": worker_metrics,
+        "prefix_cache": aggregate_prefix_cache_metrics(worker_metrics),
+    }

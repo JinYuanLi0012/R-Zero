@@ -30,8 +30,12 @@ def main() -> None:
         artifact_stem="semantic_smoke_v6_pattern_reasoning",
         experiment="round4_semantic_mc_smoke_2048x128_v6_pattern_reasoning",
         controlled_baseline="round4_semantic_mc_smoke_2048x128_v1",
-        only_intended_variable="semantic judge prompt changed to V6 brief reasoning",
+        only_intended_variable=(
+            "V6 brief-reasoning judge with canonical candidate-then-reference presentation"
+        ),
         report_title="Round-4 semantic Monte Carlo smoke — V6 brief reasoning",
+        pair_orientation="candidate_then_reference_v1",
+        inference_order="candidate_grouped_panel_order_v1",
     )
 
 

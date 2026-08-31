@@ -56,14 +56,46 @@ def generate_with_one_retry(
     return results
 
 
+def prefix_cache_observation(requests: list[object]) -> dict[str, int]:
+    """Summarize vLLM RequestOutput.num_cached_tokens when available."""
+    observed_requests = 0
+    prompt_tokens = 0
+    hit_tokens = 0
+    for request in requests:
+        cached_tokens = getattr(request, "num_cached_tokens", None)
+        prompt_token_ids = getattr(request, "prompt_token_ids", None)
+        if cached_tokens is None or prompt_token_ids is None:
+            continue
+        observed_requests += 1
+        prompt_tokens += len(prompt_token_ids)
+        hit_tokens += int(cached_tokens)
+    return {
+        "observed_request_count": observed_requests,
+        "observed_prompt_tokens": prompt_tokens,
+        "hit_tokens": hit_tokens,
+    }
+
+
 def main() -> None:
     args = arguments()
     tasks = read_tasks(args.input)
     if not tasks:
         atomic_jsonl(args.output, [])
-        atomic_json(args.metrics, {"task_count": 0, "model_load_seconds": 0.0, "generation_seconds": 0.0})
+        atomic_json(args.metrics, {
+            "task_count": 0,
+            "model_load_seconds": 0.0,
+            "generation_seconds": 0.0,
+            "enable_prefix_caching": True,
+            "generated_request_count": 0,
+            "prefix_cache_observed_request_count": 0,
+            "prefix_cache_observed_prompt_tokens": 0,
+            "prefix_cache_hit_tokens": 0,
+            "prefix_cache_token_hit_rate": None,
+        })
         return
 
+    import vllm
+    import vllm.envs as vllm_envs
     from vllm import LLM, SamplingParams
 
     sampling = SamplingParams(**sampling_options(args.max_tokens, args.seed))
@@ -75,17 +107,29 @@ def main() -> None:
         tensor_parallel_size=1,
         gpu_memory_utilization=args.gpu_memory_utilization,
         seed=args.seed,
+        enable_prefix_caching=True,
     )
     model_load_seconds = time.perf_counter() - load_start
     results: dict[str, dict] = {}
     generation_seconds = 0.0
+    generated_request_count = 0
+    prefix_cache_observed_request_count = 0
+    prefix_cache_observed_prompt_tokens = 0
+    prefix_cache_hit_tokens = 0
     for start in range(0, len(tasks), args.batch_size):
         batch = tasks[start:start + args.batch_size]
         def generate(prompts: list[str]) -> list[str]:
-            nonlocal generation_seconds
+            nonlocal generation_seconds, generated_request_count
+            nonlocal prefix_cache_observed_request_count
+            nonlocal prefix_cache_observed_prompt_tokens, prefix_cache_hit_tokens
             generation_start = time.perf_counter()
             generated = model.generate(prompts, sampling_params=sampling, use_tqdm=True)
             generation_seconds += time.perf_counter() - generation_start
+            generated_request_count += len(generated)
+            observation = prefix_cache_observation(generated)
+            prefix_cache_observed_request_count += observation["observed_request_count"]
+            prefix_cache_observed_prompt_tokens += observation["observed_prompt_tokens"]
+            prefix_cache_hit_tokens += observation["hit_tokens"]
             return [output.outputs[0].text for output in generated]
 
         results.update(generate_with_one_retry(batch, generate, parse_response_v3))
@@ -95,6 +139,17 @@ def main() -> None:
         "task_count": len(tasks),
         "model_load_seconds": model_load_seconds,
         "generation_seconds": generation_seconds,
+        "vllm_version": vllm.__version__,
+        "vllm_use_v1": bool(vllm_envs.VLLM_USE_V1),
+        "enable_prefix_caching": True,
+        "generated_request_count": generated_request_count,
+        "prefix_cache_observed_request_count": prefix_cache_observed_request_count,
+        "prefix_cache_observed_prompt_tokens": prefix_cache_observed_prompt_tokens,
+        "prefix_cache_hit_tokens": prefix_cache_hit_tokens,
+        "prefix_cache_token_hit_rate": (
+            prefix_cache_hit_tokens / prefix_cache_observed_prompt_tokens
+            if prefix_cache_observed_prompt_tokens else None
+        ),
         "final_parse_success_count": sum(row["parsed_label"] is not None for row in rows),
         "final_parse_failure_count": sum(row["parsed_label"] is None for row in rows),
     })

@@ -10,20 +10,34 @@ it with the Step-15 validity Solver, an Instruct model, or another checkpoint.
 ## Round-4 2048x128 semantic-MC smoke with the frozen V6 prompt
 
 This is the distribution-level follow-up to the 50-pair V6 diagnostic. It uses
-the existing Round-4 smoke code path and changes only the semantic judge prompt
-protocol to the frozen V6 exercise-pattern definition with brief reasoning.
-The input, candidate/panel sampling, frozen Base model, sampling parameters,
-parser, one-retry rule, GPU worker implementation, and reward aggregation are
-unchanged from the original smoke.
+the frozen V6 exercise-pattern definition with brief reasoning. The input,
+candidate/panel samples, frozen Base model, sampling parameters, parser,
+one-retry rule, pair set, and reward aggregation are unchanged from the
+original smoke.
 
 With the unchanged 7,440-row input, seed 42 samples the same 2,048 candidate row
 indices and seed 43 samples the same shared 128-row panel from those candidates.
 Only equal row indices are skipped, so the invariant remains
-`2048 * 128 - 128 = 262,016` pair instances. Lexicographic question-text
-orientation, exact-text cache expansion, and multiplicity are also unchanged.
-The V6 prompt is included in the cache context, so its cache keys cannot reuse
-judgments generated with the old prompt. This is a repeated Round-4 diagnostic,
-not held-out validation and not a training run.
+`2048 * 128 - 128 = 262,016` pair instances. Exact-text cache expansion and
+multiplicity are unchanged.
+
+For every pair, Question A is now canonically the candidate and Question B is
+the panel reference. Tasks are emitted in candidate order and panel order, and
+every candidate group stays contiguous on one GPU worker. Thus the 128 prompts
+for one candidate share the exact `instruction + Question A` token prefix.
+The worker explicitly passes `enable_prefix_caching=True` to vLLM instead of
+depending on the V0/V1 default. Each worker records vLLM's request-level
+`num_cached_tokens`, total observed prompt tokens, the actual token hit rate,
+vLLM version, and `VLLM_USE_V1`; these are aggregated into the manifest and
+report. vLLM 0.9.1 is pinned by `requirements.txt`.
+
+Prompt version, template, and candidate/reference orientation are all included
+in the persistent pair-cache context, so this protocol cannot reuse judgments
+from the old prompt or the earlier lexicographic orientation. This is a repeated
+Round-4 diagnostic, not held-out validation and not a training run. Since the
+original smoke used lexicographic question order, old-vs-V6 penalty deltas are
+matched on the same candidate/reference row-index pairs but are not a strict
+prompt-only ablation.
 
 ```bash
 cd /storage1/jiaxinh/Active/jinyuan/R-zero
@@ -58,9 +72,12 @@ import sys
 manifest = json.load(open(sys.argv[1]))
 f = manifest["feasibility"]
 assert manifest["prompt_version"] == "semantic-pair-v6-exercise-pattern-brief-reasoning"
+assert manifest["pair_protocol"]["orientation"] == "candidate_then_reference_v1"
+assert manifest["pair_protocol"]["inference_order"] == "candidate_grouped_panel_order_v1"
 assert f["total_pair_instances"] == 262_016, f
 assert len(manifest["sampled_row_indices"]) == 2048
 assert len(manifest["panel_row_indices"]) == 128
+assert f["prefix_cache"]["enabled_explicitly"] is True
 print(json.dumps(f, indent=2))
 print(json.dumps(manifest["reward_signal"], indent=2))
 PY

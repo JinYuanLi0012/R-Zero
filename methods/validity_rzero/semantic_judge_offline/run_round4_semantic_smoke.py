@@ -26,7 +26,9 @@ from methods.validity_rzero.semantic_mc import (
     aggregate_semantic_penalties, build_pair_plan, cache_context,
     sample_candidate_and_panel_indices,
 )
-from methods.validity_rzero.semantic_mc_gpu import run_gpu_tasks
+from methods.validity_rzero.semantic_mc_gpu import (
+    aggregate_prefix_cache_metrics, run_gpu_tasks,
+)
 
 
 DEFAULT_INPUT = Path(
@@ -151,6 +153,9 @@ def write_report(
     *,
     title: str = "Round-4 semantic Monte Carlo smoke",
 ) -> None:
+    prefix_cache = feasibility["prefix_cache"]
+    hit_rate = prefix_cache["token_hit_rate"]
+    hit_rate_text = "unavailable" if hit_rate is None else f"{hit_rate:.6%}"
     lines = [
         f"# {title}", "",
         "## A. Feasibility / integrity", "",
@@ -159,6 +164,14 @@ def write_report(
         f"- Exact-pair cache hits: {feasibility['cache_hits']:,}",
         f"- vLLM worker wall time: {feasibility['vllm_wall_seconds']:.2f} s",
         f"- Unique inference pairs/sec: {feasibility['unique_inference_pairs_per_second']:.3f}",
+        f"- vLLM prefix caching explicitly enabled: {prefix_cache['enabled_explicitly']}",
+        f"- Worker vLLM versions: {prefix_cache['vllm_versions']}",
+        f"- Worker VLLM_USE_V1 values: {prefix_cache['vllm_use_v1_values']}",
+        f"- Prefix-cache metric requests: {prefix_cache['observed_request_count']:,} / "
+        f"{prefix_cache['generated_request_count_including_retries']:,}",
+        f"- Prefix-cache hit tokens: {prefix_cache['hit_tokens']:,} / "
+        f"{prefix_cache['observed_prompt_tokens']:,}",
+        f"- Prefix-cache token hit rate: {hit_rate_text}",
         f"- Parse success after retry: {feasibility['parse_success_after_retry']:.6%}",
         f"- Parse failure after retry: {feasibility['parse_failure_after_retry']:.6%}", "",
         "## B. Reward signal", "",
@@ -193,7 +206,11 @@ def run_smoke(
     controlled_baseline: str | None = None,
     only_intended_variable: str | None = None,
     report_title: str = "Round-4 semantic Monte Carlo smoke",
+    pair_orientation: str = "lexicographic_question_text_v1",
+    inference_order: str = "cache_key_sorted_v1",
 ) -> None:
+    if inference_order not in {"cache_key_sorted_v1", "candidate_grouped_panel_order_v1"}:
+        raise ValueError(f"unsupported semantic inference order: {inference_order}")
     manifest_path = args.output_dir / f"{artifact_stem}_manifest.json"
     per_question_path = args.output_dir / f"{artifact_stem}_per_question.jsonl"
     report_path = args.output_dir / f"{artifact_stem}_report.md"
@@ -214,6 +231,7 @@ def run_smoke(
         args.sampling_seed,
         prompt_version=prompt_version,
         prompt_template=prompt_template,
+        orientation=pair_orientation,
     )
     instances, tasks = build_pair_plan(
         questions,
@@ -227,7 +245,12 @@ def run_smoke(
         raise RuntimeError(f"pair-instance invariant failed: {len(instances)} vs {expected_pairs}")
     cached = load_cache(cache_path)
     judgments = {key: cached[key] for key in tasks.keys() & cached.keys()}
-    missing_tasks = [task for key, task in sorted(tasks.items()) if key not in judgments]
+    ordered_tasks = (
+        list(tasks.values())
+        if inference_order == "candidate_grouped_panel_order_v1"
+        else [task for _, task in sorted(tasks.items())]
+    )
+    missing_tasks = [task for task in ordered_tasks if task.cache_key not in judgments]
     gpu_ids = [value.strip() for value in args.gpu_ids.split(",") if value.strip()]
     fresh, runtime = run_gpu_tasks(
         missing_tasks, resolved_model_path, gpu_ids, args.output_dir / "worker_state",
@@ -258,6 +281,9 @@ def run_smoke(
     compared_total = sum(int(item["compared_count"]) for item in aggregates.values())
     penalties = [float(item["semantic_penalty"]) for item in aggregates.values()]
     wall = float(runtime["wall_seconds"])
+    prefix_cache = runtime.get(
+        "prefix_cache", aggregate_prefix_cache_metrics(runtime.get("workers", []))
+    )
     feasibility = {
         "total_pair_instances": len(instances),
         "unique_pairs": len(tasks),
@@ -268,6 +294,7 @@ def run_smoke(
         "parse_success_after_retry": compared_total / len(instances),
         "parse_failure_after_retry": (len(instances) - compared_total) / len(instances),
         "parse_failure_instances_after_retry": len(instances) - compared_total,
+        "prefix_cache": prefix_cache,
     }
     reward = {
         "mean": sum(penalties) / len(penalties),
@@ -310,9 +337,17 @@ def run_smoke(
             "self_skip_key": "same_sample_index_only",
             "different_index_identical_text_is_valid": True,
             "orientation": context["orientation"],
+            "prompt_layout": (
+                "shared_instruction_then_candidate_then_reference"
+                if pair_orientation == "candidate_then_reference_v1"
+                else "shared_instruction_then_lexicographically_ordered_questions"
+            ),
+            "inference_order": inference_order,
+            "candidate_group_kept_on_one_gpu_worker": True,
         },
         "feasibility": feasibility,
         "reward_signal": reward,
+        "worker_runtime": runtime,
         "zero_denominator_warnings": warnings,
     }
     atomic_json(manifest_path, manifest)
