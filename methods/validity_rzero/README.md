@@ -33,6 +33,14 @@ bash methods/validity_rzero/run.sh
 The initial Solver defaults to the requested clean-validity Step-10 checkpoint
 and can be overridden with `VALIDITY_RZERO_INITIAL_SOLVER`.
 
+### Frozen history-context Questioner prompt pilot
+
+`incontext_pilot/run_prompt_pilot.py` provides a generation-only matched P0/P1
+test of whether three negative references from a lambda-1 Round-4 archive steer
+one frozen Questioner away from historical templates. It is independent of the
+semantic-MC reward treatment and does not modify the training path. See
+`incontext_pilot/README.md` for the fixed inputs, command, and artifact checks.
+
 ### Semantic Monte Carlo diversity treatment
 
 Set `VALIDITY_RZERO_DIVERSITY_MODE=semantic_mc` to replace only the validity
