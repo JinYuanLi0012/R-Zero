@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from contextlib import contextmanager
 from dataclasses import dataclass
+import json
 import os
 from pathlib import Path
 import signal
@@ -150,21 +151,43 @@ def wait_gpus_released(gpu_ids: tuple[str, ...], timeout_seconds: int) -> None:
     raise RuntimeError(f"GPU processes remained after service stop: {gpu_compute_pids(gpu_ids)}")
 
 
-def wait_services_healthy(ports: tuple[int, ...], timeout_seconds: int) -> None:
-    deadline = time.monotonic() + timeout_seconds
-    pending = set(ports)
+def service_health(port: int) -> dict | None:
+    try:
+        with urllib.request.urlopen(f"http://127.0.0.1:{port}/health", timeout=2) as response:
+            if response.status == 200:
+                return json.loads(response.read().decode("utf-8"))
+    except Exception:
+        pass
+    return None
+
+
+def wait_services_healthy(config: SolverServiceConfig) -> None:
+    pids = read_pids(config.pid_file)
+    if len(pids) != len(config.ports):
+        raise RuntimeError(
+            f"Solver PID coverage mismatch: pids={pids}, ports={config.ports}"
+        )
+    expected = dict(zip(config.ports, pids))
+    deadline = time.monotonic() + config.health_timeout_seconds
+    pending = set(config.ports)
     while pending and time.monotonic() < deadline:
         for port in list(pending):
-            try:
-                with urllib.request.urlopen(f"http://127.0.0.1:{port}/health", timeout=2) as response:
-                    if response.status == 200:
-                        pending.remove(port)
-            except Exception:
-                pass
+            health = service_health(port)
+            if (
+                health
+                and health.get("status") == "ok"
+                and str(health.get("run_id")) == config.run_id
+                and int(health.get("pid", -1)) == expected[port]
+            ):
+                pending.remove(port)
         if pending:
             time.sleep(1)
     if pending:
-        raise RuntimeError(f"restarted Solver services did not become healthy: {sorted(pending)}")
+        observed = {port: service_health(port) for port in sorted(pending)}
+        raise RuntimeError(
+            "Solver services did not become healthy with the expected run/PID identity: "
+            f"pending={sorted(pending)} expected={expected} observed={observed}"
+        )
 
 
 def start_solver_services(config: SolverServiceConfig) -> None:
@@ -174,7 +197,7 @@ def start_solver_services(config: SolverServiceConfig) -> None:
     ]
     subprocess.run(command, cwd=config.repo_root, env=os.environ.copy(), check=True)
     try:
-        wait_services_healthy(config.ports, config.health_timeout_seconds)
+        wait_services_healthy(config)
     except BaseException:
         terminate_recorded_process_groups(config.pid_file)
         raise

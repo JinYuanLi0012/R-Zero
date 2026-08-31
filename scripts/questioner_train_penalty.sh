@@ -94,9 +94,14 @@ trap cleanup_vllm EXIT
 echo "Waiting for vLLM services to become healthy..."
 for i in $(seq 0 $((VLLM_SERVICE_COUNT - 1))); do
     port=$((VLLM_PORT_BASE + i))
+    expected_pid=$(sed -n "$((i + 1))p" "$QUESTIONER_VLLM_PID_FILE")
     ok=0
     for _ in $(seq 1 240); do
-        if python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:${port}/health', timeout=2).read()" >/dev/null 2>&1; then
+        if [ -n "$expected_pid" ] && ! kill -0 "$expected_pid" 2>/dev/null; then
+            echo "Solver process pid=$expected_pid for port=$port exited before becoming healthy." >&2
+            break
+        fi
+        if python3 -c 'import json,sys,urllib.request; d=json.load(urllib.request.urlopen(f"http://127.0.0.1:{sys.argv[1]}/health", timeout=2)); assert d.get("status") == "ok" and str(d.get("run_id")) == sys.argv[2] and int(d.get("pid", -1)) == int(sys.argv[3])' "$port" "$RUN_ID" "$expected_pid" >/dev/null 2>&1; then
             ok=1
             break
         fi

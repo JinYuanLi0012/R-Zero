@@ -1,3 +1,4 @@
+from dataclasses import replace
 from pathlib import Path
 import json
 import os
@@ -10,6 +11,7 @@ from methods.validity_rzero.service_handoff import (
     semantic_gpu_handoff,
     start_solver_services,
     stop_solver_services,
+    wait_services_healthy,
 )
 from methods.validity_rzero.semantic_mc import UniquePairTask
 from methods.validity_rzero.semantic_mc_gpu import run_gpu_tasks
@@ -63,6 +65,39 @@ def test_failed_solver_restart_cleans_partially_started_processes():
             with unittest.TestCase().assertRaisesRegex(RuntimeError, "unhealthy"):
                 start_solver_services(value)
         cleanup.assert_called_once_with(value.pid_file)
+
+
+def test_solver_health_is_bound_to_recorded_run_id_and_pid():
+    with tempfile.TemporaryDirectory() as directory:
+        value = config(Path(directory))
+        with patch("methods.validity_rzero.service_handoff.read_pids", return_value=[101, 102]), \
+             patch(
+                 "methods.validity_rzero.service_handoff.service_health",
+                 side_effect=lambda port: {
+                     "status": "ok",
+                     "run_id": "run-id",
+                     "pid": {5000: 101, 5001: 102}[port],
+                 },
+             ):
+            wait_services_healthy(value)
+
+
+def test_solver_health_rejects_incomplete_pid_coverage_immediately():
+    with tempfile.TemporaryDirectory() as directory:
+        value = config(Path(directory))
+        with patch("methods.validity_rzero.service_handoff.read_pids", return_value=[101]):
+            with unittest.TestCase().assertRaisesRegex(RuntimeError, "PID coverage mismatch"):
+                wait_services_healthy(value)
+
+
+def test_solver_health_rejects_a_stale_healthy_run():
+    with tempfile.TemporaryDirectory() as directory:
+        value = replace(config(Path(directory)), health_timeout_seconds=0)
+        stale = {"status": "ok", "run_id": "old-run", "pid": 999}
+        with patch("methods.validity_rzero.service_handoff.read_pids", return_value=[101, 102]), \
+             patch("methods.validity_rzero.service_handoff.service_health", return_value=stale):
+            with unittest.TestCase().assertRaisesRegex(RuntimeError, "expected run/PID identity"):
+                wait_services_healthy(value)
 
 
 def test_semantic_workers_are_evenly_sharded_and_failure_clears_supervisor_pids():

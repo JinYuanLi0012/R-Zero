@@ -36,6 +36,7 @@ if VALIDITY_RZERO_ENABLED:
 parser = argparse.ArgumentParser()
 parser.add_argument('--port', type=str, default='5000')
 parser.add_argument('--model_path', type=str, default='Qwen/Qwen3-4B-Base')
+parser.add_argument('--run_id', type=str, default='')
 parser.add_argument('--gpu_mem_util', type=float, default=0.8,
                     help='The maximum GPU memory utilization fraction for vLLM.')
 args = parser.parse_args()
@@ -130,7 +131,13 @@ app = Flask(__name__)
 
 @app.route('/health', methods=['GET'])
 def health():
-    return jsonify({"status": "ok"})
+    return jsonify({
+        "status": "ok",
+        "pid": os.getpid(),
+        "run_id": args.run_id,
+        "model_path": args.model_path,
+        "port": int(args.port),
+    })
 
 @app.route('/hello', methods=['GET'])
 def hello():
