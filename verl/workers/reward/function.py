@@ -72,6 +72,10 @@ class FunctionRewardManager(ABC):
                 raise KeyError(f"reward data key {key!r} is missing from the batch")
             value = data.non_tensor_batch[key]
             values[key] = value[index] if index is not None else value.tolist()
+        for key in self.config.reward_function_optional_data_keys:
+            if key in data.non_tensor_batch:
+                value = data.non_tensor_batch[key]
+                values[key] = value[index] if index is not None else value.tolist()
         return values
 
     @abstractmethod

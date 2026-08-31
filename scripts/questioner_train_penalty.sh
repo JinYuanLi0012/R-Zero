@@ -62,7 +62,7 @@ if [ -n "$QUESTIONER_LOAD_CHECKPOINT" ]; then
     RESUME_ARGS+=(trainer.load_checkpoint_path="$QUESTIONER_LOAD_CHECKPOINT")
 fi
 if [ "${VALIDITY_RZERO_ENABLED:-0}" = "1" ] && [ "$VALIDITY_RZERO_DIVERSITY_MODE" = "semantic_mc" ]; then
-    REWARD_DATA_ARGS+=("worker.reward.reward_function_data_keys=[validity_rzero_semantic_gpu_ready_file]")
+    REWARD_DATA_ARGS+=("worker.reward.reward_function_optional_data_keys=[validity_rzero_semantic_gpu_ready_file]")
 fi
 
 cleanup_pid_file() {

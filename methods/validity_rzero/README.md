@@ -67,6 +67,13 @@ All semantic subprocesses exit before reward returns, the Solver restarts and
 passes health checks, and only then can actor update begin. Failures clean up
 semantic workers and still attempt the Solver restart.
 
+The per-step barrier is an optional reward-data field: training batches carry
+it, while validation batches may omit it. In semantic mode, the Questioner
+configuration's explicit `trainer.val_freq=-1` also disables the otherwise
+automatic final validation. If semantic validation is explicitly enabled with
+`val_freq>0`, its synchronous generated batch runs without a barrier. Baseline
+and BLEU modes retain the trainer's original final-validation behavior.
+
 The online worker shares the tested smoke implementation: submissions default
 to 8,192 requests, all first-pass batches finish before failures are collected
 into large deferred retry batches, and vLLM prefix caching is explicitly

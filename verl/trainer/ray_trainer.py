@@ -674,7 +674,17 @@ class RayPPOTrainer:
                 break
 
         # perform validation after training
-        if self.val_reward_fn is not None:
+        skip_final_validation = False
+        if (
+            os.getenv("VALIDITY_RZERO_ENABLED", "0") == "1"
+            and os.getenv("VALIDITY_RZERO_DIVERSITY_MODE", "bleu_lambda5") == "semantic_mc"
+        ):
+            from methods.validity_rzero.semantic_gpu_barrier import (
+                skip_final_validation as should_skip_final_validation,
+            )
+
+            skip_final_validation = should_skip_final_validation(self.config.trainer.val_freq)
+        if self.val_reward_fn is not None and not skip_final_validation:
             if (
                 val_metrics is None
                 or self.config.trainer.val_freq <= 0
@@ -684,6 +694,8 @@ class RayPPOTrainer:
                 self.logger.log(data=val_metrics, step=self.global_step)
 
             print(f"Final validation metrics: {convert_dict_to_str(val_metrics)}")
+        elif skip_final_validation:
+            print("[validity_rzero][semantic_mc] final validation disabled by trainer.val_freq<=0")
 
         if self.config.trainer.save_freq <= 0 or self.global_step % self.config.trainer.save_freq != 0:
             self._save_checkpoint()

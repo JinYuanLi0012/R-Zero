@@ -26,6 +26,7 @@ class RewardConfig:
     reward_function: Optional[str] = None
     reward_function_kwargs: dict = field(default_factory=dict)
     reward_function_data_keys: Tuple[str, ...] = ()
+    reward_function_optional_data_keys: Tuple[str, ...] = ()
     skip_special_tokens: bool = True
     num_cpus: int = 1
     """auto keys"""

@@ -12,6 +12,15 @@ import uuid
 BARRIER_DATA_KEY = "validity_rzero_semantic_gpu_ready_file"
 
 
+def skip_final_validation(val_freq: int) -> bool:
+    """Honor disabled validation only for the opt-in semantic-MC treatment."""
+    return (
+        val_freq <= 0
+        and os.getenv("VALIDITY_RZERO_ENABLED", "0") == "1"
+        and os.getenv("VALIDITY_RZERO_DIVERSITY_MODE", "bleu_lambda5") == "semantic_mc"
+    )
+
+
 def create_barrier(step: int) -> Path:
     root = Path(os.environ["STORAGE_PATH"]) / "temp_results" / "semantic_gpu_barriers"
     root.mkdir(parents=True, exist_ok=True)

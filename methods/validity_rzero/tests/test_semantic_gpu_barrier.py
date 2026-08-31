@@ -1,12 +1,15 @@
 import json
+import os
 from pathlib import Path
 import tempfile
 import threading
 import time
 import unittest
+from unittest.mock import patch
 
 from methods.validity_rzero.semantic_gpu_barrier import (
     cleanup_barrier,
+    skip_final_validation,
     signal_abort,
     signal_ready,
     wait_until_ready,
@@ -43,3 +46,26 @@ def test_missing_ready_signal_times_out_without_falling_through():
         path = Path(directory) / "missing.json"
         with unittest.TestCase().assertRaisesRegex(TimeoutError, "Questioner GPU handoff"):
             wait_until_ready(str(path), 0)
+
+
+def test_semantic_disabled_validation_skips_final_validation():
+    with patch.dict(os.environ, {
+        "VALIDITY_RZERO_ENABLED": "1",
+        "VALIDITY_RZERO_DIVERSITY_MODE": "semantic_mc",
+    }, clear=True):
+        assert skip_final_validation(-1)
+        assert not skip_final_validation(1)
+
+
+def test_baseline_and_bleu_final_validation_behavior_is_unchanged():
+    with patch.dict(os.environ, {
+        "VALIDITY_RZERO_ENABLED": "0",
+        "VALIDITY_RZERO_DIVERSITY_MODE": "semantic_mc",
+    }, clear=True):
+        assert not skip_final_validation(-1)
+    for mode in ("bleu_legacy", "bleu_lambda5"):
+        with patch.dict(os.environ, {
+            "VALIDITY_RZERO_ENABLED": "1",
+            "VALIDITY_RZERO_DIVERSITY_MODE": mode,
+        }, clear=True):
+            assert not skip_final_validation(-1)
