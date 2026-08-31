@@ -550,29 +550,67 @@ class RayPPOTrainer:
                     batch.meta_info["global_token_num"] = torch.sum(batch.batch["attention_mask"], dim=-1).tolist()
 
                     # compute reward
+                    semantic_barrier = None
+                    if (
+                        os.getenv("VALIDITY_RZERO_ENABLED", "0") == "1"
+                        and os.getenv("VALIDITY_RZERO_DIVERSITY_MODE", "bleu_lambda5") == "semantic_mc"
+                    ):
+                        from methods.validity_rzero.semantic_gpu_barrier import (
+                            BARRIER_DATA_KEY,
+                            create_barrier,
+                        )
+
+                        semantic_barrier = create_barrier(self.global_step)
+                        batch.non_tensor_batch[BARRIER_DATA_KEY] = np.full(
+                            len(batch), str(semantic_barrier), dtype=object
+                        )
                     with timer("reward", timing_raw):
                         reward_ref = self.reward_fn.compute_reward.remote(batch)
 
-                    # recompute old_log_probs
-                    with timer("old", timing_raw):
-                        old_log_probs = self.actor_rollout_wg.compute_log_probs(batch)
-                        batch = batch.union(old_log_probs)
+                    try:
+                        # recompute old_log_probs
+                        with timer("old", timing_raw):
+                            old_log_probs = self.actor_rollout_wg.compute_log_probs(batch)
+                            batch = batch.union(old_log_probs)
 
-                    # compute ref_log_probs
-                    if self.use_reference_policy:
-                        with timer("ref", timing_raw):
-                            ref_log_probs = self.ref_policy_wg.compute_ref_log_probs(batch)
-                            batch = batch.union(ref_log_probs)
+                        # compute ref_log_probs
+                        if self.use_reference_policy:
+                            with timer("ref", timing_raw):
+                                ref_log_probs = self.ref_policy_wg.compute_ref_log_probs(batch)
+                                batch = batch.union(ref_log_probs)
 
-                    # compute values
-                    if self.use_critic:
-                        with timer("values", timing_raw):
-                            values = self.critic_wg.compute_values(batch)
-                            batch = batch.union(values)
+                        # compute values
+                        if self.use_critic:
+                            with timer("values", timing_raw):
+                                values = self.critic_wg.compute_values(batch)
+                                batch = batch.union(values)
+                    except BaseException as error:
+                        if semantic_barrier is not None:
+                            from methods.validity_rzero.semantic_gpu_barrier import signal_abort
+
+                            signal_abort(semantic_barrier, repr(error))
+                            ray.cancel(reward_ref, force=True)
+                        raise
+                    else:
+                        if semantic_barrier is not None:
+                            from methods.validity_rzero.semantic_gpu_barrier import cleanup_barrier, signal_ready
+
+                            try:
+                                signal_ready(semantic_barrier)
+                            except BaseException:
+                                ray.cancel(reward_ref, force=True)
+                                cleanup_barrier(semantic_barrier)
+                                raise
 
                     with timer("adv", timing_raw):
                         # get token level scores
-                        reward_tensor, reward_metrics = ray.get(reward_ref)
+                        try:
+                            reward_tensor, reward_metrics = ray.get(reward_ref)
+                        finally:
+                            if semantic_barrier is not None:
+                                from methods.validity_rzero.semantic_gpu_barrier import cleanup_barrier
+
+                                cleanup_barrier(semantic_barrier)
                         batch.batch["token_level_scores"] = reward_tensor
                         reward_metrics = {f"reward/{k}": v for k, v in reduce_metrics(reward_metrics).items()}
                         metrics.update(reward_metrics)

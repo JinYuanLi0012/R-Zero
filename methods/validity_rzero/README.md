@@ -57,12 +57,15 @@ semantic_penalty = SAME_TYPE / successfully_parsed_nonself_comparisons
 questioner_reward = questioner_base_reward - semantic_penalty
 ```
 
-GPU 2/3 are reused sequentially. The Solver first finishes all validity/math
-rollouts and base rewards. Its recorded process groups are then stopped and GPU
-release is verified; two single-GPU frozen-base workers run the semantic panel;
-they are stopped and release is verified; finally the same Solver services are
-restarted and health-checked before the next Questioner step. Failures clean up
-workers and still attempt the Solver restart.
+GPU 2/3 continue to host the Solver. The reward is launched asynchronously with
+Questioner old/ref log-prob computation on GPU 0/1. A per-step barrier prevents
+the frozen judge from borrowing GPU 0/1 until old/ref log-probs (and values, if
+configured) have completed and their weights have been offloaded. The Solver
+then stops and releases GPU 2/3; by default four single-GPU frozen-base workers
+run on GPU 0/1/2/3 without stopping the small persistent Ray workers on GPU 0/1.
+All semantic subprocesses exit before reward returns, the Solver restarts and
+passes health checks, and only then can actor update begin. Failures clean up
+semantic workers and still attempt the Solver restart.
 
 The online worker shares the tested smoke implementation: submissions default
 to 8,192 requests, all first-pass batches finish before failures are collected
@@ -85,8 +88,17 @@ export VALIDITY_RZERO_SEMANTIC_MODEL=Qwen/Qwen3-4B-Base
 export VALIDITY_RZERO_SEMANTIC_LOCAL_FILES_ONLY=1
 export VALIDITY_RZERO_SEMANTIC_PANEL_SIZE=128
 export VALIDITY_RZERO_SEMANTIC_PANEL_SEED=43
+export VALIDITY_RZERO_SEMANTIC_GPU_IDS=0,1,2,3
+export VALIDITY_RZERO_SEMANTIC_GPU_MEMORY_UTILIZATION=0.80
 export VALIDITY_RZERO_SEMANTIC_WORKER_BATCH_SIZE=8192
 ```
+
+`VALIDITY_RZERO_SEMANTIC_GPU_IDS` is deliberately separate from
+`VLLM_GPU_IDS=2,3`: the latter remains the Solver topology. The 0.80 semantic
+memory fraction leaves headroom for the roughly 2--3 GB persistent Ray process
+on each Questioner GPU. Set the semantic GPU list back to `2,3` to reproduce the
+previous two-replica execution topology; the reward formula and judge protocol
+are identical.
 
 Run CPU tests in the normal R-Zero environment with:
 

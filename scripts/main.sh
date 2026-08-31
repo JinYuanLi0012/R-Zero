@@ -85,6 +85,19 @@ export QUESTIONER_TRAIN_GPU_IDS=${QUESTIONER_TRAIN_GPU_IDS:-0,1}
 export VLLM_GPU_IDS=${VLLM_GPU_IDS:-2,3}
 export VLLM_PORT_BASE=${VLLM_PORT_BASE:-5000}
 export QUESTION_GPU_IDS=${QUESTION_GPU_IDS:-0,1,2,3}
+if [ "$VALIDITY_RZERO_ENABLED" = "1" ] && [ "$VALIDITY_RZERO_DIVERSITY_MODE" = "semantic_mc" ]; then
+    export VALIDITY_RZERO_SEMANTIC_GPU_IDS=${VALIDITY_RZERO_SEMANTIC_GPU_IDS:-${QUESTIONER_TRAIN_GPU_IDS},${VLLM_GPU_IDS}}
+    export VALIDITY_RZERO_SEMANTIC_GPU_MEMORY_UTILIZATION=${VALIDITY_RZERO_SEMANTIC_GPU_MEMORY_UTILIZATION:-0.80}
+    python3 - "$VALIDITY_RZERO_SEMANTIC_GPU_IDS" "$VALIDITY_RZERO_SEMANTIC_GPU_MEMORY_UTILIZATION" <<'PY'
+import sys
+gpu_ids = [value.strip() for value in sys.argv[1].split(",") if value.strip()]
+if not gpu_ids or len(gpu_ids) != len(set(gpu_ids)):
+    raise SystemExit("VALIDITY_RZERO_SEMANTIC_GPU_IDS must contain unique GPU IDs")
+utilization = float(sys.argv[2])
+if not 0.0 < utilization < 1.0:
+    raise SystemExit("VALIDITY_RZERO_SEMANTIC_GPU_MEMORY_UTILIZATION must be in (0, 1)")
+PY
+fi
 export QUESTIONER_MAX_STEPS=${QUESTIONER_MAX_STEPS:-5}
 export QUESTIONER_MERGE_STEP=${QUESTIONER_MERGE_STEP:-5}
 export QUESTIONER_SAVE_FREQ=${QUESTIONER_SAVE_FREQ:-1}
@@ -147,6 +160,9 @@ if [ "$VALIDITY_RZERO_ENABLED" = "1" ]; then
             --field "semantic_sampling_protocol=generative_v3_max1024_seed42"
             --field "semantic_pair_orientation=candidate_then_reference_v1"
             --field "semantic_worker_batch_size=${VALIDITY_RZERO_SEMANTIC_WORKER_BATCH_SIZE}"
+            --field "semantic_gpu_ids=${VALIDITY_RZERO_SEMANTIC_GPU_IDS}"
+            --field "semantic_gpu_memory_utilization=${VALIDITY_RZERO_SEMANTIC_GPU_MEMORY_UTILIZATION}"
+            --field "semantic_questioner_gpu_barrier=old_ref_values_complete_v1"
             --field "semantic_retry_policy=deferred_one_retry_v1"
             --field "semantic_prefix_cache=enabled"
         )

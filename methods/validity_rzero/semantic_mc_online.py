@@ -15,6 +15,7 @@ from .semantic_judge_offline.semantic_pair_prompt_formal import (
 )
 from .semantic_mc import aggregate_semantic_penalties, build_pair_plan, cache_context
 from .semantic_mc_gpu import run_gpu_tasks
+from .semantic_gpu_barrier import wait_until_ready
 from .service_handoff import SolverServiceConfig, semantic_gpu_handoff
 
 
@@ -35,7 +36,19 @@ def resolve_frozen_model() -> tuple[str, str | None]:
     return _RESOLVED_MODEL
 
 
-def compute_online_semantic_penalties(questions: list[str]) -> list[dict[str, int | float]]:
+def _semantic_gpu_ids(service: SolverServiceConfig) -> list[str]:
+    value = os.getenv("VALIDITY_RZERO_SEMANTIC_GPU_IDS", ",".join(service.gpu_ids))
+    gpu_ids = [item.strip() for item in value.split(",") if item.strip()]
+    if not gpu_ids:
+        raise ValueError("VALIDITY_RZERO_SEMANTIC_GPU_IDS must contain at least one GPU")
+    if len(gpu_ids) != len(set(gpu_ids)):
+        raise ValueError(f"duplicate semantic GPU IDs are not allowed: {gpu_ids}")
+    return gpu_ids
+
+
+def compute_online_semantic_penalties(
+    questions: list[str], gpu_ready_file: str | None = None
+) -> list[dict[str, int | float]]:
     valid_indices = [index for index, question in enumerate(questions) if question]
     output = [
         {"same_count": 0, "compared_count": 0, "parse_failure_count": 0, "semantic_penalty": 0.0}
@@ -66,15 +79,23 @@ def compute_online_semantic_penalties(questions: list[str]) -> list[dict[str, in
         prompt_builder=build_prompt,
     )
     service = SolverServiceConfig.from_environment()
+    semantic_gpu_ids = _semantic_gpu_ids(service)
     temp_root = Path(os.environ["STORAGE_PATH"]) / "temp_results"
     temp_root.mkdir(parents=True, exist_ok=True)
     work_dir = Path(tempfile.mkdtemp(prefix="semantic_mc_online_", dir=temp_root))
     try:
+        barrier_wait_seconds = 0.0
+        if gpu_ready_file:
+            barrier_wait_seconds = wait_until_ready(gpu_ready_file)
+            print(
+                "[validity_rzero][semantic_mc] Questioner GPU barrier ready "
+                f"after {barrier_wait_seconds:.3f}s; semantic_gpus={','.join(semantic_gpu_ids)}"
+            )
         with semantic_gpu_handoff(service):
             judgments, runtime = run_gpu_tasks(
-                list(tasks.values()), resolved_model, list(service.gpu_ids), work_dir,
+                list(tasks.values()), resolved_model, semantic_gpu_ids, work_dir,
                 max_tokens=1024, seed=42,
-                gpu_memory_utilization=float(os.getenv("VALIDITY_RZERO_SEMANTIC_GPU_MEMORY_UTILIZATION", "0.85")),
+                gpu_memory_utilization=float(os.getenv("VALIDITY_RZERO_SEMANTIC_GPU_MEMORY_UTILIZATION", "0.80")),
                 batch_size=int(os.getenv("VALIDITY_RZERO_SEMANTIC_WORKER_BATCH_SIZE", "8192")),
             )
         warnings: list[str] = []
@@ -91,6 +112,7 @@ def compute_online_semantic_penalties(questions: list[str]) -> list[dict[str, in
             "[validity_rzero][semantic_mc] "
             f"prompt_version={PROMPT_VERSION} worker_batch_size="
             f"{int(os.getenv('VALIDITY_RZERO_SEMANTIC_WORKER_BATCH_SIZE', '8192'))} "
+            f"semantic_gpus={','.join(semantic_gpu_ids)} barrier_wait_seconds={barrier_wait_seconds:.3f} "
             f"pair_instances={len(instances)} unique_pairs={len(tasks)} "
             f"cache_hits={len(instances) - len(tasks)} vllm_wall_seconds={runtime['wall_seconds']:.3f} "
             f"parse_success_after_retry={(compared / total if total else 1.0):.6f} "

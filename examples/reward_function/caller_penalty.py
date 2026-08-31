@@ -115,7 +115,15 @@ def accuracy_reward(predict: str, ground_truth: str) -> float:
     return 1.0 if grade_answer(answer, ground_truth) else 0.0
 
 
-def compute_score(predicts: List[str], ground_truths: List[str], format_weight: float = 0.1, file_path: str = "", num_services: int = 2, port_base: int = 5000) -> List[Dict[str, float]]:
+def compute_score(
+    predicts: List[str],
+    ground_truths: List[str],
+    format_weight: float = 0.1,
+    file_path: str = "",
+    num_services: int = 2,
+    port_base: int = 5000,
+    validity_rzero_semantic_gpu_ready_file=None,
+) -> List[Dict[str, float]]:
     results = []
     with open('test.json','w') as f:
         json.dump(predicts,f,indent=4)
@@ -150,8 +158,15 @@ def compute_score(predicts: List[str], ground_truths: List[str], format_weight: 
         # Importing this module can resolve/load the frozen semantic judge, so the
         # pure R-Zero path must never import it.
         from methods.validity_rzero.semantic_mc_online import compute_online_semantic_penalties
+        gpu_ready_files = validity_rzero_semantic_gpu_ready_file or []
+        if isinstance(gpu_ready_files, str):
+            gpu_ready_files = [gpu_ready_files]
+        unique_ready_files = set(gpu_ready_files)
+        if len(unique_ready_files) > 1:
+            raise RuntimeError(f"semantic batch contains multiple GPU barriers: {unique_ready_files}")
+        semantic_kwargs = {"gpu_ready_file": next(iter(unique_ready_files))} if unique_ready_files else {}
         semantic_stats = compute_online_semantic_penalties(
-            [result.get("question", "") for result in final_results]
+            [result.get("question", "") for result in final_results], **semantic_kwargs
         )
         penalty = None
     else:
@@ -244,8 +259,4 @@ def compute_score(predicts: List[str], ground_truths: List[str], format_weight: 
                 final_score = (min(final_results[i]["score"],1-final_results[i]["score"]) if final_results[i]['question'] else -1)-penalty[i]
                 scores.append({"overall": final_score,"format": 1 if final_results[i]['question'] else 0,"accuracy": penalty[i]})
     return scores
-
-
-
-
 

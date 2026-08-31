@@ -35,14 +35,18 @@ def _load_compute_score(final_results, penalties):
     return namespace["compute_score"]
 
 
-def _run_compute_score(final_results, penalties, environment, semantic_stats=None):
+def _run_compute_score(
+    final_results, penalties, environment, semantic_stats=None, ready_files=None, semantic_calls=None
+):
     compute_score = _load_compute_score(final_results, penalties)
     semantic_module = ModuleType("methods.validity_rzero.semantic_mc_online")
-    semantic_module.compute_online_semantic_penalties = (
-        lambda _questions: semantic_stats
-        if semantic_stats is not None
-        else (_ for _ in ()).throw(AssertionError("semantic dependency must not be used"))
-    )
+    def semantic_penalties(_questions, **kwargs):
+        if semantic_calls is not None:
+            semantic_calls.append(kwargs)
+        if semantic_stats is not None:
+            return semantic_stats
+        raise AssertionError("semantic dependency must not be used")
+    semantic_module.compute_online_semantic_penalties = semantic_penalties
     previous_cwd = os.getcwd()
     try:
         with tempfile.TemporaryDirectory() as temporary_directory:
@@ -51,9 +55,15 @@ def _run_compute_score(final_results, penalties, environment, semantic_stats=Non
             with patch.dict(os.environ, environment, clear=True), \
                  patch.dict(sys.modules, {semantic_module.__name__: semantic_module}), \
                  redirect_stdout(output):
+                kwargs = (
+                    {"validity_rzero_semantic_gpu_ready_file": ready_files}
+                    if ready_files is not None
+                    else {}
+                )
                 scores = compute_score(
                     ["<question>question</question> \\boxed{answer}"] * len(final_results),
                     ["answer"] * len(final_results),
+                    **kwargs,
                 )
     finally:
         os.chdir(previous_cwd)
@@ -162,6 +172,24 @@ def test_semantic_mode_subtracts_same_over_successfully_parsed_for_valid_and_inv
     assert scores[0]["compared_count"] == 4
     assert scores[0]["parse_failure_count"] == 1
     assert '"diversity_mode": "semantic_mc"' in logs
+
+
+def test_semantic_batch_forwards_one_shared_gpu_barrier():
+    calls = []
+    _run_compute_score(
+        [_validity_result()],
+        [0.1],
+        {"VALIDITY_RZERO_ENABLED": "1", "VALIDITY_RZERO_DIVERSITY_MODE": "semantic_mc"},
+        semantic_stats=[{
+            "same_count": 0,
+            "compared_count": 1,
+            "parse_failure_count": 0,
+            "semantic_penalty": 0.0,
+        }],
+        ready_files=["/tmp/step.json", "/tmp/step.json"],
+        semantic_calls=calls,
+    )
+    assert calls == [{"gpu_ready_file": "/tmp/step.json"}]
 
 
 def test_disabled_baseline_never_imports_semantic_even_if_mode_is_set():
