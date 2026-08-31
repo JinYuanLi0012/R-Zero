@@ -39,8 +39,10 @@ if [ "${VALIDITY_RZERO_ENABLED:-0}" = "1" ] && [ "$VALIDITY_RZERO_DIVERSITY_MODE
     export VALIDITY_RZERO_SOLVER_MODEL_PATH=$solver_model_path
     export VALIDITY_RZERO_SOLVER_RUN_ID=$RUN_ID
     export VALIDITY_RZERO_SEMANTIC_MODEL=${VALIDITY_RZERO_SEMANTIC_MODEL:-Qwen/Qwen3-4B-Base}
+    export VALIDITY_RZERO_SEMANTIC_WORKER_BATCH_SIZE=${VALIDITY_RZERO_SEMANTIC_WORKER_BATCH_SIZE:-8192}
     export VALIDITY_RZERO_SEMANTIC_PID_FILE=${VALIDITY_RZERO_SEMANTIC_PID_FILE:-${STORAGE_PATH}/temp_results/questioner_semantic_${RUN_ID}.pids}
-    echo "semantic MC enabled: Solver and frozen judge will sequentially reuse GPUs $VLLM_GPU_IDS"
+    echo "semantic MC enabled: formal recurring-exercise prompt, batch=$VALIDITY_RZERO_SEMANTIC_WORKER_BATCH_SIZE, deferred retry, prefix cache"
+    echo "Solver and frozen judge will sequentially reuse GPUs $VLLM_GPU_IDS"
 fi
 bash vllm_service_init/start.sh $solver_model_path $RUN_ID
 echo "vLLM services started with RUN_ID=$RUN_ID on GPUs $VLLM_GPU_IDS and ports starting at $VLLM_PORT_BASE"

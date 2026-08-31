@@ -46,9 +46,11 @@ semantic-MC reward treatment and does not modify the training path. See
 Set `VALIDITY_RZERO_DIVERSITY_MODE=semantic_mc` to replace only the validity
 Questioner diversity term. For each Questioner batch, a fixed-seed shared panel
 of up to 128 sample indices is drawn without text deduplication. The frozen
-`Qwen/Qwen3-4B-Base` v3-max1024 judge compares every nonself candidate/panel
-pair. Strict-parse failures are retried once and final failures are removed from
-both numerator and denominator:
+`Qwen/Qwen3-4B-Base` judge uses the formal recurring-exercise prompt and the
+unchanged v3-max1024 sampling/parser contract for every nonself candidate/panel
+pair. Question A is always the candidate and Question B the panel reference.
+Strict-parse failures are retried once and final failures are removed from both
+numerator and denominator:
 
 ```text
 semantic_penalty = SAME_TYPE / successfully_parsed_nonself_comparisons
@@ -61,6 +63,14 @@ release is verified; two single-GPU frozen-base workers run the semantic panel;
 they are stopped and release is verified; finally the same Solver services are
 restarted and health-checked before the next Questioner step. Failures clean up
 workers and still attempt the Solver restart.
+
+The online worker shares the tested smoke implementation: submissions default
+to 8,192 requests, all first-pass batches finish before failures are collected
+into large deferred retry batches, and vLLM prefix caching is explicitly
+enabled. Candidate/reference orientation and candidate-contiguous sharding let
+comparisons for one candidate reuse the fixed instruction plus Question-A token
+prefix. Online logs record first-pass/retry call counts and the observed prefix
+cache token hit rate when the installed vLLM exposes it.
 
 The mode is opt-in. `VALIDITY_RZERO_ENABLED=0` retains the original
 `min(score, 1-score) - BLEU_cluster_share` path and never imports the semantic
@@ -75,6 +85,7 @@ export VALIDITY_RZERO_SEMANTIC_MODEL=Qwen/Qwen3-4B-Base
 export VALIDITY_RZERO_SEMANTIC_LOCAL_FILES_ONLY=1
 export VALIDITY_RZERO_SEMANTIC_PANEL_SIZE=128
 export VALIDITY_RZERO_SEMANTIC_PANEL_SEED=43
+export VALIDITY_RZERO_SEMANTIC_WORKER_BATCH_SIZE=8192
 ```
 
 Run CPU tests in the normal R-Zero environment with:

@@ -48,6 +48,14 @@ if [ "$VALIDITY_RZERO_ENABLED" = "1" ]; then
         bleu_legacy|bleu_lambda5|semantic_mc) ;;
         *) echo "Unsupported VALIDITY_RZERO_DIVERSITY_MODE=$VALIDITY_RZERO_DIVERSITY_MODE" >&2; exit 2 ;;
     esac
+    if [ "$VALIDITY_RZERO_DIVERSITY_MODE" = "semantic_mc" ]; then
+        VALIDITY_RZERO_SEMANTIC_WORKER_BATCH_SIZE=${VALIDITY_RZERO_SEMANTIC_WORKER_BATCH_SIZE:-8192}
+        if ! [[ "$VALIDITY_RZERO_SEMANTIC_WORKER_BATCH_SIZE" =~ ^[1-9][0-9]*$ ]]; then
+            echo "VALIDITY_RZERO_SEMANTIC_WORKER_BATCH_SIZE must be a positive integer" >&2
+            exit 2
+        fi
+        export VALIDITY_RZERO_SEMANTIC_WORKER_BATCH_SIZE
+    fi
     export VALIDITY_RZERO_DIVERSITY_MODE
 fi
 if ! [[ "$NUM_ROUNDS" =~ ^[1-9][0-9]*$ ]]; then
@@ -135,7 +143,12 @@ if [ "$VALIDITY_RZERO_ENABLED" = "1" ]; then
             --field "semantic_model=${VALIDITY_RZERO_SEMANTIC_MODEL:-Qwen/Qwen3-4B-Base}"
             --field "semantic_panel_size=${VALIDITY_RZERO_SEMANTIC_PANEL_SIZE:-128}"
             --field "semantic_panel_seed=${VALIDITY_RZERO_SEMANTIC_PANEL_SEED:-43}"
+            --field "semantic_prompt_protocol=semantic-pair-formal-recurring-exercise-v1"
             --field "semantic_sampling_protocol=generative_v3_max1024_seed42"
+            --field "semantic_pair_orientation=candidate_then_reference_v1"
+            --field "semantic_worker_batch_size=${VALIDITY_RZERO_SEMANTIC_WORKER_BATCH_SIZE}"
+            --field "semantic_retry_policy=deferred_one_retry_v1"
+            --field "semantic_prefix_cache=enabled"
         )
     elif [ "$VALIDITY_RZERO_DIVERSITY_MODE" = "bleu_lambda5" ]; then
         FINGERPRINT_EXTRA+=(
