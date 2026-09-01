@@ -123,6 +123,7 @@ def compute_score(
     num_services: int = 2,
     port_base: int = 5000,
     validity_rzero_semantic_gpu_ready_file=None,
+    uid=None,
 ) -> List[Dict[str, float]]:
     results = []
     with open('test.json','w') as f:
@@ -147,17 +148,22 @@ def compute_score(
         if validity_rzero_enabled
         else "baseline"
     )
-    supported_modes = {"bleu_legacy", "bleu_lambda5", "semantic_mc"}
+    supported_modes = {
+        "bleu_legacy",
+        "bleu_lambda5",
+        "semantic_mc",
+        "semantic_novelty_gate",
+    }
     if validity_rzero_enabled and diversity_mode not in supported_modes:
         raise ValueError(
             f"unsupported VALIDITY_RZERO_DIVERSITY_MODE={diversity_mode!r}; "
             f"expected one of {sorted(supported_modes)}"
         )
     semantic_stats = None
-    if validity_rzero_enabled and diversity_mode == "semantic_mc":
+    novelty_stats = None
+    if validity_rzero_enabled and diversity_mode in {"semantic_mc", "semantic_novelty_gate"}:
         # Importing this module can resolve/load the frozen semantic judge, so the
         # pure R-Zero path must never import it.
-        from methods.validity_rzero.semantic_mc_online import compute_online_semantic_penalties
         gpu_ready_files = validity_rzero_semantic_gpu_ready_file or []
         if isinstance(gpu_ready_files, str):
             gpu_ready_files = [gpu_ready_files]
@@ -165,9 +171,18 @@ def compute_score(
         if len(unique_ready_files) > 1:
             raise RuntimeError(f"semantic batch contains multiple GPU barriers: {unique_ready_files}")
         semantic_kwargs = {"gpu_ready_file": next(iter(unique_ready_files))} if unique_ready_files else {}
-        semantic_stats = compute_online_semantic_penalties(
-            [result.get("question", "") for result in final_results], **semantic_kwargs
-        )
+        if diversity_mode == "semantic_mc":
+            from methods.validity_rzero.semantic_mc_online import compute_online_semantic_penalties
+            semantic_stats = compute_online_semantic_penalties(
+                [result.get("question", "") for result in final_results], **semantic_kwargs
+            )
+        else:
+            from methods.validity_rzero.semantic_novelty_gate_online import compute_online_novelty
+            # Novelty consumes only parsed Questioner candidates. Solver outputs
+            # are used separately below to compose validity/frontier rewards.
+            novelty_stats = compute_online_novelty(
+                [result.get("question", "") for result in results], **semantic_kwargs
+            )
         penalty = None
     else:
         penalty = cluster_share_per_problem(
@@ -181,7 +196,42 @@ def compute_score(
         else None
     )
     for i in range(len(final_results)):
-        if validity_rzero_enabled and diversity_mode == "semantic_mc" and final_results[i].get("question"):
+        if validity_rzero_enabled and diversity_mode == "semantic_novelty_gate" and final_results[i].get("question"):
+            item = final_results[i]
+            stats = novelty_stats[i]
+            novelty = int(stats["novelty"])
+            if item["validity_decision"] == "INVALID":
+                final_score = float(item["questioner_base_reward"])
+            else:
+                final_score = novelty * float(item["math_frontier_score"])
+            print("[validity_rzero][questioner_reward] " + json.dumps({
+                "invalid_votes": item["invalid_votes"],
+                "total_votes": item["total_votes"],
+                "validity_decision": item["validity_decision"],
+                "validity_penalty": item["validity_penalty"],
+                "math_frontier_score": item["math_frontier_score"],
+                "diversity_mode": diversity_mode,
+                "novelty": novelty,
+                "same_count": stats["same_count"],
+                "compared_count": stats["compared_count"],
+                "parse_failure_count": stats["parse_failure_count"],
+                "final_questioner_reward": final_score,
+            }))
+            scores.append({
+                "overall": final_score,
+                "format": 1.0,
+                "accuracy": float(novelty),
+                "invalid_votes": float(item["invalid_votes"]),
+                "validity_invalid": float(item["validity_decision"] == "INVALID"),
+                "validity_valid": float(item["validity_decision"] == "VALID"),
+                "validity_penalty": float(item["validity_penalty"]),
+                "math_frontier_score": float(item["math_frontier_score"]),
+                "novelty": float(novelty),
+                "same_count": float(stats["same_count"]),
+                "compared_count": float(stats["compared_count"]),
+                "parse_failure_count": float(stats["parse_failure_count"]),
+            })
+        elif validity_rzero_enabled and diversity_mode == "semantic_mc" and final_results[i].get("question"):
             item = final_results[i]
             base_reward = float(item["questioner_base_reward"])
             stats = semantic_stats[i]
@@ -250,7 +300,7 @@ def compute_score(
                 "diversity_penalty": diversity_penalty,
             })
         else:
-            if validity_rzero_enabled and diversity_mode == "semantic_mc":
+            if validity_rzero_enabled and diversity_mode in {"semantic_mc", "semantic_novelty_gate"}:
                 final_score = -1.0
                 scores.append({"overall": final_score, "format": 0, "accuracy": 0.0})
             else:
@@ -258,5 +308,10 @@ def compute_score(
                 # behavior when VALIDITY_RZERO_ENABLED is not 1.
                 final_score = (min(final_results[i]["score"],1-final_results[i]["score"]) if final_results[i]['question'] else -1)-penalty[i]
                 scores.append({"overall": final_score,"format": 1 if final_results[i]['question'] else 0,"accuracy": penalty[i]})
+    if validity_rzero_enabled and diversity_mode == "semantic_novelty_gate":
+        from methods.validity_rzero.semantic_novelty_gate import novelty_training_diagnostics
+        diagnostics = novelty_training_diagnostics(final_results, novelty_stats, uid)
+        for score in scores:
+            score.update(diagnostics)
+        print("[validity_rzero][semantic_novelty_gate][step_metrics] " + json.dumps(diagnostics))
     return scores
-

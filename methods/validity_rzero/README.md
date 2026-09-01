@@ -107,6 +107,58 @@ on each Questioner GPU. Set the semantic GPU list back to `2,3` to reproduce the
 previous two-replica execution topology; the reward formula and judge protocol
 are identical.
 
+### Semantic novelty-gate experiment
+
+`VALIDITY_RZERO_DIVERSITY_MODE=semantic_novelty_gate` is an independent,
+opt-in hard-gate treatment. It does not alter `semantic_mc`: instead of one
+shared 128-reference panel and a continuous density penalty, every Questioner
+candidate deterministically samples its own K nonself sample indices from the
+current generation batch. Text is not deduplicated, so identical text at a
+different sample index remains a valid comparison. The default is K=8 with
+seed 43.
+
+The frozen judge, formal recurring-exercise prompt, candidate-to-reference
+orientation, v3-max1024 generation contract, strict parser, deferred one-retry
+policy, large submission batches, prefix cache, and four-GPU service handoff
+are exactly the existing semantic protocol. Final parse failures fail open for
+their individual comparisons. The binary gate and Questioner reward are:
+
+```text
+novelty = 0  if any successfully parsed comparison is SAME_TYPE
+novelty = 1  otherwise
+
+INVALID: questioner_reward = 0.5 - invalid_votes / 9
+VALID:   questioner_reward = novelty * R_frontier
+```
+
+Novelty is computed once from each generated question and never from Solver
+responses, validity votes, or pure-math rollouts. The Solver and novelty paths
+meet only when the final Questioner reward is composed. Existing GRPO grouping,
+advantage calculation, and actor update remain unchanged.
+
+The existing reward/W&B path records validity pass rate, novelty pass rate
+among valid candidates, valid-and-novel rate, mean SAME hits, semantic parse
+failure rate, and survivor counts based on the batch's real `uid` prompt/group
+identifier. In particular, `zero_survivor_grpo_group_rate` exposes reward
+starvation caused by an overly strict hard gate.
+
+Recommended experiment-specific settings are:
+
+```bash
+export VALIDITY_RZERO_DIVERSITY_MODE=semantic_novelty_gate
+export VALIDITY_RZERO_NOVELTY_K=8
+export VALIDITY_RZERO_NOVELTY_SEED=43
+
+export VALIDITY_RZERO_SEMANTIC_MODEL=Qwen/Qwen3-4B-Base
+export VALIDITY_RZERO_SEMANTIC_LOCAL_FILES_ONLY=1
+export VALIDITY_RZERO_SEMANTIC_GPU_IDS=0,1,2,3
+export VALIDITY_RZERO_SEMANTIC_GPU_MEMORY_UTILIZATION=0.80
+export VALIDITY_RZERO_SEMANTIC_WORKER_BATCH_SIZE=8192
+```
+
+`VALIDITY_RZERO_SEMANTIC_PANEL_SIZE` is intentionally ignored in this mode.
+Changing it cannot change novelty K.
+
 Run CPU tests in the normal R-Zero environment with:
 
 ```bash

@@ -33,7 +33,7 @@ export VLLM_SERVICE_COUNT
 export QUESTIONER_VLLM_PID_FILE=${QUESTIONER_VLLM_PID_FILE:-${STORAGE_PATH}/temp_results/questioner_vllm_${RUN_ID}.pids}
 export VLLM_LOG_DIR=${VLLM_LOG_DIR:-logs}
 export VALIDITY_RZERO_DIVERSITY_MODE=${VALIDITY_RZERO_DIVERSITY_MODE:-bleu_lambda5}
-if [ "${VALIDITY_RZERO_ENABLED:-0}" = "1" ] && [ "$VALIDITY_RZERO_DIVERSITY_MODE" = "semantic_mc" ]; then
+if [ "${VALIDITY_RZERO_ENABLED:-0}" = "1" ] && { [ "$VALIDITY_RZERO_DIVERSITY_MODE" = "semantic_mc" ] || [ "$VALIDITY_RZERO_DIVERSITY_MODE" = "semantic_novelty_gate" ]; }; then
     export VALIDITY_RZERO_REPO_ROOT
     VALIDITY_RZERO_REPO_ROOT=$(pwd)
     export VALIDITY_RZERO_SOLVER_MODEL_PATH=$solver_model_path
@@ -43,7 +43,7 @@ if [ "${VALIDITY_RZERO_ENABLED:-0}" = "1" ] && [ "$VALIDITY_RZERO_DIVERSITY_MODE
     export VALIDITY_RZERO_SEMANTIC_GPU_MEMORY_UTILIZATION=${VALIDITY_RZERO_SEMANTIC_GPU_MEMORY_UTILIZATION:-0.80}
     export VALIDITY_RZERO_SEMANTIC_WORKER_BATCH_SIZE=${VALIDITY_RZERO_SEMANTIC_WORKER_BATCH_SIZE:-8192}
     export VALIDITY_RZERO_SEMANTIC_PID_FILE=${VALIDITY_RZERO_SEMANTIC_PID_FILE:-${STORAGE_PATH}/temp_results/questioner_semantic_${RUN_ID}.pids}
-    echo "semantic MC enabled: formal recurring-exercise prompt, batch=$VALIDITY_RZERO_SEMANTIC_WORKER_BATCH_SIZE, deferred retry, prefix cache"
+    echo "semantic diversity enabled: mode=$VALIDITY_RZERO_DIVERSITY_MODE, formal recurring-exercise prompt, batch=$VALIDITY_RZERO_SEMANTIC_WORKER_BATCH_SIZE, deferred retry, prefix cache"
     echo "Solver GPUs: $VLLM_GPU_IDS; temporary frozen-judge GPUs: $VALIDITY_RZERO_SEMANTIC_GPU_IDS; memory utilization: $VALIDITY_RZERO_SEMANTIC_GPU_MEMORY_UTILIZATION"
 fi
 bash vllm_service_init/start.sh $solver_model_path $RUN_ID
@@ -63,6 +63,8 @@ if [ -n "$QUESTIONER_LOAD_CHECKPOINT" ]; then
 fi
 if [ "${VALIDITY_RZERO_ENABLED:-0}" = "1" ] && [ "$VALIDITY_RZERO_DIVERSITY_MODE" = "semantic_mc" ]; then
     REWARD_DATA_ARGS+=("worker.reward.reward_function_optional_data_keys=[validity_rzero_semantic_gpu_ready_file]")
+elif [ "${VALIDITY_RZERO_ENABLED:-0}" = "1" ] && [ "$VALIDITY_RZERO_DIVERSITY_MODE" = "semantic_novelty_gate" ]; then
+    REWARD_DATA_ARGS+=("worker.reward.reward_function_optional_data_keys=[validity_rzero_semantic_gpu_ready_file,uid]")
 fi
 
 cleanup_pid_file() {

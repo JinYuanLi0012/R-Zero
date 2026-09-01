@@ -17,7 +17,8 @@ def skip_final_validation(val_freq: int) -> bool:
     return (
         val_freq <= 0
         and os.getenv("VALIDITY_RZERO_ENABLED", "0") == "1"
-        and os.getenv("VALIDITY_RZERO_DIVERSITY_MODE", "bleu_lambda5") == "semantic_mc"
+        and os.getenv("VALIDITY_RZERO_DIVERSITY_MODE", "bleu_lambda5")
+        in {"semantic_mc", "semantic_novelty_gate"}
     )
 
 

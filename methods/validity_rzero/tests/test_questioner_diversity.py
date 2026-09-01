@@ -36,7 +36,15 @@ def _load_compute_score(final_results, penalties):
 
 
 def _run_compute_score(
-    final_results, penalties, environment, semantic_stats=None, ready_files=None, semantic_calls=None
+    final_results,
+    penalties,
+    environment,
+    semantic_stats=None,
+    novelty_stats=None,
+    ready_files=None,
+    group_ids=None,
+    semantic_calls=None,
+    novelty_calls=None,
 ):
     compute_score = _load_compute_score(final_results, penalties)
     semantic_module = ModuleType("methods.validity_rzero.semantic_mc_online")
@@ -47,19 +55,30 @@ def _run_compute_score(
             return semantic_stats
         raise AssertionError("semantic dependency must not be used")
     semantic_module.compute_online_semantic_penalties = semantic_penalties
+    novelty_module = ModuleType("methods.validity_rzero.semantic_novelty_gate_online")
+    def online_novelty(_questions, **kwargs):
+        if novelty_calls is not None:
+            novelty_calls.append(kwargs)
+        if novelty_stats is not None:
+            return novelty_stats
+        raise AssertionError("novelty dependency must not be used")
+    novelty_module.compute_online_novelty = online_novelty
     previous_cwd = os.getcwd()
     try:
         with tempfile.TemporaryDirectory() as temporary_directory:
             os.chdir(temporary_directory)
             output = StringIO()
             with patch.dict(os.environ, environment, clear=True), \
-                 patch.dict(sys.modules, {semantic_module.__name__: semantic_module}), \
+                 patch.dict(sys.modules, {
+                     semantic_module.__name__: semantic_module,
+                     novelty_module.__name__: novelty_module,
+                 }), \
                  redirect_stdout(output):
-                kwargs = (
-                    {"validity_rzero_semantic_gpu_ready_file": ready_files}
-                    if ready_files is not None
-                    else {}
-                )
+                kwargs = {}
+                if ready_files is not None:
+                    kwargs["validity_rzero_semantic_gpu_ready_file"] = ready_files
+                if group_ids is not None:
+                    kwargs["uid"] = group_ids
                 scores = compute_score(
                     ["<question>question</question> \\boxed{answer}"] * len(final_results),
                     ["answer"] * len(final_results),
@@ -190,6 +209,39 @@ def test_semantic_batch_forwards_one_shared_gpu_barrier():
         semantic_calls=calls,
     )
     assert calls == [{"gpu_ready_file": "/tmp/step.json"}]
+
+
+def test_novelty_gate_reward_keeps_invalid_shaping_and_hard_gates_only_valid():
+    invalid_base = 0.5 - 5 / 9
+    stats = [
+        {"same_count": 0, "compared_count": 8, "parse_failure_count": 0, "novelty": 1},
+        {"same_count": 1, "compared_count": 8, "parse_failure_count": 0, "novelty": 0},
+        {"same_count": 2, "compared_count": 8, "parse_failure_count": 0, "novelty": 0},
+    ]
+    calls = []
+    scores, logs = _run_compute_score(
+        [
+            _validity_result(base_reward=0.4),
+            _validity_result(base_reward=0.3),
+            _validity_result(base_reward=invalid_base, decision="INVALID", invalid_votes=5),
+        ],
+        [999, 999, 999],
+        {
+            "VALIDITY_RZERO_ENABLED": "1",
+            "VALIDITY_RZERO_DIVERSITY_MODE": "semantic_novelty_gate",
+        },
+        novelty_stats=stats,
+        ready_files=["/tmp/step.json"] * 3,
+        group_ids=["group-a", "group-a", "group-a"],
+        novelty_calls=calls,
+    )
+    assert scores[0]["overall"] == 0.4
+    assert scores[1]["overall"] == 0.0
+    assert abs(scores[2]["overall"] - invalid_base) < 1e-12
+    assert calls == [{"gpu_ready_file": "/tmp/step.json"}]
+    assert scores[0]["mean_survivors_per_grpo_group"] == 1.0
+    assert scores[0]["zero_survivor_grpo_group_rate"] == 0.0
+    assert '"diversity_mode": "semantic_novelty_gate"' in logs
 
 
 def test_disabled_baseline_never_imports_semantic_even_if_mode_is_set():

@@ -45,16 +45,29 @@ if [ "$VALIDITY_RZERO_ENABLED" = "1" ]; then
     : "${TERRA_REPLAY_RATIO:?set TERRA_REPLAY_RATIO}"
     VALIDITY_RZERO_DIVERSITY_MODE=${VALIDITY_RZERO_DIVERSITY_MODE:-bleu_lambda5}
     case "$VALIDITY_RZERO_DIVERSITY_MODE" in
-        bleu_legacy|bleu_lambda5|semantic_mc) ;;
+        bleu_legacy|bleu_lambda5|semantic_mc|semantic_novelty_gate) ;;
         *) echo "Unsupported VALIDITY_RZERO_DIVERSITY_MODE=$VALIDITY_RZERO_DIVERSITY_MODE" >&2; exit 2 ;;
     esac
-    if [ "$VALIDITY_RZERO_DIVERSITY_MODE" = "semantic_mc" ]; then
+    if [ "$VALIDITY_RZERO_DIVERSITY_MODE" = "semantic_mc" ] || [ "$VALIDITY_RZERO_DIVERSITY_MODE" = "semantic_novelty_gate" ]; then
         VALIDITY_RZERO_SEMANTIC_WORKER_BATCH_SIZE=${VALIDITY_RZERO_SEMANTIC_WORKER_BATCH_SIZE:-8192}
         if ! [[ "$VALIDITY_RZERO_SEMANTIC_WORKER_BATCH_SIZE" =~ ^[1-9][0-9]*$ ]]; then
             echo "VALIDITY_RZERO_SEMANTIC_WORKER_BATCH_SIZE must be a positive integer" >&2
             exit 2
         fi
         export VALIDITY_RZERO_SEMANTIC_WORKER_BATCH_SIZE
+    fi
+    if [ "$VALIDITY_RZERO_DIVERSITY_MODE" = "semantic_novelty_gate" ]; then
+        VALIDITY_RZERO_NOVELTY_K=${VALIDITY_RZERO_NOVELTY_K:-8}
+        VALIDITY_RZERO_NOVELTY_SEED=${VALIDITY_RZERO_NOVELTY_SEED:-43}
+        if ! [[ "$VALIDITY_RZERO_NOVELTY_K" =~ ^[1-9][0-9]*$ ]]; then
+            echo "VALIDITY_RZERO_NOVELTY_K must be a positive integer" >&2
+            exit 2
+        fi
+        if ! [[ "$VALIDITY_RZERO_NOVELTY_SEED" =~ ^[0-9]+$ ]]; then
+            echo "VALIDITY_RZERO_NOVELTY_SEED must be a nonnegative integer" >&2
+            exit 2
+        fi
+        export VALIDITY_RZERO_NOVELTY_K VALIDITY_RZERO_NOVELTY_SEED
     fi
     export VALIDITY_RZERO_DIVERSITY_MODE
 fi
@@ -85,7 +98,7 @@ export QUESTIONER_TRAIN_GPU_IDS=${QUESTIONER_TRAIN_GPU_IDS:-0,1}
 export VLLM_GPU_IDS=${VLLM_GPU_IDS:-2,3}
 export VLLM_PORT_BASE=${VLLM_PORT_BASE:-5000}
 export QUESTION_GPU_IDS=${QUESTION_GPU_IDS:-0,1,2,3}
-if [ "$VALIDITY_RZERO_ENABLED" = "1" ] && [ "$VALIDITY_RZERO_DIVERSITY_MODE" = "semantic_mc" ]; then
+if [ "$VALIDITY_RZERO_ENABLED" = "1" ] && { [ "$VALIDITY_RZERO_DIVERSITY_MODE" = "semantic_mc" ] || [ "$VALIDITY_RZERO_DIVERSITY_MODE" = "semantic_novelty_gate" ]; }; then
     export VALIDITY_RZERO_SEMANTIC_GPU_IDS=${VALIDITY_RZERO_SEMANTIC_GPU_IDS:-${QUESTIONER_TRAIN_GPU_IDS},${VLLM_GPU_IDS}}
     export VALIDITY_RZERO_SEMANTIC_GPU_MEMORY_UTILIZATION=${VALIDITY_RZERO_SEMANTIC_GPU_MEMORY_UTILIZATION:-0.80}
     python3 - "$VALIDITY_RZERO_SEMANTIC_GPU_IDS" "$VALIDITY_RZERO_SEMANTIC_GPU_MEMORY_UTILIZATION" <<'PY'
@@ -165,6 +178,22 @@ if [ "$VALIDITY_RZERO_ENABLED" = "1" ]; then
             --field "semantic_questioner_gpu_barrier=old_ref_values_complete_v1"
             --field "semantic_retry_policy=deferred_one_retry_v1"
             --field "semantic_prefix_cache=enabled"
+        )
+    elif [ "$VALIDITY_RZERO_DIVERSITY_MODE" = "semantic_novelty_gate" ]; then
+        FINGERPRINT_EXTRA+=(
+            --field "semantic_model=${VALIDITY_RZERO_SEMANTIC_MODEL:-Qwen/Qwen3-4B-Base}"
+            --field "semantic_novelty_k=${VALIDITY_RZERO_NOVELTY_K}"
+            --field "semantic_novelty_seed=${VALIDITY_RZERO_NOVELTY_SEED}"
+            --field "semantic_prompt_protocol=semantic-pair-formal-recurring-exercise-v1"
+            --field "semantic_sampling_protocol=generative_v3_max1024_seed42"
+            --field "semantic_pair_orientation=candidate_then_reference_v1"
+            --field "semantic_worker_batch_size=${VALIDITY_RZERO_SEMANTIC_WORKER_BATCH_SIZE}"
+            --field "semantic_gpu_ids=${VALIDITY_RZERO_SEMANTIC_GPU_IDS}"
+            --field "semantic_gpu_memory_utilization=${VALIDITY_RZERO_SEMANTIC_GPU_MEMORY_UTILIZATION}"
+            --field "semantic_questioner_gpu_barrier=old_ref_values_complete_v1"
+            --field "semantic_retry_policy=deferred_one_retry_v1"
+            --field "semantic_prefix_cache=enabled"
+            --field "semantic_novelty_treatment=any_same_hard_gate_v1"
         )
     elif [ "$VALIDITY_RZERO_DIVERSITY_MODE" = "bleu_lambda5" ]; then
         FINGERPRINT_EXTRA+=(

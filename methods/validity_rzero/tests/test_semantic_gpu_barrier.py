@@ -49,12 +49,13 @@ def test_missing_ready_signal_times_out_without_falling_through():
 
 
 def test_semantic_disabled_validation_skips_final_validation():
-    with patch.dict(os.environ, {
-        "VALIDITY_RZERO_ENABLED": "1",
-        "VALIDITY_RZERO_DIVERSITY_MODE": "semantic_mc",
-    }, clear=True):
-        assert skip_final_validation(-1)
-        assert not skip_final_validation(1)
+    for mode in ("semantic_mc", "semantic_novelty_gate"):
+        with patch.dict(os.environ, {
+            "VALIDITY_RZERO_ENABLED": "1",
+            "VALIDITY_RZERO_DIVERSITY_MODE": mode,
+        }, clear=True):
+            assert skip_final_validation(-1)
+            assert not skip_final_validation(1)
 
 
 def test_baseline_and_bleu_final_validation_behavior_is_unchanged():
