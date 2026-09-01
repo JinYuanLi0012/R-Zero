@@ -11,7 +11,7 @@ import sys
 import time
 from typing import Iterable
 
-from .semantic_judge_offline.run_pair_judge import atomic_jsonl
+from .semantic_judge_offline.run_pair_judge import atomic_json, atomic_jsonl
 from .semantic_mc import UniquePairTask
 
 
@@ -107,6 +107,35 @@ def terminate_process_groups(processes: Iterable[subprocess.Popen]) -> None:
                 process.wait(timeout=10)
 
 
+def tail_text(path: Path, max_bytes: int = 32_768, max_lines: int = 80) -> str:
+    """Read a bounded UTF-8 tail for surfacing child-process diagnostics."""
+    if not path.is_file():
+        return "<missing>"
+    with path.open("rb") as handle:
+        size = handle.seek(0, os.SEEK_END)
+        handle.seek(max(0, size - max_bytes))
+        value = handle.read().decode("utf-8", errors="replace")
+    return "\n".join(value.splitlines()[-max_lines:]) or "<empty>"
+
+
+def worker_failure_message(workers: list[dict]) -> str:
+    failed = [worker for worker in workers if worker.get("return_code") != 0]
+    sections = []
+    for worker in failed:
+        sections.append(
+            "\n".join((
+                f"gpu={worker['gpu_id']} shard={worker['shard_index']} "
+                f"pid={worker['pid']} tasks={worker['task_count']} "
+                f"exit_code={worker['return_code']}",
+                f"stdout={worker['stdout_path']}",
+                tail_text(Path(worker["stdout_path"])),
+                f"stderr={worker['stderr_path']}",
+                tail_text(Path(worker["stderr_path"])),
+            ))
+        )
+    return "semantic GPU worker failures:\n" + "\n---\n".join(sections)
+
+
 def run_gpu_tasks(
     tasks: list[UniquePairTask],
     model: str,
@@ -129,6 +158,8 @@ def run_gpu_tasks(
     work_dir.mkdir(parents=True, exist_ok=True)
     shards = shard_tasks_by_candidate(tasks, len(gpu_ids))
     processes: list[subprocess.Popen] = []
+    log_handles = []
+    workers: list[dict] = []
     pid_file_value = os.getenv("VALIDITY_RZERO_SEMANTIC_PID_FILE")
     pid_file = Path(pid_file_value) if pid_file_value else None
     output_paths: list[Path] = []
@@ -139,6 +170,8 @@ def run_gpu_tasks(
             input_path = work_dir / f"semantic_tasks_{shard_index}.jsonl"
             output_path = work_dir / f"semantic_results_{shard_index}.jsonl"
             metric_path = work_dir / f"semantic_metrics_{shard_index}.json"
+            stdout_path = work_dir / f"semantic_worker_{shard_index}_gpu_{gpu_id}.stdout.log"
+            stderr_path = work_dir / f"semantic_worker_{shard_index}_gpu_{gpu_id}.stderr.log"
             atomic_jsonl(input_path, (
                 {
                     "cache_key": task.cache_key,
@@ -158,7 +191,36 @@ def run_gpu_tasks(
                 "--gpu-memory-utilization", str(gpu_memory_utilization),
                 "--batch-size", str(batch_size),
             ]
-            processes.append(subprocess.Popen(command, env=env, start_new_session=True))
+            stdout_handle = stdout_path.open("w", encoding="utf-8")
+            stderr_handle = stderr_path.open("w", encoding="utf-8")
+            log_handles.extend((stdout_handle, stderr_handle))
+            process = subprocess.Popen(
+                command,
+                env=env,
+                start_new_session=True,
+                stdout=stdout_handle,
+                stderr=stderr_handle,
+            )
+            processes.append(process)
+            workers.append({
+                "shard_index": shard_index,
+                "gpu_id": str(gpu_id),
+                "pid": process.pid,
+                "task_count": len(shard),
+                "input_path": str(input_path),
+                "output_path": str(output_path),
+                "metric_path": str(metric_path),
+                "stdout_path": str(stdout_path),
+                "stderr_path": str(stderr_path),
+                "return_code": None,
+            })
+            atomic_json(work_dir / "semantic_workers.json", {"workers": workers})
+            print(
+                "[validity_rzero][semantic_worker] "
+                f"gpu={gpu_id} shard={shard_index} pid={process.pid} tasks={len(shard)} "
+                f"stdout={stdout_path} stderr={stderr_path}",
+                flush=True,
+            )
             if pid_file is not None:
                 pid_file.parent.mkdir(parents=True, exist_ok=True)
                 pid_file.write_text(
@@ -167,13 +229,27 @@ def run_gpu_tasks(
             output_paths.append(output_path)
             metric_paths.append(metric_path)
         return_codes = [process.wait() for process in processes]
+        for worker, return_code, stdout_handle, stderr_handle in zip(
+            workers, return_codes, log_handles[::2], log_handles[1::2]
+        ):
+            worker["return_code"] = return_code
+            stdout_handle.flush()
+            stderr_handle.flush()
+        atomic_json(work_dir / "semantic_workers.json", {"workers": workers})
         if any(code != 0 for code in return_codes):
-            raise RuntimeError(f"semantic GPU worker failures: {return_codes}")
+            atomic_json(
+                work_dir / "semantic_failure.json",
+                {"return_codes": return_codes, "workers": workers},
+            )
+            raise RuntimeError(worker_failure_message(workers))
     except BaseException:
         terminate_process_groups(processes)
         if pid_file is not None:
             pid_file.write_text("", encoding="utf-8")
         raise
+    finally:
+        for handle in log_handles:
+            handle.close()
     if pid_file is not None:
         pid_file.write_text("", encoding="utf-8")
     wall_seconds = time.perf_counter() - wall_start

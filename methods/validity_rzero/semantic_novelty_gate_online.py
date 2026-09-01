@@ -58,6 +58,7 @@ def compute_online_novelty(
     temp_root = Path(os.environ["STORAGE_PATH"]) / "temp_results"
     temp_root.mkdir(parents=True, exist_ok=True)
     work_dir = Path(tempfile.mkdtemp(prefix="semantic_novelty_gate_online_", dir=temp_root))
+    completed = False
     try:
         barrier_wait_seconds = 0.0
         if gpu_ready_file:
@@ -114,6 +115,14 @@ def compute_online_novelty(
         )
         for index in candidate_indices:
             output[index] = aggregates[index]
+        completed = True
         return output
     finally:
-        shutil.rmtree(work_dir, ignore_errors=True)
+        if completed:
+            shutil.rmtree(work_dir, ignore_errors=True)
+        else:
+            print(
+                "[validity_rzero][semantic_novelty_gate][WARNING] "
+                f"preserving failed semantic work directory: {work_dir}",
+                flush=True,
+            )

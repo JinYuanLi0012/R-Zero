@@ -107,6 +107,8 @@ def test_semantic_workers_are_evenly_sharded_and_failure_clears_supervisor_pids(
         def __init__(self, *_args, **_kwargs):
             self.pid = FailedProcess.next_pid
             FailedProcess.next_pid += 1
+            _kwargs["stdout"].write(f"stdout from pid {self.pid}\n")
+            _kwargs["stderr"].write(f"traceback from pid {self.pid}\n")
 
         def wait(self, timeout=None):
             return 1
@@ -120,8 +122,12 @@ def test_semantic_workers_are_evenly_sharded_and_failure_clears_supervisor_pids(
         pid_file = root / "semantic.pids"
         with patch.dict(os.environ, {"VALIDITY_RZERO_SEMANTIC_PID_FILE": str(pid_file)}), \
              patch("methods.validity_rzero.semantic_mc_gpu.subprocess.Popen", FailedProcess):
-            with unittest.TestCase().assertRaisesRegex(RuntimeError, "worker failures"):
+            with unittest.TestCase().assertRaisesRegex(RuntimeError, "worker failures") as error:
                 run_gpu_tasks(tasks, "/model", ["2", "3"], root / "work")
+        message = str(error.exception)
+        assert "gpu=2 shard=0 pid=100 tasks=3 exit_code=1" in message
+        assert "gpu=3 shard=1 pid=101 tasks=2 exit_code=1" in message
+        assert "traceback from pid 100" in message
         shard_counts = []
         for index in range(2):
             rows = [
@@ -131,3 +137,15 @@ def test_semantic_workers_are_evenly_sharded_and_failure_clears_supervisor_pids(
             shard_counts.append(len(rows))
         assert shard_counts == [3, 2]
         assert pid_file.read_text() == ""
+        failure = json.loads((root / "work" / "semantic_failure.json").read_text())
+        assert failure["return_codes"] == [1, 1]
+        assert [worker["gpu_id"] for worker in failure["workers"]] == ["2", "3"]
+        assert (root / "work" / "semantic_worker_0_gpu_2.stdout.log").is_file()
+        assert (root / "work" / "semantic_worker_0_gpu_2.stderr.log").is_file()
+
+
+def test_semantic_worker_disables_per_request_tqdm_logging():
+    source = (Path(__file__).parents[1] / "semantic_mc_worker.py").read_text(
+        encoding="utf-8"
+    )
+    assert "model.generate(prompts, sampling_params=sampling, use_tqdm=False)" in source

@@ -153,7 +153,7 @@ def main() -> None:
         nonlocal prefix_cache_observed_request_count
         nonlocal prefix_cache_observed_prompt_tokens, prefix_cache_hit_tokens
         generation_start = time.perf_counter()
-        generated = model.generate(prompts, sampling_params=sampling, use_tqdm=True)
+        generated = model.generate(prompts, sampling_params=sampling, use_tqdm=False)
         generation_seconds += time.perf_counter() - generation_start
         generated_request_count += len(generated)
         observation = prefix_cache_observation(generated)

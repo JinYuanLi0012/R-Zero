@@ -83,6 +83,10 @@ def test_online_novelty_uses_candidate_specific_k_and_existing_judge_protocol():
              "run_gpu_tasks",
              side_effect=fake_gpu,
          ), \
+         patch.object(
+             semantic_novelty_gate_online.shutil,
+             "rmtree",
+         ) as cleanup, \
          patch("sys.stdout", new_callable=StringIO) as output:
         novelty = semantic_novelty_gate_online.compute_online_novelty(
             questions,
@@ -121,3 +125,56 @@ def test_online_novelty_uses_candidate_specific_k_and_existing_judge_protocol():
     assert "semantic_gpus=0,1,2,3" in log
     assert "parse_failure_after_retry=0.000000" in log
     assert "prefix_cache_token_hit_rate=0.500000" in log
+    cleanup.assert_called_once_with(captured["work_dir"], ignore_errors=True)
+
+
+def test_online_novelty_preserves_worker_artifacts_on_failure():
+    captured = {}
+
+    class Service:
+        gpu_ids = ("2", "3")
+
+    def failed_gpu(_tasks, _model, _gpu_ids, work_dir, **_kwargs):
+        captured["work_dir"] = work_dir
+        (work_dir / "semantic_failure.json").write_text("failure\n", encoding="utf-8")
+        raise RuntimeError("gpu 0 failed")
+
+    with tempfile.TemporaryDirectory() as directory, \
+         patch.dict(os.environ, {
+             "STORAGE_PATH": directory,
+             "VALIDITY_RZERO_NOVELTY_K": "1",
+             "VALIDITY_RZERO_NOVELTY_SEED": "43",
+             "VALIDITY_RZERO_SEMANTIC_GPU_IDS": "0,1,2,3",
+         }, clear=True), \
+         patch.object(
+             semantic_novelty_gate_online,
+             "resolve_frozen_model",
+             return_value=("/frozen/base", "rev"),
+         ), \
+         patch.object(
+             semantic_novelty_gate_online.SolverServiceConfig,
+             "from_environment",
+             return_value=Service(),
+         ), \
+         patch.object(
+             semantic_novelty_gate_online,
+             "semantic_gpu_handoff",
+             return_value=nullcontext(),
+         ), \
+         patch.object(
+             semantic_novelty_gate_online,
+             "run_gpu_tasks",
+             side_effect=failed_gpu,
+         ), \
+         patch("sys.stdout", new_callable=StringIO) as output:
+        try:
+            semantic_novelty_gate_online.compute_online_novelty(["q0", "q1"])
+        except RuntimeError as error:
+            assert str(error) == "gpu 0 failed"
+        else:
+            raise AssertionError("worker failure must propagate")
+
+        work_dir = captured["work_dir"]
+        assert work_dir.is_dir()
+        assert (work_dir / "semantic_failure.json").read_text() == "failure\n"
+        assert "preserving failed semantic work directory" in output.getvalue()
