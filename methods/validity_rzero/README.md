@@ -41,6 +41,19 @@ one frozen Questioner away from historical templates. It is independent of the
 semantic-MC reward treatment and does not modify the training path. See
 `incontext_pilot/README.md` for the fixed inputs, command, and artifact checks.
 
+### Frozen LOPE Questioner prompt pilot
+
+`frozen_lope_pilot/run_frozen_lope_pilot.py` provides the generation-only
+paired 8,000/8,000 P0/PLOPE test on the frozen Semantic-MC Round-2 Questioner.
+Every treatment request receives an independent exact 100--300 Qwen-token
+python-lorem-compatible prefix before a fixed boundary and the original prompt. Generation
+seeds and all decoding settings are paired. The output directly reports
+numeric-normalized repeated-template share, surface duplicate share, Top-5
+normalized-template mass, and parse success. It does not train or call a
+Solver. The exact 63-word pool and shuffle behavior are vendored, so no new
+runtime package is required. See `frozen_lope_pilot/README.md` for the Linux
+command and artifacts.
+
 ### Semantic Monte Carlo diversity treatment
 
 Set `VALIDITY_RZERO_DIVERSITY_MODE=semantic_mc` to replace only the validity
