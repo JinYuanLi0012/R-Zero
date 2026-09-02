@@ -33,12 +33,15 @@ After pulling the commit and sourcing `env_rzero.sh`:
 ```bash
 python methods/validity_rzero/frozen_lope_pilot/run_frozen_lope_pilot.py \
   --output-dir /engrfs/project/jiaxinh/jinyuan/R-zero-storage/rzero_runs/frozen_questioner_lope_semantic_mc_r2_v1 \
+  --gpu-ids 0,1,2,3 \
   --local-files-only
 ```
 
 The model path, 8,000 requests per condition, seeds, Lorem token range, and
-decoding settings have experiment defaults. Use `--gpu-id` only to select the
-single GPU used by this isolated offline generation.
+decoding settings have experiment defaults. Four GPU workers are also the
+default. Request IDs are assigned round-robin, and each paired fixed/LOPE
+request stays on the same GPU. A comma-separated subset such as `--gpu-ids 0,1`
+can be used for a smaller run without changing the pairing contract.
 
 The method vendors python-lorem 1.3.0.post3's exact 63-word pool and `get_word`
 shuffle behavior, so the existing R-Zero environment needs no new package.

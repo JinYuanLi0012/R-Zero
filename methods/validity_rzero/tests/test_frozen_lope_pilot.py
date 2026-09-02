@@ -15,6 +15,8 @@ from methods.validity_rzero.frozen_lope_pilot.run_frozen_lope_pilot import (
     generate_lorem_perturbation,
     numeric_template_key,
     parse_completion,
+    parse_gpu_ids,
+    partition_paired_requests,
     surface_key,
 )
 from methods.validity_rzero.frozen_lope_pilot.lorem_compat import WORD_POOL
@@ -83,6 +85,22 @@ def test_requests_are_one_to_one_seed_paired_and_only_lope_has_perturbation():
         assert lope["perturbation_seed"] == 50000 + lope["request_id"]
         assert lope["prompt"].index(lope["perturbation_text"]) < lope["prompt"].index(BOUNDARY)
         assert lope["prompt"].index(BOUNDARY) < lope["prompt"].index(SYSTEM_PROMPT)
+
+
+def test_four_gpu_partition_keeps_each_pair_together_and_balanced():
+    requests = [
+        {"request_id": request_id, "condition": condition}
+        for request_id in range(1, 9)
+        for condition in ("fixed", "lope")
+    ]
+    shards = partition_paired_requests(requests, worker_count=4)
+    assert [len(shard) for shard in shards] == [4, 4, 4, 4]
+    for shard in shards:
+        by_id = {}
+        for request in shard:
+            by_id.setdefault(request["request_id"], set()).add(request["condition"])
+        assert all(conditions == {"fixed", "lope"} for conditions in by_id.values())
+    assert parse_gpu_ids("0,1,2,3") == ["0", "1", "2", "3"]
 
 
 def test_parser_requires_question_and_boxed_answer():

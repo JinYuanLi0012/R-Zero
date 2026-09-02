@@ -50,9 +50,10 @@ python-lorem-compatible prefix before a fixed boundary and the original prompt. 
 seeds and all decoding settings are paired. The output directly reports
 numeric-normalized repeated-template share, surface duplicate share, Top-5
 normalized-template mass, and parse success. It does not train or call a
-Solver. The exact 63-word pool and shuffle behavior are vendored, so no new
-runtime package is required. See `frozen_lope_pilot/README.md` for the Linux
-command and artifacts.
+Solver. Four independent single-GPU vLLM workers are used by default; paired
+fixed/LOPE requests always remain on the same worker. The exact 63-word pool
+and shuffle behavior are vendored, so no new runtime package is required. See
+`frozen_lope_pilot/README.md` for the Linux command and artifacts.
 
 ### Semantic Monte Carlo diversity treatment
 

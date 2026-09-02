@@ -6,13 +6,16 @@ from __future__ import annotations
 import argparse
 from collections import Counter
 import hashlib
+from importlib.metadata import version as package_version
 import json
+import multiprocessing
 import os
 from pathlib import Path
 import random
 import re
 import subprocess
 import sys
+import tempfile
 import time
 from typing import Any, Callable, Iterable
 
@@ -63,7 +66,7 @@ def arguments() -> argparse.Namespace:
     parser.add_argument("--max-new-tokens", type=int, default=4096)
     parser.add_argument("--temperature", type=float, default=1.0)
     parser.add_argument("--top-p", type=float, default=0.95)
-    parser.add_argument("--gpu-id", default="0")
+    parser.add_argument("--gpu-ids", default="0,1,2,3")
     parser.add_argument("--gpu-memory-utilization", type=float, default=0.85)
     parser.add_argument("--local-files-only", action="store_true")
     parser.add_argument("--overwrite", action="store_true")
@@ -106,6 +109,11 @@ def atomic_jsonl(path: Path, rows: Iterable[dict[str, Any]]) -> None:
         for row in rows:
             handle.write(json.dumps(row, ensure_ascii=False, sort_keys=True) + "\n")
     os.replace(temporary, path)
+
+
+def read_jsonl(path: Path) -> list[dict[str, Any]]:
+    with path.open(encoding="utf-8") as handle:
+        return [json.loads(line) for line in handle if line.strip()]
 
 
 def render_prompt(tokenizer: Any, system_prompt: str) -> str:
@@ -219,6 +227,27 @@ def build_requests(
     return requests
 
 
+def parse_gpu_ids(value: str) -> list[str]:
+    gpu_ids = [item.strip() for item in value.split(",") if item.strip()]
+    if not gpu_ids:
+        raise ValueError("gpu_ids must contain at least one GPU")
+    if len(gpu_ids) != len(set(gpu_ids)):
+        raise ValueError("gpu_ids must not contain duplicates")
+    return gpu_ids
+
+
+def partition_paired_requests(
+    requests: list[dict[str, Any]], worker_count: int
+) -> list[list[dict[str, Any]]]:
+    if worker_count < 1:
+        raise ValueError("worker_count must be positive")
+    shards: list[list[dict[str, Any]]] = [[] for _ in range(worker_count)]
+    for request in requests:
+        shard_index = (int(request["request_id"]) - 1) % worker_count
+        shards[shard_index].append(request)
+    return shards
+
+
 def extract_last_boxed(text: str) -> str | None:
     results = []
     prefix = r"\boxed{"
@@ -246,6 +275,81 @@ def parse_completion(text: str) -> tuple[str, str, bool]:
     answer = extract_last_boxed(text)
     question = questions[-1].strip() if questions else ""
     return question, answer or "", bool(question and answer is not None)
+
+
+def generation_row(request: dict[str, Any], output: Any) -> dict[str, Any]:
+    if output.prompt != request["prompt"]:
+        raise RuntimeError(
+            f"vLLM output order mismatch for request {request['request_id']} "
+            f"condition {request['condition']}"
+        )
+    if len(output.outputs) != 1:
+        raise RuntimeError(
+            f"request {request['request_id']} condition {request['condition']} returned "
+            f"{len(output.outputs)} completions"
+        )
+    completion = output.outputs[0]
+    question, answer, parse_ok = parse_completion(completion.text)
+    return {
+        "request_id": request["request_id"],
+        "condition": request["condition"],
+        "generation_seed": request["generation_seed"],
+        "perturbation_seed": request["perturbation_seed"],
+        "perturbation_token_count": request["perturbation_token_count"],
+        "perturbation_text": request["perturbation_text"],
+        "prompt_sha256": request["prompt_sha256"],
+        "prompt_token_count": request["prompt_token_count"],
+        "raw_completion": completion.text,
+        "parsed_question": question,
+        "parsed_answer": answer,
+        "parsed_question_success": parse_ok,
+        "surface_key": surface_key(question) if parse_ok else "",
+        "numeric_template_key": numeric_template_key(question) if parse_ok else "",
+        "completion_token_count": len(completion.token_ids),
+        "finish_reason": completion.finish_reason,
+    }
+
+
+def run_gpu_shard(
+    gpu_id: str,
+    requests: list[dict[str, Any]],
+    output_path: Path,
+    config: dict[str, Any],
+) -> None:
+    os.environ["CUDA_VISIBLE_DEVICES"] = gpu_id
+    if config["local_files_only"]:
+        os.environ["HF_HUB_OFFLINE"] = "1"
+        os.environ["TRANSFORMERS_OFFLINE"] = "1"
+
+    from vllm import LLM, SamplingParams
+
+    sampling = [
+        SamplingParams(
+            n=1,
+            max_tokens=config["max_new_tokens"],
+            temperature=config["temperature"],
+            top_p=config["top_p"],
+            seed=request["generation_seed"],
+            stop_token_ids=[config["eos_token_id"]],
+        )
+        for request in requests
+    ]
+    model = LLM(
+        model=config["model"],
+        tokenizer=config["model"],
+        seed=config["generation_seed_base"],
+        gpu_memory_utilization=config["gpu_memory_utilization"],
+        enable_prefix_caching=True,
+    )
+    outputs = model.generate(
+        [request["prompt"] for request in requests], sampling_params=sampling, use_tqdm=True
+    )
+    if len(outputs) != len(requests):
+        raise RuntimeError(f"GPU {gpu_id}: expected {len(requests)} outputs, found {len(outputs)}")
+    atomic_jsonl(
+        output_path,
+        (generation_row(request, output) for request, output in zip(requests, outputs)),
+    )
 
 
 def surface_key(question: str) -> str:
@@ -303,6 +407,7 @@ def write_report(path: Path, manifest: dict[str, Any], metrics: dict[str, Any]) 
         f"- Model: `{manifest['model']}`",
         f"- Requests per condition: {manifest['request_count']:,}",
         f"- Total completions: {manifest['total_completions']:,}",
+        f"- GPU workers: {', '.join(manifest['gpu_ids'])}",
         f"- Paired generation seeds: {manifest['paired_generation_seeds']}",
         f"- Lorem length: uniform integer target in [{manifest['lorem_min_tokens']}, "
         f"{manifest['lorem_max_tokens']}] Qwen tokens",
@@ -353,6 +458,9 @@ def validate_args(args: argparse.Namespace) -> None:
         raise ValueError("temperature must be positive and top_p must be in (0, 1]")
     if not 0 < args.gpu_memory_utilization < 1:
         raise ValueError("gpu_memory_utilization must be in (0, 1)")
+    gpu_ids = parse_gpu_ids(args.gpu_ids)
+    if len(gpu_ids) > args.request_count:
+        raise ValueError("number of GPUs cannot exceed request_count")
 
 
 def main() -> None:
@@ -370,13 +478,11 @@ def main() -> None:
     if args.local_files_only:
         os.environ["HF_HUB_OFFLINE"] = "1"
         os.environ["TRANSFORMERS_OFFLINE"] = "1"
-    os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu_id)
 
-    from transformers import AutoTokenizer
     import transformers
-    import vllm
-    from vllm import LLM, SamplingParams
+    from transformers import AutoTokenizer
 
+    gpu_ids = parse_gpu_ids(args.gpu_ids)
     tokenizer = AutoTokenizer.from_pretrained(
         str(args.model), local_files_only=args.local_files_only
     )
@@ -390,64 +496,42 @@ def main() -> None:
         max_prompt_tokens=args.max_prompt_tokens,
         word_generator=get_word,
     )
-    sampling = [
-        SamplingParams(
-            n=1,
-            max_tokens=args.max_new_tokens,
-            temperature=args.temperature,
-            top_p=args.top_p,
-            seed=request["generation_seed"],
-            stop_token_ids=[tokenizer.eos_token_id],
-        )
-        for request in requests
-    ]
-    model = LLM(
-        model=str(args.model),
-        tokenizer=str(args.model),
-        seed=args.generation_seed_base,
-        gpu_memory_utilization=args.gpu_memory_utilization,
-        enable_prefix_caching=True,
-    )
+    request_shards = partition_paired_requests(requests, len(gpu_ids))
+    worker_config = {
+        "model": str(args.model),
+        "generation_seed_base": args.generation_seed_base,
+        "max_new_tokens": args.max_new_tokens,
+        "temperature": args.temperature,
+        "top_p": args.top_p,
+        "eos_token_id": tokenizer.eos_token_id,
+        "gpu_memory_utilization": args.gpu_memory_utilization,
+        "local_files_only": args.local_files_only,
+    }
     started = time.monotonic()
-    outputs = model.generate(
-        [request["prompt"] for request in requests], sampling_params=sampling, use_tqdm=True
-    )
+    with tempfile.TemporaryDirectory(prefix=".frozen_lope_gpu_", dir=args.output_dir) as temp_dir:
+        shard_paths = [Path(temp_dir) / f"gpu_{index}.jsonl" for index in range(len(gpu_ids))]
+        context = multiprocessing.get_context("spawn")
+        workers = [
+            context.Process(
+                target=run_gpu_shard,
+                args=(gpu_id, request_shard, shard_path, worker_config),
+                name=f"frozen-lope-gpu-{gpu_id}",
+            )
+            for gpu_id, request_shard, shard_path in zip(gpu_ids, request_shards, shard_paths)
+        ]
+        for worker in workers:
+            worker.start()
+        for worker in workers:
+            worker.join()
+        failures = [worker.name for worker in workers if worker.exitcode != 0]
+        if failures:
+            raise RuntimeError(f"GPU generation workers failed: {failures}")
+        generations = [row for shard_path in shard_paths for row in read_jsonl(shard_path)]
     generation_wall_seconds = time.monotonic() - started
-    if len(outputs) != len(requests):
-        raise RuntimeError(f"expected {len(requests)} outputs, found {len(outputs)}")
-
-    generations = []
-    for request, output in zip(requests, outputs):
-        if output.prompt != request["prompt"]:
-            raise RuntimeError(
-                f"vLLM output order mismatch for request {request['request_id']} "
-                f"condition {request['condition']}"
-            )
-        if len(output.outputs) != 1:
-            raise RuntimeError(
-                f"request {request['request_id']} condition {request['condition']} returned "
-                f"{len(output.outputs)} completions"
-            )
-        completion = output.outputs[0]
-        question, answer, parse_ok = parse_completion(completion.text)
-        generations.append({
-            "request_id": request["request_id"],
-            "condition": request["condition"],
-            "generation_seed": request["generation_seed"],
-            "perturbation_seed": request["perturbation_seed"],
-            "perturbation_token_count": request["perturbation_token_count"],
-            "perturbation_text": request["perturbation_text"],
-            "prompt_sha256": request["prompt_sha256"],
-            "prompt_token_count": request["prompt_token_count"],
-            "raw_completion": completion.text,
-            "parsed_question": question,
-            "parsed_answer": answer,
-            "parsed_question_success": parse_ok,
-            "surface_key": surface_key(question) if parse_ok else "",
-            "numeric_template_key": numeric_template_key(question) if parse_ok else "",
-            "completion_token_count": len(completion.token_ids),
-            "finish_reason": completion.finish_reason,
-        })
+    condition_order = {"fixed": 0, "lope": 1}
+    generations.sort(key=lambda row: (row["request_id"], condition_order[row["condition"]]))
+    if len(generations) != len(requests):
+        raise RuntimeError(f"expected {len(requests)} merged outputs, found {len(generations)}")
 
     by_condition = {
         condition: [row for row in generations if row["condition"] == condition]
@@ -485,11 +569,13 @@ def main() -> None:
         "temperature": args.temperature,
         "top_p": args.top_p,
         "stop_token_ids": [tokenizer.eos_token_id],
-        "gpu_id": str(args.gpu_id),
+        "gpu_ids": gpu_ids,
+        "gpu_worker_count": len(gpu_ids),
+        "request_ids_per_gpu": [len(shard) // 2 for shard in request_shards],
         "gpu_memory_utilization": args.gpu_memory_utilization,
         "generation_wall_seconds": generation_wall_seconds,
         "transformers_version": transformers.__version__,
-        "vllm_version": vllm.__version__,
+        "vllm_version": package_version("vllm"),
         "prompt": {
             "version": PROMPT_VERSION,
             "system": SYSTEM_PROMPT,
