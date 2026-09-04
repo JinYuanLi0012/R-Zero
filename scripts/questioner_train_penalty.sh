@@ -44,6 +44,9 @@ if [ "${VALIDITY_RZERO_ENABLED:-0}" = "1" ] && { [ "$VALIDITY_RZERO_DIVERSITY_MO
     export VALIDITY_RZERO_SEMANTIC_WORKER_BATCH_SIZE=${VALIDITY_RZERO_SEMANTIC_WORKER_BATCH_SIZE:-8192}
     export VALIDITY_RZERO_SEMANTIC_PID_FILE=${VALIDITY_RZERO_SEMANTIC_PID_FILE:-${STORAGE_PATH}/temp_results/questioner_semantic_${RUN_ID}.pids}
     echo "semantic diversity enabled: mode=$VALIDITY_RZERO_DIVERSITY_MODE, formal recurring-exercise prompt, batch=$VALIDITY_RZERO_SEMANTIC_WORKER_BATCH_SIZE, deferred retry, prefix cache"
+    if [ "$VALIDITY_RZERO_DIVERSITY_MODE" = "semantic_novelty_gate" ]; then
+        echo "semantic novelty gate: K=${VALIDITY_RZERO_NOVELTY_K:-8}, reject_at_same_hits=${VALIDITY_RZERO_NOVELTY_MIN_SAME_HITS:-1}, seed=${VALIDITY_RZERO_NOVELTY_SEED:-43}"
+    fi
     echo "Solver GPUs: $VLLM_GPU_IDS; temporary frozen-judge GPUs: $VALIDITY_RZERO_SEMANTIC_GPU_IDS; memory utilization: $VALIDITY_RZERO_SEMANTIC_GPU_MEMORY_UTILIZATION"
 fi
 bash vllm_service_init/start.sh $solver_model_path $RUN_ID

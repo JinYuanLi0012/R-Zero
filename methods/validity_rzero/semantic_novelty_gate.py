@@ -62,7 +62,10 @@ def aggregate_novelty(
     candidate_indices: Iterable[int],
     instances: Iterable[PairInstance],
     judgments: Mapping[str, Mapping[str, Any]],
+    min_same_hits: int = 1,
 ) -> dict[int, dict[str, int]]:
+    if min_same_hits < 1:
+        raise ValueError("novelty minimum SAME_TYPE hits must be positive")
     aggregates = {
         index: {
             "same_count": 0,
@@ -81,7 +84,7 @@ def aggregate_novelty(
         item["compared_count"] += 1
         item["same_count"] += int(label == "SAME_TYPE")
     for item in aggregates.values():
-        item["novelty"] = int(item["same_count"] == 0)
+        item["novelty"] = int(item["same_count"] < min_same_hits)
     return aggregates
 
 

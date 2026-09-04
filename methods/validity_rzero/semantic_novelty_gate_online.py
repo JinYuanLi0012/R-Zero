@@ -32,9 +32,15 @@ def compute_online_novelty(
         print("[validity_rzero][semantic_novelty_gate][WARNING] no valid questions; novelty=1")
         return output
     novelty_k = int(os.getenv("VALIDITY_RZERO_NOVELTY_K", "8"))
+    min_same_hits = int(os.getenv("VALIDITY_RZERO_NOVELTY_MIN_SAME_HITS", "1"))
     novelty_seed = int(os.getenv("VALIDITY_RZERO_NOVELTY_SEED", "43"))
     if novelty_k < 0:
         raise ValueError("VALIDITY_RZERO_NOVELTY_K must be nonnegative")
+    if not 1 <= min_same_hits <= novelty_k:
+        raise ValueError(
+            "VALIDITY_RZERO_NOVELTY_MIN_SAME_HITS must be between 1 and "
+            "VALIDITY_RZERO_NOVELTY_K"
+        )
     resolved_model, _ = resolve_frozen_model()
     context = cache_context(
         resolved_model,
@@ -82,7 +88,12 @@ def compute_online_novelty(
                     os.getenv("VALIDITY_RZERO_SEMANTIC_WORKER_BATCH_SIZE", "8192")
                 ),
             )
-        aggregates = aggregate_novelty(candidate_indices, instances, judgments)
+        aggregates = aggregate_novelty(
+            candidate_indices,
+            instances,
+            judgments,
+            min_same_hits=min_same_hits,
+        )
         compared = sum(int(item["compared_count"]) for item in aggregates.values())
         failures = sum(int(item["parse_failure_count"]) for item in aggregates.values())
         total = compared + failures
@@ -92,7 +103,8 @@ def compute_online_novelty(
         sampled_counts = [len(references[index]) for index in candidate_indices]
         print(
             "[validity_rzero][semantic_novelty_gate] "
-            f"prompt_version={PROMPT_VERSION} novelty_k={novelty_k} novelty_seed={novelty_seed} "
+            f"prompt_version={PROMPT_VERSION} novelty_k={novelty_k} "
+            f"novelty_min_same_hits={min_same_hits} novelty_seed={novelty_seed} "
             f"references_per_candidate_min={min(sampled_counts)} "
             f"references_per_candidate_max={max(sampled_counts)} "
             f"semantic_gpus={','.join(semantic_gpu_ids)} "

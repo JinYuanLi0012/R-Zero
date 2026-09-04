@@ -58,6 +58,7 @@ if [ "$VALIDITY_RZERO_ENABLED" = "1" ]; then
     fi
     if [ "$VALIDITY_RZERO_DIVERSITY_MODE" = "semantic_novelty_gate" ]; then
         VALIDITY_RZERO_NOVELTY_K=${VALIDITY_RZERO_NOVELTY_K:-8}
+        VALIDITY_RZERO_NOVELTY_MIN_SAME_HITS=${VALIDITY_RZERO_NOVELTY_MIN_SAME_HITS:-1}
         VALIDITY_RZERO_NOVELTY_SEED=${VALIDITY_RZERO_NOVELTY_SEED:-43}
         if ! [[ "$VALIDITY_RZERO_NOVELTY_K" =~ ^[1-9][0-9]*$ ]]; then
             echo "VALIDITY_RZERO_NOVELTY_K must be a positive integer" >&2
@@ -67,7 +68,11 @@ if [ "$VALIDITY_RZERO_ENABLED" = "1" ]; then
             echo "VALIDITY_RZERO_NOVELTY_SEED must be a nonnegative integer" >&2
             exit 2
         fi
-        export VALIDITY_RZERO_NOVELTY_K VALIDITY_RZERO_NOVELTY_SEED
+        if ! [[ "$VALIDITY_RZERO_NOVELTY_MIN_SAME_HITS" =~ ^[1-9][0-9]*$ ]] || [ "$VALIDITY_RZERO_NOVELTY_MIN_SAME_HITS" -gt "$VALIDITY_RZERO_NOVELTY_K" ]; then
+            echo "VALIDITY_RZERO_NOVELTY_MIN_SAME_HITS must be a positive integer no greater than VALIDITY_RZERO_NOVELTY_K" >&2
+            exit 2
+        fi
+        export VALIDITY_RZERO_NOVELTY_K VALIDITY_RZERO_NOVELTY_MIN_SAME_HITS VALIDITY_RZERO_NOVELTY_SEED
     fi
     export VALIDITY_RZERO_DIVERSITY_MODE
 fi
@@ -180,6 +185,10 @@ if [ "$VALIDITY_RZERO_ENABLED" = "1" ]; then
             --field "semantic_prefix_cache=enabled"
         )
     elif [ "$VALIDITY_RZERO_DIVERSITY_MODE" = "semantic_novelty_gate" ]; then
+        NOVELTY_TREATMENT=any_same_hard_gate_v1
+        if [ "$VALIDITY_RZERO_NOVELTY_MIN_SAME_HITS" -ne 1 ]; then
+            NOVELTY_TREATMENT=minimum_same_hits_hard_gate_v1
+        fi
         FINGERPRINT_EXTRA+=(
             --field "semantic_model=${VALIDITY_RZERO_SEMANTIC_MODEL:-Qwen/Qwen3-4B-Base}"
             --field "semantic_novelty_k=${VALIDITY_RZERO_NOVELTY_K}"
@@ -193,8 +202,13 @@ if [ "$VALIDITY_RZERO_ENABLED" = "1" ]; then
             --field "semantic_questioner_gpu_barrier=old_ref_values_complete_v1"
             --field "semantic_retry_policy=deferred_one_retry_v1"
             --field "semantic_prefix_cache=enabled"
-            --field "semantic_novelty_treatment=any_same_hard_gate_v1"
+            --field "semantic_novelty_treatment=${NOVELTY_TREATMENT}"
         )
+        if [ "$VALIDITY_RZERO_NOVELTY_MIN_SAME_HITS" -ne 1 ]; then
+            FINGERPRINT_EXTRA+=(
+                --field "semantic_novelty_min_same_hits=${VALIDITY_RZERO_NOVELTY_MIN_SAME_HITS}"
+            )
+        fi
     elif [ "$VALIDITY_RZERO_DIVERSITY_MODE" = "bleu_lambda5" ]; then
         FINGERPRINT_EXTRA+=(
             --field "validity_diversity_lambda=${VALIDITY_RZERO_DIVERSITY_LAMBDA:-5.0}"

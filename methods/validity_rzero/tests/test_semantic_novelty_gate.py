@@ -62,6 +62,46 @@ def test_any_same_rejects_no_same_passes_and_parse_failure_fails_open():
     }
 
 
+def test_two_same_threshold_rejects_only_at_two_successful_same_hits():
+    instances = [
+        PairInstance(0, 1, "same_1"),
+        PairInstance(0, 2, "different"),
+        PairInstance(1, 0, "same_2"),
+        PairInstance(1, 2, "same_3"),
+        PairInstance(2, 0, "same_4"),
+        PairInstance(2, 1, "failure"),
+    ]
+    aggregates = aggregate_novelty(
+        [0, 1, 2],
+        instances,
+        {
+            "same_1": {"parsed_label": "SAME_TYPE"},
+            "same_2": {"parsed_label": "SAME_TYPE"},
+            "same_3": {"parsed_label": "SAME_TYPE"},
+            "same_4": {"parsed_label": "SAME_TYPE"},
+            "different": {"parsed_label": "DIFFERENT"},
+            "failure": {"parsed_label": None},
+        },
+        min_same_hits=2,
+    )
+    assert aggregates[0]["same_count"] == 1
+    assert aggregates[0]["novelty"] == 1
+    assert aggregates[1]["same_count"] == 2
+    assert aggregates[1]["novelty"] == 0
+    assert aggregates[2]["same_count"] == 1
+    assert aggregates[2]["parse_failure_count"] == 1
+    assert aggregates[2]["novelty"] == 1
+
+
+def test_same_hit_threshold_must_be_positive():
+    try:
+        aggregate_novelty([], [], {}, min_same_hits=0)
+    except ValueError as error:
+        assert "must be positive" in str(error)
+    else:
+        raise AssertionError("zero SAME_TYPE threshold must be rejected")
+
+
 def test_real_group_survivor_metrics_include_zero_one_and_multi_survivor_groups():
     rows = [
         {"question": "q0", "validity_decision": "VALID"},

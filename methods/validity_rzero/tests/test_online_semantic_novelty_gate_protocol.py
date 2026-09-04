@@ -52,6 +52,7 @@ def test_online_novelty_uses_candidate_specific_k_and_existing_judge_protocol():
          patch.dict(os.environ, {
              "STORAGE_PATH": directory,
              "VALIDITY_RZERO_NOVELTY_K": "8",
+             "VALIDITY_RZERO_NOVELTY_MIN_SAME_HITS": "2",
              "VALIDITY_RZERO_NOVELTY_SEED": "43",
              "VALIDITY_RZERO_SEMANTIC_PANEL_SIZE": "1",
              "VALIDITY_RZERO_SEMANTIC_WORKER_BATCH_SIZE": "8192",
@@ -121,6 +122,7 @@ def test_online_novelty_uses_candidate_specific_k_and_existing_judge_protocol():
     log = output.getvalue()
     assert f"prompt_version={PROMPT_VERSION}" in log
     assert "novelty_k=8" in log
+    assert "novelty_min_same_hits=2" in log
     assert "novelty_seed=43" in log
     assert "semantic_gpus=0,1,2,3" in log
     assert "parse_failure_after_retry=0.000000" in log
@@ -178,3 +180,21 @@ def test_online_novelty_preserves_worker_artifacts_on_failure():
         assert work_dir.is_dir()
         assert (work_dir / "semantic_failure.json").read_text() == "failure\n"
         assert "preserving failed semantic work directory" in output.getvalue()
+
+
+def test_online_novelty_rejects_same_hit_threshold_above_k_before_model_loading():
+    with patch.dict(os.environ, {
+        "VALIDITY_RZERO_NOVELTY_K": "16",
+        "VALIDITY_RZERO_NOVELTY_MIN_SAME_HITS": "17",
+        "VALIDITY_RZERO_NOVELTY_SEED": "43",
+    }, clear=True), patch.object(
+        semantic_novelty_gate_online,
+        "resolve_frozen_model",
+    ) as resolve_model:
+        try:
+            semantic_novelty_gate_online.compute_online_novelty(["q0", "q1"])
+        except ValueError as error:
+            assert "must be between 1" in str(error)
+        else:
+            raise AssertionError("threshold above K must be rejected")
+    resolve_model.assert_not_called()

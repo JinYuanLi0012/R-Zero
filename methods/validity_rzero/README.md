@@ -128,8 +128,10 @@ opt-in hard-gate treatment. It does not alter `semantic_mc`: instead of one
 shared 128-reference panel and a continuous density penalty, every Questioner
 candidate deterministically samples its own K nonself sample indices from the
 current generation batch. Text is not deduplicated, so identical text at a
-different sample index remains a valid comparison. The default is K=8 with
-seed 43.
+different sample index remains a valid comparison. The default is K=8, a
+one-hit rejection threshold, and seed 43. Set
+`VALIDITY_RZERO_NOVELTY_MIN_SAME_HITS=2` to require two successfully parsed
+`SAME_TYPE` votes before rejection.
 
 The frozen judge, formal recurring-exercise prompt, candidate-to-reference
 orientation, v3-max1024 generation contract, strict parser, deferred one-retry
@@ -138,7 +140,7 @@ are exactly the existing semantic protocol. Final parse failures fail open for
 their individual comparisons. The binary gate and Questioner reward are:
 
 ```text
-novelty = 0  if any successfully parsed comparison is SAME_TYPE
+novelty = 0  if same_count >= VALIDITY_RZERO_NOVELTY_MIN_SAME_HITS
 novelty = 1  otherwise
 
 INVALID: questioner_reward = 0.5 - invalid_votes / 9
@@ -161,6 +163,7 @@ Recommended experiment-specific settings are:
 ```bash
 export VALIDITY_RZERO_DIVERSITY_MODE=semantic_novelty_gate
 export VALIDITY_RZERO_NOVELTY_K=8
+export VALIDITY_RZERO_NOVELTY_MIN_SAME_HITS=1
 export VALIDITY_RZERO_NOVELTY_SEED=43
 
 export VALIDITY_RZERO_SEMANTIC_MODEL=Qwen/Qwen3-4B-Base
