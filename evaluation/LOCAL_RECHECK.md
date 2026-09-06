@@ -124,6 +124,7 @@ python evaluation/run_local_recheck.py \
 - 失败的数据集不会写入成功汇总；此前已经完成的数据集保留，原始逐题文件不会修改。
 - Yes/No 允许大小写、空白和末尾句号/感叹号，不再用“包含 yes”判定正确；非空 thinking 文本会报错。
 - 服务日志保留在 EVAL_LOG_DIR 下的 `local_judge_*.log`。端口被抢占、加载失败或启动超时不会接管其他服务。
+- Judge 每次启动会新建 `/tmp/rzero-judge-*`，在子进程中覆盖 TMPDIR/TMP/TEMP、TORCHINDUCTOR_CACHE_DIR、TRITON_CACHE_DIR 和 VLLM_CACHE_ROOT，避免在 `/engrfs` 共享缓存上执行编译文件替换时遇到 `Device or resource busy`。模型 HF 缓存仍在原路径，编译缓存目录保留，不自动删除。可用 `RECHECK_LOCAL_TMP_ROOT` 指向其他有足够空间的节点本地磁盘；不要指向共享文件系统。
 - 程序正常结束、请求失败、Ctrl-C 或 SIGTERM 时只清理自己创建的服务/客户端进程组；不删除日志和结果文件。
 - SIGKILL/节点故障无法执行 Python 清理，由 allocation/调度系统回收资源。
 
@@ -143,6 +144,7 @@ python evaluation/run_local_recheck.py \
 | RECHECK_LOCAL_TIMEOUT | 120 秒 | 单次请求超时 |
 | RECHECK_STARTUP_TIMEOUT | 900 秒 | 等待模型服务启动；首次下载慢时可增加 |
 | RECHECK_LOCAL_PYTHON | 当前 Python | 可选独立 judge 环境解释器 |
+| RECHECK_LOCAL_TMP_ROOT | /tmp | 独立运行目录的父路径，必须选择节点本地磁盘 |
 
 模型更换会改变评估器，不能假定与旧 GPT 分数完全等价。先用同一批人工核对样本检查误判，
 然后在各 solver 之间固定相同模型版本和参数。本地 CPU 测试验证了程序协议，未证明模型判分准确率。

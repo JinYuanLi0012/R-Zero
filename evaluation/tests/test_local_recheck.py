@@ -197,6 +197,34 @@ class LocalRecheckTest(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "exited during startup"):
             run_local_recheck.wait_ready(process, "http://127.0.0.1:12345/v1", "test", "alias", 10)
 
+    def test_runtime_cache_is_unique_and_overrides_shared_cache_only_in_child(self):
+        inherited = {
+            "TMPDIR": "/shared/tmp", "TRITON_CACHE_DIR": "/shared/triton",
+            "TORCHINDUCTOR_CACHE_DIR": "/shared/inductor", "VLLM_CACHE_ROOT": "/shared/vllm",
+            "HF_HOME": "/shared/huggingface", "HF_HUB_CACHE": "/shared/huggingface/hub",
+        }
+        with patch.dict(os.environ, inherited):
+            child = os.environ.copy()
+            first = run_local_recheck.configure_runtime_cache(child)
+            second = run_local_recheck.configure_runtime_cache(os.environ.copy())
+            self.assertNotEqual(first, second)
+            self.assertEqual(first.parent, Path("/tmp").resolve())
+            for variable in ("TMPDIR", "TMP", "TEMP", "TORCHINDUCTOR_CACHE_DIR", "TRITON_CACHE_DIR", "VLLM_CACHE_ROOT"):
+                path = Path(child[variable])
+                self.assertEqual(path.parent, first)
+                self.assertTrue(path.is_dir())
+            for variable, value in inherited.items():
+                self.assertEqual(os.environ[variable], value)
+            self.assertEqual(child["HF_HUB_CACHE"], inherited["HF_HUB_CACHE"])
+            self.assertEqual(child["HF_HOME"], inherited["HF_HOME"])
+            self.assertEqual(first.stat().st_mode & 0o777, 0o700)
+
+    def test_explicit_node_local_runtime_root(self):
+        root = Path(tempfile.mkdtemp(prefix="rzero-node-local-test-"))
+        env = {"RECHECK_LOCAL_TMP_ROOT": str(root)}
+        runtime = run_local_recheck.configure_runtime_cache(env)
+        self.assertEqual(runtime.parent, root.resolve())
+
     def test_real_http_lifecycle_success_and_failure(self):
         for failure in (False, True):
             with self.subTest(failure=failure):

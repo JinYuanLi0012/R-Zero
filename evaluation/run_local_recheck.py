@@ -11,6 +11,7 @@ import signal
 import socket
 import subprocess
 import sys
+import tempfile
 import time
 import uuid
 
@@ -23,6 +24,29 @@ except ModuleNotFoundError:
 
 ROOT = Path(__file__).resolve().parents[1]
 DATASETS = "math,gsm8k,amc,minerva,olympiad,aime2024,aime2025"
+
+
+def configure_runtime_cache(env):
+    """Keep compiler rename operations off shared storage and isolate each run.
+
+    Only the child environment is changed. HF model caches stay where the user
+    configured them, and runtime artifacts are retained for diagnosis.
+    """
+    parent = Path(env.get("RECHECK_LOCAL_TMP_ROOT", "/tmp")).resolve()
+    parent.mkdir(parents=True, exist_ok=True)
+    runtime = Path(tempfile.mkdtemp(prefix="rzero-judge-", dir=str(parent)))
+    for variable, directory in {
+        "TMPDIR": "tmp",
+        "TMP": "tmp",
+        "TEMP": "tmp",
+        "TORCHINDUCTOR_CACHE_DIR": "torchinductor",
+        "TRITON_CACHE_DIR": "triton",
+        "VLLM_CACHE_ROOT": "vllm",
+    }.items():
+        path = runtime / directory
+        path.mkdir(exist_ok=True)
+        env[variable] = str(path)
+    return runtime
 
 
 def stop_owned_process(process):
@@ -127,6 +151,8 @@ def main():
         return
 
     Path(env["FINAL_RESULTS_FILE"]).parent.mkdir(parents=True, exist_ok=True)
+    runtime = configure_runtime_cache(env)
+    print(f"Local judge runtime cache (retained): {runtime}", flush=True)
     with socket.socket() as sock:
         sock.bind(("127.0.0.1", 0))
         port = sock.getsockname()[1]

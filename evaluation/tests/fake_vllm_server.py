@@ -11,6 +11,10 @@ parser.add_argument("--port", type=int)
 parser.add_argument("--api-key")
 parser.add_argument("--served-model-name")
 args, _ = parser.parse_known_args()
+runtime_tmp = Path(os.environ["TMPDIR"])
+for name in ("TORCHINDUCTOR_CACHE_DIR", "TRITON_CACHE_DIR", "VLLM_CACHE_ROOT"):
+    assert Path(os.environ[name]).parent == runtime_tmp.parent
+    assert Path(os.environ[name]).is_dir()
 Path(os.environ["TEST_SERVER_PID"]).write_text(str(os.getpid()))
 
 
