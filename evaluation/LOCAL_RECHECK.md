@@ -160,3 +160,43 @@ bash -n evaluation/evaluate.bash
 
 参考：[Qwen3-32B 模型卡](https://huggingface.co/Qwen/Qwen3-32B)、
 [vLLM thinking 参数说明](https://docs.vllm.ai/en/v0.14.1/features/reasoning_outputs/)。
+
+
+## 三组各五轮的批量评估与汇总
+
+`run_math_batch.py` 固定评估以下三组的 solver v1–v5，checkpoint 均取 `global_step_15/actor/huggingface`：
+
+- `rzero_8k`：`qwen3_4b_rzero_8k_5round_solver_v*`
+- `novelty_k8`：`qwen3_4b_validity_rzero_semantic_novelty_gate_k8_4gpu_v1_solver_v*`
+- `validity_clean`：`qwen3_4b_validity_rzero_clean_formal_r10_initstep15_v1_solver_v*`
+
+在已激活环境、设置 STORAGE_PATH/HF 缓存、获得空闲四卡后：
+
+```bash
+python evaluation/run_math_batch.py --dry-run
+python evaluation/run_math_batch.py
+```
+
+默认输出到 `$STORAGE_PATH/evaluation_batches/three_groups_qwen3_32b_时间戳`，也可用
+`--batch-dir` 指定一个尚不存在的新目录。该批次固定使用 Qwen3-32B、TP=4、关闭 thinking、
+max_tokens=32、并发 8，覆盖旧 API judge 和 EVAL_TASKS 等相关设置。
+模型 revision 未固定；使用同一份已缓存模型进行组间比较，不要运行期间更新权重。
+模型依次执行完整七项数学评估。首次失败停止后续模型；不自动跳过或重跑旧批次。
+
+每个模型的原始生成结果仍写在 STORAGE_PATH/evaluation 下；本次汇总、日志写在批次目录中：
+
+- `summary.csv`：15 行宽表，可在 Excel 中打开。
+- `summary.md`：同一张表，适合终端查看。
+- `manifest.json`：本批次模型路径和运行状态。
+- `组名/v轮次/final_results.jsonl` 及 `logs/`：每个模型的明细和日志。
+
+每完成一模型自动刷新汇总。失败或未完成项目留空，不能按零分解释；`mean_7` 仅在该模型
+成功完成全部七项时计算，是七项百分比分数的简单平均，不是官方或按题量加权的综合指标。
+汇总验证 model、judge 配置和数据集，拒绝重复或混用其他 judge 的记录。
+查看或重新汇总已有批次，无需 GPU：
+
+```bash
+python evaluation/run_math_batch.py --summary-only /你的/批次目录
+```
+
+前台执行需要保持终端和 GPU allocation 有效。完成前一组四卡评估后再启动此批次。
