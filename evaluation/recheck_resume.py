@@ -6,8 +6,10 @@ import random
 import requests
 
 try:
+    from evaluation.local_judge import LocalJudge, local_backend, judge_metadata
     from evaluation.recheck_common import recheck_concurrency, recheck_rows
 except ModuleNotFoundError:  # Support `python evaluation/recheck_resume.py`.
+    from local_judge import LocalJudge, local_backend, judge_metadata
     from recheck_common import recheck_concurrency, recheck_rows
 
 DEFAULT_DATASETS = ["math", "gsm8k", "amc", "minerva", "olympiad", "aime2024", "aime2025"]
@@ -58,7 +60,7 @@ def judge_model_response(api_url, api_key, gold_answer, model_response):
     return response.json()["choices"][0]["message"]["content"]
 
 
-def load_completed(output_file: Path):
+def load_completed(output_file: Path, metadata=None):
     completed = set()
     if not output_file.exists():
         return completed
@@ -71,7 +73,7 @@ def load_completed(output_file: Path):
             continue
         model = item.get("model")
         dataset = item.get("dataset")
-        if model and dataset:
+        if model and dataset and (metadata is None or item.get("recheck") == metadata):
             completed.add((model, dataset))
     return completed
 
@@ -80,20 +82,21 @@ def model_eval_dir(storage_path: Path, model: str):
     return storage_path / "evaluation" / model.replace("/", "_")
 
 
-def recheck_dataset(storage_path, model, dataset, api_url, api_key, concurrency):
+def recheck_dataset(storage_path, model, dataset, api_url, api_key, concurrency, local_judge=None):
     result_file = model_eval_dir(storage_path, model) / f"results_{dataset}.json"
     if not result_file.exists():
         raise FileNotFoundError(result_file)
     results = json.loads(result_file.read_text())
     rows = results[:-1]
-    if api_url and api_key:
+    if local_judge or (api_url and api_key):
         recheck_rows(
             rows,
-            lambda answer, response: judge_model_response(
+            local_judge or (lambda answer, response: judge_model_response(
                 api_url, api_key, answer, response
-            ),
+            )),
             concurrency,
             f"{model} {dataset}",
+            strict=local_judge is not None,
         )
     else:
         print("No API key configured; using local raw scores.", flush=True)
@@ -119,9 +122,12 @@ def main():
 
     models = [line.strip() for line in Path(args.models_file).read_text().splitlines() if line.strip()]
     datasets = [x.strip() for x in args.datasets.split(",") if x.strip()]
-    completed = load_completed(output_file)
+    is_local = local_backend()
+    metadata = judge_metadata() if is_local else None
+    completed = load_completed(output_file, metadata)
+    local_judge = LocalJudge() if is_local else None
 
-    api_key = load_openai_key(Path(args.token_file))
+    api_key = None if is_local else load_openai_key(Path(args.token_file))
     api_url = None
     if api_key:
         api_base = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1").rstrip("/")
@@ -143,9 +149,11 @@ def main():
                 continue
             print(f"RUN: {model} {dataset}", flush=True)
             score = recheck_dataset(
-                storage_path, model, dataset, api_url, api_key, concurrency
+                storage_path, model, dataset, api_url, api_key, concurrency, local_judge
             )
             record = {"model": model, "dataset": dataset, "score": score}
+            if is_local:
+                record["recheck"] = metadata
             with output_file.open("a") as f:
                 json.dump(record, f)
                 f.write("\n")

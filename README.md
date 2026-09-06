@@ -76,7 +76,7 @@ mkdir -p \
 You'll need to add a few API keys to run the experiments:
 
 * In `tokens.json`, add your API keys for **Hugging Face** and **WandB** (for logging).
-* In `evaluation/results_recheck.py`, add your **OpenAI GPT** API key for evaluation.
+* For API math rechecks, set `OPENAI_API_KEY` or the `openai` field in `tokens.json`. For a local Qwen3-32B judge without an OpenAI key, see [local recheck on Compute1](evaluation/LOCAL_RECHECK.md).
 
 ### 3. Run the Experiments!
 
@@ -123,6 +123,8 @@ bash scripts/main.sh Qwen/Qwen3-4B-Base qwen3-4b-8k
 ```
 
 ### 4. Run Evaluation Only
+
+For **four A100 80GB GPUs**, set `RECHECK_BACKEND=local` to run a BF16 Qwen3-32B judge after solver generation. The judge starts and stops automatically; saved base results can also be rechecked without regenerating answers. See [setup, full evaluation, and resume commands](evaluation/LOCAL_RECHECK.md).
 
 If you already have a Hugging Face model path and only want to run evaluation, use:
 

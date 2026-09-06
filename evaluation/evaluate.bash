@@ -4,6 +4,10 @@ export VLLM_DISABLE_COMPILE_CACHE=1
 REPO_ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 export PYTHONPATH="${REPO_ROOT}:${PYTHONPATH:-}"
 model_name=$1
+case "${RECHECK_BACKEND:-api}" in
+  api|local) ;;
+  *) echo "RECHECK_BACKEND must be api or local" >&2; exit 2 ;;
+esac
 mkdir -p logs
 EVAL_RUN_ID=${EVAL_RUN_ID:-$(date +%Y%m%d_%H%M%S)}
 EVAL_LOG_DIR=${EVAL_LOG_DIR:-logs}
@@ -124,7 +128,14 @@ if [ "$failed" != "0" ]; then
   exit 1
 fi
 
-python evaluation/results_recheck.py --model_name $model_name
+if [ "${RECHECK_BACKEND:-api}" = "local" ]; then
+  # All solver workers have exited before the judge acquires these GPUs.
+  RECHECK_GPU_IDS="${RECHECK_GPU_IDS:-${EVAL_CUDA_VISIBLE_DEVICES}}" \
+  python evaluation/run_local_recheck.py --model_name "$model_name" \
+    --datasets "$(IFS=','; echo "${TASKS[*]}")" --output_file "$FINAL_RESULTS_FILE"
+else
+  python evaluation/results_recheck.py --model_name "$model_name"
+fi
 
 if [ "${EVAL_MATH_ONLY:-0}" = "1" ]; then
   echo "==> EVAL_MATH_ONLY=1, skipping supergpqa/bbeh/mmlupro."

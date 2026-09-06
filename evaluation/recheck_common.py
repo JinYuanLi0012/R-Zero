@@ -28,12 +28,14 @@ def recheck_rows(
     description: str,
     *,
     show_progress: bool = True,
+    strict: bool = False,
 ) -> None:
     """Recheck locally wrong rows and update scores only from the caller thread."""
     pending = [index for index, row in enumerate(rows) if float(row.get("score", 0)) < 0.5]
     if not pending:
         return
 
+    rescues = []
     with ThreadPoolExecutor(max_workers=concurrency) as executor:
         futures = {
             executor.submit(judge, rows[index]["answer"], rows[index]["response"]): index
@@ -49,7 +51,17 @@ def recheck_rows(
             try:
                 verdict = future.result()
             except Exception as exc:
+                if strict:
+                    for outstanding in futures:
+                        outstanding.cancel()
+                    raise RuntimeError(f"Local recheck failed on {description} row {index}: {exc}") from exc
                 print(f"judge error on {description} row {index}: {exc}", flush=True)
                 verdict = "No"
-            if "yes" in str(verdict).lower():
-                rows[index]["score"] = 1
+            if strict and verdict not in ("Yes", "No"):
+                raise ValueError("Strict recheck expects a parsed Yes or No verdict")
+            accepted = verdict == "Yes" if strict else "yes" in str(verdict).lower()
+            if accepted:
+                rescues.append(index)
+    # A failed strict batch never leaves partially upgraded scores behind.
+    for index in rescues:
+        rows[index]["score"] = 1

@@ -5,8 +5,10 @@ import argparse
 import os
 
 try:
+    from evaluation.local_judge import LocalJudge, local_backend
     from evaluation.recheck_common import recheck_concurrency, recheck_rows
 except ModuleNotFoundError:  # Support `python evaluation/results_recheck.py`.
+    from local_judge import LocalJudge, local_backend
     from recheck_common import recheck_concurrency, recheck_rows
 
 STORAGE_PATH = os.getenv("STORAGE_PATH")
@@ -17,8 +19,9 @@ RECHECK_MAX_COMPLETION_TOKENS = int(os.getenv("RECHECK_MAX_COMPLETION_TOKENS", "
 api_urls = []
 api_keys = []
 
-openai_key = os.getenv("OPENAI_API_KEY")
-if not openai_key:
+IS_LOCAL = local_backend()
+openai_key = None if IS_LOCAL else os.getenv("OPENAI_API_KEY")
+if not IS_LOCAL and not openai_key:
     try:
         with open('tokens.json', 'r') as f:
             openai_key = json.load(f).get('openai')
@@ -62,34 +65,29 @@ def process_example(answer, response):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--model_name", type=str, default="Qwen/Qwen2.5-7B-Instruct")
+    parser.add_argument("--datasets", default=os.getenv("EVAL_TASKS", "math,gsm8k,amc,minerva,olympiad,aime2024,aime2025"))
     args = parser.parse_args()
+    local_judge = LocalJudge() if IS_LOCAL else None
     concurrency = recheck_concurrency()
 
     new_results = []
-    print(f"Recheck judge model: {RECHECK_JUDGE_MODEL}")
+    print(f"Recheck judge: {local_judge.metadata if IS_LOCAL else RECHECK_JUDGE_MODEL}")
     print(f"Recheck concurrency: {concurrency}")
-    if RECHECK_REASONING_EFFORT:
+    if RECHECK_REASONING_EFFORT and not IS_LOCAL:
         print(f"Recheck reasoning effort: {RECHECK_REASONING_EFFORT}")
     for model_name in [args.model_name]:
-        for dataset in [
-            "math",
-            "gsm8k",
-            "amc",
-            "minerva",
-            "olympiad",
-            "aime2024",
-            "aime2025",
-        ]:
+        for dataset in args.datasets.split(","):
             with open(f'{STORAGE_PATH}/evaluation/{model_name.replace("/","_")}/results_{dataset}.json', 'r') as f:
                 results = json.load(f)
 
             rows = results[:-1]
-            if api_urls and api_keys:
+            if local_judge or (api_urls and api_keys):
                 recheck_rows(
                     rows,
-                    process_example,
+                    local_judge or process_example,
                     concurrency,
                     f"{model_name} {dataset}",
+                    strict=IS_LOCAL,
                 )
             else:
                 print("No API urls configured; skipping GPT recheck and using local scores.")
@@ -105,10 +103,10 @@ def main():
                     'model': model_name,
                     'dataset': dataset,
                     'score': score,
+                    **({'recheck': local_judge.metadata} if IS_LOCAL else {}),
                 }, f)
                 f.write('\n')
 
 
 if __name__ == "__main__":
     main()
-
