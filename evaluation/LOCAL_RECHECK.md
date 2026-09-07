@@ -37,6 +37,57 @@ vLLM 0.8.5、Transformers 4.51.0；实际 GPU/CUDA 兼容性需要在 Compute1 �
 
 ## 2. 完整评估：生成后自动启动本地 judge
 
+### 任意 N 个模型：传路径即可
+
+激活环境并设置 `STORAGE_PATH` 后，可以用通用入口代替手写循环：
+
+```bash
+python evaluation/evaluate_models.py /模型目录1 /模型目录2 /模型目录3
+```
+
+每个参数可以是包含 `config.json` 的 merged checkpoint 目录，也可以是模型运行目录；
+后一种自动补上 `global_step_15/actor/huggingface`。路径不固定组名和轮数，按参数顺序运行。
+非 step15 checkpoint 请直接传完整 merged 目录。启动前检查所有 config，重复模型路径会报错。
+
+你当前的 K16/min1 四轮可执行：
+
+```bash
+python evaluation/evaluate_models.py \
+  /storage1/jiaxinh/Active/jinyuan/R-zero-storage/models/qwen3_4b_validity_rzero_semantic_novelty_gate_k16_min1_4gpu_v1_solver_v{1,2,3,4}
+```
+
+可以先在命令中加入 `--dry-run`，只检查路径而不启动评估。
+默认使用 GPU `0,1,2,3`（已设置 CUDA_VISIBLE_DEVICES 时沿用它），可用 `--gpu-ids 0,1,2,3` 指定。
+每个模型先生成全部七项数学评测，再启动 Qwen3-32B 本地 judge，结束后释放 judge，再处理下一个。
+入口固定 local backend、Qwen3-32B、关闭 thinking、max_tokens=32、并发 8；
+支持沿用 `RECHECK_LOCAL_REVISION` 固定版本，避免旧 API 配置和 EVAL_TASKS 改变本批次范围。
+
+模型路径可以在 `/storage1`，而 `STORAGE_PATH` 仍指向 `/engrfs`：后者控制基础生成结果和默认批次输出位置，
+不会被用来拼接或替换你传入的 checkpoint 路径。也可显式使用 `--storage-path /结果存储根目录`。
+
+默认每次创建新的 `$STORAGE_PATH/evaluation_batches/math_qwen3_32b_时间戳`；
+`--batch-dir /全新目录` 可以指定位置，拒绝覆盖已有批次。
+终端会打印批次目录，每完成一个模型更新 `summary.csv` 和 `summary.md`，最后自动打印整张表：
+
+`id | name | status | math | gsm8k | amc | minerva | olympiad | aime2024 | aime2025 | mean_7`
+
+CSV 另含完整模型路径和结果文件路径。`mean_7` 是七项百分比分数的简单平均，不是官方综合指标；
+只有模型成功且七项记录完整时才计算。失败、缺失项留空，并标明状态。
+每个模型的详细结果和日志保存在批次的 `001/`、`002/` 等子目录，不会覆盖同名模型的汇总。
+原有基础逐题输出仍在 `STORAGE_PATH/evaluation` 下；重新完整评估同一个 checkpoint 会更新其基础输出。
+
+任一模型失败时停止后续模型，保留已有结果。此入口不自动恢复旧批次；
+需要恢复时可使用前文 `run_local_recheck.py --models_file` 仅复核已有基础结果，
+或向本入口只传尚需评估的模型路径开始新批次。保持前台会话及 GPU allocation 有效。
+
+重新打印或刷新任意批次的汇总（不需要 GPU）：
+
+```bash
+python evaluation/evaluate_models.py --summary-only /上面打印的批次目录
+```
+
+### 单个模型的原有命令
+
 将 MODEL 改为目标 solver 的 huggingface 目录，然后执行：
 
 ```bash

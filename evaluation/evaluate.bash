@@ -26,7 +26,7 @@ else
 fi
 
 MODEL_NAMES=(
-  $model_name
+  "$model_name"
 )
 
 if [ -n "${EVAL_TASKS:-}" ]; then
