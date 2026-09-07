@@ -76,6 +76,31 @@ CSV 另含完整模型路径和结果文件路径。`mean_7` 是七项百分比�
 每个模型的详细结果和日志保存在批次的 `001/`、`002/` 等子目录，不会覆盖同名模型的汇总。
 原有基础逐题输出仍在 `STORAGE_PATH/evaluation` 下；重新完整评估同一个 checkpoint 会更新其基础输出。
 
+每个模型成功完成七项评估后，还会自动在**实际 merged checkpoint 目录**内保存独立副本：
+
+```text
+global_step_15/actor/huggingface/evaluations/<批次名>_<模型序号>/
+  final_results.jsonl
+  summary.csv
+  summary.md
+  evaluation.json
+```
+
+这里仅保存该 checkpoint 的七项最终分数、单模型汇总和来源信息。
+`evaluation.json` 记录 judge 配置、批次目录、原结果/日志路径及基础逐题结果位置。
+不是符号链接，因此即使集中汇总目录不可访问，仍可在 checkpoint 旁查看这份分数。
+大体积逐题文件与日志继续留在 STORAGE_PATH，不重复复制。
+checkpoint 在 storage 就存 storage，在 engr 就存 engr；参数是模型根目录或完整 merged 路径时，
+副本都会归到同一个实际 merged checkpoint 目录，避免不同 step 混淆。
+失败/不完整结果不会发布为成功副本；遇到副本目录无写权限时会报错，中央结果保留。
+批次名和模型序号用于分隔不同评估；若同名目录属于其他批次则报错，不覆盖它。
+
+已运行完的旧批次可以补写 checkpoint 副本，无需重新评估：
+
+```bash
+python evaluation/evaluate_models.py --summary-only /已有批次目录 --copy-to-checkpoints
+```
+
 任一模型失败时停止后续模型，保留已有结果。此入口不自动恢复旧批次；
 需要恢复时可使用前文 `run_local_recheck.py --models_file` 仅复核已有基础结果，
 或向本入口只传尚需评估的模型路径开始新批次。保持前台会话及 GPU allocation 有效。

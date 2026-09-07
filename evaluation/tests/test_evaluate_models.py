@@ -43,6 +43,13 @@ class EvaluateModelsTest(unittest.TestCase):
         self.assertEqual(len(manifest['models']), 4)
         self.assertTrue(all(item['status'] == 'complete' for item in manifest['models']))
         self.assertEqual(len((self.output / 'summary.csv').read_text().splitlines()), 5)
+        for item in manifest['models']:
+            copy = Path(item['checkpoint_results_dir'])
+            self.assertEqual(copy.parent, Path(item['model']) / 'evaluations')
+            self.assertEqual((copy / 'final_results.jsonl').read_bytes(),
+                             (self.output / item['results_file']).read_bytes())
+            self.assertEqual(len((copy / 'summary.csv').read_text().splitlines()), 2)
+            self.assertEqual(json.loads((copy / 'evaluation.json').read_text())['status'], 'complete')
         with patch.object(sys, 'argv', ['runner', '--summary-only', str(self.output)]), \
              patch.object(batch.subprocess, 'call') as call:
             batch.main()
@@ -63,6 +70,7 @@ class EvaluateModelsTest(unittest.TestCase):
         self.assertEqual(rows[0][10], '')
         self.assertEqual(rows[1][2], 'pending')
         self.assertEqual(rows[1][3:11], [''] * 8)
+        self.assertFalse((Path(manifest['models'][0]['model']) / 'evaluations').exists())
 
     def test_duplicate_or_different_judge_not_accepted(self):
         item = batch.plan(self.paths)[0]
@@ -111,6 +119,32 @@ class EvaluateModelsTest(unittest.TestCase):
              patch.object(batch.subprocess, 'call', side_effect=emit):
             batch.main()
         self.assertTrue((self.output / 'summary.csv').is_file())
+
+    def test_backfill_old_batch_without_gpu_and_refuse_other_batch_collision(self):
+        item = batch.plan(self.paths[:1])[0]
+        item['status'] = 'complete'
+        source = self.output / item['results_file']
+        source.parent.mkdir(parents=True)
+        self.emit(['unused', item['model']], None, dict(
+            RECHECK_BACKEND='local', RECHECK_LOCAL_MODEL='Qwen/Qwen3-32B',
+            EVAL_TASKS=','.join(batch.DATASETS), FINAL_RESULTS_FILE=str(source)))
+        manifest = dict(judge=batch.JUDGE, models=[item])
+        (self.output / 'manifest.json').write_text(json.dumps(manifest))
+        with patch.object(sys, 'argv', ['runner', '--summary-only', str(self.output), '--copy-to-checkpoints']), \
+             patch.object(batch.subprocess, 'call') as call:
+            batch.main()
+            batch.main()  # Repeat safely for the same batch.
+            call.assert_not_called()
+        updated = json.loads((self.output / 'manifest.json').read_text())
+        destination = Path(updated['models'][0]['checkpoint_results_dir'])
+        metadata_file = destination / 'evaluation.json'
+        metadata = json.loads(metadata_file.read_text())
+        metadata['batch_dir'] = '/another/batch'
+        metadata_file.write_text(json.dumps(metadata))
+        original = (destination / 'final_results.jsonl').read_bytes()
+        with self.assertRaises(FileExistsError):
+            batch.save(self.output, updated)
+        self.assertEqual((destination / 'final_results.jsonl').read_bytes(), original)
 
 
 if __name__ == '__main__':

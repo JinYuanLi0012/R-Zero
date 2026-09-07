@@ -7,6 +7,7 @@ import json
 import math
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 
@@ -14,6 +15,7 @@ DATASETS = ['math', 'gsm8k', 'amc', 'minerva', 'olympiad', 'aime2024', 'aime2025
 JUDGE = {'backend': 'local', 'model': 'Qwen/Qwen3-32B', 'revision': None,
          'prompt_version': 'math-recheck-local-v1', 'enable_thinking': False,
          'temperature': 0.0, 'max_tokens': 32}
+COLUMNS = ['id', 'name', 'status'] + DATASETS + ['mean_7', 'model', 'results_file']
 
 
 def plan(paths):
@@ -37,7 +39,7 @@ def plan(paths):
 
 
 def summarize(batch, manifest):
-    columns = ['id', 'name', 'status'] + DATASETS + ['mean_7', 'model', 'results_file']
+    columns = COLUMNS
     table = []
     for item in manifest['models']:
         scores = {}
@@ -78,9 +80,51 @@ def summarize(batch, manifest):
     return table
 
 
+def copy_to_checkpoints(batch, manifest, table):
+    """Publish only validated complete scores next to each exact checkpoint."""
+    for item, row in zip(manifest['models'], table):
+        if row[2] != 'complete':
+            continue
+        destination = Path(item['model']) / 'evaluations' / f'{batch.name}_{item["id"]:03d}'
+        metadata_file = destination / 'evaluation.json'
+        identity = {'batch_dir': str(batch.resolve()), 'model': item['model']}
+        if destination.exists():
+            if not metadata_file.is_file():
+                raise FileExistsError(f'Refusing to overwrite an unrecognized result directory: {destination}')
+            previous = json.loads(metadata_file.read_text())
+            if any(previous.get(key) != value for key, value in identity.items()):
+                raise FileExistsError(f'Refusing to overwrite results from another batch: {destination}')
+        else:
+            destination.mkdir(parents=True, exist_ok=False)
+            metadata_file.write_text(json.dumps(dict(identity, status='copying'), indent=2) + '\n')
+        source = batch / item['results_file']
+        shutil.copyfile(source, destination / 'final_results.jsonl')
+        with (destination / 'summary.csv').open('w', newline='') as output:
+            writer = csv.writer(output)
+            writer.writerow(COLUMNS)
+            writer.writerow(row)
+        with (destination / 'summary.md').open('w') as output:
+            output.write('Scores are percentages. mean_7 is an unweighted mean, not an official aggregate.\n\n')
+            output.write('| ' + ' | '.join(COLUMNS[:11]) + ' |\n')
+            output.write('| ' + ' | '.join(['---'] * 11) + ' |\n')
+            output.write('| ' + ' | '.join(str(value) for value in row[:11]) + ' |\n')
+        metadata = dict(identity, status='complete', judge=manifest['judge'],
+                        source_results_file=str(source.resolve()),
+                        source_log_dir=str((source.parent / 'logs').resolve()))
+        if manifest.get('storage_path'):
+            metadata['source_raw_results_dir'] = str(Path(manifest['storage_path']) / 'evaluation' /
+                                                   item['model'].replace('/', '_'))
+        metadata_file.write_text(json.dumps(metadata, indent=2) + '\n')
+        item['checkpoint_results_dir'] = str(destination)
+
+
 def save(batch, manifest):
+    # Keep the central scores even if a checkpoint-side copy fails (e.g. permissions).
     (batch / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
-    return summarize(batch, manifest)
+    table = summarize(batch, manifest)
+    copy_to_checkpoints(batch, manifest, table)
+    (batch / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
+    return table
 
 
 def main():
@@ -91,16 +135,22 @@ def main():
     parser.add_argument('--dry-run', action='store_true', help='Check all checkpoint configs; no GPU or output writes')
     parser.add_argument('--batch-dir', type=Path, help='New output directory (must not already exist)')
     parser.add_argument('--summary-only', type=Path, metavar='BATCH_DIR', help='Refresh and print an existing batch summary')
+    parser.add_argument('--copy-to-checkpoints', action='store_true', help='With --summary-only, copy completed results beside checkpoints without GPU work')
     args = parser.parse_args()
     if args.summary_only:
         if args.paths or args.dry_run or args.batch_dir:
             parser.error('--summary-only cannot be combined with paths, --dry-run or --batch-dir')
         batch = args.summary_only.resolve()
         manifest = json.loads((batch / 'manifest.json').read_text())
-        summarize(batch, manifest)
+        if args.copy_to_checkpoints:
+            save(batch, manifest)
+        else:
+            summarize(batch, manifest)
         print((batch / 'summary.md').read_text())
         print(f'CSV: {batch / "summary.csv"}')
         return
+    if args.copy_to_checkpoints:
+        parser.error('--copy-to-checkpoints requires --summary-only')
     if not args.paths:
         parser.error('Provide one or more model paths')
     if not args.storage_path:
@@ -162,6 +212,7 @@ def main():
             if code or result_row[2] != 'complete':
                 raise SystemExit(f'Stopped at model {item["id"]}; inspect {output.parent / "logs"}')
             print(f'DONE [{item["id"]}/{len(models)}] {item["name"]}; mean_7={result_row[10]}', flush=True)
+            print(f'Checkpoint result copy: {item["checkpoint_results_dir"]}', flush=True)
     finally:
         save(batch, manifest)
         print((batch / 'summary.md').read_text(), flush=True)
