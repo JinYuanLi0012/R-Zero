@@ -107,6 +107,10 @@ def main():
                 }, f)
                 f.write('\n')
 
+    if new_results:
+        ave = sum(result['score'] for result in new_results) / len(new_results)
+        print(f"AVE ({len(new_results)} benchmarks, unweighted): {ave:.2f}%", flush=True)
+
 
 if __name__ == "__main__":
     main()

@@ -15,7 +15,7 @@ DATASETS = ['math', 'gsm8k', 'amc', 'minerva', 'olympiad', 'aime2024', 'aime2025
 JUDGE = {'backend': 'local', 'model': 'Qwen/Qwen3-32B', 'revision': None,
          'prompt_version': 'math-recheck-local-v1', 'enable_thinking': False,
          'temperature': 0.0, 'max_tokens': 32}
-COLUMNS = ['id', 'name', 'status'] + DATASETS + ['mean_7', 'model', 'results_file']
+COLUMNS = ['id', 'name', 'status'] + DATASETS + ['ave', 'model', 'results_file']
 
 
 def plan(paths):
@@ -72,7 +72,7 @@ def summarize(batch, manifest):
         writer.writerow(columns)
         writer.writerows(table)
     with (batch / 'summary.md').open('w') as output:
-        output.write('Scores are percentages. mean_7 is an unweighted mean, not an official aggregate.\n\n')
+        output.write('Scores are percentages. ave is an unweighted mean, not an official aggregate.\n\n')
         output.write('| ' + ' | '.join(columns[:11]) + ' |\n')
         output.write('| ' + ' | '.join(['---'] * 11) + ' |\n')
         for row in table:
@@ -104,7 +104,7 @@ def copy_to_checkpoints(batch, manifest, table):
             writer.writerow(COLUMNS)
             writer.writerow(row)
         with (destination / 'summary.md').open('w') as output:
-            output.write('Scores are percentages. mean_7 is an unweighted mean, not an official aggregate.\n\n')
+            output.write('Scores are percentages. ave is an unweighted mean, not an official aggregate.\n\n')
             output.write('| ' + ' | '.join(COLUMNS[:11]) + ' |\n')
             output.write('| ' + ' | '.join(['---'] * 11) + ' |\n')
             output.write('| ' + ' | '.join(str(value) for value in row[:11]) + ' |\n')
@@ -211,7 +211,7 @@ def main():
             result_row = next(row for row in table if row[0] == item['id'])
             if code or result_row[2] != 'complete':
                 raise SystemExit(f'Stopped at model {item["id"]}; inspect {output.parent / "logs"}')
-            print(f'DONE [{item["id"]}/{len(models)}] {item["name"]}; mean_7={result_row[10]}', flush=True)
+            print(f'DONE [{item["id"]}/{len(models)}] {item["name"]}; ave={result_row[10]}', flush=True)
             print(f'Checkpoint result copy: {item["checkpoint_results_dir"]}', flush=True)
     finally:
         save(batch, manifest)

@@ -69,9 +69,9 @@ python evaluation/evaluate_models.py \
 `--batch-dir /全新目录` 可以指定位置，拒绝覆盖已有批次。
 终端会打印批次目录，每完成一个模型更新 `summary.csv` 和 `summary.md`，最后自动打印整张表：
 
-`id | name | status | math | gsm8k | amc | minerva | olympiad | aime2024 | aime2025 | mean_7`
+`id | name | status | math | gsm8k | amc | minerva | olympiad | aime2024 | aime2025 | ave`
 
-CSV 另含完整模型路径和结果文件路径。`mean_7` 是七项百分比分数的简单平均，不是官方综合指标；
+CSV 另含完整模型路径和结果文件路径。`ave` 是七项百分比分数的简单平均，不是官方综合指标；
 只有模型成功且七项记录完整时才计算。失败、缺失项留空，并标明状态。
 每个模型的详细结果和日志保存在批次的 `001/`、`002/` 等子目录，不会覆盖同名模型的汇总。
 原有基础逐题输出仍在 `STORAGE_PATH/evaluation` 下；重新完整评估同一个 checkpoint 会更新其基础输出。
