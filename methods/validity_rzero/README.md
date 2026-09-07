@@ -143,8 +143,9 @@ their individual comparisons. The binary gate and Questioner reward are:
 novelty = 0  if same_count >= VALIDITY_RZERO_NOVELTY_MIN_SAME_HITS
 novelty = 1  otherwise
 
-INVALID: questioner_reward = 0.5 - invalid_votes / 9
+INVALID: questioner_reward = 0.5 - invalid_votes / 9  (default: legacy)
 VALID:   questioner_reward = novelty * R_frontier
+Questioner format failure: questioner_reward = -1
 ```
 
 Novelty is computed once from each generated question and never from Solver
@@ -155,8 +156,9 @@ advantage calculation, and actor update remain unchanged.
 The existing reward/W&B path records validity pass rate, novelty pass rate
 among valid candidates, valid-and-novel rate, mean SAME hits, semantic parse
 failure rate, and survivor counts based on the batch's real `uid` prompt/group
-identifier. In particular, `zero_survivor_grpo_group_rate` exposes reward
-starvation caused by an overly strict hard gate.
+identifier. `zero_survivor_grpo_group_rate` counts groups with no VALID + novel
+candidate; it is not a zero-advantage metric. A group can still have unequal
+rewards because of INVALID or format-failure penalties.
 
 Recommended experiment-specific settings are:
 
@@ -175,6 +177,100 @@ export VALIDITY_RZERO_SEMANTIC_WORKER_BATCH_SIZE=8192
 
 `VALIDITY_RZERO_SEMANTIC_PANEL_SIZE` is intentionally ignored in this mode.
 Changing it cannot change novelty K.
+
+### K8 INVALID-zero reward ablation
+
+The only algorithmic change in this opt-in experiment is the final Questioner
+reward for an INVALID decision. Select it with:
+
+```bash
+export VALIDITY_RZERO_NOVELTY_INVALID_REWARD=zero
+```
+
+This parameter is read only when validity is enabled and the diversity mode is
+`semantic_novelty_gate`. Its default is `legacy`; other diversity modes and pure
+R-Zero ignore it. Existing K8/1, K16/1 and K16/2 experiments remain reproducible.
+
+| Questioner outcome | `legacy` (default) | `zero` |
+|---|---:|---:|
+| INVALID, at least 5 of the same 9 votes | `0.5 - invalid_votes / 9` | `0` |
+| VALID + novel | `math_frontier_score` | unchanged |
+| VALID + redundant | `0` | unchanged |
+| Questioner format parsing failure | `-1` | unchanged |
+
+The Solver, prompts, nine-vote validity decision (4/9 remains VALID, 5/9 becomes
+INVALID), frozen judge, K references, successful SAME_TYPE hit threshold,
+sampling seeds, retry/fail-open protocol and GPU scheduling are unchanged.
+GRPO advantage computation, KL, learning rate, update budgets, Phase B filtering,
+Terra replay and Solver rewards are also unchanged. There is no advantage mask,
+Questioner reset, memory, or deduplication in this ablation.
+
+The experiment tests removing the ordering INVALID < VALID-but-redundant.
+Because format failures still score -1, zero-reward rejected questions can
+still have positive group-relative advantage. This is not an all-failures-zero
+multiplicative gate, and improved downstream performance is not assumed.
+
+For auditing, the original `questioner_base_reward`, `validity_penalty`, and
+votes are retained. Per-question logs include `novelty_invalid_reward` and the
+final reward; the existing reward/W&B path also reports the numeric flag
+`reward/novelty_invalid_reward_zero` (1 for this ablation, 0 for legacy).
+Startup prints `semantic novelty INVALID final reward: zero`.
+
+Only `zero` adds `semantic_novelty_invalid_reward=zero` to the run-state
+configuration/fingerprint. Legacy omits the new field, preserving old fingerprints
+and resume compatibility. A new/old reward mismatch refuses resume in both
+directions; use a new `MODEL_ABBR` for the ablation. To resume this new experiment
+later, retain `zero` and every original setting, then add `--resume`.
+
+After syncing the code, run this in a fresh Linux shell using the same environment
+and credentials as the original K8 experiment. First invocation has no `--resume`:
+
+```bash
+cd /storage1/jiaxinh/Active/jinyuan/R-zero
+source env_rzero.sh
+
+# Do not reuse a previous run's explicit artifact/checkpoint paths.
+unset RZERO_RUN_ROOT VALIDITY_RZERO_ARTIFACT_DIR
+unset QUESTIONER_OUTPUT_DIR QUESTIONER_LOAD_CHECKPOINT SOLVER_LOAD_CHECKPOINT
+unset VALIDITY_RZERO_DIVERSITY_LAMBDA VALIDITY_RZERO_SEMANTIC_PANEL_SIZE
+unset VALIDITY_RZERO_SEMANTIC_PANEL_SEED
+
+export BASE_MODEL=Qwen/Qwen3-4B-Base
+export MODEL_ABBR=qwen3_4b_validity_rzero_semantic_novelty_gate_k8_invalidzero_4gpu_v1
+export VALIDITY_RZERO_INITIAL_SOLVER=/engrfs/project/jiaxinh/jinyuan/R-zero-storage/models/qwen3_4b_validity_rl_terra_clean_v1/global_step_15/actor/huggingface
+export TERRA_REPLAY_DATASET=jinyuan222/rzero-validity-rl-terra-v1-clean-v1
+export TERRA_REPLAY_CONFIG=default
+export TERRA_REPLAY_RATIO=0.1
+export TERRA_REPLAY_SEED=1
+
+export VALIDITY_RZERO_DIVERSITY_MODE=semantic_novelty_gate
+export VALIDITY_RZERO_NOVELTY_K=8
+export VALIDITY_RZERO_NOVELTY_MIN_SAME_HITS=1
+export VALIDITY_RZERO_NOVELTY_SEED=43
+export VALIDITY_RZERO_NOVELTY_INVALID_REWARD=zero
+
+export VALIDITY_RZERO_SEMANTIC_MODEL=Qwen/Qwen3-4B-Base
+export VALIDITY_RZERO_SEMANTIC_LOCAL_FILES_ONLY=1
+export VALIDITY_RZERO_SEMANTIC_GPU_IDS=0,1,2,3
+export VALIDITY_RZERO_SEMANTIC_GPU_MEMORY_UTILIZATION=0.80
+export VALIDITY_RZERO_SEMANTIC_WORKER_BATCH_SIZE=8192
+export QUESTIONER_TRAIN_GPU_IDS=0,1
+export VLLM_GPU_IDS=2,3
+export QUESTION_GPU_IDS=0,1,2,3
+
+# Original K8 update and generation budgets.
+export RZERO_NUM_ROUNDS=5
+export QUESTIONER_MAX_STEPS=5 QUESTIONER_MERGE_STEP=5
+export QUESTIONER_ROLLOUT_BATCH_SIZE=512 QUESTIONER_ROLLOUT_N=4
+export QUESTIONER_GLOBAL_BATCH_SIZE=4 QUESTIONER_MAX_RESPONSE_LENGTH=4096
+export SOLVER_MAX_STEPS=15 SOLVER_MERGE_STEP=15
+export SOLVER_ROLLOUT_BATCH_SIZE=512 SOLVER_MAX_RESPONSE_LENGTH=4096
+export SOLVER_GENERATE_SAMPLES=2500
+export SOLVER_TOTAL_EPOCHS=100 SOLVER_VAL_FREQ=4
+export SOLVER_UPLOAD_MIN_SCORE=0.3 SOLVER_UPLOAD_MAX_SCORE=0.8
+
+bash methods/validity_rzero/run.sh
+```
 
 Run CPU tests in the normal R-Zero environment with:
 

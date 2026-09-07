@@ -46,6 +46,12 @@ if [ "${VALIDITY_RZERO_ENABLED:-0}" = "1" ] && { [ "$VALIDITY_RZERO_DIVERSITY_MO
     echo "semantic diversity enabled: mode=$VALIDITY_RZERO_DIVERSITY_MODE, formal recurring-exercise prompt, batch=$VALIDITY_RZERO_SEMANTIC_WORKER_BATCH_SIZE, deferred retry, prefix cache"
     if [ "$VALIDITY_RZERO_DIVERSITY_MODE" = "semantic_novelty_gate" ]; then
         echo "semantic novelty gate: K=${VALIDITY_RZERO_NOVELTY_K:-8}, reject_at_same_hits=${VALIDITY_RZERO_NOVELTY_MIN_SAME_HITS:-1}, seed=${VALIDITY_RZERO_NOVELTY_SEED:-43}"
+        export VALIDITY_RZERO_NOVELTY_INVALID_REWARD=${VALIDITY_RZERO_NOVELTY_INVALID_REWARD:-legacy}
+        case "$VALIDITY_RZERO_NOVELTY_INVALID_REWARD" in
+            legacy|zero) ;;
+            *) echo "VALIDITY_RZERO_NOVELTY_INVALID_REWARD must be legacy or zero" >&2; exit 2 ;;
+        esac
+        echo "semantic novelty INVALID final reward: $VALIDITY_RZERO_NOVELTY_INVALID_REWARD (format failure remains -1)"
     fi
     echo "Solver GPUs: $VLLM_GPU_IDS; temporary frozen-judge GPUs: $VALIDITY_RZERO_SEMANTIC_GPU_IDS; memory utilization: $VALIDITY_RZERO_SEMANTIC_GPU_MEMORY_UTILIZATION"
 fi

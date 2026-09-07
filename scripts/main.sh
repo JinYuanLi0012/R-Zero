@@ -60,6 +60,12 @@ if [ "$VALIDITY_RZERO_ENABLED" = "1" ]; then
         VALIDITY_RZERO_NOVELTY_K=${VALIDITY_RZERO_NOVELTY_K:-8}
         VALIDITY_RZERO_NOVELTY_MIN_SAME_HITS=${VALIDITY_RZERO_NOVELTY_MIN_SAME_HITS:-1}
         VALIDITY_RZERO_NOVELTY_SEED=${VALIDITY_RZERO_NOVELTY_SEED:-43}
+        VALIDITY_RZERO_NOVELTY_INVALID_REWARD=${VALIDITY_RZERO_NOVELTY_INVALID_REWARD:-legacy}
+        case "$VALIDITY_RZERO_NOVELTY_INVALID_REWARD" in
+            legacy|zero) ;;
+            *) echo "VALIDITY_RZERO_NOVELTY_INVALID_REWARD must be legacy or zero" >&2; exit 2 ;;
+        esac
+        export VALIDITY_RZERO_NOVELTY_INVALID_REWARD
         if ! [[ "$VALIDITY_RZERO_NOVELTY_K" =~ ^[1-9][0-9]*$ ]]; then
             echo "VALIDITY_RZERO_NOVELTY_K must be a positive integer" >&2
             exit 2
@@ -208,6 +214,11 @@ if [ "$VALIDITY_RZERO_ENABLED" = "1" ]; then
             FINGERPRINT_EXTRA+=(
                 --field "semantic_novelty_min_same_hits=${VALIDITY_RZERO_NOVELTY_MIN_SAME_HITS}"
             )
+        fi
+        # Omit the legacy default to preserve all existing K8/K16 fingerprints.
+        # The new field makes zero-reward and legacy checkpoints incompatible.
+        if [ "$VALIDITY_RZERO_NOVELTY_INVALID_REWARD" = "zero" ]; then
+            FINGERPRINT_EXTRA+=(--field "semantic_novelty_invalid_reward=zero")
         fi
     elif [ "$VALIDITY_RZERO_DIVERSITY_MODE" = "bleu_lambda5" ]; then
         FINGERPRINT_EXTRA+=(

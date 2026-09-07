@@ -15,18 +15,23 @@ from unittest.mock import patch
 CALLER_PENALTY = Path(__file__).parents[3] / "examples" / "reward_function" / "caller_penalty.py"
 
 
-def _load_compute_score(final_results, penalties):
+def _load_compute_score(final_results, penalties, parsed_inputs=None):
     tree = ast.parse(CALLER_PENALTY.read_text(encoding="utf-8"), filename=str(CALLER_PENALTY))
     function = next(
         node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "compute_score"
     )
     module = ast.Module(body=[function], type_ignores=[])
+    def generate_results(rows, **_kwargs):
+        if parsed_inputs is not None:
+            parsed_inputs.extend(rows)
+        return final_results
+
     namespace = {
         "Dict": Dict,
         "List": List,
         "cluster_share_per_problem": lambda *_args, **_kwargs: penalties,
         "extract_boxed_content": lambda _text: "answer",
-        "generate_results": lambda *_args, **_kwargs: final_results,
+        "generate_results": generate_results,
         "json": json,
         "os": os,
         "re": re,
@@ -45,8 +50,10 @@ def _run_compute_score(
     group_ids=None,
     semantic_calls=None,
     novelty_calls=None,
+    predictions=None,
+    parsed_inputs=None,
 ):
-    compute_score = _load_compute_score(final_results, penalties)
+    compute_score = _load_compute_score(final_results, penalties, parsed_inputs)
     semantic_module = ModuleType("methods.validity_rzero.semantic_mc_online")
     def semantic_penalties(_questions, **kwargs):
         if semantic_calls is not None:
@@ -80,7 +87,7 @@ def _run_compute_score(
                 if group_ids is not None:
                     kwargs["uid"] = group_ids
                 scores = compute_score(
-                    ["<question>question</question> \\boxed{answer}"] * len(final_results),
+                    predictions if predictions is not None else ["<question>question</question> \\boxed{answer}"] * len(final_results),
                     ["answer"] * len(final_results),
                     **kwargs,
                 )

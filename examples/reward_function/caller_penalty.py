@@ -161,6 +161,11 @@ def compute_score(
         )
     semantic_stats = None
     novelty_stats = None
+    novelty_invalid_reward = "legacy"
+    if validity_rzero_enabled and diversity_mode == "semantic_novelty_gate":
+        novelty_invalid_reward = os.getenv("VALIDITY_RZERO_NOVELTY_INVALID_REWARD", "legacy")
+        if novelty_invalid_reward not in {"legacy", "zero"}:
+            raise ValueError("VALIDITY_RZERO_NOVELTY_INVALID_REWARD must be legacy or zero")
     if validity_rzero_enabled and diversity_mode in {"semantic_mc", "semantic_novelty_gate"}:
         # Importing this module can resolve/load the frozen semantic judge, so the
         # pure R-Zero path must never import it.
@@ -201,7 +206,9 @@ def compute_score(
             stats = novelty_stats[i]
             novelty = int(stats["novelty"])
             if item["validity_decision"] == "INVALID":
-                final_score = float(item["questioner_base_reward"])
+                # Override only the final Questioner reward. Keep the original
+                # nine-vote decision and base reward available for auditing.
+                final_score = 0.0 if novelty_invalid_reward == "zero" else float(item["questioner_base_reward"])
             else:
                 final_score = novelty * float(item["math_frontier_score"])
             print("[validity_rzero][questioner_reward] " + json.dumps({
@@ -211,6 +218,8 @@ def compute_score(
                 "validity_penalty": item["validity_penalty"],
                 "math_frontier_score": item["math_frontier_score"],
                 "diversity_mode": diversity_mode,
+                "novelty_invalid_reward": novelty_invalid_reward,
+                "questioner_base_reward": item["questioner_base_reward"],
                 "novelty": novelty,
                 "same_count": stats["same_count"],
                 "compared_count": stats["compared_count"],
@@ -311,6 +320,7 @@ def compute_score(
     if validity_rzero_enabled and diversity_mode == "semantic_novelty_gate":
         from methods.validity_rzero.semantic_novelty_gate import novelty_training_diagnostics
         diagnostics = novelty_training_diagnostics(final_results, novelty_stats, uid)
+        diagnostics["novelty_invalid_reward_zero"] = float(novelty_invalid_reward == "zero")
         for score in scores:
             score.update(diagnostics)
         print("[validity_rzero][semantic_novelty_gate][step_metrics] " + json.dumps(diagnostics))

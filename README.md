@@ -6,6 +6,10 @@ available under [`methods/validity_rl_terra_dataset`](methods/validity_rl_terra_
 An offline V1–V3 epistemic-disagreement validation pipeline is available under
 [`methods/gaussian_population_rzero_epistemic_validation`](methods/gaussian_population_rzero_epistemic_validation/README.md).
 
+Validity-aware R-Zero includes an opt-in
+[`K8 INVALID=0 reward ablation`](methods/validity_rzero/README.md#k8-invalid-zero-reward-ablation)
+via `VALIDITY_RZERO_NOVELTY_INVALID_REWARD=zero`; existing modes retain their defaults.
+
 > Teach Large Language Models to reason and evolve on their own, starting with nothing but a base model. No data required.
 
 Check  out our [paper](https://arxiv.org/abs/2508.05004) or [webpage](https://chengsong-huang.github.io/R-Zero.github.io/)  for the details
