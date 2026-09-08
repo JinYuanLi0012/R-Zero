@@ -124,6 +124,7 @@ def compute_score(
     port_base: int = 5000,
     validity_rzero_semantic_gpu_ready_file=None,
     uid=None,
+    domain=None,
 ) -> List[Dict[str, float]]:
     results = []
     with open('test.json','w') as f:
@@ -324,4 +325,13 @@ def compute_score(
         for score in scores:
             score.update(diagnostics)
         print("[validity_rzero][semantic_novelty_gate][step_metrics] " + json.dumps(diagnostics))
+    if domain is not None:
+        if len(domain) != len(scores):
+            raise ValueError("domain metadata length mismatch")
+        for label, result, score in zip(domain, final_results, scores):
+            print("[validity_rzero][domain_curriculum] " + json.dumps({
+                "domain": label, "question": result.get("question", ""),
+                "validity_decision": result.get("validity_decision"),
+                "reward": score["overall"],
+            }, ensure_ascii=False))
     return scores

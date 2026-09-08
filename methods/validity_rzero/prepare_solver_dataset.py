@@ -48,6 +48,7 @@ def build_mixed_rows(
             "score": float(row["score"]),
             "source": "rzero",
             "sample_id": f"rzero-{index}",
+            **({"domain": row["domain"]} if "domain" in row else {}),
         }
         for index, row in enumerate(evaluated_rows)
         if passes_rzero_filter(row, min_score, max_score)

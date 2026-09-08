@@ -171,6 +171,8 @@ for index, (golden_answer, question) in enumerate(zip(answers, questions)):
                 "discarded_by_validity": True,
                 **gate,
             }
+            if "domain" in correct_data[index]:
+                item["domain"] = correct_data[index]["domain"]
             results_all.append(item)
             print(f"[{args.suffix}] [validity_rzero][phase_b] " + json.dumps({
                 key: item[key] for key in (
@@ -251,6 +253,8 @@ for index, (golden_answer, question) in enumerate(zip(answers, questions)):
                 "math_majority": majority_answer,
                 "original_rzero_score": score,
             }))
+        if "domain" in correct_data[index]:
+            item["domain"] = correct_data[index]["domain"]
         results_all.append(item)
 
     except Exception as e:

@@ -164,6 +164,23 @@ STATE_FILE=$STATE_DIR/run_state.json
 SUMMARY_FILE=$RUN_ROOT/summary.json
 
 FINGERPRINT_EXTRA=()
+# Opt-in only: absent/none contributes no fields to legacy resume fingerprints.
+if [ "$VALIDITY_RZERO_ENABLED" = "1" ]; then
+    export VALIDITY_RZERO_DOMAIN_MODE=${VALIDITY_RZERO_DOMAIN_MODE:-none}
+    case "$VALIDITY_RZERO_DOMAIN_MODE" in
+        none) ;;
+        balanced_v1)
+            export VALIDITY_RZERO_DOMAIN_SEED=${VALIDITY_RZERO_DOMAIN_SEED:-43}
+            python3 -c 'import sys; int(sys.argv[1])' "$VALIDITY_RZERO_DOMAIN_SEED"
+            FINGERPRINT_EXTRA+=(
+                --field "domain_curriculum=balanced_v1"
+                --field "domain_seed=$VALIDITY_RZERO_DOMAIN_SEED"
+            )
+            echo "Domain curriculum: balanced_v1, 8 parents / 28 leaves, seed=$VALIDITY_RZERO_DOMAIN_SEED"
+            ;;
+        *) echo "VALIDITY_RZERO_DOMAIN_MODE must be none or balanced_v1" >&2; exit 2 ;;
+    esac
+fi
 if [ "$VALIDITY_RZERO_ENABLED" = "1" ]; then
     FINGERPRINT_EXTRA+=(
         --field "validity_rzero_enabled=1"

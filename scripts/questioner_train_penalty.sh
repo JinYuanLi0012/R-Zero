@@ -55,6 +55,17 @@ if [ "${VALIDITY_RZERO_ENABLED:-0}" = "1" ] && { [ "$VALIDITY_RZERO_DIVERSITY_MO
     fi
     echo "Solver GPUs: $VLLM_GPU_IDS; temporary frozen-judge GPUs: $VALIDITY_RZERO_SEMANTIC_GPU_IDS; memory utilization: $VALIDITY_RZERO_SEMANTIC_GPU_MEMORY_UTILIZATION"
 fi
+DOMAIN_DATA_ARGS=()
+QUESTIONER_FORMAT_PROMPT=./examples/format_prompt/questioner.jinja
+if [ "${VALIDITY_RZERO_ENABLED:-0}" = "1" ] && [ "${VALIDITY_RZERO_DOMAIN_MODE:-none}" = "balanced_v1" ]; then
+    DOMAIN_DATASET="$QUESTIONER_OUTPUT_DIR/domain_prompts.parquet"
+    python3 -m methods.validity_rzero.domain_curriculum.prepare \
+        --output "$DOMAIN_DATASET" --batch-size "${QUESTIONER_ROLLOUT_BATCH_SIZE:-512}" \
+        --steps "${QUESTIONER_MAX_STEPS:-5}" --seed "${VALIDITY_RZERO_DOMAIN_SEED:-43}" --context "$save_path"
+    QUESTIONER_FORMAT_PROMPT=./methods/validity_rzero/domain_curriculum/questioner.jinja
+    DOMAIN_DATA_ARGS+=("data.train_files=$DOMAIN_DATASET" "data.val_files=$DOMAIN_DATASET"
+        data.shuffle=false data.filter_overlong_prompts=false)
+fi
 bash vllm_service_init/start.sh $solver_model_path $RUN_ID
 echo "vLLM services started with RUN_ID=$RUN_ID on GPUs $VLLM_GPU_IDS and ports starting at $VLLM_PORT_BASE"
 echo "Questioner training will use GPUs $QUESTIONER_TRAIN_GPU_IDS"
@@ -74,6 +85,10 @@ if [ "${VALIDITY_RZERO_ENABLED:-0}" = "1" ] && [ "$VALIDITY_RZERO_DIVERSITY_MODE
     REWARD_DATA_ARGS+=("worker.reward.reward_function_optional_data_keys=[validity_rzero_semantic_gpu_ready_file]")
 elif [ "${VALIDITY_RZERO_ENABLED:-0}" = "1" ] && [ "$VALIDITY_RZERO_DIVERSITY_MODE" = "semantic_novelty_gate" ]; then
     REWARD_DATA_ARGS+=("worker.reward.reward_function_optional_data_keys=[validity_rzero_semantic_gpu_ready_file,uid]")
+fi
+
+if [ "${VALIDITY_RZERO_ENABLED:-0}" = "1" ] && [ "${VALIDITY_RZERO_DOMAIN_MODE:-none}" = "balanced_v1" ]; then
+    REWARD_DATA_ARGS=('worker.reward.reward_function_optional_data_keys=[validity_rzero_semantic_gpu_ready_file,uid,domain]')
 fi
 
 cleanup_pid_file() {
@@ -144,7 +159,8 @@ CUDA_VISIBLE_DEVICES=${QUESTIONER_TRAIN_GPU_IDS} python3 -m verl.trainer.main \
     trainer.val_freq=-1 \
     trainer.val_before_train=${QUESTIONER_VAL_BEFORE_TRAIN:-false} \
     trainer.n_gpus_per_node=${QUESTIONER_TRAIN_GPU_COUNT} \
-    data.format_prompt=./examples/format_prompt/questioner.jinja \
+    data.format_prompt="$QUESTIONER_FORMAT_PROMPT" \
+    "${DOMAIN_DATA_ARGS[@]}" \
     worker.rollout.n=${QUESTIONER_ROLLOUT_N:-4} \
     worker.actor.global_batch_size=${QUESTIONER_GLOBAL_BATCH_SIZE:-4} \
     worker.actor.micro_batch_size_per_device_for_update=${QUESTIONER_MICRO_BATCH_UPDATE:-2} \

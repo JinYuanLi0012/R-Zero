@@ -149,6 +149,9 @@ class RLHFDataset(Dataset):
         if self.format_prompt_source_key:
             source = example.get(self.format_prompt_source_key, self.default_source)
             format_prompt = self.format_prompt_by_source.get(source, format_prompt)
+        if format_prompt and format_prompt.strip() == "rzero_domain_balanced_v1":
+            from methods.validity_rzero.domain_curriculum.core import messages
+            return messages(prompt_str)
         if "questioner_format_with_persona" in format_prompt:
             print("load personas")
             return [

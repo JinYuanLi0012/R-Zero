@@ -295,3 +295,10 @@ fallback layers. Prioritize correct core training logic, reuse the original
 R-Zero code, make only necessary changes, and preserve baseline interfaces and
 behavior. Edge cases without a realistic path to affect this experiment should
 be recorded for later rather than expanding this integration.
+
+### Balanced domain Questioner
+
+`VALIDITY_RZERO_DOMAIN_MODE=balanced_v1` adds the optional 8-domain / 28-leaf
+prompt curriculum to both Questioner GRPO and Phase B generation. Default `none`
+keeps existing runs unchanged. It does not change K8 rewards or Terra replay.
+See [the protocol and pinned K8 launch script](domain_curriculum/README.md).

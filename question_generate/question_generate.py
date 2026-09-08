@@ -104,7 +104,21 @@ def main(args):
         stop_token_ids=[tokenizer.eos_token_id],
     )
 
-    completions: List[RequestOutput] = model.generate([prompt]*args.num_samples, sampling_params=sample_params)
+    domains = None
+    prompts = [prompt] * args.num_samples
+    if os.getenv("VALIDITY_RZERO_ENABLED", "0") == "1" and os.getenv("VALIDITY_RZERO_DOMAIN_MODE", "none") == "balanced_v1":
+        from methods.validity_rzero.domain_curriculum.core import messages, phase_b_domains
+        domains = phase_b_domains(args.num_samples, int(os.environ["QUESTION_NUM_SHARDS"]),
+                                  int(args.suffix), int(os.getenv("VALIDITY_RZERO_DOMAIN_SEED", "43")), args.save_name)
+        prompts = []
+        for domain in domains:
+            domain_chat = messages(domain)
+            if tokenizer.chat_template:
+                prompts.append(tokenizer.apply_chat_template(domain_chat, tokenize=False,
+                    add_generation_prompt=True, add_special_tokens=True))
+            else:
+                prompts.append("system: " + domain_chat[0]["content"] + '\n' + "user: " + domain_chat[1]["content"])
+    completions: List[RequestOutput] = model.generate(prompts, sampling_params=sample_params)
     results=[]
     for completion in completions:
         response = completion.outputs[0].text
@@ -120,6 +134,10 @@ def main(args):
                 results.append({"question": response, "answer": "", "score": -1})
         except:
             results.append({"question": response, "answer": "", "score": -1})
+    if domains is not None:
+        assert len(results) == len(domains)
+        for row, domain in zip(results, domains):
+            row["domain"] = domain
     with open(f"{STORAGE_PATH}/generated_question/{args.save_name}_{args.suffix}.json", "w") as f:
         json.dump(results, f, indent=4)
 
