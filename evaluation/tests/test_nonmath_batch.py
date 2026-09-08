@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 import sys
 import unittest
+import threading
 from unittest.mock import patch
 from evaluation import evaluate_models as batch
 from evaluation.tests import test_evaluate_models
@@ -61,3 +62,54 @@ class NonmathBatchTest(unittest.TestCase):
             with self.assertRaises(SystemExit):
                 batch.main()
         self.assertFalse((self.output / '001/final_results.jsonl').exists())
+
+    def test_three_gpus_run_concurrently_without_tensor_parallel_three(self):
+        barrier = threading.Barrier(3, timeout=5)
+        seen = {}
+        def emit(command, cwd, env, stdout, stderr):
+            dataset = Path(command[1]).stem.removeprefix('eval_')
+            self.assertEqual(env['EVAL_TENSOR_PARALLEL_SIZE'], '1')
+            gpu = env['CUDA_VISIBLE_DEVICES']
+            self.assertEqual(gpu, str(1 + batch.NONMATH_DATASETS.index(dataset)))
+            seen[dataset] = env['TORCHINDUCTOR_CACHE_DIR']
+            barrier.wait()  # Fails if the three tasks were launched sequentially.
+            model = command[command.index('--model_path') + 1]
+            Path(env['FINAL_RESULTS_FILE']).write_text(json.dumps(dict(
+                model=model, dataset=dataset, accuracy=50)))
+            return 0
+        with patch.object(sys, 'argv', ['runner', '--suite', 'nonmath', '--gpu-ids', '1,2,3',
+                '--batch-dir', str(self.output)] + self.paths[:1]), \
+             patch.object(batch.subprocess, 'call', side_effect=emit) as call:
+            batch.main()
+            self.assertEqual(call.call_count, 3)
+        self.assertEqual(len(set(seen.values())), 3)
+        manifest = json.loads((self.output / 'manifest.json').read_text())
+        rows = batch.summarize(self.output, manifest)
+        self.assertEqual(rows[0][2], 'complete')
+        self.assertEqual(rows[0][-3], 50)
+        self.assertEqual(len((self.output / '001/final_results.jsonl').read_text().splitlines()), 3)
+
+    def test_three_gpu_failure_preserves_other_scores_and_stops_next_model(self):
+        barrier = threading.Barrier(3, timeout=5)
+        def emit(command, cwd, env, **kwargs):
+            dataset = Path(command[1]).stem.removeprefix('eval_')
+            barrier.wait()
+            if dataset == 'bbeh':
+                return 1
+            model = command[command.index('--model_path') + 1]
+            Path(env['FINAL_RESULTS_FILE']).write_text(json.dumps(dict(
+                model=model, dataset=dataset, accuracy=50)))
+            return 0
+        with patch.object(sys, 'argv', ['runner', '--suite', 'nonmath', '--gpu-ids', '1,2,3',
+                '--batch-dir', str(self.output)] + self.paths[:2]), \
+             patch.object(batch.subprocess, 'call', side_effect=emit) as call:
+            with self.assertRaises(SystemExit):
+                batch.main()
+            self.assertEqual(call.call_count, 3)
+        manifest = json.loads((self.output / 'manifest.json').read_text())
+        rows = batch.summarize(self.output, manifest)
+        self.assertEqual(rows[0][2], 'failed')
+        self.assertEqual(rows[0][-3], '')
+        self.assertEqual(rows[1][2], 'pending')
+        self.assertNotIn('checkpoint_results_dir', manifest['models'][0])
+        self.assertEqual(len((self.output / '001/final_results.jsonl').read_text().splitlines()), 2)

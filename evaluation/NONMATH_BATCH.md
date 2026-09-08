@@ -12,8 +12,10 @@ Accepts any number of run directories or merged Hugging Face checkpoint director
 Run directories select `global_step_15/actor/huggingface`, as in the math mode.
 Add `--dry-run` to validate paths without launching models or writing outputs.
 
-Each model runs SuperGPQA, BBEH, then MMLU-Pro sequentially, using all selected GPUs
-for tensor parallelism. This mode directly invokes the existing benchmark scripts;
+With exactly three GPU IDs (for example `--gpu-ids 1,2,3`), each model runs
+SuperGPQA on the first GPU, BBEH on the second, and MMLU-Pro on the third
+concurrently, with TP=1 each. With other GPU counts, benchmarks run sequentially
+using all selected GPUs for tensor parallelism. Models always run sequentially. This mode directly invokes the existing benchmark scripts;
 it does not run the math evaluations or launch the Qwen3-32B judge.
 The existing benchmark prompts and accuracy scoring are unchanged.
 
@@ -25,7 +27,7 @@ Each completed model also receives scores and summaries under its exact checkpoi
 `evaluations/<batch-name>_<id>` directory. Raw responses and per-task logs remain in
 the central batch directory; checkpoint metadata records their locations.
 
-A failed task stops the batch, preserves available scores/logs, and leaves the
+A failed task stops the batch after already-running tasks finish, preserves available scores/logs, and leaves the
 average empty. Inspect the printed log path before starting another batch.
 Compiler caches are isolated under `/tmp` by default (override with
 `RECHECK_LOCAL_TMP_ROOT`); they are retained for diagnosis.

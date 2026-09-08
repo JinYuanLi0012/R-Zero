@@ -2,6 +2,7 @@
 
 import argparse
 import csv
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 import json
 import math
@@ -29,8 +30,30 @@ def layout(manifest):
     return datasets, ['id', 'name', 'status'] + datasets + [average, 'model', 'results_file']
 
 
-def run_nonmath(root, model, output, env):
-    """Run existing evaluators sequentially; normalize their legacy JSON accuracy output."""
+def run_nonmath(root, model, output, env, datasets=None):
+    """With three GPUs, run one benchmark per GPU; otherwise use sequential TP."""
+    gpu_ids = env['EVAL_GPU_IDS'].split(',')
+    if datasets is None and len(gpu_ids) == 3:
+        # Each worker writes a private JSONL; only this thread merges final scores.
+        # Await all workers before returning, so the next model cannot overlap.
+        failed = False
+        with ThreadPoolExecutor(max_workers=3) as pool:
+            futures = {}
+            for dataset, gpu in zip(NONMATH_DATASETS, gpu_ids):
+                child = dict(env, EVAL_GPU_IDS=gpu)
+                private_output = output.parent / f'{dataset}_normalized.jsonl'
+                print(f'  ASSIGN {dataset}: GPU {gpu}, TP=1', flush=True)
+                future = pool.submit(run_nonmath, root, model, private_output, child, [dataset])
+                futures[future] = private_output
+            for future in as_completed(futures):
+                code = future.result()
+                if code:
+                    failed = True
+                else:
+                    with output.open('a') as stream:
+                        stream.write(futures[future].read_text())
+        return 1 if failed else 0
+    datasets = NONMATH_DATASETS if datasets is None else datasets
     logs = output.parent / 'logs'
     logs.mkdir(parents=True, exist_ok=True)
     child = env.copy()
@@ -47,7 +70,7 @@ def run_nonmath(root, model, output, env):
         directory.mkdir(exist_ok=True)
         child[key] = str(directory)
     print(f'Nonmath runtime cache (retained): {runtime}', flush=True)
-    for dataset in NONMATH_DATASETS:
+    for dataset in datasets:
         score_file = output.parent / f'{dataset}_score.json'
         child['FINAL_RESULTS_FILE'] = str(score_file)
         log = logs / f'{dataset}.log'
