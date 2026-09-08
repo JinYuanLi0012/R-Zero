@@ -6,6 +6,7 @@ import json
 import re
 
 from . import prompts
+from .protocol import FieldError, parse_fields
 
 
 class BudgetExhausted(RuntimeError):
@@ -23,7 +24,8 @@ def require(condition, message):
 
 def obj(value, keys, label):
     require(isinstance(value, dict), f"{label} must be an object")
-    require(set(value) == set(keys), f"{label} keys must be {sorted(keys)}")
+    missing, extra = sorted(set(keys) - set(value)), sorted(set(value) - set(keys))
+    require(not missing and not extra, f"{label}: missing={missing}; extra={extra}; expected exactly {sorted(keys)}")
 
 
 def string(value, label, empty=False):
@@ -46,6 +48,14 @@ JSON_FENCE = re.compile(r"```(?:json)?[ \t]*\r?\n(.*?)\r?\n[ \t]*```", re.DOTALL
 
 
 def final_box(text):
+    if "<final>" in text or "</final>" in text:
+        require("<final_json>" not in text and "</final_json>" not in text,
+                "mixed final and legacy final_json boxes are ambiguous")
+        for tag in ("<final>", "</final>"):
+            require(text.count(tag) == 1, f"expected exactly one {tag}")
+        match = re.search(r"<final>(.*?)</final>", text, re.DOTALL)
+        require(match is not None, "final delimiters are out of order")
+        return match, "fields"
     # An explicit final box takes precedence over drafts. Broken or repeated
     # final tags must not silently fall back to a different result.
     if "<final_json>" in text or "</final_json>" in text:
@@ -58,7 +68,7 @@ def final_box(text):
     # Never search arbitrary bare objects or choose among multiple code blocks.
     match = JSON_FENCE.search(text)
     require(text.count("```") == 2 and match is not None,
-            "expected one complete final_json box or one unambiguous JSON code fence")
+            "expected one complete <final>...</final> result block")
     return match, "json_fence"
 
 
@@ -71,6 +81,11 @@ def parse_response(text):
     analysis = re.sub(r"</?(?:analysis|think)>", "", text[:match.start()]).strip()
     require(bool(analysis), "missing analysis before final result; reason briefly before the final result")
     payload = match[1].strip()
+    if box_format == "fields":
+        try:
+            return parse_fields(payload)
+        except FieldError as exc:
+            raise SchemaError(str(exc)) from exc
     # Harmless fenced JSON inside the designated box is still unambiguous.
     fence = JSON_FENCE.fullmatch(payload) if box_format == "final_json" else None
     if fence:
@@ -97,16 +112,18 @@ def response_diagnostics(text):
         "final_json_open_count": text.count("<final_json>"),
         "final_json_close_count": text.count("</final_json>"),
         "final_box_format": box_format,
-        "has_analysis_before_final": bool(analysis),
+        "has_nonempty_prefix": bool(analysis),
+        "final_open_count": text.count("<final>"),
+        "final_close_count": text.count("</final>"),
         "raw_head": text[:300],
         "raw_tail": text[-500:],
     }
 
 
-def child_schema(child):
-    obj(child, ("name", "scope", "distinguishing_feature"), "child")
+def child_schema(child, path="$"):
+    obj(child, ("name", "scope", "distinguishing_feature"), path)
     for key, value in child.items():
-        string(value, key)
+        string(value, f"{path}.{key}")
     return child
 
 
@@ -117,11 +134,11 @@ def child_names(children):
 
 
 def validate_proposal(data):
-    obj(data, ("partition_principle", "children"), "proposal")
-    string(data["partition_principle"], "partition_principle")
-    array(data["children"], "children")
-    for child in data["children"]:
-        child_schema(child)
+    obj(data, ("partition_principle", "children"), "$")
+    string(data["partition_principle"], "$.partition_principle")
+    array(data["children"], "$.children")
+    for index, child in enumerate(data["children"]):
+        child_schema(child, f"$.children[{index}]")
     child_names(data["children"])
     return data
 
@@ -131,15 +148,15 @@ def validate_audit(data, children, depth=None):
     checks = ("fits_parent", "follows_principle", "comparable_breadth")
     if depth == 2:
         checks += ("generation_ready",)
-    obj(data, ("principle_ok", "principle_feedback", "children", "pairs"), "audit")
+    obj(data, ("principle_ok", "principle_feedback", "children", "pairs"), "$")
     require(type(data["principle_ok"]) is bool, "principle_ok must be boolean")
     string(data["principle_feedback"], "principle_feedback", empty=data["principle_ok"])
-    array(data["children"], "children")
+    array(data["children"], "$.children")
     array(data["pairs"], "pairs")
     ids = {c["id"] for c in children}
     seen, decisions = set(), {}
-    for row in data["children"]:
-        obj(row, ("id", "action", "reason") + checks, "child audit")
+    for index, row in enumerate(data["children"]):
+        obj(row, ("id", "action", "reason") + checks, f"$.children[{index}]")
         string(row["id"], "id")
         require(row["id"] in ids and row["id"] not in seen, "unknown or repeated child audit id")
         seen.add(row["id"])
@@ -154,8 +171,8 @@ def validate_audit(data, children, depth=None):
         decisions[row["id"]] = row["action"]
     require(seen == ids, "audit must assess every child")
     pairs = set()
-    for row in data["pairs"]:
-        obj(row, ("a", "b", "relation", "reason"), "pair audit")
+    for index, row in enumerate(data["pairs"]):
+        obj(row, ("a", "b", "relation", "reason"), f"$.pairs[{index}]")
         string(row["a"], "a")
         string(row["b"], "b")
         require(row["a"] in ids and row["b"] in ids and row["a"] != row["b"], "invalid pair endpoints")
@@ -182,19 +199,19 @@ def new_node(parent, depth, serial, child):
 
 
 def apply_repair(data, parent, children, audit, depth):
-    obj(data, ("partition_principle", "replacements"), "repair")
-    string(data["partition_principle"], "partition_principle")
+    obj(data, ("partition_principle", "replacements"), "$")
+    string(data["partition_principle"], "$.partition_principle")
     if audit["principle_ok"]:
         require(data["partition_principle"] == parent["partition_principle"], "accepted partition principle is immutable")
     array(data["replacements"], "replacements")
     rejected = {row["id"]: row["action"] for row in audit["children"] if row["action"] != "KEEP"}
     replacements = {}
-    for row in data["replacements"]:
-        obj(row, ("id", "child"), "replacement")
+    for index, row in enumerate(data["replacements"]):
+        obj(row, ("id", "child"), f"$.replacements[{index}]")
         string(row["id"], "id")
         require(row["id"] in rejected and row["id"] not in replacements, "replacement must target each rejected id exactly once")
         if row["child"] is not None:
-            child_schema(row["child"])
+            child_schema(row["child"], f"$.replacements[{index}].child")
             require(rejected[row["id"]] != "REMOVE", "REMOVE requires child=null")
         replacements[row["id"]] = row["child"]
     require(set(replacements) == set(rejected), "missing rejected child replacements")
@@ -220,12 +237,12 @@ def leaf_records(root):
 
 
 def validate_global(data, leaves):
-    obj(data, ("issues",), "global audit")
+    obj(data, ("issues",), "$")
     array(data["issues"], "issues")
     lookup = {c["id"]: c for c in leaves}
     seen = set()
-    for issue in data["issues"]:
-        obj(issue, ("a", "b", "relation", "revise_id", "reason"), "global issue")
+    for index, issue in enumerate(data["issues"]):
+        obj(issue, ("a", "b", "relation", "revise_id", "reason"), f"$.issues[{index}]")
         for key in ("a", "b", "revise_id"):
             string(issue[key], key)
         a, b = issue["a"], issue["b"]
@@ -241,7 +258,7 @@ def validate_global(data, leaves):
 
 
 def validate_coverage(data):
-    obj(data, ("has_major_gap", "gap_description", "reason"), "coverage")
+    obj(data, ("has_major_gap", "gap_description", "reason"), "$")
     require(type(data["has_major_gap"]) is bool, "has_major_gap must be boolean")
     string(data["reason"], "reason")
     if data["has_major_gap"]:
@@ -252,14 +269,14 @@ def validate_coverage(data):
 
 
 def validate_addition(data, children):
-    obj(data, ("child",), "single addition")
-    child_schema(data["child"])
+    obj(data, ("child",), "$")
+    child_schema(data["child"], "$.child")
     child_names(children + [data["child"]])
     return data["child"]
 
 
 def validate_global_addition(data, root):
-    obj(data, ("parent_id", "child"), "global addition")
+    obj(data, ("parent_id", "child"), "$")
     string(data["parent_id"], "parent_id")
     parents = {p["id"]: p for p in [root] + root["children"]}
     require(data["parent_id"] in parents, "addition parent must be root or existing L1")

@@ -1,9 +1,9 @@
-# Frozen Base 两层数学 scope 树（v3）
+# Frozen Base 两层数学 scope 树（v3.1 文本协议）
 
 一个 frozen `Qwen/Qwen3-4B-Base`、一个单卡 vLLM 实例，离线构建数学出题范围。
 不训练模型，不修改 Questioner/Solver 的训练、reward 或采样流程。
 
-## v3 的问题空间
+## v3 算法的问题空间
 
 所有动作共享原 R-Zero Questioner 的目标：brand-new、non-trivial、self-contained、
 checkable，competition-style or similarly challenging。保留其领域举例
@@ -38,10 +38,12 @@ Sibling audit **不再包含 gap**，严格检查 parent fit、单一划分轴�
 任何检查失败不得 KEEP；每对 OVERLAP/NESTED/NEAR_DUPLICATE 至少一个端点需要改动。
 数学上的普通交叉不等于大量重复生成，但不能只凭名称不同就判 DISTINCT。
 
-覆盖检查有独立 schema：
+覆盖检查使用独立记录：
 
-```json
-{"has_major_gap": false, "gap_description": null, "reason": "..."}
+```text
+HAS_MAJOR_GAP: NO
+GAP: NONE
+REASON: 当前范围没有重大遗漏的理由
 ```
 
 YES 必须给出非空 structural gap；只有某个重大范围否则几乎分不到生成预算时才报告。
@@ -49,8 +51,8 @@ YES 必须给出非空 structural gap；只有某个重大范围否则几乎分�
 同一状态下两次调用的输入相同、请求标签与 seed 不同，不把第一次结论传给第二次。
 不同采样不保证 same-Base 判断在统计上独立，也不证明覆盖真实完整。
 
-Repair 仅输出 `partition_principle / replacements`，不能夹带 additions。
-增补使用独立的 `{"child": {...}}`，每次恰好一个。已 KEEP 的节点受保护：后续候选
+Repair 用 `PRINCIPLE` 和重复的 `REPLACE / ACTION` 记录；替换时附三个 family 字段，
+删除时不附。增补只输出一次 `NAME / SCOPE / DISTINCTION`，每次恰好一个。已 KEEP 的节点受保护：后续候选
 若要求改动这些节点，标记 `protected_sibling_conflict`，不悄悄推翻已接受节点。
 候选本身可在剩余 repair 预算内修复。所有变更后重置覆盖计数和请求阶段。
 
@@ -73,16 +75,57 @@ Repair 仅输出 `partition_principle / replacements`，不能夹带 additions�
 无法检测所有语义改写循环，剩余宽度/调用预算为最终上限。调用预算耗尽退出 2，
 不是 accepted。格式重试耗尽、加载错误等执行故障仍记录 failed。
 
-## 输出格式与完整记录
+## 模型输出文本，程序保存 JSON
 
-每个动作先输出分析，再把唯一最终 JSON 放进 `<final_json>...</final_json>`。
-分析可用普通文字、`<analysis>` 或 `<think>`；只检查结果前有非空文字，不声称验证了推理质量。
-vLLM 在 `</final_json>` 停止且保留标记。
+v3.1 不再要求 Base 生成嵌套 JSON。所有新 prompt 只要求：普通分析文字，然后一个
+`<final>...</final>` 文本框。程序将字段记录映射为现有内部对象，再执行相同 schema
+和语义流程校验，最终 `tree.json / manifest.json / attempt_N.json` 仍是标准 JSON。
 
-兼容 v2 的解析修复：指定 final box 优先于前面的草稿；没有 final 标签时，也接受
-分析后的唯一完整 JSON code fence。损坏/重复的 final 标签、多份候选代码框或裸 JSON
-不被猜测性提取。JSON 语法、重复 key、schema、id、pair 覆盖和修复权限仍严格校验。
-失败默认额外 retry 2 次，用新 seed 并提供格式错误。思考与失败原文全部保存。
+PROPOSE 示例（占位符仅说明格式，不是预置 taxonomy）：
+
+```text
+模型先分析当前划分任务……
+<final>
+PRINCIPLE: 一个共同的划分原则
+NAME: 第一个 family 名称
+SCOPE: 这个 family 独有的数学对象、关系与约束
+DISTINCTION: 沿该划分原则与兄弟节点的具体差别
+NAME: 第二个 family 名称
+SCOPE: 第二个 family 的数学范围
+DISTINCTION: 第二个 family 的具体区别
+</final>
+```
+
+| 动作 | 最终文本记录 |
+|---|---|
+| PROPOSE | `PRINCIPLE`，随后重复 `NAME / SCOPE / DISTINCTION` |
+| SIBLING AUDIT | `PRINCIPLE_OK / PRINCIPLE_REASON`；每个节点 `CHILD / FIT / AXIS / BREADTH / READY（仅 L2） / ACTION / REASON`；每对 `PAIR / RELATION / REASON` |
+| COVERAGE（局部/全局） | `HAS_MAJOR_GAP / GAP / REASON` |
+| REPAIR | `PRINCIPLE`；每个目标 `REPLACE / ACTION`，ACTION=REPLACE 时附三个 family 字段，DELETE 时不附 |
+| 局部增补 | 恰好一次 `NAME / SCOPE / DISTINCTION` |
+| GLOBAL OVERLAP | 无问题用 `ISSUES: NONE`，否则重复 `PAIR / RELATION / REVISE / REASON` |
+| 全局增补 | `PARENT` 选择目标父引用，随后一次三个 family 字段 |
+
+标签按给定顺序顶格书写，每行 `LABEL: value`。布尔值严格为 YES/NO。
+`PAIR` 的值恰好是两个用空格分隔的引用 ID。冒号、引号、竖线在普通字段值中保持原样；
+需要换行时，每个续行缩进两个空格，续行中的 `NAME:` 等也只是内容。空行忽略，可分隔记录。
+不猜测无缩进的续行、不接受重复字段或记录、不补造缺失原则、不静默删除额外字段或冲突 ID。
+Coverage 为 NO 时 GAP 必须为 NONE；YES 必须给具体描述。所有完整 pair、readiness、
+KEEP 一致性与接受节点保护继续生效。
+
+输入也与存储对象解耦：用简洁的父范围、节点语义和必要引用 ID，不再把完整 parent 存储
+对象摆在模型面前。完整竞赛要求保留在共享 system 上下文；root 的输入范围不再重复它。
+`SCOPE` 不能照抄全局任务，`DISTINCTION` 不能重复 generic broad variation；judge 明确
+检查实际范围描述，不能仅凭名字推断不存在的边界。这仍是模型审查，不保证识别所有语义退化。
+
+模型原文始终完整保存，包括分析、草稿和失败结果。`has_nonempty_prefix` 仅记录最终框前
+有无文字；前缀可能只是草稿 JSON，不代表验证了 CoT 的存在或质量。
+vLLM 在 `</final>` 停止并保留标记。解析失败仍默认额外 retry 两次，不增加长度或次数。
+错误指出文本行和缺失/重复字段；内部 schema 错误指出具体路径和 missing/extra 字段。
+
+旧 `<final_json>` 和唯一 JSON code fence 仍可解析，保留旧回归兼容；新 prompt 不提供
+协议选择。混用两类 final 框、损坏/重复边界和无边界裸 JSON 仍拒绝。
+旧 JSON 中即使 `parent_id` 与上下文一致，也仍属于额外字段，不会自动删除。
 
 | 文件 | 内容 |
 |---|---|
@@ -92,7 +135,7 @@ vLLM 在 `</final_json>` 停止且保留标记。
 | `status.json` | 局部状态、当前 partition 的连续 NO 次数、全局状态、停止原因 |
 | `manifest.json` | 模型/源码/prompt/参数 fingerprint、调用数、版本与退出状态 |
 | `requests/<hash>/request.json` | 请求 label、system 和 task 输入 |
-| `requests/<hash>/attempt_N.json` | 完整实际 prompt、raw_completion（含思考）、seed、结束原因、token 数、解析结果/错误及诊断 |
+| `requests/<hash>/attempt_N.json` | 完整实际 prompt、raw_completion（含思考）、seed、结束原因、token 数、程序组装的 parsed_json、错误及诊断 |
 
 节点仍仅保留 `id / depth / name / scope / distinguishing_feature / parent_id / children`；
 非叶节点另有 `partition_principle`。覆盖计数放在 status，不塞进 taxonomy。
@@ -112,14 +155,14 @@ python -m methods.validity_rzero.scope_tree.run \
   --local-files-only \
   --max-new-tokens 8192 \
   --max-model-len 32768 \
-  --output-dir /engrfs/project/jiaxinh/jinyuan/R-zero-storage/rzero_runs/scope_tree_base_v3
+  --output-dir /engrfs/project/jiaxinh/jinyuan/R-zero-storage/rzero_runs/scope_tree_base_v3_1
 ```
 
 模型也可以用同一 Base 的本地 snapshot 路径。默认采样为 temperature=0.6、top_p=0.95、
 top_k=20、n=1、seed=42，显存比例 0.80。单个实例贯穿全程。
 超出上下文预算会报错，不静默截断 sibling/leaf 输入。
 
-**从 v1/v2 更新必须用新输出目录，不能对旧目录 --resume。**
+**从 v1/v2/v3 更新到 v3.1 必须用新输出目录，不能对旧目录 --resume。**
 同版本、同参数中断后可在同命令加 `--resume`；程序复核模型/源码/prompt/参数 fingerprint，
 从历史请求重建树，复用同状态的成功结果。请求 epoch 和输入状态共同区分覆盖确认，
 变更后的集合不能复用变更前的 NO。恢复不会重置已消耗的 retry、repair 或总调用预算。
@@ -135,4 +178,7 @@ python -m methods.validity_rzero.scope_tree.run --help
 测试覆盖双 NO、NO/YES、增补后重置、粒度/readiness、接受节点保护、全 pair、预算、
 stalled、全局修复/增补后的局部与全局复审、新 L1 展开、缓存恢复及原解析回归。
 `tests/fixtures/root_propose_v1.json` 是真实历史 Base 原始输出；其余脚本化响应验证控制流。
-这些 CPU 测试与历史回放不是 v3 GPU 生成效果，更不是下游多样性提升的证据。
+`tests/fixtures/root_propose_v3.json` 保留第三版三次真实格式失败：缺少原则和额外字段
+继续被拒绝。额外覆盖文本协议全动作、换行/分隔符、缺失与冲突字段、文本重试、完整流程
+和兼容 JSON。测试中的文本重编码只是人工构造传输用例，不是新模型生成。
+这些 CPU 测试与历史回放不是 v3.1 GPU 生成效果，更不是下游多样性提升的证据。

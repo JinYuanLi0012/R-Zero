@@ -72,9 +72,9 @@ class StructuredClient:
                 retry_prompt += (
                     "\nYour preceding attempt did not yield a valid structured result.\n"
                     f"Validation error: {last_error}\n"
-                    "Retry the SAME task. First write a concise analysis, then a complete JSON result. "
-                    "Follow the exact schema, include every required id/pair, and wrap the final JSON in "
-                    "<final_json>...</final_json>. Analysis can be ordinary prose; no analysis tags are required. "
+                    "Retry the SAME task. First write a concise analysis, then the complete labeled field records. "
+                    "Follow the task field format, include every required id/pair, and wrap the result in "
+                    "<final>...</final>. Do not output JSON. Analysis can be ordinary prose; no analysis tags are required. "
                     "Do not discuss the formatting failure or copy the previous answer.\n"
                 )
             saved = {"label": label, "attempt": attempt, "seed": seed, "user": retry_prompt,
@@ -140,7 +140,7 @@ class VLLMBackend:
         sampling = self.sampling_class(
             n=1, max_tokens=self.args.max_new_tokens, temperature=self.args.temperature,
             top_p=self.args.top_p, top_k=20, seed=seed,
-            stop=["</final_json>"], include_stop_str_in_output=True,
+            stop=["</final>", "</final_json>"], include_stop_str_in_output=True,
         )
         outputs = self.model.generate([prompt], sampling_params=sampling, use_tqdm=False)
         if len(outputs) != 1 or len(outputs[0].outputs) != 1:

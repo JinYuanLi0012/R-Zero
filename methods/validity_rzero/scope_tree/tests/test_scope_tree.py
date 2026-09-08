@@ -161,7 +161,7 @@ class SchemaTests(unittest.TestCase):
         info = response_diagnostics(raw)
         self.assertEqual(info["final_json_open_count"], 1)
         self.assertEqual(info["final_json_close_count"], 1)
-        self.assertTrue(info["has_analysis_before_final"])
+        self.assertTrue(info["has_nonempty_prefix"])
         self.assertEqual(response_diagnostics('long unfinished reasoning')["final_json_open_count"], 0)
         self.assertEqual(response_diagnostics('Reason. ```json\n{}\n```')["final_box_format"], "json_fence")
 
