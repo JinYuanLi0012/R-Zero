@@ -1,7 +1,5 @@
-"""CPU regressions for the real state machine; no model quality is simulated."""
-
+"""CPU checks for the small single-answer pipeline; no GPU quality claims."""
 from copy import deepcopy
-import itertools
 import json
 from pathlib import Path
 import tempfile
@@ -9,590 +7,241 @@ import types
 import unittest
 from unittest.mock import patch
 
-from methods.validity_rzero.scope_tree import prompts
+from methods.validity_rzero.scope_tree import prompts, run
 from methods.validity_rzero.scope_tree.core import (
-    SchemaError, TreeBuilder, apply_repair, parse_response, passed,
-    response_diagnostics, validate_addition, validate_audit, validate_coverage, validate_global, validate_proposal,
+    SchemaError, TreeBuilder, decision, description, gap_answer, parse_response,
 )
-from methods.validity_rzero.scope_tree.run import (
-    BudgetExhausted, ParseRetriesExhausted, StructuredClient,
-)
-from methods.validity_rzero.scope_tree import run as runner
+from methods.validity_rzero.scope_tree.run import StructuredClient, ParseRetriesExhausted
 
 
-def child(name):
-    return {"name": name, "scope": f"Scope of {name}", "distinguishing_feature": f"Feature of {name}"}
+def boxed(value):
+    return '<analysis>Consider the scope and distinctions.</analysis>\n<box>' + value + '</box>'
 
 
-def node(node_id, name):
-    return {"id": node_id, "depth": 2 if "." in node_id else 1,
-            "parent_id": node_id.split(".")[0] if "." in node_id else "root",
-            **child(name), "children": []}
-
-
-def proposal(names):
-    return {"partition_principle": "Shared structural axis", "children": [child(n) for n in names]}
-
-
-def audit(ids, revise=(), remove=()):
-    rows = []
-    for i in ids:
-        row = {"id": i, "fits_parent": True, "follows_principle": True,
-               "comparable_breadth": i not in revise,
-               "action": "REMOVE" if i in remove else "REVISE" if i in revise else "KEEP",
-               "reason": "Review finding"}
-        if "." in i:
-            row["generation_ready"] = True
-        rows.append(row)
-    return {"principle_ok": True, "principle_feedback": "Consistent axis", "children": rows,
-            "pairs": [{"a": a, "b": b, "relation": "DISTINCT", "reason": "Different scope"}
-                      for a, b in itertools.combinations(ids, 2)]}
-
-
-def coverage(gap=None):
-    return {"has_major_gap": gap is not None, "gap_description": gap, "reason": "Allocation assessment"}
-
-
-def repair(replacements=None):
-    return {"partition_principle": "Shared structural axis",
-            "replacements": [{"id": key, "child": value} for key, value in (replacements or {}).items()]}
-
-
-def wrapped(value):
-    return "<analysis>Assess the supplied scope and distinctions.</analysis>\n<final_json>" + json.dumps(value) + "</final_json>"
-
-
-class FakeBackend:
+class Backend:
     def __init__(self, outputs):
-        self.outputs = list(outputs)
-        self.seeds = []
+        self.outputs = iter(outputs)
+        self.seeds, self.users = [], []
 
     def generate(self, system, user, seed):
         self.seeds.append(seed)
-        if not self.outputs:
-            raise AssertionError("unexpected inference")
-        value = self.outputs.pop(0)
-        return {"raw_completion": value if isinstance(value, str) else wrapped(value), "finish_reason": "stop"}
+        self.users.append(user)
+        value = next(self.outputs)
+        return {'raw_completion': value, 'finish_reason': 'stop'}
 
 
-class ScriptedClient:
-    def __init__(self, script):
-        self.script = dict(script)
-        self.labels = []
+class Script:
+    def __init__(self, values):
+        self.values, self.calls = values, []
+        self.last_raw_completion = ''
 
     def request(self, label, prompt, validator):
-        self.labels.append(label)
-        return validator(deepcopy(self.script[label]))
+        self.calls.append((label, prompt))
+        raw = boxed(self.values[label])
+        self.last_raw_completion = raw
+        return validator(parse_response(raw))
 
 
-def confirmations(prefix, epoch=0):
-    return {f"{prefix}/coverage/{epoch}/{i}": coverage() for i in range(2)}
+def confirms(parent, count):
+    return {f'{parent}/coverage/{count}/{i}': 'NONE' for i in range(2)}
 
 
-def clean_script():
-    return {
-        "root/propose": proposal(["Broad A", "Broad B"]),
-        "root/audit/0": audit(["1", "2"]), **confirmations("root"),
-        "1/propose": proposal(["A one", "A two"]),
-        "1/audit/0": audit(["1.1", "1.2"]), **confirmations("1"),
-        "2/propose": proposal(["B one", "B two"]),
-        "2/audit/0": audit(["2.1", "2.2"]), **confirmations("2"),
-        "global/audit/0": {"issues": []}, **confirmations("global"),
-    }
+def happy():
+    return {'root/principle': 'Primary structures',
+            'root/candidate/1/propose': 'Region A', 'root/candidate/1/audit/0': 'YES',
+            'root/coverage/1/0': 'Region B has no allocation',
+            'root/candidate/2/propose': 'Region B', 'root/candidate/2/audit/0': 'YES', **confirms('root', 2),
+            '1/principle': 'Relations among objects', '1/candidate/1/propose': 'Family A1',
+            '1/candidate/1/audit/0': 'YES', **confirms('1', 1),
+            '2/principle': 'Relations among objects', '2/candidate/1/propose': 'Family B1',
+            '2/candidate/1/audit/0': 'YES', **confirms('2', 1), 'global/audit': 'YES'}
 
 
-class SchemaTests(unittest.TestCase):
-    def test_analysis_present_and_final_box_unambiguous(self):
-        self.assertEqual(parse_response(wrapped({"a": {"b": 1}})), {"a": {"b": 1}})
-        invalid = [
-            '<final_json>{}</final_json>',
-            '<analysis></analysis><final_json>{}</final_json>',
-            wrapped({}) + wrapped({}),
-            '<analysis>x</analysis><final_json>{"a":1,"a":2}</final_json>',
-            '<analysis>x</analysis><final_json>{"a":NaN}</final_json>',
-            '<analysis>x</analysis><final_json>{',
-        ]
-        for raw in invalid:
+class BoxTests(unittest.TestCase):
+    def test_only_box_parsed_analysis_is_not_a_schema(self):
+        for prefix in ('Plain reasoning. ', '<analysis>Reasoning</analysis>', 'Reasoning</analysis>', ''):
+            self.assertEqual(parse_response(prefix + '<box>A scope: with | symbols\nand another line.</box>'),
+                             'A scope: with | symbols\nand another line.')
+        self.assertEqual(parse_response('Analysis <box>YES<\\box>'), 'YES')
+        self.assertTrue(decision(parse_response('<BOX>yes</BOX>')))
+
+    def test_missing_empty_ambiguous_and_old_formats_rejected(self):
+        for raw in ('NAME: A', '<box>unfinished', '<box></box>', '<box>A</box><box>B</box>',
+                    '</box>A<box>', '<final>NAME: A</final>', '<final_json>{}</final_json>'):
             with self.subTest(raw=raw), self.assertRaises(SchemaError):
                 parse_response(raw)
 
-    def test_plain_or_think_analysis_and_extra_prose_do_not_block_final_json(self):
-        data = {"a": {"nested": [1, 2]}, "text": "A {brace} inside a string"}
-        final = "<final_json>" + json.dumps(data) + "</final_json>"
-        for raw in (
-            "First I compare the relevant structures.\n" + final,
-            "<think>Compare the scope and granularity.</think>\n" + final,
-            "<analysis>Compare structures.</analysis>\nFinal result:\n" + final,
-            "<analysis>Compare structures.</analysis>\n" + final + "\nDone.",
-            "Compare the scopes.\n<final_json>```json\n" + json.dumps(data) + "\n```</final_json>",
-        ):
-            with self.subTest(raw=raw):
-                self.assertEqual(parse_response(raw), data)
-
-    def test_missing_or_broken_final_still_rejected(self):
-        for raw in (
-            'I compare the scopes. {"children": []}',
-            'I compare. <final_json>{"children": []}',
-            'I compare. </final_json>{}<final_json>',
-            'I compare. <final_json>{}{}</final_json>',
-        ):
-            with self.subTest(raw=raw), self.assertRaises(SchemaError):
-                parse_response(raw)
-
-    def test_json_fence_fallback_requires_one_complete_box_and_analysis(self):
-        self.assertEqual(parse_response('分析：比较对象。\n```json\n{"a": 1}\n```\n说明。'), {"a": 1})
-        for raw in (
-            '```json\n{}\n```',
-            'Reason. ```json\n{}\n```\n```json\n{}\n```',
-            'Reason. ```json\n{}',
-            'Reason. <final_json>```json\n{}\n```',
-            'Reason. ```json\n{"a":1,"a":2}\n```',
-            'Reason. ```json\n{"a":NaN}\n```',
-        ):
-            with self.subTest(raw=raw), self.assertRaises(SchemaError):
-                parse_response(raw)
-
-    def test_explicit_final_wins_over_draft_fence(self):
-        raw = 'Draft. ```json\n{"draft": true}\n```\nCompare structures.\n<final_json>{"final": true}</final_json>'
-        self.assertEqual(parse_response(raw), {"final": True})
-
-    def test_diagnostics_distinguish_missing_final_from_unstructured_analysis(self):
-        raw = 'Reasoning in plain text. <final_json>{}</final_json>'
-        info = response_diagnostics(raw)
-        self.assertEqual(info["final_json_open_count"], 1)
-        self.assertEqual(info["final_json_close_count"], 1)
-        self.assertTrue(info["has_nonempty_prefix"])
-        self.assertEqual(response_diagnostics('long unfinished reasoning')["final_json_open_count"], 0)
-        self.assertEqual(response_diagnostics('Reason. ```json\n{}\n```')["final_box_format"], "json_fence")
-
-    def test_adaptive_width_has_no_eight_or_four_limit(self):
-        validate_proposal(proposal([f"Family {i}" for i in range(11)]))
-        with self.assertRaises(SchemaError):
-            validate_proposal(proposal([]))
-        with self.assertRaises(SchemaError):
-            validate_proposal(proposal(["A", "a"]))
-
-    def test_complete_pair_matrix_required(self):
-        children = [node(str(i), str(i)) for i in range(3)]
-        result = audit(["0", "1", "2"])
-        validate_audit(result, children)
-        result["pairs"].pop()
-        with self.assertRaises(SchemaError):
-            validate_audit(result, children)
-
-    def test_contradictory_overlap_or_keep_is_rejected(self):
-        children = [node("1", "A"), node("2", "B")]
-        result = audit(["1", "2"])
-        result["pairs"][0]["relation"] = "OVERLAP"
-        with self.assertRaises(SchemaError):
-            validate_audit(result, children)
-        result = audit(["1", "2"])
-        result["children"][0]["fits_parent"] = False
-        with self.assertRaises(SchemaError):
-            validate_audit(result, children)
-
-    def test_coverage_has_separate_strict_schema(self):
-        validate_coverage(coverage())
-        validate_coverage(coverage("A substantial unallocated region"))
-        for bad in ({**coverage(), "has_major_gap": "false"},
-                    {**coverage(), "gap_description": "Contradiction"},
-                    {**coverage(), "has_major_gap": True},
-                    {**coverage(), "reason": ""}):
+    def test_single_verdict_and_missing_description(self):
+        self.assertFalse(decision('NO'))
+        self.assertIsNone(gap_answer('NONE'))
+        self.assertEqual(gap_answer('Missing continuous structures'), 'Missing continuous structures')
+        for answer in ('YES because...', 'TRUE', 'YES\nNO'):
             with self.assertRaises(SchemaError):
-                validate_coverage(bad)
-        with self.assertRaises(SchemaError):
-            validate_audit({**audit(["1"]), "gap": None}, [node("1", "A")])
-
-    def test_repair_keeps_accepted_nodes_and_addition_is_separate(self):
-        children = [node("1", "A"), node("2", "B")]
-        parent = {"id": "root", "partition_principle": "Shared structural axis"}
-        result = apply_repair(repair({"2": child("B repaired")}), parent, children,
-                              audit(["1", "2"], revise=["2"]), 1)
-        self.assertEqual(result["children"][0], children[0])
-        with self.assertRaises(SchemaError):
-            apply_repair(repair({"1": child("Changed accepted")}), parent, children, audit(["1", "2"]), 1)
-        with self.assertRaises(SchemaError):
-            apply_repair({**repair(), "additions": [child("C")]}, parent, children, audit(["1", "2"]), 1)
-        self.assertEqual(validate_addition({"child": child("C")}, children), child("C"))
-        for bad in ({"children": [child("C"), child("D")]}, {"child": child("A")}, {"child": [child("C")]}):
+                decision(answer)
+        for answer in ('YES', 'NO', 'NONE'):
             with self.assertRaises(SchemaError):
-                validate_addition(bad, children)
+                description(answer)
 
-    def test_bad_breadth_or_routine_leaf_cannot_keep(self):
-        for ids, key in ((["1"], "comparable_breadth"), (["1.1"], "generation_ready")):
-            review = audit(ids)
-            review["children"][0][key] = False
-            with self.assertRaises(SchemaError):
-                validate_audit(review, [node(ids[0], "Routine ax+b=c")])
-            review["children"][0]["action"] = "REVISE"
-            self.assertFalse(passed(validate_audit(review, [node(ids[0], "Routine ax+b=c")])))
-
-    def test_removal_and_principle_changes_checked(self):
-        children = [node("1", "A"), node("2", "B")]
-        parent = {"id": "root", "partition_principle": "Shared structural axis"}
-        result = apply_repair(repair({"2": None}), parent, children, audit(["1", "2"], remove=["2"]), 1)
-        self.assertEqual(len(result["children"]), 1)
-        changed = repair()
-        changed["partition_principle"] = "Other axis"
-        with self.assertRaises(SchemaError):
-            apply_repair(changed, parent, children, audit(["1", "2"]), 1)
-
-    def test_global_only_cross_branch_high_confidence_pairs(self):
-        leaves = [node("1.1", "A"), node("1.2", "B"), node("2.1", "C")]
-        issue = {"a": "1.1", "b": "2.1", "revise_id": "2.1", "relation": "STRONG_OVERLAP", "reason": "same assignments"}
-        validate_global({"issues": [issue]}, leaves)
-        issue["b"] = "1.2"
-        with self.assertRaises(SchemaError):
-            validate_global({"issues": [issue]}, leaves)
-
-
-class RetryTests(unittest.TestCase):
-    def test_malformed_and_schema_failure_retry_then_resume_without_inference(self):
-        with tempfile.TemporaryDirectory() as directory:
-            backend = FakeBackend(["truncated", {"wrong": []}, proposal(["A", "B"])])
-            client = StructuredClient(backend, directory)
-            result = client.request("x", "task", validate_proposal)
-            self.assertEqual(len(result["children"]), 2)
-            self.assertEqual(len(set(backend.seeds)), 3)
-            attempts = list((Path(directory) / "requests").glob("*/attempt_*.json"))
-            self.assertEqual(len(attempts), 3)
-            self.assertTrue(all("raw_completion" in json.loads(p.read_text()) for p in attempts))
-            self.assertTrue(all("diagnostics" in json.loads(p.read_text()) for p in attempts))
-            resumed = StructuredClient(FakeBackend([]), directory)
-            self.assertEqual(resumed.request("x", "task", validate_proposal), result)
-            self.assertEqual(resumed.calls, 3)
-
-    def test_plain_analysis_valid_json_does_not_spend_retry(self):
-        with tempfile.TemporaryDirectory() as directory:
-            result = proposal(["A", "B"])
-            raw = "Compare mathematical objects and avoid overly narrow subcases.\n<final_json>" + json.dumps(result) + "</final_json>"
-            client = StructuredClient(FakeBackend([raw]), directory)
-            self.assertEqual(client.request("x", "task", validate_proposal), result)
-            self.assertEqual(client.calls, 1)
-
-    def test_retry_exhaustion_is_bounded_and_persistent(self):
-        with tempfile.TemporaryDirectory() as directory:
-            client = StructuredClient(FakeBackend(["bad"] * 3), directory)
-            with self.assertRaises(ParseRetriesExhausted):
-                client.request("x", "task", validate_proposal)
-            resumed = StructuredClient(FakeBackend([]), directory)
-            with self.assertRaises(ParseRetriesExhausted):
-                resumed.request("x", "task", validate_proposal)
-            self.assertEqual(resumed.calls, 3)
-
-    def test_global_budget_counts_retries(self):
-        with tempfile.TemporaryDirectory() as directory:
-            client = StructuredClient(FakeBackend(["bad"]), directory, max_calls=1)
-            with self.assertRaises(BudgetExhausted):
-                client.request("x", "task", validate_proposal)
-            self.assertEqual(client.calls, 1)
-
-
-class RecordedOutputTests(unittest.TestCase):
-    """Exact Base completions from the failed v1 root/propose, excluding run metadata."""
-
-    def setUp(self):
-        self.rows = json.loads((Path(__file__).parent / "fixtures" / "root_propose_v1.json").read_text(encoding="utf-8"))
-
-    def test_recorded_outputs_reject_repetition_accept_tagged_and_fenced_results(self):
-        self.assertEqual(self.rows[0]["finish_reason"], "length")
-        with self.assertRaises(SchemaError):
-            parse_response(self.rows[0]["raw_completion"])
-        for row, expected_width in zip(self.rows[1:], (10, 4)):
-            with self.subTest(attempt=row["attempt"]):
-                result = validate_proposal(parse_response(row["raw_completion"]))
-                self.assertEqual(len(result["children"]), expected_width)
-
-    def test_recorded_retry_stops_at_second_completion_and_persists_evidence(self):
-        outputs = iter(self.rows)
-        backend = types.SimpleNamespace(generate=lambda *args: deepcopy(next(outputs)))
-        with tempfile.TemporaryDirectory() as directory:
-            client = StructuredClient(backend, directory)
-            result = client.request("root/propose", "Recorded request replay", validate_proposal)
-            self.assertEqual(client.calls, 2)
-            self.assertEqual(len(result["children"]), 10)
-            saved = [json.loads(p.read_text()) for p in sorted((Path(directory) / "requests").glob("*/attempt_*.json"))]
-            self.assertEqual([r["status"] for r in saved], ["parse_error", "ok"])
-            self.assertEqual([r["finish_reason"] for r in saved], ["length", "stop"])
-            self.assertEqual(saved[0]["raw_completion"], self.rows[0]["raw_completion"])
-            resumed = StructuredClient(FakeBackend([]), directory)
-            self.assertEqual(resumed.request("root/propose", "Recorded request replay", validate_proposal), result)
+    def test_prompt_has_one_answer_no_field_matrix(self):
+        builder = TreeBuilder(None)
+        task = prompts.propose(builder.root, 1)
+        self.assertIn('just ONE', task)
+        for label in ('NAME:', 'SCOPE:', 'DISTINCTION:', 'PRINCIPLE:', 'PAIR:'):
+            self.assertNotIn(label, task + prompts.SYSTEM)
+        self.assertIn('fewer than 30%', prompts.SYSTEM)
 
 
 class FlowTests(unittest.TestCase):
-    def test_happy_path_depth_two_and_two_checks(self):
-        client = ScriptedClient(clean_script())
-        builder = TreeBuilder(client)
+    def test_incremental_build_and_double_no_use_same_input(self):
+        client = Script(happy()); builder = TreeBuilder(client)
         self.assertTrue(builder.build())
-        self.assertEqual(len(client.labels), 15)
-        self.assertTrue(all(c["consecutive_no"] == 2 for c in builder.status["coverage"].values()))
-        self.assertTrue(all(not leaf["children"] for p in builder.root["children"] for leaf in p["children"]))
+        self.assertEqual(len(builder.root['children']), 2)
+        self.assertTrue(all(c['children'] for c in builder.root['children']))
+        self.assertEqual(builder.root['children'][0]['scope'], 'Region A')
+        self.assertTrue(all(n == 2 for n in builder.status['coverage_no'].values()))
+        calls = dict(client.calls)
+        self.assertEqual(calls['root/coverage/2/0'], calls['root/coverage/2/1'])
+        self.assertNotEqual(calls['root/coverage/1/0'], calls['root/coverage/2/0'])
 
-    def test_one_no_cannot_freeze_when_call_budget_ends(self):
-        with tempfile.TemporaryDirectory() as directory:
-            backend = FakeBackend([proposal(["A"]), audit(["1"]), coverage()])
-            builder = TreeBuilder(StructuredClient(backend, directory, max_calls=3))
-            self.assertFalse(builder.build())
-            self.assertEqual(builder.status["state"], "unresolved")
-            self.assertEqual(builder.status["coverage"]["root"]["consecutive_no"], 1)
-            self.assertEqual(builder.status["stop_reason"], "call_budget_exhausted")
-
-    def test_no_yes_addition_restarts_checks_and_preserves_siblings(self):
-        script = {"root/propose": proposal(["A", "B"]), "root/audit/0": audit(["1", "2"]),
-                  "root/coverage/0/0": coverage(), "root/coverage/0/1": coverage("Unallocated structure"),
-                  "root/addition/0": {"child": child("C")}, "root/audit/1": audit(["1", "2", "3"]),
-                  **confirmations("root", 1)}
+    def test_no_yes_resets_confirmation_after_addition(self):
+        values = happy(); values['root/coverage/1/0'] = 'NONE'
+        values['root/coverage/1/1'] = 'Missing B'
         snapshots = []
-        client = ScriptedClient(script)
-        builder = TreeBuilder(client, checkpoint=lambda root, status: snapshots.append(deepcopy(status)))
-        self.assertTrue(builder.build_children(builder.root, 1))
-        self.assertEqual([c["name"] for c in builder.root["children"]], ["A", "B", "C"])
-        self.assertEqual(client.labels[-2:], ["root/coverage/1/0", "root/coverage/1/1"])
-        counts = [s["coverage"].get("root", {}).get("consecutive_no") for s in snapshots]
-        self.assertIn(1, counts)
-        self.assertIn(0, counts[counts.index(1) + 1:])
-
-    def test_yes_addition_then_repeated_gap_stalls(self):
-        script = {"root/propose": proposal(["A"]), "root/audit/0": audit(["1"]),
-                  "root/coverage/0/0": coverage("Missing structure"), "root/addition/0": {"child": child("B")},
-                  "root/audit/1": audit(["1", "2"]), "root/coverage/1/0": coverage("missing  structure")}
-        builder = TreeBuilder(ScriptedClient(script))
-        self.assertFalse(builder.build())
-        self.assertEqual(builder.status["parents"]["root"], "stalled_repeated_gap")
-
-    def test_width_ceiling_is_not_success(self):
-        for too_large in (False, True):
-            script = {"root/propose": proposal(["A", "B"] if too_large else ["A"]),
-                      "root/audit/0": audit(["1"]), "root/coverage/0/0": coverage("Gap")}
-            builder = TreeBuilder(ScriptedClient(script), max_children_per_parent=1)
-            self.assertFalse(builder.build())
-            self.assertEqual(builder.status["parents"]["root"], "children_limit_exhausted")
-
-    def test_second_repair_gets_third_audit_and_fresh_coverage(self):
-        script = {"root/propose": proposal(["A", "B"]), "root/audit/0": audit(["1", "2"], revise=["2"]),
-                  "root/repair/0": repair({"2": child("B revised once")}),
-                  "root/audit/1": audit(["1", "2"], revise=["2"]),
-                  "root/repair/1": repair({"2": child("B revised twice")}),
-                  "root/audit/2": audit(["1", "2"]), **confirmations("root", 2)}
-        builder = TreeBuilder(ScriptedClient(script))
-        self.assertTrue(builder.build_children(builder.root, 1))
-
-    def test_budget_exhaustion_does_not_freeze_bad_tree(self):
-        script = {"root/propose": proposal(["A", "B"]), "root/audit/0": audit(["1", "2"], revise=["2"])}
-        builder = TreeBuilder(ScriptedClient(script), max_repairs=0)
-        self.assertFalse(builder.build())
-        self.assertEqual(builder.status["parents"]["root"], "repair_budget_exhausted")
-
-    def test_identical_repair_stops_as_stalled(self):
-        script = {"root/propose": proposal(["A", "B"]), "root/audit/0": audit(["1", "2"], revise=["2"]),
-                  "root/repair/0": repair({"2": child("B")})}
-        builder = TreeBuilder(ScriptedClient(script))
-        self.assertFalse(builder.build())
-        self.assertEqual(builder.status["parents"]["root"], "stalled")
-
-    def test_addition_cannot_force_changes_to_accepted_siblings(self):
-        script = {"root/propose": proposal(["A"]), "root/audit/0": audit(["1"]),
-                  "root/coverage/0/0": coverage("Gap"), "root/addition/0": {"child": child("B")},
-                  "root/audit/1": audit(["1", "2"], revise=["1"])}
-        builder = TreeBuilder(ScriptedClient(script))
-        self.assertFalse(builder.build())
-        self.assertEqual(builder.status["parents"]["root"], "protected_sibling_conflict")
-        self.assertEqual(builder.root["children"][0]["name"], "A")
-
-    def test_global_repair_followed_by_local_double_coverage_and_global_checks(self):
-        script = clean_script()
-        script.update({"global/audit/0": {"issues": [{"a": "1.1", "b": "2.1", "revise_id": "2.1",
-                                                     "relation": "NEAR_DUPLICATE", "reason": "same structure"}]},
-                       "global/repair/2": repair({"2.1": child("B new structure")}),
-                       "global/verify/2/audit/0": audit(["2.1", "2.2"]), **confirmations("global/verify/2"),
-                       "global/audit/1": {"issues": []}, **confirmations("global", 1)})
-        client = ScriptedClient(script)
-        self.assertTrue(TreeBuilder(client).build())
-        self.assertEqual(client.labels[-3:], ["global/audit/1", "global/coverage/1/0", "global/coverage/1/1"])
-
-    def test_global_repair_cannot_hide_new_local_gap(self):
-        script = clean_script()
-        script.update({"global/audit/0": {"issues": [{"a": "1.1", "b": "2.1", "revise_id": "2.1",
-                                                     "relation": "NESTED", "reason": "nested scope"}]},
-                       "global/repair/2": repair({"2.1": None}),
-                       "global/verify/2/audit/0": audit(["2.2"]),
-                       "global/verify/2/coverage/0/0": coverage("Removal leaves a major gap")})
-        builder = TreeBuilder(ScriptedClient(script))
-        self.assertFalse(builder.build())
-        self.assertEqual(builder.status["global"], "unresolved")
-        self.assertEqual(builder.status["parents"]["2"], "coverage_unresolved")
-
-    def global_addition_script(self, new_branch=False):
-        script = clean_script()
-        script["global/coverage/0/0"] = coverage("Missing major generation region")
-        target = "root" if new_branch else "2"
-        ids = ["1", "2", "3"] if new_branch else ["2.1", "2.2", "2.3"]
-        script.update({"global/addition": {"parent_id": target, "child": child("New region")},
-                       f"global/verify/{target}/audit/0": audit(ids), **confirmations(f"global/verify/{target}"),
-                       "global/audit/1": {"issues": []}, **confirmations("global", 1)})
-        if new_branch:
-            script.update({"3/propose": proposal(["C one", "C two"]), "3/audit/0": audit(["3.1", "3.2"]),
-                           **confirmations("3")})
-        return script
-
-    def test_global_gap_addition_existing_branch_and_new_l1(self):
-        for new_branch in (False, True):
-            with self.subTest(new_branch=new_branch):
-                client = ScriptedClient(self.global_addition_script(new_branch))
-                builder = TreeBuilder(client)
-                self.assertTrue(builder.build())
-                self.assertTrue(all(p["children"] for p in builder.root["children"]))
-                self.assertEqual(len(builder.root["children"]), 3 if new_branch else 2)
-                self.assertEqual(client.labels.count("global/addition"), 1)
-
-    def test_global_addition_cannot_repeat_sweep_or_skip_validation(self):
-        for failed_local in (False, True):
-            script = self.global_addition_script()
-            if failed_local:
-                script["global/verify/2/audit/0"] = audit(["2.1", "2.2", "2.3"], revise=["2.3"])
-            else:
-                script["global/coverage/1/1"] = coverage("Another global gap")
-            builder = TreeBuilder(ScriptedClient(script))
-            self.assertFalse(builder.build())
-            self.assertEqual(builder.status["global"], "unresolved")
-
-    def test_full_pipeline_transport_distinct_samples_and_cached_resume(self):
-        with tempfile.TemporaryDirectory() as directory:
-            backend = FakeBackend(list(clean_script().values()))
-            self.assertTrue(TreeBuilder(StructuredClient(backend, directory)).build())
-            self.assertEqual(len(backend.seeds), 15)
-            self.assertEqual(len(set(backend.seeds)), 15)
-            requests = [json.loads(p.read_text()) for p in (Path(directory) / "requests").glob("*/request.json")]
-            a, b = [next(r for r in requests if r["label"] == f"root/coverage/0/{i}") for i in range(2)]
-            self.assertEqual(a["user"], b["user"])
-            self.assertTrue(TreeBuilder(StructuredClient(FakeBackend([]), directory)).build())
-
-    def test_changed_partition_cannot_reuse_previous_coverage_confirmations(self):
-        outputs = [proposal(["A"]), audit(["1"]), coverage(), coverage("Unallocated region"),
-                   {"child": child("B")}, audit(["1", "2"]), coverage(), coverage()]
-        with tempfile.TemporaryDirectory() as directory:
-            backend = FakeBackend(outputs)
-            builder = TreeBuilder(StructuredClient(backend, directory))
-            self.assertTrue(builder.build_children(builder.root, 1))
-            self.assertEqual(len(backend.seeds), 8)
-            requests = [json.loads(p.read_text()) for p in (Path(directory) / "requests").glob("*/request.json")]
-            old = next(r for r in requests if r["label"] == "root/coverage/0/0")
-            new = next(r for r in requests if r["label"] == "root/coverage/1/0")
-            self.assertNotEqual(old["user"], new["user"])
-            resumed = TreeBuilder(StructuredClient(FakeBackend([]), directory))
-            self.assertTrue(resumed.build_children(resumed.root, 1))
-            self.assertEqual(resumed.root, builder.root)
-
-    def test_new_l1_must_complete_l2_and_final_overlap_must_pass(self):
-        script = self.global_addition_script(True)
-        script["3/audit/0"] = audit(["3.1", "3.2"], revise=["3.1"])
-        builder = TreeBuilder(ScriptedClient(script), max_repairs=0)
-        self.assertFalse(builder.build())
-        self.assertEqual(builder.status["parents"]["3"], "repair_budget_exhausted")
-        script = self.global_addition_script()
-        script["global/audit/1"] = {"issues": [{"a": "1.1", "b": "2.3", "revise_id": "2.3",
-                                               "relation": "NESTED", "reason": "New leaf still overlaps"}]}
-        self.assertFalse(TreeBuilder(ScriptedClient(script)).build())
-
-    def test_added_child_can_be_repaired_without_touching_accepted_sibling(self):
-        script = {"root/propose": proposal(["A"]), "root/audit/0": audit(["1"]),
-                  "root/coverage/0/0": coverage("Gap"), "root/addition/0": {"child": child("B")},
-                  "root/audit/1": audit(["1", "2"], revise=["2"]),
-                  "root/repair/0": repair({"2": child("B repaired")}),
-                  "root/audit/2": audit(["1", "2"]), **confirmations("root", 2)}
-        builder = TreeBuilder(ScriptedClient(script))
-        self.assertTrue(builder.build_children(builder.root, 1))
-        self.assertEqual([c["name"] for c in builder.root["children"]], ["A", "B repaired"])
-
-    def test_global_overlap_repair_and_gap_addition_share_one_verified_sweep(self):
-        script = self.global_addition_script()
-        script.update({"global/audit/0": {"issues": [{"a": "1.1", "b": "2.1", "revise_id": "2.1",
-                                                     "relation": "NESTED", "reason": "Overlap"}]},
-                       "global/repair/2": repair({"2.1": child("Revised B")})})
-        client = ScriptedClient(script)
-        builder = TreeBuilder(client)
+        builder = TreeBuilder(Script(values), checkpoint=lambda r, s: snapshots.append(deepcopy(s)))
         self.assertTrue(builder.build())
-        self.assertEqual(client.labels.count("global/verify/2/audit/0"), 1)
-        self.assertEqual(builder.root["children"][1]["children"][0]["name"], "Revised B")
+        counts = [s['coverage_no'].get('root') for s in snapshots]
+        self.assertIn(0, counts[counts.index(1)+1:])
+        self.assertEqual(builder.status['coverage_no']['root'], 2)
 
-    def test_shared_target_and_depth_constraints_in_prompts(self):
-        self.assertIn("no target count", prompts.WIDTH)
-        self.assertIn("final depth", prompts.granularity(2))
-        for text in ("fewer than 30%", "including but not limited to", "external datasets", "non-trivial"):
-            self.assertIn(text, prompts.SYSTEM)
-        with self.assertRaises(ValueError):
-            prompts.granularity(3)
+    def test_repair_one_candidate_preserves_accepted_and_passes_review(self):
+        values = happy(); values['root/candidate/2/audit/0'] = 'NO'
+        values.update({'root/candidate/2/repair/0': 'Improved B', 'root/candidate/2/audit/1': 'YES'})
+        client = Script(values); builder = TreeBuilder(client)
+        self.assertTrue(builder.build())
+        self.assertEqual([c['scope'] for c in builder.root['children']], ['Region A', 'Improved B'])
+        self.assertIn('<box>NO</box>', dict(client.calls)['root/candidate/2/repair/0'])
 
+    def test_duplicate_candidate_can_be_repaired_without_another_judge(self):
+        values = happy(); values['root/candidate/2/propose'] = 'Region A'
+        values.update({'root/candidate/2/repair/0': 'Distinct B', 'root/candidate/2/audit/1': 'YES'})
+        client = Script(values); builder = TreeBuilder(client)
+        self.assertTrue(builder.build())
+        self.assertNotIn('root/candidate/2/audit/0', dict(client.calls))
 
-class RunnerTests(unittest.TestCase):
-    def runtime_modules(self):
-        return {"transformers": types.SimpleNamespace(__version__="test"),
-                "vllm": types.SimpleNamespace(__version__="test")}
+    def test_last_repair_must_receive_a_third_review(self):
+        values = happy(); values['root/candidate/1/audit/0'] = 'NO'
+        values.update({'root/candidate/1/repair/0': 'Revised A', 'root/candidate/1/audit/1': 'NO',
+                       'root/candidate/1/repair/1': 'Final A', 'root/candidate/1/audit/2': 'YES'})
+        client = Script(values); builder = TreeBuilder(client)
+        self.assertTrue(builder.build())
+        self.assertEqual(builder.root['children'][0]['scope'], 'Final A')
+        self.assertIn('root/candidate/1/audit/2', dict(client.calls))
 
-    def test_cli_artifacts_and_completed_resume_skip_model_loading(self):
-        with tempfile.TemporaryDirectory() as directory:
-            model = Path(directory) / "model"
-            model.mkdir()
-            (model / "config.json").write_text('{}')
-            output = Path(directory) / "output"
-            args = ["--model", str(model), "--output-dir", str(output)]
-            backend = FakeBackend(list(clean_script().values()))
-            with patch.object(runner, "VLLMBackend", return_value=backend), patch.dict("sys.modules", self.runtime_modules()):
-                self.assertEqual(runner.main(args), 0)
-            self.assertTrue((output / "tree.json").is_file())
-            self.assertTrue((output / "tree.md").is_file())
-            self.assertEqual(json.loads((output / "manifest.json").read_text())["state"], "accepted")
-            with patch.object(runner, "VLLMBackend", side_effect=AssertionError("should reuse accepted tree")):
-                self.assertEqual(runner.main(args + ["--resume"]), 0)
-            with self.assertRaisesRegex(ValueError, "fingerprint differs"):
-                runner.main(args + ["--resume", "--seed", "9"])
+    def test_stalled_repair_and_repeated_gap_stop(self):
+        values = happy(); values['root/candidate/1/audit/0'] = 'NO'
+        values['root/candidate/1/repair/0'] = 'Region A'
+        builder = TreeBuilder(Script(values)); self.assertFalse(builder.build())
+        self.assertEqual(builder.status['parents']['root'], 'stalled_duplicate_candidate')
+        values = happy(); values['root/coverage/2/0'] = values['root/coverage/1/0']
+        builder = TreeBuilder(Script(values)); self.assertFalse(builder.build())
+        self.assertEqual(builder.status['parents']['root'], 'stalled_repeated_gap')
 
-    def test_cli_unresolved_does_not_publish_tree_json(self):
-        with tempfile.TemporaryDirectory() as directory:
-            model = Path(directory) / "model"
-            model.mkdir()
-            output = Path(directory) / "output"
-            backend = FakeBackend([proposal(["A", "B"]), audit(["1", "2"], revise=["2"])])
-            with patch.object(runner, "VLLMBackend", return_value=backend), patch.dict("sys.modules", self.runtime_modules()):
-                code = runner.main(["--model", str(model), "--output-dir", str(output), "--max-repairs", "0"])
-            self.assertEqual(code, 2)
-            self.assertFalse((output / "tree.json").exists())
-            self.assertTrue((output / "partial_tree.json").exists())
-            self.assertEqual(json.loads((output / "manifest.json").read_text())["state"], "unresolved")
+    def test_candidate_budget_and_actual_width_limit_are_unresolved(self):
+        values = happy(); values['root/candidate/1/audit/0'] = 'NO'
+        builder = TreeBuilder(Script(values), max_repairs=0); self.assertFalse(builder.build())
+        self.assertFalse(builder.root['children'])
+        client = Script(happy()); builder = TreeBuilder(client, max_children_per_parent=1)
+        self.assertFalse(builder.build())
+        self.assertNotIn('root/candidate/2/propose', dict(client.calls))
+        self.assertEqual(builder.status['parents']['root'], 'children_limit_exhausted')
 
-    def test_cli_parse_failure_retains_raw_and_failed_status(self):
-        with tempfile.TemporaryDirectory() as directory:
-            model = Path(directory) / "model"
-            model.mkdir()
-            output = Path(directory) / "output"
-            with patch.object(runner, "VLLMBackend", return_value=FakeBackend(["bad"] * 3)), patch.dict("sys.modules", self.runtime_modules()):
-                with self.assertRaises(ParseRetriesExhausted):
-                    runner.main(["--model", str(model), "--output-dir", str(output)])
-            self.assertFalse((output / "tree.json").exists())
-            manifest = json.loads((output / "manifest.json").read_text())
-            self.assertEqual(manifest["state"], "failed")
-            self.assertEqual(manifest["calls_used"], 3)
-            self.assertEqual(len(list((output / "requests").glob("*/attempt_*.json"))), 3)
+    def test_global_no_is_unresolved_not_an_unchecked_repair(self):
+        values = happy(); values['global/audit'] = 'NO'
+        builder = TreeBuilder(Script(values)); self.assertFalse(builder.build())
+        self.assertEqual(builder.status['global'], 'unresolved')
 
-    def test_cli_call_budget_is_unresolved_and_resume_does_not_reset_it(self):
-        with tempfile.TemporaryDirectory() as directory:
-            model = Path(directory) / "model"
-            model.mkdir()
-            output = Path(directory) / "output"
-            args = ["--model", str(model), "--output-dir", str(output), "--max-calls", "3"]
-            backend = FakeBackend([proposal(["A"]), audit(["1"]), coverage()])
-            with patch.object(runner, "VLLMBackend", return_value=backend), patch.dict("sys.modules", self.runtime_modules()):
-                self.assertEqual(runner.main(args), 2)
-                self.assertEqual(runner.main(args + ["--resume"]), 2)
-            self.assertFalse((output / "tree.json").exists())
-            manifest = json.loads((output / "manifest.json").read_text())
-            self.assertEqual(manifest["stop_reason"], "call_budget_exhausted")
-            self.assertEqual(manifest["calls_used"], 3)
-            self.assertEqual(manifest["config"]["max_children_per_parent"], 16)
-            self.assertEqual(manifest["config"]["max_new_tokens"], 8192)
-            with self.assertRaisesRegex(ValueError, "fingerprint differs"):
-                runner.main(args + ["--resume", "--max-children-per-parent", "12"])
+    def test_one_no_before_call_budget_cannot_freeze(self):
+        with tempfile.TemporaryDirectory() as d:
+            client = StructuredClient(Backend([boxed(s) for s in ('Criterion', 'A', 'YES', 'NONE')]), d, max_calls=4)
+            builder = TreeBuilder(client); self.assertFalse(builder.build())
+            self.assertEqual(builder.status['coverage_no']['root'], 1)
+            self.assertEqual(builder.status['stop_reason'], 'call_budget_exhausted')
 
 
-if __name__ == "__main__":
+class RuntimeTests(unittest.TestCase):
+    def test_full_tree_reconstruction_reuses_same_state_requests(self):
+        with tempfile.TemporaryDirectory() as d:
+            original = TreeBuilder(StructuredClient(Backend([boxed(s) for s in happy().values()]), d))
+            self.assertTrue(original.build())
+            resumed = TreeBuilder(StructuredClient(Backend([]), d))
+            self.assertTrue(resumed.build())
+            self.assertEqual(resumed.root, original.root)
+            self.assertEqual(resumed.status, original.status)
+
+    def test_parse_retry_raw_persistence_and_resume(self):
+        with tempfile.TemporaryDirectory() as d:
+            backend = Backend(['unbounded list without box', boxed('A')])
+            client = StructuredClient(backend, d)
+            self.assertEqual(client.request('x', 'Describe one family', description), 'A')
+            self.assertEqual(len(set(backend.seeds)), 2)
+            rows = [json.loads(p.read_text()) for p in sorted((Path(d)/'requests').glob('*/attempt_*.json'))]
+            self.assertEqual(rows[0]['raw_completion'], 'unbounded list without box')
+            self.assertEqual(rows[1]['box_answer'], 'A')
+            resumed = StructuredClient(Backend([]), d)
+            self.assertEqual(resumed.request('x', 'Describe one family', description), 'A')
+            self.assertEqual(resumed.last_raw_completion, boxed('A'))
+
+    def test_retry_budget_persists(self):
+        with tempfile.TemporaryDirectory() as d:
+            client = StructuredClient(Backend(['bad']*3), d)
+            with self.assertRaises(ParseRetriesExhausted): client.request('x', 'Task', description)
+            with self.assertRaises(ParseRetriesExhausted): StructuredClient(Backend([]), d).request('x', 'Task', description)
+
+    def test_plain_base_completion_prefills_analysis_and_stops_at_box(self):
+        backend = object.__new__(run.VLLMBackend)
+        backend.args = types.SimpleNamespace(max_new_tokens=8192,max_model_len=32768,temperature=.6,top_p=.95)
+        backend.tokenizer = types.SimpleNamespace(encode=lambda *a, **k: [1])
+        captured = {}
+        def sampling(**kwargs): captured.update(kwargs); return kwargs
+        backend.sampling_class = sampling
+        def generate(inputs, **kwargs):
+            self.assertTrue(inputs[0].endswith('Response:\n<analysis>\n'))
+            self.assertNotIn('<|im_start|>', inputs[0])
+            completion = types.SimpleNamespace(text='Reasoning</analysis><box>YES</box>', token_ids=[1], finish_reason='stop')
+            return [types.SimpleNamespace(outputs=[completion])]
+        backend.model = types.SimpleNamespace(generate=generate)
+        output = backend.generate(prompts.SYSTEM, 'One judgment', 1)
+        self.assertEqual(captured['stop'], ['</box>', '<\\box>'])
+        self.assertTrue(captured['include_stop_str_in_output'])
+        self.assertTrue(decision(parse_response(output['raw_completion'])))
+
+    def test_cli_json_artifacts_and_resume_fingerprint(self):
+        with tempfile.TemporaryDirectory() as d:
+            model = Path(d)/'model'; model.mkdir()
+            out = Path(d)/'output'; args = ['--model', str(model), '--output-dir', str(out)]
+            backend = Backend([boxed(s) for s in happy().values()])
+            modules = {k: types.SimpleNamespace(__version__='test') for k in ('vllm','transformers')}
+            with patch.object(run,'VLLMBackend', return_value=backend), patch.dict('sys.modules',modules):
+                self.assertEqual(run.main(args),0)
+            self.assertTrue((out/'tree.json').exists())
+            self.assertTrue((out/'tree.md').exists())
+            manifest = json.loads((out/'manifest.json').read_text())
+            self.assertEqual(manifest['config']['prompt_version'], 'scope-tree-v4-single-answer')
+            with patch.object(run,'VLLMBackend',side_effect=AssertionError('no model needed')):
+                self.assertEqual(run.main(args+['--resume']),0)
+            with self.assertRaisesRegex(ValueError,'fingerprint'):
+                run.main(args+['--resume','--seed','8'])
+
+    def test_cli_global_failure_does_not_publish_tree(self):
+        with tempfile.TemporaryDirectory() as d:
+            model = Path(d)/'model'; model.mkdir(); out=Path(d)/'output'
+            values=happy(); values['global/audit']='NO'
+            modules = {k: types.SimpleNamespace(__version__='test') for k in ('vllm','transformers')}
+            with patch.object(run,'VLLMBackend',return_value=Backend([boxed(s) for s in values.values()])), patch.dict('sys.modules',modules):
+                self.assertEqual(run.main(['--model',str(model),'--output-dir',str(out)]),2)
+            self.assertFalse((out/'tree.json').exists())
+            self.assertTrue((out/'partial_tree.json').exists())
+
+
+if __name__ == '__main__':
     unittest.main()

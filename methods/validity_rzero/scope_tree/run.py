@@ -40,7 +40,7 @@ class StructuredClient:
     completions and reuses them; retries and call budgets persist across resumes.
     """
 
-    def __init__(self, backend, output_dir, seed=42, parse_retries=2, max_calls=128):
+    def __init__(self, backend, output_dir, seed=42, parse_retries=2, max_calls=256):
         self.backend = backend
         self.directory = Path(output_dir) / "requests"
         self.directory.mkdir(parents=True, exist_ok=True)
@@ -61,6 +61,7 @@ class StructuredClient:
                 saved = json.loads(path.read_text(encoding="utf-8"))
                 if saved.get("status") == "ok":
                     # Validate against the CURRENT parent/sibling state as well.
+                    self.last_raw_completion = saved["raw_completion"]
                     return validator(parse_response(saved["raw_completion"]))
                 last_error = saved.get("error", "previous attempt failed")
                 continue
@@ -72,10 +73,8 @@ class StructuredClient:
                 retry_prompt += (
                     "\nYour preceding attempt did not yield a valid structured result.\n"
                     f"Validation error: {last_error}\n"
-                    "Retry the SAME task. First write a concise analysis, then the complete labeled field records. "
-                    "Follow the task field format, include every required id/pair, and wrap the result in "
-                    "<final>...</final>. Do not output JSON. Analysis can be ordinary prose; no analysis tags are required. "
-                    "Do not discuss the formatting failure or copy the previous answer.\n"
+                    "Retry the same task. Think, then put just the requested single answer in <box>...</box>. "
+                    "No JSON, field records, or multiple answers.\n"
                 )
             saved = {"label": label, "attempt": attempt, "seed": seed, "user": retry_prompt,
                      "status": "started", "started_at": time.time()}
@@ -90,7 +89,8 @@ class StructuredClient:
                 saved["diagnostics"] = response_diagnostics(output["raw_completion"])
                 data = parse_response(output["raw_completion"])
                 result = validator(data)
-                saved.update({"status": "ok", "parsed_json": data})
+                saved.update({"status": "ok", "box_answer": data})
+                self.last_raw_completion = output["raw_completion"]
             except (SchemaError, RecursionError) as exc:
                 last_error = str(exc)
                 saved.update({"status": "parse_error", "error": last_error})
@@ -124,13 +124,13 @@ class VLLMBackend:
                          gpu_memory_utilization=args.gpu_memory_utilization)
 
     def generate(self, system, user, seed):
-        messages = [{"role": "system", "content": system}, {"role": "user", "content": user}]
-        if self.tokenizer.chat_template:
-            prompt = self.tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
-            template = "tokenizer_chat_template"
-        else:
-            prompt = f"system: {system}\nuser: {user}\nassistant:\n"
-            template = "plain_role_fallback"
+        # A Base completion task, not an assumed instruction-tuned chat model.
+        # Prefill only the analysis opener; raw_completion remains actual model text.
+        prompt = (system + "\n\nTask:\n" + user
+                  + "\n\nAnswer layout:\n<analysis>reason about this task</analysis>"
+                    "\n<box>the single answer requested by the task</box>"
+                    "\n\nResponse:\n<analysis>\n")
+        template = "plain_completion_analysis_prefill"
         prompt_tokens = len(self.tokenizer.encode(prompt, add_special_tokens=False))
         if prompt_tokens + self.args.max_new_tokens > self.args.max_model_len:
             raise ContextBudgetExceeded(
@@ -140,7 +140,7 @@ class VLLMBackend:
         sampling = self.sampling_class(
             n=1, max_tokens=self.args.max_new_tokens, temperature=self.args.temperature,
             top_p=self.args.top_p, top_k=20, seed=seed,
-            stop=["</final>", "</final_json>"], include_stop_str_in_output=True,
+            stop=["</box>", "<\\box>"], include_stop_str_in_output=True,
         )
         outputs = self.model.generate([prompt], sampling_params=sampling, use_tqdm=False)
         if len(outputs) != 1 or len(outputs[0].outputs) != 1:
@@ -164,9 +164,9 @@ def arguments(argv=None):
     parser.add_argument("--top-p", type=float, default=0.95)
     parser.add_argument("--max-new-tokens", type=int, default=8192)
     parser.add_argument("--max-model-len", type=int, default=32768)
-    parser.add_argument("--max-repairs", type=int, default=2, help="Local semantic repair rounds per parent; not a width quota")
+    parser.add_argument("--max-repairs", type=int, default=2, help="Maximum repairs per rejected candidate")
     parser.add_argument("--parse-retries", type=int, default=2, help="Additional attempts per malformed result")
-    parser.add_argument("--max-calls", type=int, default=128, help="Total inference attempts, including retries; safety budget only")
+    parser.add_argument("--max-calls", type=int, default=256, help="Total inference attempts, including retries; safety budget only")
     parser.add_argument("--max-children-per-parent", type=int, default=16, help="Emergency width ceiling only; never a target count")
     parser.add_argument("--resume", action="store_true")
     args = parser.parse_args(argv)
@@ -218,11 +218,10 @@ def write_readable(directory, root, status, calls):
              f"L1 families: {len(root['children'])}; depth-2 leaves: {len(leaf_records(root))}", "",
              "An accepted audit is a same-model judgment, not independent verification of mathematical coverage.", ""]
     for parent in root["children"]:
-        lines.extend([f"## {parent['id']}. {parent['name']}", "", parent["scope"], "",
+        lines.extend([f"## Family {parent['id']}", "", parent["scope"], "",
                       f"Partition principle: {parent.get('partition_principle', '(not built)')}", ""])
         for leaf in parent["children"]:
-            lines.extend([f"### {leaf['id']} {leaf['name']}", "", leaf["scope"], "",
-                          f"Distinguishing feature: {leaf['distinguishing_feature']}", ""])
+            lines.extend([f"### Family {leaf['id']}", "", leaf["scope"], ""])
     (directory / "tree.md").write_text("\n".join(lines), encoding="utf-8")
 
 
