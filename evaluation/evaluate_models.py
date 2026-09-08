@@ -1,4 +1,4 @@
-"""Evaluate N checkpoint paths sequentially with a local Qwen3 judge and a score summary."""
+"""Evaluate N checkpoint paths sequentially with math or nonmath benchmarks and a score summary."""
 
 import argparse
 import csv
@@ -10,12 +10,69 @@ from pathlib import Path
 import shutil
 import subprocess
 import sys
+import tempfile
 
 DATASETS = ['math', 'gsm8k', 'amc', 'minerva', 'olympiad', 'aime2024', 'aime2025']
 JUDGE = {'backend': 'local', 'model': 'Qwen/Qwen3-32B', 'revision': None,
          'prompt_version': 'math-recheck-local-v1', 'enable_thinking': False,
          'temperature': 0.0, 'max_tokens': 32}
 COLUMNS = ['id', 'name', 'status'] + DATASETS + ['ave', 'model', 'results_file']
+
+NONMATH_DATASETS = ['supergpqa', 'bbeh', 'mmlupro']
+NONMATH_EVALUATOR = {'backend': 'benchmark_scripts', 'version': 'nonmath-v1'}
+
+
+def layout(manifest):
+    nonmath = manifest.get('suite', 'math') == 'nonmath'
+    datasets = NONMATH_DATASETS if nonmath else DATASETS
+    average = 'ave_nonmath' if nonmath else 'ave'
+    return datasets, ['id', 'name', 'status'] + datasets + [average, 'model', 'results_file']
+
+
+def run_nonmath(root, model, output, env):
+    """Run existing evaluators sequentially; normalize their legacy JSON accuracy output."""
+    logs = output.parent / 'logs'
+    logs.mkdir(parents=True, exist_ok=True)
+    child = env.copy()
+    child['CUDA_VISIBLE_DEVICES'] = env['EVAL_GPU_IDS']
+    child['EVAL_TENSOR_PARALLEL_SIZE'] = str(len(env['EVAL_GPU_IDS'].split(',')))
+    # Isolate compiler caches on node-local storage, as with the math judge.
+    cache_root = Path(env['RECHECK_LOCAL_TMP_ROOT'])
+    cache_root.mkdir(parents=True, exist_ok=True)
+    runtime = Path(tempfile.mkdtemp(prefix='rzero-nonmath-', dir=str(cache_root)))
+    for key, subdir in {'TMPDIR': 'tmp', 'TMP': 'tmp', 'TEMP': 'tmp',
+                        'TORCHINDUCTOR_CACHE_DIR': 'torchinductor',
+                        'TRITON_CACHE_DIR': 'triton', 'VLLM_CACHE_ROOT': 'vllm'}.items():
+        directory = runtime / subdir
+        directory.mkdir(exist_ok=True)
+        child[key] = str(directory)
+    print(f'Nonmath runtime cache (retained): {runtime}', flush=True)
+    for dataset in NONMATH_DATASETS:
+        score_file = output.parent / f'{dataset}_score.json'
+        child['FINAL_RESULTS_FILE'] = str(score_file)
+        log = logs / f'{dataset}.log'
+        print(f'  START {dataset}; log: {log}', flush=True)
+        with log.open('w') as stream:
+            code = subprocess.call(
+                [sys.executable, str(root / 'evaluation' / f'eval_{dataset}.py'),
+                 '--model_path', model, '--output_file', str(output.parent / f'{dataset}_outputs.json')],
+                cwd=root, env=child, stdout=stream, stderr=subprocess.STDOUT)
+        if code:
+            return code
+        try:
+            record = json.loads(score_file.read_text())
+            score = float(record['accuracy'])
+            if (record['model'] != model or record['dataset'] != dataset
+                    or not math.isfinite(score) or not 0 <= score <= 100):
+                raise ValueError('Invalid score or model/dataset mismatch')
+        except (OSError, ValueError, KeyError, TypeError, AttributeError) as exc:
+            print(f'Invalid result for {dataset}: {exc}', file=sys.stderr)
+            return 1
+        with output.open('a') as stream:
+            stream.write(json.dumps(dict(model=model, dataset=dataset, score=score,
+                                         evaluator=NONMATH_EVALUATOR)) + '\n')
+        print(f'  DONE {dataset}: {score}', flush=True)
+    return 0
 
 
 def plan(paths):
@@ -39,7 +96,8 @@ def plan(paths):
 
 
 def summarize(batch, manifest):
-    columns = COLUMNS
+    datasets, columns = layout(manifest)
+    width = len(columns) - 2
     table = []
     for item in manifest['models']:
         scores = {}
@@ -51,8 +109,9 @@ def summarize(batch, manifest):
                     record = json.loads(line)
                     dataset = record['dataset']
                     score = float(record['score'])
-                    if (record['model'] != item['model'] or record.get('recheck') != manifest['judge']
-                            or dataset not in DATASETS or dataset in scores
+                    if (record['model'] != item['model'] or (record.get('evaluator') != NONMATH_EVALUATOR if manifest.get('suite') == 'nonmath'
+                                else record.get('recheck') != manifest['judge'])
+                            or dataset not in datasets or dataset in scores
                             or not math.isfinite(score) or not 0 <= score <= 100):
                         raise ValueError('Invalid or mixed result')
                     scores[dataset] = score
@@ -61,10 +120,10 @@ def summarize(batch, manifest):
         status = item['status']
         if invalid:
             status = 'invalid_results'
-        elif status == 'complete' and len(scores) != len(DATASETS):
+        elif status == 'complete' and len(scores) != len(datasets):
             status = 'incomplete_results'
-        mean = round(sum(scores.values()) / len(DATASETS), 2) if status == 'complete' else ''
-        row = [item['id'], item['name'], status] + [scores.get(d, '') for d in DATASETS]
+        mean = round(sum(scores.values()) / len(datasets), 2) if status == 'complete' else ''
+        row = [item['id'], item['name'], status] + [scores.get(d, '') for d in datasets]
         table.append(row + [mean, item['model'], str(path)])
     # These two generated summary files are refreshed; original per-model results stay intact.
     with (batch / 'summary.csv').open('w', newline='') as output:
@@ -72,16 +131,18 @@ def summarize(batch, manifest):
         writer.writerow(columns)
         writer.writerows(table)
     with (batch / 'summary.md').open('w') as output:
-        output.write('Scores are percentages. ave is an unweighted mean, not an official aggregate.\n\n')
-        output.write('| ' + ' | '.join(columns[:11]) + ' |\n')
-        output.write('| ' + ' | '.join(['---'] * 11) + ' |\n')
+        output.write(f'Scores are percentages. {columns[-3]} is an unweighted mean of {len(columns) - 6} benchmarks, not an official aggregate.\n\n')
+        output.write('| ' + ' | '.join(columns[:width]) + ' |\n')
+        output.write('| ' + ' | '.join(['---'] * width) + ' |\n')
         for row in table:
-            output.write('| ' + ' | '.join(str(value) for value in row[:11]) + ' |\n')
+            output.write('| ' + ' | '.join(str(value) for value in row[:width]) + ' |\n')
     return table
 
 
 def copy_to_checkpoints(batch, manifest, table):
     """Publish only validated complete scores next to each exact checkpoint."""
+    _, columns = layout(manifest)
+    width = len(columns) - 2
     for item, row in zip(manifest['models'], table):
         if row[2] != 'complete':
             continue
@@ -101,17 +162,21 @@ def copy_to_checkpoints(batch, manifest, table):
         shutil.copyfile(source, destination / 'final_results.jsonl')
         with (destination / 'summary.csv').open('w', newline='') as output:
             writer = csv.writer(output)
-            writer.writerow(COLUMNS)
+            writer.writerow(columns)
             writer.writerow(row)
         with (destination / 'summary.md').open('w') as output:
-            output.write('Scores are percentages. ave is an unweighted mean, not an official aggregate.\n\n')
-            output.write('| ' + ' | '.join(COLUMNS[:11]) + ' |\n')
-            output.write('| ' + ' | '.join(['---'] * 11) + ' |\n')
-            output.write('| ' + ' | '.join(str(value) for value in row[:11]) + ' |\n')
+            output.write(f'Scores are percentages. {columns[-3]} is an unweighted mean of {len(columns) - 6} benchmarks, not an official aggregate.\n\n')
+            output.write('| ' + ' | '.join(columns[:width]) + ' |\n')
+            output.write('| ' + ' | '.join(['---'] * width) + ' |\n')
+            output.write('| ' + ' | '.join(str(value) for value in row[:width]) + ' |\n')
         metadata = dict(identity, status='complete', judge=manifest['judge'],
                         source_results_file=str(source.resolve()),
                         source_log_dir=str((source.parent / 'logs').resolve()))
-        if manifest.get('storage_path'):
+        metadata['suite'] = manifest.get('suite', 'math')
+        if manifest.get('suite') == 'nonmath':
+            metadata['evaluator'] = NONMATH_EVALUATOR
+            metadata['source_raw_results_dir'] = str(source.parent.resolve())
+        elif manifest.get('storage_path'):
             metadata['source_raw_results_dir'] = str(Path(manifest['storage_path']) / 'evaluation' /
                                                    item['model'].replace('/', '_'))
         metadata_file.write_text(json.dumps(metadata, indent=2) + '\n')
@@ -131,6 +196,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('paths', nargs='*', help='Run directories or merged checkpoint directories')
     parser.add_argument('--storage-path', default=os.getenv('STORAGE_PATH'), help='Base evaluation output storage; independent of checkpoint location')
+    parser.add_argument('--suite', choices=['math', 'nonmath'], default=None,
+                        help='Default: math (7 tasks). nonmath: SuperGPQA, BBEH, MMLU-Pro only')
     parser.add_argument('--gpu-ids', default=os.getenv('CUDA_VISIBLE_DEVICES') or '0,1,2,3')
     parser.add_argument('--dry-run', action='store_true', help='Check all checkpoint configs; no GPU or output writes')
     parser.add_argument('--batch-dir', type=Path, help='New output directory (must not already exist)')
@@ -138,8 +205,8 @@ def main():
     parser.add_argument('--copy-to-checkpoints', action='store_true', help='With --summary-only, copy completed results beside checkpoints without GPU work')
     args = parser.parse_args()
     if args.summary_only:
-        if args.paths or args.dry_run or args.batch_dir:
-            parser.error('--summary-only cannot be combined with paths, --dry-run or --batch-dir')
+        if args.paths or args.dry_run or args.batch_dir or args.suite:
+            parser.error('--summary-only cannot be combined with paths, --dry-run, --batch-dir or --suite')
         batch = args.summary_only.resolve()
         manifest = json.loads((batch / 'manifest.json').read_text())
         if args.copy_to_checkpoints:
@@ -149,6 +216,7 @@ def main():
         print((batch / 'summary.md').read_text())
         print(f'CSV: {batch / "summary.csv"}')
         return
+    args.suite = args.suite or 'math'
     if args.copy_to_checkpoints:
         parser.error('--copy-to-checkpoints requires --summary-only')
     if not args.paths:
@@ -170,21 +238,23 @@ def main():
         return
     root = Path(__file__).resolve().parents[1]
     batch = (args.batch_dir or storage / 'evaluation_batches' /
-             ('math_qwen3_32b_' + datetime.now().strftime('%Y%m%d_%H%M%S_%f'))).absolute()
+             (('nonmath_' if args.suite == 'nonmath' else 'math_qwen3_32b_') + datetime.now().strftime('%Y%m%d_%H%M%S_%f'))).absolute()
     batch.mkdir(parents=True, exist_ok=False)
     env = os.environ.copy()
     judge = dict(JUDGE, revision=env.get('RECHECK_LOCAL_REVISION') or None)
     env['STORAGE_PATH'] = str(storage)
-    env.update(RECHECK_BACKEND='local', RECHECK_LOCAL_MODEL=JUDGE['model'],
-               RECHECK_MAX_COMPLETION_TOKENS='32', RECHECK_CONCURRENCY='8',
-               RECHECK_GPU_IDS=args.gpu_ids, RECHECK_TENSOR_PARALLEL_SIZE=str(len(gpu_ids)),
-               EVAL_GPU_IDS=args.gpu_ids, EVAL_TENSOR_PARALLEL_SIZE='1',
-               EVAL_MATH_ONLY='1', EVAL_TASKS=','.join(DATASETS))
+    env['EVAL_GPU_IDS'] = args.gpu_ids
+    if args.suite == 'math':
+        env.update(RECHECK_BACKEND='local', RECHECK_LOCAL_MODEL=JUDGE['model'],
+                   RECHECK_MAX_COMPLETION_TOKENS='32', RECHECK_CONCURRENCY='8',
+                   RECHECK_GPU_IDS=args.gpu_ids, RECHECK_TENSOR_PARALLEL_SIZE=str(len(gpu_ids)),
+                   EVAL_GPU_IDS=args.gpu_ids, EVAL_TENSOR_PARALLEL_SIZE='1',
+                   EVAL_MATH_ONLY='1', EVAL_TASKS=','.join(DATASETS))
     env.setdefault('RECHECK_LOCAL_TMP_ROOT', '/tmp')
     env.setdefault('RECHECK_STARTUP_TIMEOUT', '3600')
     # evaluate.bash invokes "python"; ensure it uses this activated interpreter.
     env['PATH'] = str(Path(sys.executable).parent) + os.pathsep + env.get('PATH', '')
-    manifest = {'judge': judge, 'storage_path': str(storage), 'models': models}
+    manifest = {'suite': args.suite, 'judge': judge if args.suite == 'math' else None, 'storage_path': str(storage), 'models': models}
     save(batch, manifest)
     print(f'BATCH_DIR={batch}', flush=True)
     print(f'Live summary: {batch / "summary.csv"}', flush=True)
@@ -198,8 +268,11 @@ def main():
             save(batch, manifest)
             print(f'START [{item["id"]}/{len(models)}] {item["name"]}', flush=True)
             try:
-                code = subprocess.call(['bash', str(root / 'evaluation/evaluate.bash'), item['model']],
-                                       cwd=root, env=env)
+                if args.suite == 'nonmath':
+                    code = run_nonmath(root, item['model'], output, env)
+                else:
+                    code = subprocess.call(['bash', str(root / 'evaluation/evaluate.bash'), item['model']],
+                                           cwd=root, env=env)
             except KeyboardInterrupt:
                 item['status'] = 'interrupted'
                 raise
@@ -211,7 +284,7 @@ def main():
             result_row = next(row for row in table if row[0] == item['id'])
             if code or result_row[2] != 'complete':
                 raise SystemExit(f'Stopped at model {item["id"]}; inspect {output.parent / "logs"}')
-            print(f'DONE [{item["id"]}/{len(models)}] {item["name"]}; ave={result_row[10]}', flush=True)
+            print(f'DONE [{item["id"]}/{len(models)}] {item["name"]}; {layout(manifest)[1][-3]}={result_row[-3]}', flush=True)
             print(f'Checkpoint result copy: {item["checkpoint_results_dir"]}', flush=True)
     finally:
         save(batch, manifest)
