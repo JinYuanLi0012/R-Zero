@@ -11,7 +11,7 @@ import sys
 import time
 
 from . import prompts
-from .core import SchemaError, TreeBuilder, leaf_records, parse_response, response_diagnostics
+from .core import BudgetExhausted, SchemaError, TreeBuilder, leaf_records, parse_response, response_diagnostics
 
 
 def atomic_json(path, data):
@@ -23,10 +23,6 @@ def atomic_json(path, data):
 
 def digest(value):
     return hashlib.sha256(value.encode("utf-8")).hexdigest()
-
-
-class BudgetExhausted(RuntimeError):
-    pass
 
 
 class ParseRetriesExhausted(RuntimeError):
@@ -171,10 +167,11 @@ def arguments(argv=None):
     parser.add_argument("--max-repairs", type=int, default=2, help="Local semantic repair rounds per parent; not a width quota")
     parser.add_argument("--parse-retries", type=int, default=2, help="Additional attempts per malformed result")
     parser.add_argument("--max-calls", type=int, default=128, help="Total inference attempts, including retries; safety budget only")
+    parser.add_argument("--max-children-per-parent", type=int, default=16, help="Emergency width ceiling only; never a target count")
     parser.add_argument("--resume", action="store_true")
     args = parser.parse_args(argv)
-    if args.max_repairs < 0 or args.parse_retries < 0 or args.max_calls < 1:
-        parser.error("repair/retry budgets must be nonnegative; max-calls must be positive")
+    if args.max_repairs < 0 or args.parse_retries < 0 or args.max_calls < 1 or args.max_children_per_parent < 1:
+        parser.error("repair/retry budgets must be nonnegative; max-calls and max-children-per-parent must be positive")
     if not 0 < args.gpu_memory_utilization < 1 or not 0 < args.top_p <= 1 or args.temperature < 0:
         parser.error("invalid sampling or memory parameters")
     if not 0 < args.max_new_tokens < args.max_model_len:
@@ -211,7 +208,7 @@ def run_config(args, model_path):
             "seed": args.seed, "temperature": args.temperature, "top_p": args.top_p, "top_k": 20,
             "max_new_tokens": args.max_new_tokens, "max_model_len": args.max_model_len,
             "max_repairs": args.max_repairs, "parse_retries": args.parse_retries,
-            "max_calls": args.max_calls, "gpu_id": args.gpu_id,
+            "max_children_per_parent": args.max_children_per_parent, "max_calls": args.max_calls, "gpu_id": args.gpu_id,
             "gpu_memory_utilization": args.gpu_memory_utilization}
 
 
@@ -277,9 +274,10 @@ def main(argv=None):
                 atomic_json(directory / "partial_tree.json", root)
                 atomic_json(directory / "status.json", status)
 
-            builder = TreeBuilder(client, args.max_repairs, checkpoint)
+            builder = TreeBuilder(client, args.max_repairs, checkpoint, args.max_children_per_parent)
             accepted = builder.build()
             manifest.update({"state": builder.status["state"], "calls_used": client.calls,
+                             "stop_reason": builder.status.get("stop_reason"), "error": builder.status.get("error"),
                              "l1_count": len(builder.root["children"]), "leaf_count": len(leaf_records(builder.root))})
             if accepted:
                 atomic_json(directory / "tree.json", builder.root)

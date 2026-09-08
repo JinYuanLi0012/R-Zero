@@ -12,7 +12,7 @@ from unittest.mock import patch
 from methods.validity_rzero.scope_tree import prompts
 from methods.validity_rzero.scope_tree.core import (
     SchemaError, TreeBuilder, apply_repair, parse_response, passed,
-    response_diagnostics, validate_audit, validate_global, validate_proposal,
+    response_diagnostics, validate_addition, validate_audit, validate_coverage, validate_global, validate_proposal,
 )
 from methods.validity_rzero.scope_tree.run import (
     BudgetExhausted, ParseRetriesExhausted, StructuredClient,
@@ -34,20 +34,28 @@ def proposal(names):
     return {"partition_principle": "Shared structural axis", "children": [child(n) for n in names]}
 
 
-def audit(ids, revise=(), remove=(), gap=None):
-    return {"principle_ok": True, "principle_feedback": "Consistent axis", "gap": gap,
-            "children": [{"id": i, "fits_parent": True, "follows_principle": True,
-                          "granularity_ok": i not in revise,
-                          "action": "REMOVE" if i in remove else "REVISE" if i in revise else "KEEP",
-                          "reason": "Review finding"} for i in ids],
+def audit(ids, revise=(), remove=()):
+    rows = []
+    for i in ids:
+        row = {"id": i, "fits_parent": True, "follows_principle": True,
+               "comparable_breadth": i not in revise,
+               "action": "REMOVE" if i in remove else "REVISE" if i in revise else "KEEP",
+               "reason": "Review finding"}
+        if "." in i:
+            row["generation_ready"] = True
+        rows.append(row)
+    return {"principle_ok": True, "principle_feedback": "Consistent axis", "children": rows,
             "pairs": [{"a": a, "b": b, "relation": "DISTINCT", "reason": "Different scope"}
                       for a, b in itertools.combinations(ids, 2)]}
 
 
-def repair(replacements=None, additions=None):
+def coverage(gap=None):
+    return {"has_major_gap": gap is not None, "gap_description": gap, "reason": "Allocation assessment"}
+
+
+def repair(replacements=None):
     return {"partition_principle": "Shared structural axis",
-            "replacements": [{"id": key, "child": value} for key, value in (replacements or {}).items()],
-            "additions": additions or []}
+            "replacements": [{"id": key, "child": value} for key, value in (replacements or {}).items()]}
 
 
 def wrapped(value):
@@ -77,15 +85,19 @@ class ScriptedClient:
         return validator(deepcopy(self.script[label]))
 
 
+def confirmations(prefix, epoch=0):
+    return {f"{prefix}/coverage/{epoch}/{i}": coverage() for i in range(2)}
+
+
 def clean_script():
     return {
         "root/propose": proposal(["Broad A", "Broad B"]),
-        "root/audit/0": audit(["1", "2"]),
+        "root/audit/0": audit(["1", "2"]), **confirmations("root"),
         "1/propose": proposal(["A one", "A two"]),
-        "1/audit/0": audit(["1.1", "1.2"]),
+        "1/audit/0": audit(["1.1", "1.2"]), **confirmations("1"),
         "2/propose": proposal(["B one", "B two"]),
-        "2/audit/0": audit(["2.1", "2.2"]),
-        "global/audit/0": {"issues": []},
+        "2/audit/0": audit(["2.1", "2.2"]), **confirmations("2"),
+        "global/audit/0": {"issues": []}, **confirmations("global"),
     }
 
 
@@ -179,20 +191,41 @@ class SchemaTests(unittest.TestCase):
         with self.assertRaises(SchemaError):
             validate_audit(result, children)
 
-    def test_gap_prevents_acceptance_even_when_all_children_keep(self):
-        self.assertFalse(passed(audit(["1", "2"], gap="A substantially different representation is missing")))
+    def test_coverage_has_separate_strict_schema(self):
+        validate_coverage(coverage())
+        validate_coverage(coverage("A substantial unallocated region"))
+        for bad in ({**coverage(), "has_major_gap": "false"},
+                    {**coverage(), "gap_description": "Contradiction"},
+                    {**coverage(), "has_major_gap": True},
+                    {**coverage(), "reason": ""}):
+            with self.assertRaises(SchemaError):
+                validate_coverage(bad)
+        with self.assertRaises(SchemaError):
+            validate_audit({**audit(["1"]), "gap": None}, [node("1", "A")])
 
-    def test_repair_keeps_accepted_nodes_and_can_fill_gap(self):
+    def test_repair_keeps_accepted_nodes_and_addition_is_separate(self):
         children = [node("1", "A"), node("2", "B")]
         parent = {"id": "root", "partition_principle": "Shared structural axis"}
-        result = apply_repair(repair({"2": child("B repaired")}, [child("C")]), parent, children,
-                              audit(["1", "2"], revise=["2"], gap="Uncovered region"), 1)
+        result = apply_repair(repair({"2": child("B repaired")}), parent, children,
+                              audit(["1", "2"], revise=["2"]), 1)
         self.assertEqual(result["children"][0], children[0])
-        self.assertEqual([n["id"] for n in result["children"]], ["1", "2", "3"])
         with self.assertRaises(SchemaError):
             apply_repair(repair({"1": child("Changed accepted")}), parent, children, audit(["1", "2"]), 1)
         with self.assertRaises(SchemaError):
-            apply_repair(repair(additions=[child("C")]), parent, children, audit(["1", "2"]), 1)
+            apply_repair({**repair(), "additions": [child("C")]}, parent, children, audit(["1", "2"]), 1)
+        self.assertEqual(validate_addition({"child": child("C")}, children), child("C"))
+        for bad in ({"children": [child("C"), child("D")]}, {"child": child("A")}, {"child": [child("C")]}):
+            with self.assertRaises(SchemaError):
+                validate_addition(bad, children)
+
+    def test_bad_breadth_or_routine_leaf_cannot_keep(self):
+        for ids, key in ((["1"], "comparable_breadth"), (["1.1"], "generation_ready")):
+            review = audit(ids)
+            review["children"][0][key] = False
+            with self.assertRaises(SchemaError):
+                validate_audit(review, [node(ids[0], "Routine ax+b=c")])
+            review["children"][0]["action"] = "REVISE"
+            self.assertFalse(passed(validate_audit(review, [node(ids[0], "Routine ax+b=c")])))
 
     def test_removal_and_principle_changes_checked(self):
         children = [node("1", "A"), node("2", "B")]
@@ -287,24 +320,62 @@ class RecordedOutputTests(unittest.TestCase):
 
 
 class FlowTests(unittest.TestCase):
-    def test_happy_path_depth_two_only(self):
+    def test_happy_path_depth_two_and_two_checks(self):
         client = ScriptedClient(clean_script())
         builder = TreeBuilder(client)
         self.assertTrue(builder.build())
-        self.assertEqual(len(client.labels), 7)
-        self.assertEqual(builder.status["state"], "accepted")
+        self.assertEqual(len(client.labels), 15)
+        self.assertTrue(all(c["consecutive_no"] == 2 for c in builder.status["coverage"].values()))
         self.assertTrue(all(not leaf["children"] for p in builder.root["children"] for leaf in p["children"]))
 
-    def test_second_repair_gets_a_third_audit(self):
-        script = clean_script()
-        script.update({"root/audit/0": audit(["1", "2"], revise=["2"]),
-                       "root/repair/0": repair({"2": child("B revised once")}),
-                       "root/audit/1": audit(["1", "2"], revise=["2"]),
-                       "root/repair/1": repair({"2": child("B revised twice")}),
-                       "root/audit/2": audit(["1", "2"])})
+    def test_one_no_cannot_freeze_when_call_budget_ends(self):
+        with tempfile.TemporaryDirectory() as directory:
+            backend = FakeBackend([proposal(["A"]), audit(["1"]), coverage()])
+            builder = TreeBuilder(StructuredClient(backend, directory, max_calls=3))
+            self.assertFalse(builder.build())
+            self.assertEqual(builder.status["state"], "unresolved")
+            self.assertEqual(builder.status["coverage"]["root"]["consecutive_no"], 1)
+            self.assertEqual(builder.status["stop_reason"], "call_budget_exhausted")
+
+    def test_no_yes_addition_restarts_checks_and_preserves_siblings(self):
+        script = {"root/propose": proposal(["A", "B"]), "root/audit/0": audit(["1", "2"]),
+                  "root/coverage/0/0": coverage(), "root/coverage/0/1": coverage("Unallocated structure"),
+                  "root/addition/0": {"child": child("C")}, "root/audit/1": audit(["1", "2", "3"]),
+                  **confirmations("root", 1)}
+        snapshots = []
         client = ScriptedClient(script)
-        self.assertTrue(TreeBuilder(client).build())
-        self.assertIn("root/audit/2", client.labels)
+        builder = TreeBuilder(client, checkpoint=lambda root, status: snapshots.append(deepcopy(status)))
+        self.assertTrue(builder.build_children(builder.root, 1))
+        self.assertEqual([c["name"] for c in builder.root["children"]], ["A", "B", "C"])
+        self.assertEqual(client.labels[-2:], ["root/coverage/1/0", "root/coverage/1/1"])
+        counts = [s["coverage"].get("root", {}).get("consecutive_no") for s in snapshots]
+        self.assertIn(1, counts)
+        self.assertIn(0, counts[counts.index(1) + 1:])
+
+    def test_yes_addition_then_repeated_gap_stalls(self):
+        script = {"root/propose": proposal(["A"]), "root/audit/0": audit(["1"]),
+                  "root/coverage/0/0": coverage("Missing structure"), "root/addition/0": {"child": child("B")},
+                  "root/audit/1": audit(["1", "2"]), "root/coverage/1/0": coverage("missing  structure")}
+        builder = TreeBuilder(ScriptedClient(script))
+        self.assertFalse(builder.build())
+        self.assertEqual(builder.status["parents"]["root"], "stalled_repeated_gap")
+
+    def test_width_ceiling_is_not_success(self):
+        for too_large in (False, True):
+            script = {"root/propose": proposal(["A", "B"] if too_large else ["A"]),
+                      "root/audit/0": audit(["1"]), "root/coverage/0/0": coverage("Gap")}
+            builder = TreeBuilder(ScriptedClient(script), max_children_per_parent=1)
+            self.assertFalse(builder.build())
+            self.assertEqual(builder.status["parents"]["root"], "children_limit_exhausted")
+
+    def test_second_repair_gets_third_audit_and_fresh_coverage(self):
+        script = {"root/propose": proposal(["A", "B"]), "root/audit/0": audit(["1", "2"], revise=["2"]),
+                  "root/repair/0": repair({"2": child("B revised once")}),
+                  "root/audit/1": audit(["1", "2"], revise=["2"]),
+                  "root/repair/1": repair({"2": child("B revised twice")}),
+                  "root/audit/2": audit(["1", "2"]), **confirmations("root", 2)}
+        builder = TreeBuilder(ScriptedClient(script))
+        self.assertTrue(builder.build_children(builder.root, 1))
 
     def test_budget_exhaustion_does_not_freeze_bad_tree(self):
         script = {"root/propose": proposal(["A", "B"]), "root/audit/0": audit(["1", "2"], revise=["2"])}
@@ -313,46 +384,142 @@ class FlowTests(unittest.TestCase):
         self.assertEqual(builder.status["parents"]["root"], "repair_budget_exhausted")
 
     def test_identical_repair_stops_as_stalled(self):
-        script = {"root/propose": proposal(["A", "B"]),
-                  "root/audit/0": audit(["1", "2"], revise=["2"]),
+        script = {"root/propose": proposal(["A", "B"]), "root/audit/0": audit(["1", "2"], revise=["2"]),
                   "root/repair/0": repair({"2": child("B")})}
         builder = TreeBuilder(ScriptedClient(script))
         self.assertFalse(builder.build())
         self.assertEqual(builder.status["parents"]["root"], "stalled")
 
-    def test_global_repair_is_followed_by_local_and_global_reaudit(self):
+    def test_addition_cannot_force_changes_to_accepted_siblings(self):
+        script = {"root/propose": proposal(["A"]), "root/audit/0": audit(["1"]),
+                  "root/coverage/0/0": coverage("Gap"), "root/addition/0": {"child": child("B")},
+                  "root/audit/1": audit(["1", "2"], revise=["1"])}
+        builder = TreeBuilder(ScriptedClient(script))
+        self.assertFalse(builder.build())
+        self.assertEqual(builder.status["parents"]["root"], "protected_sibling_conflict")
+        self.assertEqual(builder.root["children"][0]["name"], "A")
+
+    def test_global_repair_followed_by_local_double_coverage_and_global_checks(self):
         script = clean_script()
         script.update({"global/audit/0": {"issues": [{"a": "1.1", "b": "2.1", "revise_id": "2.1",
                                                      "relation": "NEAR_DUPLICATE", "reason": "same structure"}]},
                        "global/repair/2": repair({"2.1": child("B new structure")}),
-                       "global/local_reaudit/2": audit(["2.1", "2.2"]),
-                       "global/audit/1": {"issues": []}})
+                       "global/verify/2/audit/0": audit(["2.1", "2.2"]), **confirmations("global/verify/2"),
+                       "global/audit/1": {"issues": []}, **confirmations("global", 1)})
         client = ScriptedClient(script)
         self.assertTrue(TreeBuilder(client).build())
-        self.assertEqual(client.labels[-2:], ["global/local_reaudit/2", "global/audit/1"])
+        self.assertEqual(client.labels[-3:], ["global/audit/1", "global/coverage/1/0", "global/coverage/1/1"])
 
     def test_global_repair_cannot_hide_new_local_gap(self):
         script = clean_script()
         script.update({"global/audit/0": {"issues": [{"a": "1.1", "b": "2.1", "revise_id": "2.1",
                                                      "relation": "NESTED", "reason": "nested scope"}]},
                        "global/repair/2": repair({"2.1": None}),
-                       "global/local_reaudit/2": audit(["2.2"], gap="Removal leaves a major structural gap"),
-                       "global/audit/1": {"issues": []}})
+                       "global/verify/2/audit/0": audit(["2.2"]),
+                       "global/verify/2/coverage/0/0": coverage("Removal leaves a major gap")})
         builder = TreeBuilder(ScriptedClient(script))
         self.assertFalse(builder.build())
         self.assertEqual(builder.status["global"], "unresolved")
+        self.assertEqual(builder.status["parents"]["2"], "coverage_unresolved")
 
-    def test_full_pipeline_with_structured_transport_and_cached_resume(self):
+    def global_addition_script(self, new_branch=False):
         script = clean_script()
+        script["global/coverage/0/0"] = coverage("Missing major generation region")
+        target = "root" if new_branch else "2"
+        ids = ["1", "2", "3"] if new_branch else ["2.1", "2.2", "2.3"]
+        script.update({"global/addition": {"parent_id": target, "child": child("New region")},
+                       f"global/verify/{target}/audit/0": audit(ids), **confirmations(f"global/verify/{target}"),
+                       "global/audit/1": {"issues": []}, **confirmations("global", 1)})
+        if new_branch:
+            script.update({"3/propose": proposal(["C one", "C two"]), "3/audit/0": audit(["3.1", "3.2"]),
+                           **confirmations("3")})
+        return script
+
+    def test_global_gap_addition_existing_branch_and_new_l1(self):
+        for new_branch in (False, True):
+            with self.subTest(new_branch=new_branch):
+                client = ScriptedClient(self.global_addition_script(new_branch))
+                builder = TreeBuilder(client)
+                self.assertTrue(builder.build())
+                self.assertTrue(all(p["children"] for p in builder.root["children"]))
+                self.assertEqual(len(builder.root["children"]), 3 if new_branch else 2)
+                self.assertEqual(client.labels.count("global/addition"), 1)
+
+    def test_global_addition_cannot_repeat_sweep_or_skip_validation(self):
+        for failed_local in (False, True):
+            script = self.global_addition_script()
+            if failed_local:
+                script["global/verify/2/audit/0"] = audit(["2.1", "2.2", "2.3"], revise=["2.3"])
+            else:
+                script["global/coverage/1/1"] = coverage("Another global gap")
+            builder = TreeBuilder(ScriptedClient(script))
+            self.assertFalse(builder.build())
+            self.assertEqual(builder.status["global"], "unresolved")
+
+    def test_full_pipeline_transport_distinct_samples_and_cached_resume(self):
         with tempfile.TemporaryDirectory() as directory:
-            backend = FakeBackend(list(script.values()))
+            backend = FakeBackend(list(clean_script().values()))
             self.assertTrue(TreeBuilder(StructuredClient(backend, directory)).build())
-            self.assertEqual(len(backend.seeds), 7)
+            self.assertEqual(len(backend.seeds), 15)
+            self.assertEqual(len(set(backend.seeds)), 15)
+            requests = [json.loads(p.read_text()) for p in (Path(directory) / "requests").glob("*/request.json")]
+            a, b = [next(r for r in requests if r["label"] == f"root/coverage/0/{i}") for i in range(2)]
+            self.assertEqual(a["user"], b["user"])
             self.assertTrue(TreeBuilder(StructuredClient(FakeBackend([]), directory)).build())
 
-    def test_prompts_have_no_fixed_taxonomy_or_width_quota(self):
+    def test_changed_partition_cannot_reuse_previous_coverage_confirmations(self):
+        outputs = [proposal(["A"]), audit(["1"]), coverage(), coverage("Unallocated region"),
+                   {"child": child("B")}, audit(["1", "2"]), coverage(), coverage()]
+        with tempfile.TemporaryDirectory() as directory:
+            backend = FakeBackend(outputs)
+            builder = TreeBuilder(StructuredClient(backend, directory))
+            self.assertTrue(builder.build_children(builder.root, 1))
+            self.assertEqual(len(backend.seeds), 8)
+            requests = [json.loads(p.read_text()) for p in (Path(directory) / "requests").glob("*/request.json")]
+            old = next(r for r in requests if r["label"] == "root/coverage/0/0")
+            new = next(r for r in requests if r["label"] == "root/coverage/1/0")
+            self.assertNotEqual(old["user"], new["user"])
+            resumed = TreeBuilder(StructuredClient(FakeBackend([]), directory))
+            self.assertTrue(resumed.build_children(resumed.root, 1))
+            self.assertEqual(resumed.root, builder.root)
+
+    def test_new_l1_must_complete_l2_and_final_overlap_must_pass(self):
+        script = self.global_addition_script(True)
+        script["3/audit/0"] = audit(["3.1", "3.2"], revise=["3.1"])
+        builder = TreeBuilder(ScriptedClient(script), max_repairs=0)
+        self.assertFalse(builder.build())
+        self.assertEqual(builder.status["parents"]["3"], "repair_budget_exhausted")
+        script = self.global_addition_script()
+        script["global/audit/1"] = {"issues": [{"a": "1.1", "b": "2.3", "revise_id": "2.3",
+                                               "relation": "NESTED", "reason": "New leaf still overlaps"}]}
+        self.assertFalse(TreeBuilder(ScriptedClient(script)).build())
+
+    def test_added_child_can_be_repaired_without_touching_accepted_sibling(self):
+        script = {"root/propose": proposal(["A"]), "root/audit/0": audit(["1"]),
+                  "root/coverage/0/0": coverage("Gap"), "root/addition/0": {"child": child("B")},
+                  "root/audit/1": audit(["1", "2"], revise=["2"]),
+                  "root/repair/0": repair({"2": child("B repaired")}),
+                  "root/audit/2": audit(["1", "2"]), **confirmations("root", 2)}
+        builder = TreeBuilder(ScriptedClient(script))
+        self.assertTrue(builder.build_children(builder.root, 1))
+        self.assertEqual([c["name"] for c in builder.root["children"]], ["A", "B repaired"])
+
+    def test_global_overlap_repair_and_gap_addition_share_one_verified_sweep(self):
+        script = self.global_addition_script()
+        script.update({"global/audit/0": {"issues": [{"a": "1.1", "b": "2.1", "revise_id": "2.1",
+                                                     "relation": "NESTED", "reason": "Overlap"}]},
+                       "global/repair/2": repair({"2.1": child("Revised B")})})
+        client = ScriptedClient(script)
+        builder = TreeBuilder(client)
+        self.assertTrue(builder.build())
+        self.assertEqual(client.labels.count("global/verify/2/audit/0"), 1)
+        self.assertEqual(builder.root["children"][1]["children"][0]["name"], "Revised B")
+
+    def test_shared_target_and_depth_constraints_in_prompts(self):
         self.assertIn("no target count", prompts.WIDTH)
         self.assertIn("final depth", prompts.granularity(2))
+        for text in ("fewer than 30%", "including but not limited to", "external datasets", "non-trivial"):
+            self.assertIn(text, prompts.SYSTEM)
         with self.assertRaises(ValueError):
             prompts.granularity(3)
 
@@ -406,6 +573,25 @@ class RunnerTests(unittest.TestCase):
             self.assertEqual(manifest["state"], "failed")
             self.assertEqual(manifest["calls_used"], 3)
             self.assertEqual(len(list((output / "requests").glob("*/attempt_*.json"))), 3)
+
+    def test_cli_call_budget_is_unresolved_and_resume_does_not_reset_it(self):
+        with tempfile.TemporaryDirectory() as directory:
+            model = Path(directory) / "model"
+            model.mkdir()
+            output = Path(directory) / "output"
+            args = ["--model", str(model), "--output-dir", str(output), "--max-calls", "3"]
+            backend = FakeBackend([proposal(["A"]), audit(["1"]), coverage()])
+            with patch.object(runner, "VLLMBackend", return_value=backend), patch.dict("sys.modules", self.runtime_modules()):
+                self.assertEqual(runner.main(args), 2)
+                self.assertEqual(runner.main(args + ["--resume"]), 2)
+            self.assertFalse((output / "tree.json").exists())
+            manifest = json.loads((output / "manifest.json").read_text())
+            self.assertEqual(manifest["stop_reason"], "call_budget_exhausted")
+            self.assertEqual(manifest["calls_used"], 3)
+            self.assertEqual(manifest["config"]["max_children_per_parent"], 16)
+            self.assertEqual(manifest["config"]["max_new_tokens"], 8192)
+            with self.assertRaisesRegex(ValueError, "fingerprint differs"):
+                runner.main(args + ["--resume", "--max-children-per-parent", "12"])
 
 
 if __name__ == "__main__":
