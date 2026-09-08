@@ -12,7 +12,7 @@ from unittest.mock import patch
 from methods.validity_rzero.scope_tree import prompts
 from methods.validity_rzero.scope_tree.core import (
     SchemaError, TreeBuilder, apply_repair, parse_response, passed,
-    validate_audit, validate_global, validate_proposal,
+    response_diagnostics, validate_audit, validate_global, validate_proposal,
 )
 from methods.validity_rzero.scope_tree.run import (
     BudgetExhausted, ParseRetriesExhausted, StructuredClient,
@@ -90,12 +90,11 @@ def clean_script():
 
 
 class SchemaTests(unittest.TestCase):
-    def test_analysis_required_and_strict_box(self):
+    def test_analysis_present_and_final_box_unambiguous(self):
         self.assertEqual(parse_response(wrapped({"a": {"b": 1}})), {"a": {"b": 1}})
         invalid = [
             '<final_json>{}</final_json>',
             '<analysis></analysis><final_json>{}</final_json>',
-            wrapped({}) + "trailing",
             wrapped({}) + wrapped({}),
             '<analysis>x</analysis><final_json>{"a":1,"a":2}</final_json>',
             '<analysis>x</analysis><final_json>{"a":NaN}</final_json>',
@@ -104,6 +103,55 @@ class SchemaTests(unittest.TestCase):
         for raw in invalid:
             with self.subTest(raw=raw), self.assertRaises(SchemaError):
                 parse_response(raw)
+
+    def test_plain_or_think_analysis_and_extra_prose_do_not_block_final_json(self):
+        data = {"a": {"nested": [1, 2]}, "text": "A {brace} inside a string"}
+        final = "<final_json>" + json.dumps(data) + "</final_json>"
+        for raw in (
+            "First I compare the relevant structures.\n" + final,
+            "<think>Compare the scope and granularity.</think>\n" + final,
+            "<analysis>Compare structures.</analysis>\nFinal result:\n" + final,
+            "<analysis>Compare structures.</analysis>\n" + final + "\nDone.",
+            "Compare the scopes.\n<final_json>```json\n" + json.dumps(data) + "\n```</final_json>",
+        ):
+            with self.subTest(raw=raw):
+                self.assertEqual(parse_response(raw), data)
+
+    def test_missing_or_broken_final_still_rejected(self):
+        for raw in (
+            'I compare the scopes. {"children": []}',
+            'I compare. <final_json>{"children": []}',
+            'I compare. </final_json>{}<final_json>',
+            'I compare. <final_json>{}{}</final_json>',
+        ):
+            with self.subTest(raw=raw), self.assertRaises(SchemaError):
+                parse_response(raw)
+
+    def test_json_fence_fallback_requires_one_complete_box_and_analysis(self):
+        self.assertEqual(parse_response('分析：比较对象。\n```json\n{"a": 1}\n```\n说明。'), {"a": 1})
+        for raw in (
+            '```json\n{}\n```',
+            'Reason. ```json\n{}\n```\n```json\n{}\n```',
+            'Reason. ```json\n{}',
+            'Reason. <final_json>```json\n{}\n```',
+            'Reason. ```json\n{"a":1,"a":2}\n```',
+            'Reason. ```json\n{"a":NaN}\n```',
+        ):
+            with self.subTest(raw=raw), self.assertRaises(SchemaError):
+                parse_response(raw)
+
+    def test_explicit_final_wins_over_draft_fence(self):
+        raw = 'Draft. ```json\n{"draft": true}\n```\nCompare structures.\n<final_json>{"final": true}</final_json>'
+        self.assertEqual(parse_response(raw), {"final": True})
+
+    def test_diagnostics_distinguish_missing_final_from_unstructured_analysis(self):
+        raw = 'Reasoning in plain text. <final_json>{}</final_json>'
+        info = response_diagnostics(raw)
+        self.assertEqual(info["final_json_open_count"], 1)
+        self.assertEqual(info["final_json_close_count"], 1)
+        self.assertTrue(info["has_analysis_before_final"])
+        self.assertEqual(response_diagnostics('long unfinished reasoning')["final_json_open_count"], 0)
+        self.assertEqual(response_diagnostics('Reason. ```json\n{}\n```')["final_box_format"], "json_fence")
 
     def test_adaptive_width_has_no_eight_or_four_limit(self):
         validate_proposal(proposal([f"Family {i}" for i in range(11)]))
@@ -176,9 +224,18 @@ class RetryTests(unittest.TestCase):
             attempts = list((Path(directory) / "requests").glob("*/attempt_*.json"))
             self.assertEqual(len(attempts), 3)
             self.assertTrue(all("raw_completion" in json.loads(p.read_text()) for p in attempts))
+            self.assertTrue(all("diagnostics" in json.loads(p.read_text()) for p in attempts))
             resumed = StructuredClient(FakeBackend([]), directory)
             self.assertEqual(resumed.request("x", "task", validate_proposal), result)
             self.assertEqual(resumed.calls, 3)
+
+    def test_plain_analysis_valid_json_does_not_spend_retry(self):
+        with tempfile.TemporaryDirectory() as directory:
+            result = proposal(["A", "B"])
+            raw = "Compare mathematical objects and avoid overly narrow subcases.\n<final_json>" + json.dumps(result) + "</final_json>"
+            client = StructuredClient(FakeBackend([raw]), directory)
+            self.assertEqual(client.request("x", "task", validate_proposal), result)
+            self.assertEqual(client.calls, 1)
 
     def test_retry_exhaustion_is_bounded_and_persistent(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -196,6 +253,37 @@ class RetryTests(unittest.TestCase):
             with self.assertRaises(BudgetExhausted):
                 client.request("x", "task", validate_proposal)
             self.assertEqual(client.calls, 1)
+
+
+class RecordedOutputTests(unittest.TestCase):
+    """Exact Base completions from the failed v1 root/propose, excluding run metadata."""
+
+    def setUp(self):
+        self.rows = json.loads((Path(__file__).parent / "fixtures" / "root_propose_v1.json").read_text(encoding="utf-8"))
+
+    def test_recorded_outputs_reject_repetition_accept_tagged_and_fenced_results(self):
+        self.assertEqual(self.rows[0]["finish_reason"], "length")
+        with self.assertRaises(SchemaError):
+            parse_response(self.rows[0]["raw_completion"])
+        for row, expected_width in zip(self.rows[1:], (10, 4)):
+            with self.subTest(attempt=row["attempt"]):
+                result = validate_proposal(parse_response(row["raw_completion"]))
+                self.assertEqual(len(result["children"]), expected_width)
+
+    def test_recorded_retry_stops_at_second_completion_and_persists_evidence(self):
+        outputs = iter(self.rows)
+        backend = types.SimpleNamespace(generate=lambda *args: deepcopy(next(outputs)))
+        with tempfile.TemporaryDirectory() as directory:
+            client = StructuredClient(backend, directory)
+            result = client.request("root/propose", "Recorded request replay", validate_proposal)
+            self.assertEqual(client.calls, 2)
+            self.assertEqual(len(result["children"]), 10)
+            saved = [json.loads(p.read_text()) for p in sorted((Path(directory) / "requests").glob("*/attempt_*.json"))]
+            self.assertEqual([r["status"] for r in saved], ["parse_error", "ok"])
+            self.assertEqual([r["finish_reason"] for r in saved], ["length", "stop"])
+            self.assertEqual(saved[0]["raw_completion"], self.rows[0]["raw_completion"])
+            resumed = StructuredClient(FakeBackend([]), directory)
+            self.assertEqual(resumed.request("root/propose", "Recorded request replay", validate_proposal), result)
 
 
 class FlowTests(unittest.TestCase):

@@ -11,7 +11,7 @@ import sys
 import time
 
 from . import prompts
-from .core import SchemaError, TreeBuilder, leaf_records, parse_response
+from .core import SchemaError, TreeBuilder, leaf_records, parse_response, response_diagnostics
 
 
 def atomic_json(path, data):
@@ -77,7 +77,8 @@ class StructuredClient:
                     "\nYour preceding attempt did not yield a valid structured result.\n"
                     f"Validation error: {last_error}\n"
                     "Retry the SAME task. First write a concise analysis, then a complete JSON result. "
-                    "Follow the exact schema, include every required id/pair, and close both output blocks. "
+                    "Follow the exact schema, include every required id/pair, and wrap the final JSON in "
+                    "<final_json>...</final_json>. Analysis can be ordinary prose; no analysis tags are required. "
                     "Do not discuss the formatting failure or copy the previous answer.\n"
                 )
             saved = {"label": label, "attempt": attempt, "seed": seed, "user": retry_prompt,
@@ -90,6 +91,7 @@ class StructuredClient:
             try:
                 output = self.backend.generate(prompts.SYSTEM, retry_prompt, seed)
                 saved.update(output)
+                saved["diagnostics"] = response_diagnostics(output["raw_completion"])
                 data = parse_response(output["raw_completion"])
                 result = validator(data)
                 saved.update({"status": "ok", "parsed_json": data})
@@ -97,6 +99,11 @@ class StructuredClient:
                 last_error = str(exc)
                 saved.update({"status": "parse_error", "error": last_error})
                 print(f"  retryable parse/schema error: {last_error}", flush=True)
+                print("  output diagnostics: " + json.dumps({
+                    "attempt_file": str(path), "finish_reason": saved.get("finish_reason"),
+                    "completion_tokens": saved.get("completion_tokens"),
+                    **saved.get("diagnostics", {}),
+                }, ensure_ascii=False), flush=True)
             except BaseException as exc:
                 saved.update({"status": "inference_error", "error": f"{type(exc).__name__}: {exc}"})
                 raise
@@ -159,8 +166,8 @@ def arguments(argv=None):
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--temperature", type=float, default=0.6)
     parser.add_argument("--top-p", type=float, default=0.95)
-    parser.add_argument("--max-new-tokens", type=int, default=4096)
-    parser.add_argument("--max-model-len", type=int, default=16384)
+    parser.add_argument("--max-new-tokens", type=int, default=8192)
+    parser.add_argument("--max-model-len", type=int, default=32768)
     parser.add_argument("--max-repairs", type=int, default=2, help="Local semantic repair rounds per parent; not a width quota")
     parser.add_argument("--parse-retries", type=int, default=2, help="Additional attempts per malformed result")
     parser.add_argument("--max-calls", type=int, default=128, help="Total inference attempts, including retries; safety budget only")

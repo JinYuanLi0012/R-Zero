@@ -38,21 +38,65 @@ def unique_object(pairs):
     return result
 
 
+JSON_FENCE = re.compile(r"```(?:json)?[ \t]*\r?\n(.*?)\r?\n[ \t]*```", re.DOTALL | re.IGNORECASE)
+
+
+def final_box(text):
+    # An explicit final box takes precedence over drafts. Broken or repeated
+    # final tags must not silently fall back to a different result.
+    if "<final_json>" in text or "</final_json>" in text:
+        for tag in ("<final_json>", "</final_json>"):
+            require(text.count(tag) == 1, f"expected exactly one {tag}")
+        match = re.search(r"<final_json>(.*?)</final_json>", text, re.DOTALL)
+        require(match is not None, "final_json opening and closing delimiters are out of order")
+        return match, "final_json"
+    # Base can instead produce reasoning followed by one Markdown JSON box.
+    # Never search arbitrary bare objects or choose among multiple code blocks.
+    match = JSON_FENCE.search(text)
+    require(text.count("```") == 2 and match is not None,
+            "expected one complete final_json box or one unambiguous JSON code fence")
+    return match, "json_fence"
+
+
 def parse_response(text):
-    for tag in ("<analysis>", "</analysis>", "<final_json>", "</final_json>"):
-        require(text.count(tag) == 1, f"expected exactly one {tag}")
-    match = re.fullmatch(
-        r"\s*<analysis>(.*?)</analysis>\s*<final_json>(.*?)</final_json>\s*", text, re.DOTALL
-    )
-    require(match is not None, "expected analysis then final_json, without extra text")
-    require(bool(match[1].strip()), "analysis block must be nonempty")
+    # Analysis is free text, not a second machine-readable payload. Base models
+    # may use plain prose, <think>, or <analysis>; none changes the final schema.
+    match, box_format = final_box(text)
+    # Keep the requested reasoning-before-result protocol, without requiring its
+    # exact spelling or tag syntax. This is a presence check, not a reasoning judge.
+    analysis = re.sub(r"</?(?:analysis|think)>", "", text[:match.start()]).strip()
+    require(bool(analysis), "missing analysis before final result; reason briefly before the final result")
+    payload = match[1].strip()
+    # Harmless fenced JSON inside the designated box is still unambiguous.
+    fence = JSON_FENCE.fullmatch(payload) if box_format == "final_json" else None
+    if fence:
+        payload = fence[1].strip()
     try:
-        data = json.loads(match[2], object_pairs_hook=unique_object,
+        data = json.loads(payload, object_pairs_hook=unique_object,
                           parse_constant=lambda x: (_ for _ in ()).throw(SchemaError(f"invalid JSON constant {x}")))
     except json.JSONDecodeError as exc:
         raise SchemaError(f"invalid JSON: {exc.msg}") from exc
     require(isinstance(data, dict), "final_json must contain an object")
     return data
+
+
+def response_diagnostics(text):
+    """Cheap output-shape evidence for console logs and persisted attempts."""
+    try:
+        match, box_format = final_box(text)
+        prefix = text[:match.start()]
+    except SchemaError:
+        box_format, prefix = None, ""
+    analysis = re.sub(r"</?(?:analysis|think)>", "", prefix).strip()
+    return {
+        "raw_characters": len(text),
+        "final_json_open_count": text.count("<final_json>"),
+        "final_json_close_count": text.count("</final_json>"),
+        "final_box_format": box_format,
+        "has_analysis_before_final": bool(analysis),
+        "raw_head": text[:300],
+        "raw_tail": text[-500:],
+    }
 
 
 def child_schema(child):
