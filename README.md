@@ -1,5 +1,9 @@
 # *R-Zero*: Self-Evolving Reasoning LLM from Zero Data
 
+An independent [frozen-Base mathematical scope-tree pilot](methods/validity_rzero/scope_tree/README.md)
+builds a two-level, adaptive-width hierarchy with bounded PROPOSE/AUDIT/REPAIR,
+explicit analysis plus JSON outputs, parsing retries, and resumable request logs.
+
 The two-pass, blind Terra dataset builder for validity-aware GRPO preparation is
 available under [`methods/validity_rl_terra_dataset`](methods/validity_rl_terra_dataset/README.md).
 
