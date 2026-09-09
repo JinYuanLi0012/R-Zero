@@ -92,3 +92,53 @@ CPU 测试会删除这两行透传、统一行尾空白后与原文件逐字比�
 ```bash
 python -m unittest methods.validity_rzero.three_question_pilot.test_protocol -v
 ```
+
+## 用已生成数据训练 Solver（独立 S4 分支）
+
+```bash
+cd /storage1/jiaxinh/Active/jinyuan/R-zero
+git pull --ff-only
+source env_rzero.sh
+bash methods/validity_rzero/three_question_pilot/train_solver.sh
+```
+
+默认读取原实验 Linux 输出目录的 `datasets/round_4.json` 和
+`datasets/round_4_phase_b.jsonl`，校验两者一致；不会再次出题、打分或去重。
+使用保留行的 Solver 多数投票 `answer`，不使用 `questioner_answer`。
+复用 `build_mixed_rows`，同一 Terra 数据集、default config、10% 比例和 seed=1。
+当前 5633 条 R-Zero 配 625 条 Terra，总计 6258 条。
+数据上传到 `$HUGGINGFACENAME/novelty_k8_q4_s3_three_questions_v1_solver_v4`
+（私有仓库；未设置 namespace 时默认 jinyuan222）。需要原环境的 HF 上传凭据。
+
+训练直接调用原 `scripts/solver_train.sh` 的 `SOLVER_DATASET_READY=1` 路径。
+初始模型为原 S3 的 `global_step_15/actor/huggingface`，显式对齐
+`scripts/main.sh` 的 Solver 设置：4 卡、15 steps、rollout batch 512、
+4096 response tokens、100 epochs 上限、val_freq=4、save_freq=1、save_limit=1。
+其余算法、学习率、KL、采样设置和 source 专用 prompt/reward 均来自原训练脚本及
+`examples/config.yaml`，未修改。继承的 SOLVER_* 覆盖会清除，避免污染实验。
+数据较少会改变跨 epoch 后的重复采样比例；训练步数和 batch 大小保持一致。
+
+像原 validity 主流程一样，训练后合并 step15 模型，不自动执行最终 benchmark。
+输出模型：
+`/engrfs/project/jiaxinh/jinyuan/R-zero-storage/models/novelty_k8_q4_s3_three_questions_v1_solver_v4/global_step_15/actor/huggingface`
+
+receipt、混合数据副本、启动配置和日志独立保存在：
+`/engrfs/project/jiaxinh/jinyuan/R-zero-storage/rzero_runs/novelty_k8_q4_s3_three_questions_v1_solver_v4/`
+
+可选命令：
+
+```bash
+# 只检查输入并打印参数；不上传、不加载模型、不启动 GPU
+bash methods/validity_rzero/three_question_pilot/train_solver.sh --dry-run
+# 数据目录不同则指定实际包含 round_4.json 的目录
+bash methods/validity_rzero/three_question_pilot/train_solver.sh --data-dir /path/to/datasets
+# 只混合并上传，之后不带该选项启动时会复用匹配的 receipt
+bash methods/validity_rzero/three_question_pilot/train_solver.sh --prepare-only
+```
+
+已有模型输出目录时拒绝重训覆盖；本入口不提供自动断点续训。
+训练中断后应按实际 checkpoint 单独恢复，不能删除目录后盲目重启。
+评测时对新模型复用原 S4 的评测命令、任务及 recheck 配置。
+
+本地验证：`python3 -m unittest methods.validity_rzero.three_question_pilot.test_train_solver methods.validity_rzero.three_question_pilot.test_protocol`。
+GPU 训练和 HF 上传需在 Linux 环境执行，Mac 测试不会执行这两步。
