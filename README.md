@@ -1,5 +1,9 @@
 # *R-Zero*: Self-Evolving Reasoning LLM from Zero Data
 
+An isolated [Q4 + S3 three-question generation experiment](methods/validity_rzero/three_question_pilot/README.md)
+uses four GPUs with 833 requests each, preserves all complete question/answer pairs,
+and applies the original validity and majority-vote filtering without model training.
+
 An independent [frozen-Base mathematical scope-tree pilot](methods/validity_rzero/scope_tree/README.md)
 builds a two-level, adaptive-width hierarchy with bounded PROPOSE/AUDIT/REPAIR,
 explicit analysis plus JSON outputs, parsing retries, and resumable request logs.
