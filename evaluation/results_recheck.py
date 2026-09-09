@@ -5,9 +5,11 @@ import argparse
 import os
 
 try:
+    from evaluation.judge_prompts import MODES, messages, prompt_metadata, ensure_output_mode
     from evaluation.local_judge import LocalJudge, local_backend
     from evaluation.recheck_common import recheck_concurrency, recheck_rows
 except ModuleNotFoundError:  # Support `python evaluation/results_recheck.py`.
+    from judge_prompts import MODES, messages, prompt_metadata, ensure_output_mode
     from local_judge import LocalJudge, local_backend
     from recheck_common import recheck_concurrency, recheck_rows
 
@@ -38,10 +40,7 @@ def process_example(answer, response):
         model_response = response
         example = {
             "model": RECHECK_JUDGE_MODEL,
-            "messages": [
-                {"role": "system", "content": "You are a math answer checker."},
-                {"role": "user", "content": f"Hi, there is a model response: {model_response}\n\n, and the ground truth answer is: {gold_answer}\n\n, please check whether the model response is correct or not, and return the **only** Yes or No."}
-            ],
+            "messages": messages(gold_answer, model_response),
         }
         if RECHECK_JUDGE_MODEL.startswith("gpt-5"):
             example["max_completion_tokens"] = RECHECK_MAX_COMPLETION_TOKENS
@@ -66,9 +65,14 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--model_name", type=str, default="Qwen/Qwen2.5-7B-Instruct")
     parser.add_argument("--datasets", default=os.getenv("EVAL_TASKS", "math,gsm8k,amc,minerva,olympiad,aime2024,aime2025"))
+    parser.add_argument("--judge-prompt-mode", choices=MODES, default=os.getenv("RECHECK_JUDGE_PROMPT_MODE", "corrected"))
     args = parser.parse_args()
+    os.environ["RECHECK_JUDGE_PROMPT_MODE"] = args.judge_prompt_mode
+    ensure_output_mode(FINAL_RESULTS_FILE)
     local_judge = LocalJudge() if IS_LOCAL else None
     concurrency = recheck_concurrency()
+    metadata = local_judge.metadata if IS_LOCAL else dict(backend="api", model=RECHECK_JUDGE_MODEL, **prompt_metadata())
+    print(f"Judge prompt: {metadata['prompt_mode']} ({metadata['prompt_version']})", flush=True)
 
     new_results = []
     print(f"Recheck judge: {local_judge.metadata if IS_LOCAL else RECHECK_JUDGE_MODEL}")
@@ -103,7 +107,7 @@ def main():
                     'model': model_name,
                     'dataset': dataset,
                     'score': score,
-                    **({'recheck': local_judge.metadata} if IS_LOCAL else {}),
+                    'recheck': metadata,
                 }, f)
                 f.write('\n')
 

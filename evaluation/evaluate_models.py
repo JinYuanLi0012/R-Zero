@@ -13,14 +13,26 @@ import subprocess
 import sys
 import tempfile
 
+try:
+    from evaluation.judge_prompts import MODES, prompt_metadata, normalized_metadata
+except ModuleNotFoundError:
+    from judge_prompts import MODES, prompt_metadata, normalized_metadata
+
 DATASETS = ['math', 'gsm8k', 'amc', 'minerva', 'olympiad', 'aime2024', 'aime2025']
 JUDGE = {'backend': 'local', 'model': 'Qwen/Qwen3-32B', 'revision': None,
-         'prompt_version': 'math-recheck-local-v1', 'enable_thinking': False,
+         **prompt_metadata('corrected'), 'enable_thinking': False,
          'temperature': 0.0, 'max_tokens': 32}
 COLUMNS = ['id', 'name', 'status'] + DATASETS + ['ave', 'model', 'results_file']
 
 NONMATH_DATASETS = ['supergpqa', 'bbeh', 'mmlupro']
 NONMATH_EVALUATOR = {'backend': 'benchmark_scripts', 'version': 'nonmath-v1'}
+
+
+def prompt_description(manifest):
+    if manifest.get('suite') == 'nonmath':
+        return ''
+    judge = normalized_metadata(manifest['judge'])
+    return f"Judge prompt: {judge['prompt_mode']} ({judge['prompt_version']})\n\n"
 
 
 def layout(manifest):
@@ -133,7 +145,7 @@ def summarize(batch, manifest):
                     dataset = record['dataset']
                     score = float(record['score'])
                     if (record['model'] != item['model'] or (record.get('evaluator') != NONMATH_EVALUATOR if manifest.get('suite') == 'nonmath'
-                                else record.get('recheck') != manifest['judge'])
+                                else normalized_metadata(record.get('recheck')) != normalized_metadata(manifest['judge']))
                             or dataset not in datasets or dataset in scores
                             or not math.isfinite(score) or not 0 <= score <= 100):
                         raise ValueError('Invalid or mixed result')
@@ -154,6 +166,7 @@ def summarize(batch, manifest):
         writer.writerow(columns)
         writer.writerows(table)
     with (batch / 'summary.md').open('w') as output:
+        output.write(prompt_description(manifest))
         output.write(f'Scores are percentages. {columns[-3]} is an unweighted mean of {len(columns) - 6} benchmarks, not an official aggregate.\n\n')
         output.write('| ' + ' | '.join(columns[:width]) + ' |\n')
         output.write('| ' + ' | '.join(['---'] * width) + ' |\n')
@@ -178,9 +191,11 @@ def copy_to_checkpoints(batch, manifest, table):
             previous = json.loads(metadata_file.read_text())
             if any(previous.get(key) != value for key, value in identity.items()):
                 raise FileExistsError(f'Refusing to overwrite results from another batch: {destination}')
+            if manifest.get('suite') != 'nonmath' and 'judge' in previous and normalized_metadata(previous['judge']) != normalized_metadata(manifest['judge']):
+                raise FileExistsError(f'Refusing to overwrite results from another judge configuration: {destination}')
         else:
             destination.mkdir(parents=True, exist_ok=False)
-            metadata_file.write_text(json.dumps(dict(identity, status='copying'), indent=2) + '\n')
+            metadata_file.write_text(json.dumps(dict(identity, status='copying', judge=manifest['judge']), indent=2) + '\n')
         source = batch / item['results_file']
         shutil.copyfile(source, destination / 'final_results.jsonl')
         with (destination / 'summary.csv').open('w', newline='') as output:
@@ -188,6 +203,7 @@ def copy_to_checkpoints(batch, manifest, table):
             writer.writerow(columns)
             writer.writerow(row)
         with (destination / 'summary.md').open('w') as output:
+            output.write(prompt_description(manifest))
             output.write(f'Scores are percentages. {columns[-3]} is an unweighted mean of {len(columns) - 6} benchmarks, not an official aggregate.\n\n')
             output.write('| ' + ' | '.join(columns[:width]) + ' |\n')
             output.write('| ' + ' | '.join(['---'] * width) + ' |\n')
@@ -221,6 +237,8 @@ def main():
     parser.add_argument('--storage-path', default=os.getenv('STORAGE_PATH'), help='Base evaluation output storage; independent of checkpoint location')
     parser.add_argument('--suite', choices=['math', 'nonmath'], default=None,
                         help='Default: math (7 tasks). nonmath: SuperGPQA, BBEH, MMLU-Pro only')
+    parser.add_argument('--judge-prompt-mode', choices=MODES, default=None,
+                        help='Math only: corrected (default) or the pinned upstream rzero-original prompt')
     parser.add_argument('--gpu-ids', default=os.getenv('CUDA_VISIBLE_DEVICES') or '0,1,2,3')
     parser.add_argument('--dry-run', action='store_true', help='Check all checkpoint configs; no GPU or output writes')
     parser.add_argument('--batch-dir', type=Path, help='New output directory (must not already exist)')
@@ -228,8 +246,8 @@ def main():
     parser.add_argument('--copy-to-checkpoints', action='store_true', help='With --summary-only, copy completed results beside checkpoints without GPU work')
     args = parser.parse_args()
     if args.summary_only:
-        if args.paths or args.dry_run or args.batch_dir or args.suite:
-            parser.error('--summary-only cannot be combined with paths, --dry-run, --batch-dir or --suite')
+        if args.paths or args.dry_run or args.batch_dir or args.suite or args.judge_prompt_mode:
+            parser.error('--summary-only cannot be combined with paths, --dry-run, --batch-dir, --suite or --judge-prompt-mode')
         batch = args.summary_only.resolve()
         manifest = json.loads((batch / 'manifest.json').read_text())
         if args.copy_to_checkpoints:
@@ -240,6 +258,9 @@ def main():
         print(f'CSV: {batch / "summary.csv"}')
         return
     args.suite = args.suite or 'math'
+    if args.suite == 'nonmath' and args.judge_prompt_mode is not None:
+        parser.error('--judge-prompt-mode applies only to --suite math')
+    args.judge_prompt_mode = args.judge_prompt_mode or 'corrected'
     if args.copy_to_checkpoints:
         parser.error('--copy-to-checkpoints requires --summary-only')
     if not args.paths:
@@ -261,14 +282,15 @@ def main():
         return
     root = Path(__file__).resolve().parents[1]
     batch = (args.batch_dir or storage / 'evaluation_batches' /
-             (('nonmath_' if args.suite == 'nonmath' else 'math_qwen3_32b_') + datetime.now().strftime('%Y%m%d_%H%M%S_%f'))).absolute()
+             (('nonmath_' if args.suite == 'nonmath' else f'math_qwen3_32b_{args.judge_prompt_mode}_') + datetime.now().strftime('%Y%m%d_%H%M%S_%f'))).absolute()
     batch.mkdir(parents=True, exist_ok=False)
     env = os.environ.copy()
-    judge = dict(JUDGE, revision=env.get('RECHECK_LOCAL_REVISION') or None)
+    judge = {**JUDGE, **prompt_metadata(args.judge_prompt_mode),
+             'revision': env.get('RECHECK_LOCAL_REVISION') or None}
     env['STORAGE_PATH'] = str(storage)
     env['EVAL_GPU_IDS'] = args.gpu_ids
     if args.suite == 'math':
-        env.update(RECHECK_BACKEND='local', RECHECK_LOCAL_MODEL=JUDGE['model'],
+        env.update(RECHECK_JUDGE_PROMPT_MODE=args.judge_prompt_mode, RECHECK_BACKEND='local', RECHECK_LOCAL_MODEL=JUDGE['model'],
                    RECHECK_MAX_COMPLETION_TOKENS='32', RECHECK_CONCURRENCY='8',
                    RECHECK_GPU_IDS=args.gpu_ids, RECHECK_TENSOR_PARALLEL_SIZE=str(len(gpu_ids)),
                    EVAL_GPU_IDS=args.gpu_ids, EVAL_TENSOR_PARALLEL_SIZE='1',
@@ -279,6 +301,7 @@ def main():
     env['PATH'] = str(Path(sys.executable).parent) + os.pathsep + env.get('PATH', '')
     manifest = {'suite': args.suite, 'judge': judge if args.suite == 'math' else None, 'storage_path': str(storage), 'models': models}
     save(batch, manifest)
+    print(prompt_description(manifest), end='', flush=True)
     print(f'BATCH_DIR={batch}', flush=True)
     print(f'Live summary: {batch / "summary.csv"}', flush=True)
     try:

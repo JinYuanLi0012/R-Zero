@@ -6,9 +6,11 @@ import random
 import requests
 
 try:
+    from evaluation.judge_prompts import MODES, messages, prompt_metadata, ensure_output_mode, normalized_metadata
     from evaluation.local_judge import LocalJudge, local_backend, judge_metadata
     from evaluation.recheck_common import recheck_concurrency, recheck_rows
 except ModuleNotFoundError:  # Support `python evaluation/recheck_resume.py`.
+    from judge_prompts import MODES, messages, prompt_metadata, ensure_output_mode, normalized_metadata
     from local_judge import LocalJudge, local_backend, judge_metadata
     from recheck_common import recheck_concurrency, recheck_rows
 
@@ -29,18 +31,7 @@ def judge_model_response(api_url, api_key, gold_answer, model_response):
     judge_model = os.getenv("RECHECK_JUDGE_MODEL", "gpt-4o")
     payload = {
         "model": judge_model,
-        "messages": [
-            {"role": "system", "content": "You are a math answer checker."},
-            {
-                "role": "user",
-                "content": (
-                    f"Hi, there is a model response: {model_response}\n\n"
-                    f", and the ground truth answer is: {gold_answer}\n\n"
-                    "please check whether the model response is correct or not, "
-                    "and return the **only** Yes or No."
-                ),
-            },
-        ],
+        "messages": messages(gold_answer, model_response, resume_api=True),
     }
     if judge_model.startswith("gpt-5"):
         payload["max_completion_tokens"] = int(
@@ -73,7 +64,12 @@ def load_completed(output_file: Path, metadata=None):
             continue
         model = item.get("model")
         dataset = item.get("dataset")
-        if model and dataset and (metadata is None or item.get("recheck") == metadata):
+        saved = normalized_metadata(item.get("recheck"))
+        compatible = saved == normalized_metadata(metadata)
+        # Legacy untagged API scores belong only to corrected mode.
+        if saved is None and metadata and metadata.get("backend") == "api":
+            compatible = metadata.get("prompt_mode") == "corrected"
+        if model and dataset and (compatible or (metadata is None and (saved or {}).get("prompt_mode", "corrected") == "corrected")):
             completed.add((model, dataset))
     return completed
 
@@ -110,7 +106,10 @@ def main():
     parser.add_argument("--datasets", default=",".join(DEFAULT_DATASETS))
     parser.add_argument("--token_file", default="tokens.json")
     parser.add_argument("--dry_run", action="store_true")
+    parser.add_argument("--judge-prompt-mode", choices=MODES, default=os.getenv("RECHECK_JUDGE_PROMPT_MODE", "corrected"))
     args = parser.parse_args()
+    os.environ["RECHECK_JUDGE_PROMPT_MODE"] = args.judge_prompt_mode
+    ensure_output_mode(args.output_file)
     concurrency = recheck_concurrency()
 
     storage_env = os.getenv("STORAGE_PATH")
@@ -123,7 +122,8 @@ def main():
     models = [line.strip() for line in Path(args.models_file).read_text().splitlines() if line.strip()]
     datasets = [x.strip() for x in args.datasets.split(",") if x.strip()]
     is_local = local_backend()
-    metadata = judge_metadata() if is_local else None
+    metadata = judge_metadata() if is_local else dict(backend="api", model=os.getenv("RECHECK_JUDGE_MODEL", "gpt-4o"), **prompt_metadata())
+    print(f"Judge prompt: {metadata['prompt_mode']} ({metadata['prompt_version']})", flush=True)
     completed = load_completed(output_file, metadata)
     local_judge = LocalJudge() if is_local else None
 
@@ -152,8 +152,7 @@ def main():
                 storage_path, model, dataset, api_url, api_key, concurrency, local_judge
             )
             record = {"model": model, "dataset": dataset, "score": score}
-            if is_local:
-                record["recheck"] = metadata
+            record["recheck"] = metadata
             with output_file.open("a") as f:
                 json.dump(record, f)
                 f.write("\n")

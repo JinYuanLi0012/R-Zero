@@ -62,10 +62,46 @@ python evaluation/evaluate_models.py \
 入口固定 local backend、Qwen3-32B、关闭 thinking、max_tokens=32、并发 8；
 支持沿用 `RECHECK_LOCAL_REVISION` 固定版本，避免旧 API 配置和 EVAL_TASKS 改变本批次范围。
 
+### 数学复核 prompt 模式
+
+默认 `--judge-prompt-mode corrected`，保留现有正确的答案角色映射。批量入口不受旧的
+`RECHECK_JUDGE_PROMPT_MODE` 环境变量影响，切换模式必须显式传参数：
+
+```bash
+python evaluation/evaluate_models.py --suite math --gpu-ids 0,1,2,3 \
+  --judge-prompt-mode rzero-original /模型目录1 /模型目录2
+```
+
+`rzero-original` 的 system/user 消息逐字来自上游固定提交
+[`5699329d018d79535b7910abdedf5a6eebf355fd`](https://github.com/Chengsong-Huang/R-Zero/blob/5699329d018d79535b7910abdedf5a6eebf355fd/evaluation/results_recheck.py)。
+上游调用 `process_example(results[i]['answer'], results[i]['response'])`，对应 prompt 原文：
+
+```text
+Hi, there is a answer: {answer}
+
+, and the ground truth answer is: {response}
+
+, please check whether the answer is correct or not, and return the **only** Yes or No.
+```
+
+这里 `{answer}` 是 benchmark 标准答案，`{response}` 是 solver 输出；原始模式有意保留这一反转映射。
+这只是复用上游 **prompt**，不是完整复现论文评估设置：本地仍用 Qwen3-32B、temperature=0、
+thinking=False、max_tokens=32，上游脚本使用 GPT-4o、temperature=0.1。
+
+结果中的 `recheck.prompt_mode` 和 `recheck.prompt_version` 标识评分模式；原始模式还记录源提交与链接。
+终端和 `summary.md` 显示模式及版本，checkpoint 旁的结果和 `evaluation.json` 同样保留这些信息。
+两种模式使用不同批次目录；混合模式记录被判为无效，不参与平均；禁止跨模式追加或覆盖结果。
+`--summary-only` 使用原 manifest 中的模式，不能通过新参数改写已有分数的模式。
+
+仅复核已有基础输出时，`run_local_recheck.py`、`results_recheck.py`、`recheck_resume.py`
+也接受 `--judge-prompt-mode`，这些底层入口可用 `RECHECK_JUDGE_PROMPT_MODE` 传递模式。
+切换时必须指定新的输出文件；续跑只复用匹配 judge 元数据的结果，旧版 local-v1 元数据视为 corrected。
+非数学 `--suite nonmath` 不使用该模式参数，原有三卡评估调度不变。
+
 模型路径可以在 `/storage1`，而 `STORAGE_PATH` 仍指向 `/engrfs`：后者控制基础生成结果和默认批次输出位置，
 不会被用来拼接或替换你传入的 checkpoint 路径。也可显式使用 `--storage-path /结果存储根目录`。
 
-默认每次创建新的 `$STORAGE_PATH/evaluation_batches/math_qwen3_32b_时间戳`；
+默认每次创建新的 `$STORAGE_PATH/evaluation_batches/math_qwen3_32b_模式_时间戳`；
 `--batch-dir /全新目录` 可以指定位置，拒绝覆盖已有批次。
 终端会打印批次目录，每完成一个模型更新 `summary.csv` 和 `summary.md`，最后自动打印整张表：
 

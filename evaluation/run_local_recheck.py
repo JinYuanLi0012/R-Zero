@@ -18,8 +18,10 @@ import uuid
 import requests
 
 try:
+    from evaluation.judge_prompts import MODES, prompt_mode, ensure_output_mode
     from evaluation.local_judge import DEFAULT_MODEL
 except ModuleNotFoundError:
+    from judge_prompts import MODES, prompt_mode, ensure_output_mode
     from local_judge import DEFAULT_MODEL
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -96,7 +98,10 @@ def main():
     parser.add_argument("--output_file", default=os.getenv("FINAL_RESULTS_FILE", "final_results_local_qwen3.jsonl"))
     parser.add_argument("--datasets", default=os.getenv("EVAL_TASKS", DATASETS))
     parser.add_argument("--dry_run", action="store_true", help="Validate inputs and print plan without starting GPU processes")
+    parser.add_argument("--judge-prompt-mode", choices=MODES, default=os.getenv("RECHECK_JUDGE_PROMPT_MODE", "corrected"))
     args = parser.parse_args()
+    mode = prompt_mode(args.judge_prompt_mode)
+    ensure_output_mode(args.output_file, mode)
     storage = os.getenv("STORAGE_PATH")
     if not storage:
         parser.error("STORAGE_PATH is required")
@@ -121,6 +126,7 @@ def main():
     # Discard stale API judge settings; only the explicitly named LOCAL settings
     # can choose a model/server in this workflow.
     env["RECHECK_BACKEND"] = "local"
+    env["RECHECK_JUDGE_PROMPT_MODE"] = mode
     env["RECHECK_LOCAL_MODEL"] = os.getenv("RECHECK_LOCAL_MODEL", DEFAULT_MODEL)
     env.setdefault("RECHECK_CONCURRENCY", "8")
     env.setdefault("RECHECK_MAX_COMPLETION_TOKENS", "32")
@@ -145,6 +151,7 @@ def main():
                   "--models_file", str(Path(args.models_file).resolve()),
                   "--output_file", env["FINAL_RESULTS_FILE"], "--datasets", args.datasets]
     print(f"Local judge: {env['RECHECK_LOCAL_MODEL']}; BF16; GPUs={gpu_ids}; TP={tp}; thinking=False", flush=True)
+    print(f"Judge prompt mode: {mode}", flush=True)
     print(f"Solvers={len(models)}; datasets={args.datasets}; output={env['FINAL_RESULTS_FILE']}", flush=True)
     if args.dry_run:
         print("Dry run: no server, GPU inference, or API requests started.")

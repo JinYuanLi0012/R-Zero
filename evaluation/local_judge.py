@@ -7,6 +7,11 @@ from urllib.parse import urlsplit
 
 import requests
 
+try:
+    from evaluation.judge_prompts import messages, prompt_metadata
+except ModuleNotFoundError:
+    from judge_prompts import messages, prompt_metadata
+
 DEFAULT_MODEL = "Qwen/Qwen3-32B"
 PROMPT_VERSION = "math-recheck-local-v1"
 
@@ -27,7 +32,7 @@ def judge_metadata():
         "backend": "local",
         "model": os.getenv("RECHECK_LOCAL_MODEL", DEFAULT_MODEL),
         "revision": os.getenv("RECHECK_LOCAL_REVISION") or None,
-        "prompt_version": PROMPT_VERSION,
+        **prompt_metadata(),
         "enable_thinking": False,
         "temperature": 0.0,
         "max_tokens": max_tokens,
@@ -68,15 +73,7 @@ class LocalJudge:
     def __call__(self, answer, response):
         payload = {
             "model": self.served_model,
-            "messages": [
-                {"role": "system", "content": "You are a math answer checker."},
-                {"role": "user", "content": (
-                    f"Hi, there is a model response: {response}\n\n"
-                    f", and the ground truth answer is: {answer}\n\n"
-                    ", please check whether the model response is correct or not, "
-                    "and return the **only** Yes or No."
-                )},
-            ],
+            "messages": messages(answer, response, self.metadata["prompt_mode"]),
             "temperature": 0.0,
             "max_tokens": self.metadata["max_tokens"],
             "chat_template_kwargs": {"enable_thinking": False},
