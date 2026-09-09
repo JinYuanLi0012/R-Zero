@@ -53,6 +53,9 @@ def run_nonmath(root, model, output, env, datasets=None):
             futures = {}
             for dataset, gpu in zip(NONMATH_DATASETS, gpu_ids):
                 child = dict(env, EVAL_GPU_IDS=gpu)
+                if env.get("RZERO_NONMATH_VLLM_PORT_BASE"):
+                    child["VLLM_PORT"] = str(int(env["RZERO_NONMATH_VLLM_PORT_BASE"])
+                                             + 256 * NONMATH_DATASETS.index(dataset))
                 private_output = output.parent / f'{dataset}_normalized.jsonl'
                 print(f'  ASSIGN {dataset}: GPU {gpu}, TP=1', flush=True)
                 future = pool.submit(run_nonmath, root, model, private_output, child, [dataset])

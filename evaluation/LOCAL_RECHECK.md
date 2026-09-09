@@ -98,6 +98,12 @@ thinking=False、max_tokens=32，上游脚本使用 GPT-4o、temperature=0.1。
 切换时必须指定新的输出文件；续跑只复用匹配 judge 元数据的结果，旧版 local-v1 元数据视为 corrected。
 非数学 `--suite nonmath` 不使用该模式参数，原有三卡评估调度不变。
 
+三张 GPU 并发非数学评估时，可设置 `export RZERO_NONMATH_VLLM_PORT_BASE=31000`，
+分别向 SuperGPQA、BBEH、MMLU-Pro 子进程传入 `VLLM_PORT=31000,31256,31512`，
+避免它们继承同一个端口。仅在设置该变量时启用；数学评估和其他 GPU 数量的调度不变。
+这不会检测端口是否被其他任务占用，基准端口需按节点使用情况选择。
+
+
 模型路径可以在 `/storage1`，而 `STORAGE_PATH` 仍指向 `/engrfs`：后者控制基础生成结果和默认批次输出位置，
 不会被用来拼接或替换你传入的 checkpoint 路径。也可显式使用 `--storage-path /结果存储根目录`。
 

@@ -1,5 +1,6 @@
 import csv
 import json
+import os
 from pathlib import Path
 import sys
 import unittest
@@ -71,6 +72,7 @@ class NonmathBatchTest(unittest.TestCase):
             self.assertEqual(env['EVAL_TENSOR_PARALLEL_SIZE'], '1')
             gpu = env['CUDA_VISIBLE_DEVICES']
             self.assertEqual(gpu, str(1 + batch.NONMATH_DATASETS.index(dataset)))
+            self.assertNotIn('VLLM_PORT', env)
             seen[dataset] = env['TORCHINDUCTOR_CACHE_DIR']
             barrier.wait()  # Fails if the three tasks were launched sequentially.
             model = command[command.index('--model_path') + 1]
@@ -113,3 +115,20 @@ class NonmathBatchTest(unittest.TestCase):
         self.assertEqual(rows[1][2], 'pending')
         self.assertNotIn('checkpoint_results_dir', manifest['models'][0])
         self.assertEqual(len((self.output / '001/final_results.jsonl').read_text().splitlines()), 2)
+
+    def test_three_gpu_port_base_reaches_each_benchmark_process(self):
+        seen = {}
+        def emit(command, cwd, env, **kwargs):
+            dataset = Path(command[1]).stem.removeprefix('eval_')
+            seen[dataset] = env['VLLM_PORT']
+            model = command[command.index('--model_path') + 1]
+            Path(env['FINAL_RESULTS_FILE']).write_text(json.dumps(dict(
+                model=model, dataset=dataset, accuracy=50)))
+            return 0
+        with patch.dict(os.environ, {'RZERO_NONMATH_VLLM_PORT_BASE': '31000', 'VLLM_PORT': '12345'}), \
+             patch.object(sys, 'argv', ['runner', '--suite', 'nonmath', '--gpu-ids', '1,2,3',
+                '--batch-dir', str(self.output)] + self.paths[:1]), \
+             patch.object(batch.subprocess, 'call', side_effect=emit):
+            batch.main()
+            self.assertEqual(os.environ['VLLM_PORT'], '12345')
+        self.assertEqual(seen, {'supergpqa': '31000', 'bbeh': '31256', 'mmlupro': '31512'})
