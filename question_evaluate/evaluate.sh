@@ -13,6 +13,10 @@ fi
 IFS=',' read -ra GPU_IDS <<< "$QUESTION_GPU_IDS"
 pids=()
 
+if [ "${VALIDITY_RZERO_ENABLED:-0}" = "1" ] && [ "${VALIDITY_RZERO_VALIDITY_JUDGE_MODE:-current_solver}" = "frozen" ]; then
+  python3 -m methods.validity_rzero.frozen_validity --save-name "$save_name"
+fi
+
 for i in "${!GPU_IDS[@]}"; do
   CUDA_VISIBLE_DEVICES=${GPU_IDS[$i]} python question_evaluate/evaluate.py --model $model_name --suffix $i --save_name $save_name &
   pids[$i]=$!

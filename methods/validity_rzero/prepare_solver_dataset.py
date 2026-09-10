@@ -37,8 +37,8 @@ def build_mixed_rows(
     replay_ratio: float,
     seed: int,
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
-    if not 0.0 < replay_ratio < 1.0:
-        raise ValueError("replay_ratio must be in (0, 1)")
+    if not 0.0 <= replay_ratio < 1.0:
+        raise ValueError("replay_ratio must be in [0, 1)")
 
     evaluated_rows = list(evaluated_rows)
     rzero_rows = [
@@ -55,6 +55,18 @@ def build_mixed_rows(
     ]
     if not rzero_rows:
         raise ValueError("validity and difficulty filtering produced no R-Zero rows")
+
+    if replay_ratio == 0:
+        random.Random(seed).shuffle(rzero_rows)
+        return rzero_rows, {
+            "evaluated_candidate_count": len(evaluated_rows),
+            "discarded_by_validity_count": sum(bool(row.get("discarded_by_validity", False)) for row in evaluated_rows),
+            "rzero_sample_count": len(rzero_rows),
+            "terra_replay_sample_count": 0,
+            "mixed_sample_count": len(rzero_rows),
+            "requested_replay_ratio": 0.0,
+            "actual_replay_ratio": 0.0,
+        }
 
     terra_rows = list(terra_train_rows)
     for index, row in enumerate(terra_rows):
@@ -130,7 +142,7 @@ def main() -> None:
     parser.add_argument("--num-shards", type=int, required=True)
     parser.add_argument("--min-score", type=float, required=True)
     parser.add_argument("--max-score", type=float, required=True)
-    parser.add_argument("--terra-dataset", required=True)
+    parser.add_argument("--terra-dataset", default="")
     parser.add_argument("--terra-config", default="default")
     parser.add_argument("--replay-ratio", type=float, required=True)
     parser.add_argument("--seed", type=int, default=1)
@@ -155,7 +167,7 @@ def main() -> None:
         result_paths.append(path)
         evaluated.extend(json.loads(path.read_text(encoding="utf-8")))
 
-    terra_train = load_dataset(args.terra_dataset, args.terra_config, split="train")
+    terra_train = load_dataset(args.terra_dataset, args.terra_config, split="train") if args.replay_ratio != 0 else []
     mixed, stats = build_mixed_rows(
         evaluated, terra_train, args.min_score, args.max_score, args.replay_ratio, args.seed
     )

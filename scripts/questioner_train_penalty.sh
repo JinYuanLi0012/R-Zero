@@ -33,6 +33,12 @@ export VLLM_SERVICE_COUNT
 export QUESTIONER_VLLM_PID_FILE=${QUESTIONER_VLLM_PID_FILE:-${STORAGE_PATH}/temp_results/questioner_vllm_${RUN_ID}.pids}
 export VLLM_LOG_DIR=${VLLM_LOG_DIR:-logs}
 export VALIDITY_RZERO_DIVERSITY_MODE=${VALIDITY_RZERO_DIVERSITY_MODE:-bleu_lambda5}
+if [ "${VALIDITY_RZERO_ENABLED:-0}" = "1" ] && [ "${VALIDITY_RZERO_VALIDITY_JUDGE_MODE:-current_solver}" = "frozen" ]; then
+    export VALIDITY_RZERO_REPO_ROOT="$(pwd)"
+    export VALIDITY_RZERO_SOLVER_MODEL_PATH=$solver_model_path
+    export VALIDITY_RZERO_SOLVER_RUN_ID=$RUN_ID
+    export VALIDITY_RZERO_FROZEN_PID_FILE=${STORAGE_PATH}/temp_results/questioner_frozen_validity_${RUN_ID}.pids
+fi
 if [ "${VALIDITY_RZERO_ENABLED:-0}" = "1" ] && { [ "$VALIDITY_RZERO_DIVERSITY_MODE" = "semantic_mc" ] || [ "$VALIDITY_RZERO_DIVERSITY_MODE" = "semantic_novelty_gate" ]; }; then
     export VALIDITY_RZERO_REPO_ROOT
     VALIDITY_RZERO_REPO_ROOT=$(pwd)
@@ -110,6 +116,9 @@ cleanup_pid_file() {
     fi
 }
 cleanup_vllm() {
+    if [ "${VALIDITY_RZERO_ENABLED:-0}" = "1" ] && [ "${VALIDITY_RZERO_VALIDITY_JUDGE_MODE:-current_solver}" = "frozen" ] && [ -n "${VALIDITY_RZERO_FROZEN_PID_FILE:-}" ]; then
+        cleanup_pid_file "$VALIDITY_RZERO_FROZEN_PID_FILE"
+    fi
     if [ -n "${VALIDITY_RZERO_SEMANTIC_PID_FILE:-}" ]; then
         cleanup_pid_file "$VALIDITY_RZERO_SEMANTIC_PID_FILE"
     fi

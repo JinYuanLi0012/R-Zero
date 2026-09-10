@@ -142,6 +142,10 @@ def compute_score(
         else:
             results.append({"question": "", "answer": ""})
 
+    if (os.getenv("VALIDITY_RZERO_ENABLED", "0") == "1"
+            and os.getenv("VALIDITY_RZERO_VALIDITY_JUDGE_MODE", "current_solver") == "frozen"):
+        from methods.validity_rzero.frozen_validity import annotate_phase_a
+        results = annotate_phase_a(results)
     final_results = generate_results(results, num_services=num_services, port_base=port_base)
     validity_rzero_enabled = os.getenv("VALIDITY_RZERO_ENABLED", "0") == "1"
     diversity_mode = (

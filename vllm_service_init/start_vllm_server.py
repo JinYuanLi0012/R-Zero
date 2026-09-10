@@ -276,12 +276,16 @@ def hello():
             'role': 'user',
             'content': VALIDITY_TEMPLATE.render(content=question).strip(),
         }] for question in valid_questions]
-        validity_responses = generate(render_prompts(validity_chats), validity_sample_params)
-        gates = [
-            evaluate_validity_responses([output.text for output in response.outputs])
-            for response in validity_responses
-        ]
-        del validity_responses
+        if os.getenv("VALIDITY_RZERO_VALIDITY_JUDGE_MODE", "current_solver") == "frozen":
+            from methods.validity_rzero.frozen_validity import checked_gate
+            gates = [checked_gate(data[index]) for index in valid_indices]
+        else:
+            validity_responses = generate(render_prompts(validity_chats), validity_sample_params)
+            gates = [
+                evaluate_validity_responses([output.text for output in response.outputs])
+                for response in validity_responses
+            ]
+            del validity_responses
         math_positions = valid_positions(gates)
         math_responses = generate(
             render_prompts([valid_chats[position] for position in math_positions]), math_sample_params

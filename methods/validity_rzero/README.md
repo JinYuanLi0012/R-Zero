@@ -289,6 +289,83 @@ bash methods/validity_rzero/tests/gpu_smoke.sh
 
 ## Implementation principles
 
+### Frozen Step-15 validity / no-replay K8 ablation
+
+`bash methods/validity_rzero/run_frozen_validity_k8.sh` selects the original
+global K8 treatment (one SAME hit rejects, legacy INVALID negative reward,
+no domain curriculum, legacy box filter), with two changes: a fixed validity
+judge for both Phase A and Phase B, and zero Terra replay. The mathematical
+Solver starts from the same validity-RL Step-15 checkpoint and continues from
+its previous round's checkpoint. The Questioner still starts from Base. The
+semantic judge remains the unchanged frozen `Qwen/Qwen3-4B-Base`.
+
+The independent general controls are:
+
+```bash
+export VALIDITY_RZERO_VALIDITY_JUDGE_MODE=frozen  # default: current_solver
+export VALIDITY_RZERO_VALIDITY_JUDGE_MODEL=/path/to/global_step_15/actor/huggingface
+export VALIDITY_RZERO_INITIAL_SOLVER="$VALIDITY_RZERO_VALIDITY_JUDGE_MODEL"
+export TERRA_REPLAY_RATIO=0
+```
+
+`current_solver` retains the original model routing. Nonzero replay retains the
+original dataset construction. Zero replay never loads Terra: it keeps all
+filtered R-Zero rows, uses their existing source/prompt/reward, and records zero
+Terra rows in the receipt. Freezing the judge and replay ratio are independent
+controls, allowing a frozen-judge experiment with replay as well. Frozen-mode
+fields are only added to that run's fingerprint; old fingerprints are unchanged.
+
+Phase A first stops the current Solver services on GPU 2/3, executes fixed-judge
+9-vote workers on those GPUs, waits for exit and GPU release, and restarts the
+current Solver. The Solver consumes question/model-bound vote records, performs
+only the usual math evaluation for VALID questions, and never falls back to
+its own validity judgment. Missing/mismatched records fail the run. The existing
+old/ref barrier and four-GPU semantic handoff then proceed as before. Phase B
+does the fixed-judge prepass on the evaluation GPUs before launching its math
+Solver evaluators. No extra GPU is required; model reloads add overhead.
+
+This retains the validity prompt, sampling, nine votes, 5/9 threshold, INVALID
+reward, math vote counts, and K8 semantic protocol. Judge weights stay fixed;
+sampling remains stochastic. The frontier is the original answer-cluster
+majority fraction transformed by `min(p, 1-p)`, not ground-truth accuracy.
+
+In a fresh Linux shell, after sourcing `env_rzero.sh`, first run a one-step
+smoke under a separate name (do not run concurrently with another four-GPU job):
+
+```bash
+unset MODEL_ABBR
+unset RZERO_NUM_ROUNDS QUESTIONER_MAX_STEPS QUESTIONER_MERGE_STEP
+unset SOLVER_MAX_STEPS SOLVER_MERGE_STEP SOLVER_GENERATE_SAMPLES
+bash methods/validity_rzero/run_frozen_validity_k8.sh --smoke
+```
+
+The launcher uses 2,500 generated candidates per GPU, preserving enough data
+for the filtered Solver batch. It defaults to checkpoint
+`$STORAGE_PATH/models/qwen3_4b_validity_rl_terra_clean_v1/global_step_15/actor/huggingface`.
+After smoke succeeds, with the same clean parent-shell configuration:
+
+```bash
+bash methods/validity_rzero/run_frozen_validity_k8.sh
+```
+
+Default formal run: `qwen3_4b_validity_rzero_k8_frozenstep15_noreplay_v1`.
+Default smoke run: `qwen3_4b_validity_rzero_k8_frozenstep15_noreplay_smoke_v1`.
+Only use `--resume` to resume the same new experiment. Never reuse an old
+experiment's name/checkpoint state for this ablation. The launcher explicitly
+sets the original K8 options in its child shell; it does not change the parent's
+environment or the behavior of other experiment entrypoints.
+
+Inspect `[validity_rzero][frozen_validity]` for phase/model/invalid-count and
+artifact paths; raw nine-vote records and worker logs are kept in
+`$STORAGE_PATH/temp_results/frozen_validity_*`. The final dataset receipt must
+show `terra_replay_sample_count=0` and `actual_replay_ratio=0`. A fixed-judge
+worker failure/timeout is fatal, cleaned up, and reported with log tails;
+semantic parse-failure behavior is unchanged.
+
+This is a combined fixed-evaluator/no-replay ablation. Dataset size decreases
+when replay is removed; no replacement questions are added. It does not isolate
+the individual causal effect of each of those two changes.
+
 Keep the implementation minimal, clear, and maintainable. Solve the confirmed
 training-path requirements without adding speculative abstractions or broad
 fallback layers. Prioritize correct core training logic, reuse the original

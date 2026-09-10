@@ -41,8 +41,13 @@ VALIDITY_RZERO_ENABLED=${VALIDITY_RZERO_ENABLED:-0}
 if [ "$VALIDITY_RZERO_ENABLED" = "1" ]; then
     NO_EVAL=1
     : "${VALIDITY_RZERO_INITIAL_SOLVER:?set VALIDITY_RZERO_INITIAL_SOLVER}"
-    : "${TERRA_REPLAY_DATASET:?set TERRA_REPLAY_DATASET}"
     : "${TERRA_REPLAY_RATIO:?set TERRA_REPLAY_RATIO}"
+    export VALIDITY_RZERO_VALIDITY_JUDGE_MODE=${VALIDITY_RZERO_VALIDITY_JUDGE_MODE:-current_solver}
+    case "$VALIDITY_RZERO_VALIDITY_JUDGE_MODE" in
+        current_solver) ;;
+        frozen) : "${VALIDITY_RZERO_VALIDITY_JUDGE_MODEL:?set the frozen validity checkpoint}" ;;
+        *) echo "VALIDITY_RZERO_VALIDITY_JUDGE_MODE must be current_solver or frozen" >&2; exit 2 ;;
+    esac
     VALIDITY_RZERO_DIVERSITY_MODE=${VALIDITY_RZERO_DIVERSITY_MODE:-bleu_lambda5}
     case "$VALIDITY_RZERO_DIVERSITY_MODE" in
         bleu_legacy|bleu_lambda5|semantic_mc|semantic_novelty_gate) ;;
@@ -98,9 +103,20 @@ if [ "$VALIDITY_RZERO_ENABLED" = "1" ]; then
     python3 - "$TERRA_REPLAY_RATIO" <<'PY'
 import sys
 value = float(sys.argv[1])
-if not 0.0 < value < 1.0:
-    raise SystemExit("TERRA_REPLAY_RATIO must be in (0, 1)")
+if not 0.0 <= value < 1.0:
+    raise SystemExit("TERRA_REPLAY_RATIO must be in [0, 1)")
 PY
+    if python3 -c 'import sys; sys.exit(float(sys.argv[1]) != 0)' "$TERRA_REPLAY_RATIO"; then
+        export TERRA_REPLAY_RATIO=0
+        export TERRA_REPLAY_DATASET=""
+    else
+        : "${TERRA_REPLAY_DATASET:?set TERRA_REPLAY_DATASET for nonzero replay}"
+    fi
+    if [ "$VALIDITY_RZERO_VALIDITY_JUDGE_MODE" = "frozen" ]; then
+        python3 scripts/validate_hf_checkpoint.py "$VALIDITY_RZERO_VALIDITY_JUDGE_MODEL" >/dev/null
+        VALIDITY_RZERO_VALIDITY_JUDGE_MODEL=$(python3 -c 'import pathlib,sys; print(pathlib.Path(sys.argv[1]).resolve())' "$VALIDITY_RZERO_VALIDITY_JUDGE_MODEL")
+        export VALIDITY_RZERO_VALIDITY_JUDGE_MODEL
+    fi
 fi
 
 # Reproducible base-R-Zero defaults. All remain environment-overridable, but
@@ -211,6 +227,14 @@ if [ "$VALIDITY_RZERO_ENABLED" = "1" ]; then
         --field "solver_rollout_batch_size=${SOLVER_ROLLOUT_BATCH_SIZE}"
         --field "validity_diversity_mode=${VALIDITY_RZERO_DIVERSITY_MODE}"
     )
+    # Omit default fields so existing runs retain their exact resume fingerprint.
+    if [ "$VALIDITY_RZERO_VALIDITY_JUDGE_MODE" = "frozen" ]; then
+        FINGERPRINT_EXTRA+=(
+            --field "validity_judge_mode=frozen"
+            --field "validity_judge_model=$VALIDITY_RZERO_VALIDITY_JUDGE_MODEL"
+            --field "validity_judge_protocol=frozen_prepass_9vote_v1"
+        )
+    fi
     if [ "$VALIDITY_RZERO_DIVERSITY_MODE" = "semantic_mc" ]; then
         FINGERPRINT_EXTRA+=(
             --field "semantic_model=${VALIDITY_RZERO_SEMANTIC_MODEL:-Qwen/Qwen3-4B-Base}"

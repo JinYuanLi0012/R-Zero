@@ -55,7 +55,6 @@ if [ "$SOLVER_DATASET_READY" != "1" ]; then
     echo 'start evaluate generated question'
     bash question_evaluate/evaluate.sh $solver_model_path $experiment_name
     if [ "$VALIDITY_RZERO_ENABLED" = "1" ]; then
-        : "${TERRA_REPLAY_DATASET:?set TERRA_REPLAY_DATASET for validity-RZero}"
         : "${TERRA_REPLAY_RATIO:?set TERRA_REPLAY_RATIO for validity-RZero}"
         : "${SOLVER_DATASET_RECEIPT:?set SOLVER_DATASET_RECEIPT for validity-RZero}"
         echo 'start validity-RZero dataset mixing and upload'
@@ -65,7 +64,7 @@ if [ "$SOLVER_DATASET_READY" != "1" ]; then
             --num-shards "${QUESTION_NUM_SHARDS}" \
             --max-score "${SOLVER_UPLOAD_MAX_SCORE}" \
             --min-score "${SOLVER_UPLOAD_MIN_SCORE}" \
-            --terra-dataset "${TERRA_REPLAY_DATASET}" \
+            --terra-dataset "${TERRA_REPLAY_DATASET:-}" \
             --terra-config "${TERRA_REPLAY_CONFIG:-default}" \
             --replay-ratio "${TERRA_REPLAY_RATIO}" \
             --seed "${TERRA_REPLAY_SEED:-1}" \

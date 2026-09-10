@@ -141,12 +141,16 @@ if validity_rzero_enabled:
         stop_token_ids=[tokenizer.eos_token_id],
         n=9,
     )
-    validity_responses = model.generate(validity_prompts, sampling_params=validity_params, use_tqdm=True)
-    gates = [
-        evaluate_validity_responses([output.text for output in response.outputs])
-        for response in validity_responses
-    ]
-    del validity_responses
+    if os.getenv("VALIDITY_RZERO_VALIDITY_JUDGE_MODE", "current_solver") == "frozen":
+        from methods.validity_rzero.frozen_validity import checked_gate
+        gates = [checked_gate(row) for row in correct_data]
+    else:
+        validity_responses = model.generate(validity_prompts, sampling_params=validity_params, use_tqdm=True)
+        gates = [
+            evaluate_validity_responses([output.text for output in response.outputs])
+            for response in validity_responses
+        ]
+        del validity_responses
     valid_indices = valid_positions(gates)
     math_responses = model.generate(
         [prompts[index] for index in valid_indices], sampling_params=math_sample_params, use_tqdm=True
