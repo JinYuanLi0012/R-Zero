@@ -186,6 +186,8 @@ def compute_score(
             from methods.validity_rzero.semantic_novelty_gate_online import compute_online_novelty
             # Novelty consumes only parsed Questioner candidates. Solver outputs
             # are used separately below to compose validity/frontier rewards.
+            if os.getenv("VALIDITY_RZERO_NOVELTY_SCOPE", "global") == "parent_domain":
+                semantic_kwargs["domains"] = domain
             novelty_stats = compute_online_novelty(
                 [result.get("question", "") for result in results], **semantic_kwargs
             )
@@ -328,10 +330,14 @@ def compute_score(
     if domain is not None:
         if len(domain) != len(scores):
             raise ValueError("domain metadata length mismatch")
-        for label, result, score in zip(domain, final_results, scores):
+        for index, (label, result, score) in enumerate(zip(domain, final_results, scores)):
             print("[validity_rzero][domain_curriculum] " + json.dumps({
                 "domain": label, "question": result.get("question", ""),
                 "validity_decision": result.get("validity_decision"),
                 "reward": score["overall"],
+                **({"sampled_count": novelty_stats[index].get("sampled_count"),
+                    "compared_count": novelty_stats[index]["compared_count"],
+                    "same_count": novelty_stats[index]["same_count"]}
+                   if novelty_stats is not None and os.getenv("VALIDITY_RZERO_NOVELTY_SCOPE", "global") == "parent_domain" else {}),
             }, ensure_ascii=False))
     return scores

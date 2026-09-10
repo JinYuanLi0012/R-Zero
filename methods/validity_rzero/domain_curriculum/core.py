@@ -80,3 +80,13 @@ def phase_b_domains(per_shard, shards, shard, seed, context):
         raise ValueError("invalid shard topology")
     plan = balanced_domains(per_shard * shards, seed, context=context)
     return plan[shard * per_shard:(shard + 1) * per_shard]
+
+
+def validated_parents(domains, count):
+    """Require aligned known paths; never infer domains from question text."""
+    if domains is None or len(domains) != count:
+        raise ValueError("parent_domain scope requires aligned domain metadata")
+    known = {f"{parent} → {leaf}": parent for parent, leaves in DOMAINS for leaf in leaves}
+    if any(not isinstance(domain, str) or domain not in known for domain in domains):
+        raise ValueError("parent_domain scope requires valid domain paths for all rows")
+    return {i: known[domain] for i, domain in enumerate(domains)}

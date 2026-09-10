@@ -11,14 +11,18 @@ from .semantic_mc import PairInstance, SEMANTIC_LABELS, UniquePairTask, build_pa
 
 
 def sample_references_per_candidate(
-    candidate_indices: Iterable[int], k: int, seed: int
+    candidate_indices: Iterable[int], k: int, seed: int,
+    parent_domains: Mapping[int, str] | None = None,
 ) -> dict[int, list[int]]:
     if k < 0:
         raise ValueError("novelty K must be nonnegative")
     indices = list(candidate_indices)
+    if parent_domains is not None and any(not parent_domains.get(i) for i in indices):
+        raise ValueError("parent-domain sampling requires every candidate domain")
     references: dict[int, list[int]] = {}
     for candidate_index in indices:
-        population = [index for index in indices if index != candidate_index]
+        population = [index for index in indices if index != candidate_index and (
+            parent_domains is None or parent_domains[index] == parent_domains[candidate_index])]
         sample_size = min(k, len(population))
         digest = hashlib.sha256(f"{seed}:{candidate_index}".encode("utf-8")).digest()
         candidate_seed = int.from_bytes(digest[:8], "big")
@@ -36,13 +40,14 @@ def build_novelty_pair_plan(
     context: Mapping[str, Any],
     *,
     prompt_builder: Callable[[str, str], str],
+    parent_domains: Mapping[int, str] | None = None,
 ) -> tuple[
     dict[int, list[int]],
     list[PairInstance],
     dict[str, UniquePairTask],
 ]:
     candidate_indices = list(candidate_indices)
-    references = sample_references_per_candidate(candidate_indices, k, seed)
+    references = sample_references_per_candidate(candidate_indices, k, seed, parent_domains)
     instances: list[PairInstance] = []
     tasks: dict[str, UniquePairTask] = {}
     for candidate_index in candidate_indices:

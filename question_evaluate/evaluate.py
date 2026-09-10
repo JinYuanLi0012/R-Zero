@@ -157,6 +157,11 @@ else:
 print(f"[{args.suffix}] Generation complete.")
 
 # 4. Process and Grade Responses
+box_filter = os.getenv("RZERO_QUESTION_BOX_FILTER", "legacy")
+if box_filter != "legacy":
+    from methods.validity_rzero.question_filter import question_skip_reason
+    question_skip_reason("", "", box_filter)
+filter_skips = []
 results_all = []
 print(f"[{args.suffix}] Grading responses...")
 for index, (golden_answer, question) in enumerate(zip(answers, questions)):
@@ -234,7 +239,21 @@ for index, (golden_answer, question) in enumerate(zip(answers, questions)):
         score = max_count / len(results)
 
         # Skip certain question types that are hard to grade automatically
-        if "证明" in question or 'box' in question.lower() or 'text' in majority_answer.lower():
+        if box_filter == "legacy":
+            # Keep standalone pure-base execution free of new imports.
+            if "证明" in question or 'box' in question.lower() or 'text' in majority_answer.lower():
+                continue
+            skip_reason = None
+        else:
+            skip_reason = question_skip_reason(question, majority_answer, box_filter)
+        if skip_reason:
+            if box_filter != "legacy":
+                skipped = {"source_index": index, "question": question,
+                           "domain": correct_data[index].get("domain"),
+                           "majority_answer": majority_answer, "score": score,
+                           "reason": skip_reason}
+                filter_skips.append(skipped)
+                print("[question_filter][skip] " + json.dumps(skipped, ensure_ascii=False))
             continue
 
         item = {
@@ -260,6 +279,15 @@ for index, (golden_answer, question) in enumerate(zip(answers, questions)):
     except Exception as e:
         print(f"[{args.suffix}] CRITICAL ERROR processing question '{question[:50]}...': {e}")
         continue
+
+if box_filter != "legacy":
+    from collections import Counter
+    audit = {"box_filter": box_filter, "evaluated_candidates": len(correct_data),
+             "filter_skip_counts": dict(Counter(row["reason"] for row in filter_skips)),
+             "skipped": filter_skips}
+    with open(OUTPUT_FILE + ".question_filter.json", "w") as handle:
+        json.dump(audit, handle, indent=2, ensure_ascii=False)
+    print("[question_filter][summary] " + json.dumps(audit["filter_skip_counts"]))
 
 # 5. Save Final Results
 print(f"[{args.suffix}] Processed {len(results_all)} questions. Saving results to: {OUTPUT_FILE}")

@@ -21,13 +21,23 @@ from .service_handoff import SolverServiceConfig, semantic_gpu_handoff
 
 
 def compute_online_novelty(
-    questions: list[str], gpu_ready_file: str | None = None
+    questions: list[str], gpu_ready_file: str | None = None, domains=None
 ) -> list[dict[str, int]]:
+    scope = os.getenv("VALIDITY_RZERO_NOVELTY_SCOPE", "global")
+    if scope not in {"global", "parent_domain"}:
+        raise ValueError("VALIDITY_RZERO_NOVELTY_SCOPE must be global or parent_domain")
+    parent_domains = None
+    if scope == "parent_domain":
+        from .domain_curriculum.core import validated_parents
+        parent_domains = validated_parents(domains, len(questions))
     candidate_indices = [index for index, question in enumerate(questions) if question]
     output = [
         {"same_count": 0, "compared_count": 0, "parse_failure_count": 0, "novelty": 1}
         for _ in questions
     ]
+    if scope == "parent_domain":
+        for item in output:
+            item["sampled_count"] = 0
     if not candidate_indices:
         print("[validity_rzero][semantic_novelty_gate][WARNING] no valid questions; novelty=1")
         return output
@@ -58,6 +68,7 @@ def compute_online_novelty(
         novelty_seed,
         context,
         prompt_builder=build_prompt,
+        parent_domains=parent_domains,
     )
     service = SolverServiceConfig.from_environment()
     semantic_gpu_ids = _semantic_gpu_ids(service)
@@ -103,7 +114,7 @@ def compute_online_novelty(
         sampled_counts = [len(references[index]) for index in candidate_indices]
         print(
             "[validity_rzero][semantic_novelty_gate] "
-            f"prompt_version={PROMPT_VERSION} novelty_k={novelty_k} "
+            f"prompt_version={PROMPT_VERSION} novelty_k={novelty_k} scope={scope} "
             f"novelty_min_same_hits={min_same_hits} novelty_seed={novelty_seed} "
             f"references_per_candidate_min={min(sampled_counts)} "
             f"references_per_candidate_max={max(sampled_counts)} "
@@ -127,6 +138,8 @@ def compute_online_novelty(
         )
         for index in candidate_indices:
             output[index] = aggregates[index]
+            if scope == "parent_domain":
+                output[index]["sampled_count"] = len(references[index])
         completed = True
         return output
     finally:

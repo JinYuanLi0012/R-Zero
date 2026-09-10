@@ -164,6 +164,25 @@ STATE_FILE=$STATE_DIR/run_state.json
 SUMMARY_FILE=$RUN_ROOT/summary.json
 
 FINGERPRINT_EXTRA=()
+export RZERO_QUESTION_BOX_FILTER=${RZERO_QUESTION_BOX_FILTER:-legacy}
+case "$RZERO_QUESTION_BOX_FILTER" in
+    legacy) ;;
+    latex_only) FINGERPRINT_EXTRA+=(--field "question_box_filter=latex_only") ;;
+    *) echo "RZERO_QUESTION_BOX_FILTER must be legacy or latex_only" >&2; exit 2 ;;
+esac
+if [ "$VALIDITY_RZERO_ENABLED" = "1" ] && [ "$VALIDITY_RZERO_DIVERSITY_MODE" = "semantic_novelty_gate" ]; then
+    export VALIDITY_RZERO_NOVELTY_SCOPE=${VALIDITY_RZERO_NOVELTY_SCOPE:-global}
+    case "$VALIDITY_RZERO_NOVELTY_SCOPE" in
+        global) ;;
+        parent_domain)
+            if [ "${VALIDITY_RZERO_DOMAIN_MODE:-none}" != "balanced_v1" ]; then
+                echo "parent_domain scope requires balanced_v1 domain prompts" >&2; exit 2
+            fi
+            FINGERPRINT_EXTRA+=(--field "semantic_novelty_scope=parent_domain")
+            ;;
+        *) echo "VALIDITY_RZERO_NOVELTY_SCOPE must be global or parent_domain" >&2; exit 2 ;;
+    esac
+fi
 # Opt-in only: absent/none contributes no fields to legacy resume fingerprints.
 if [ "$VALIDITY_RZERO_ENABLED" = "1" ]; then
     export VALIDITY_RZERO_DOMAIN_MODE=${VALIDITY_RZERO_DOMAIN_MODE:-none}
