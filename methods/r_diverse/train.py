@@ -1,0 +1,153 @@
+# Copyright 2024 Bytedance Ltd. and/or its affiliates
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Standard EasyR1 runner; only adaptation is val_reward_fn=None.
+import json
+import os
+import ray
+from omegaconf import OmegaConf
+
+from verl.single_controller.ray import RayWorkerGroup
+from verl.utils.tokenizer import get_processor, get_tokenizer
+from verl.workers.fsdp_workers import FSDPWorker
+from verl.workers.reward import BatchFunctionRewardManager, SequentialFunctionRewardManager
+from verl.trainer.config import PPOConfig
+from verl.trainer.data_loader import create_dataloader
+from verl.trainer.ray_trainer import RayPPOTrainer, ResourcePoolManager, Role
+
+
+def configure_auth_environment():
+    """Prefer existing environment credentials; use tokens.json only as fallback."""
+    tokens = {}
+    if os.path.isfile("tokens.json"):
+        with open("tokens.json", "r", encoding="utf-8") as handle:
+            tokens = json.load(handle)
+        if not isinstance(tokens, dict):
+            raise ValueError("tokens.json must contain a JSON object")
+
+    hf_token = (
+        os.environ.get("HF_TOKEN")
+        or os.environ.get("HUGGING_FACE_HUB_TOKEN")
+        or tokens.get("huggingface")
+    )
+    wandb_token = os.environ.get("WANDB_API_KEY") or tokens.get("wandb")
+    if hf_token:
+        os.environ["HF_TOKEN"] = hf_token
+    if wandb_token:
+        os.environ["WANDB_API_KEY"] = wandb_token
+
+
+# please make sure main_task is not scheduled on head
+@ray.remote(num_cpus=1)
+class Runner:
+    """A runner for RL training."""
+
+    def run(self, config: PPOConfig):
+        # print config
+        print(json.dumps(config.to_dict(), indent=2))
+
+        # instantiate tokenizer
+        tokenizer = get_tokenizer(
+            config.worker.actor.model.model_path,
+            override_chat_template=config.data.override_chat_template,
+            trust_remote_code=config.worker.actor.model.trust_remote_code,
+            use_fast=True,
+        )
+        processor = get_processor(
+            config.worker.actor.model.model_path,
+            override_chat_template=config.data.override_chat_template,
+            trust_remote_code=config.worker.actor.model.trust_remote_code,
+            use_fast=True,
+        )
+
+        # define worker classes
+        ray_worker_group_cls = RayWorkerGroup
+        role_worker_mapping = {
+            Role.ActorRollout: ray.remote(FSDPWorker),
+            Role.Critic: ray.remote(FSDPWorker),
+            Role.RefPolicy: ray.remote(FSDPWorker),
+        }
+        global_pool_id = "global_pool"
+        resource_pool_spec = {
+            global_pool_id: [config.trainer.n_gpus_per_node] * config.trainer.nnodes,
+        }
+        mapping = {
+            Role.ActorRollout: global_pool_id,
+            Role.Critic: global_pool_id,
+            Role.RefPolicy: global_pool_id,
+        }
+        resource_pool_manager = ResourcePoolManager(resource_pool_spec=resource_pool_spec, mapping=mapping)
+
+        if config.worker.reward.reward_type == "sequential":
+            RewardManager = SequentialFunctionRewardManager
+        elif config.worker.reward.reward_type == "batch":
+            RewardManager = BatchFunctionRewardManager
+        else:
+            raise NotImplementedError(f"Unknown reward type {config.worker.reward.reward_type}.")
+
+        RemoteRewardManager = ray.remote(RewardManager).options(num_cpus=config.worker.reward.num_cpus)
+        reward_fn = RemoteRewardManager.remote(config.worker.reward, tokenizer)
+        # This independent baseline does not run an extra reward batch at final validation.
+        val_reward_fn = None
+
+        train_dataloader, val_dataloader = create_dataloader(config.data, tokenizer, processor)
+
+        trainer = RayPPOTrainer(
+            config=config,
+            tokenizer=tokenizer,
+            processor=processor,
+            train_dataloader=train_dataloader,
+            val_dataloader=val_dataloader,
+            role_worker_mapping=role_worker_mapping,
+            resource_pool_manager=resource_pool_manager,
+            ray_worker_group_cls=ray_worker_group_cls,
+            reward_fn=reward_fn,
+            val_reward_fn=val_reward_fn,
+        )
+        trainer.init_workers()
+        trainer.fit()
+
+
+def main():
+    cli_args = OmegaConf.from_cli()
+    default_config = OmegaConf.structured(PPOConfig())
+    configure_auth_environment()
+    if hasattr(cli_args, "config"):
+        config_path = cli_args.pop("config", None)
+        file_config = OmegaConf.load(config_path)
+        default_config = OmegaConf.merge(default_config, file_config)
+
+    ppo_config = OmegaConf.merge(default_config, cli_args)
+    ppo_config: PPOConfig = OmegaConf.to_object(ppo_config)
+    ppo_config.deep_post_init()
+
+    if not ray.is_initialized():
+        runtime_env = {
+            "env_vars": {
+                "TOKENIZERS_PARALLELISM": "true",
+                "NCCL_DEBUG": "WARN",
+                "VLLM_LOGGING_LEVEL": "WARN",
+                "TORCH_NCCL_AVOID_RECORD_STREAMS": "1",
+                "PYTORCH_CUDA_ALLOC_CONF": "expandable_segments:False",
+                "PYTHONUNBUFFERED": "1",
+            }
+        }
+        ray.init(runtime_env=runtime_env,num_cpus=16)
+
+    runner = Runner.remote()
+    ray.get(runner.run.remote(ppo_config))
+
+
+if __name__ == "__main__":
+    main()

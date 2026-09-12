@@ -1,5 +1,9 @@
 # *R-Zero*: Self-Evolving Reasoning LLM from Zero Data
 
+A standalone [minimal R-Diverse baseline](methods/r_diverse/README.md) adds the
+paper-described SAM, MAP, and historical replay to original R-Zero, with
+Qwen3-4B-Base and four-GPU adaptations.
+
 An isolated [Q4 + S3 three-question generation experiment](methods/validity_rzero/three_question_pilot/README.md)
 uses four GPUs with 833 requests each, preserves all complete question/answer pairs,
 and applies the original validity and majority-vote filtering without model training.
