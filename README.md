@@ -1,5 +1,9 @@
 # *R-Zero*: Self-Evolving Reasoning LLM from Zero Data
 
+An independent [minimal OCNR reproduction](methods/ocnr/README.md) adds the
+paper-described one-class novelty reward to the original R-Zero path on four
+GPUs, with no validity-aware or other experimental treatments enabled.
+
 An isolated [Q4 + S3 three-question generation experiment](methods/validity_rzero/three_question_pilot/README.md)
 uses four GPUs with 833 requests each, preserves all complete question/answer pairs,
 and applies the original validity and majority-vote filtering without model training.
