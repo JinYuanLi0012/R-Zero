@@ -11,6 +11,8 @@
 
 ```bash
 cd /storage1/jiaxinh/Active/jinyuan/R-zero
+git fetch origin
+git switch baseline/r-diverse
 git pull --ff-only
 source env_rzero.sh
 
