@@ -78,8 +78,27 @@ bash methods/validity_rzero/run_solver_negative_k8.sh
 
 For an interrupted run, use the same script with `--resume`. The script pins
 the experiment settings and clears inherited checkpoint/artifact paths; it
-does not continue the old K8 experiment. It uses the usual five-round pipeline
-and leaves benchmark evaluation to the existing separate evaluation workflow.
+does not continue the old K8 experiment. It uses the usual five-round pipeline.
+
+The launcher also sets `SOLVER_EVAL_DUAL=1`: after each merged Solver checkpoint,
+the pipeline runs the existing `evaluation/evaluate_models.py` math suite twice,
+first with `--judge-prompt-mode rzero-original`, then with `corrected`, using
+GPUs 0,1,2,3. These are two separate commands (repeating the CLI option in one
+command would only select the last value). Both finish before the next round.
+`env_rzero.sh` supplies the `/engrfs` storage and Hugging Face cache paths;
+the launcher sets `RECHECK_LOCAL_TMP_ROOT=/tmp` and `RECHECK_STARTUP_TIMEOUT=3600`.
+
+Each mode's latest successful `summary.csv` and `summary.md` are stored under
+`$STORAGE_PATH/rzero_runs/$MODEL_ABBR/evaluations/solver_vN/<mode>/`.
+Unique `math_<mode>_<id>/` subdirectories retain the manifest, seven benchmark
+scores, and evaluator logs; the existing evaluator also copies completed scores
+beside the exact merged checkpoint. Failed attempts and their logs are retained.
+Each mode has its own completion marker: an evaluation failure stops the pipeline,
+and `--resume` skips trained checkpoints and completed modes, rerunning only the
+unfinished mode before proceeding. An incomplete mode restarts its evaluation,
+not training. Enabling this evaluation option does not change training fingerprints,
+so it can be added to an already-started negative-only run on resume. Other launchers
+default to `SOLVER_EVAL_DUAL=0` and keep their previous evaluation behavior.
 
 Useful per-step metrics (rates below are over R-Zero samples/groups only):
 

@@ -45,4 +45,7 @@ export SOLVER_UPLOAD_MIN_SCORE=0.3 SOLVER_UPLOAD_MAX_SCORE=0.8
 # Only this flag changes Solver optimization; examples/config.yaml retains
 # rollout.n=5 and the original separate low_var_kl loss with coefficient 0.01.
 export SOLVER_NEGATIVE_ONLY=1
+export SOLVER_EVAL_DUAL=1
+export RECHECK_LOCAL_TMP_ROOT=/tmp
+export RECHECK_STARTUP_TIMEOUT=3600
 bash methods/validity_rzero/run.sh "$@"

@@ -39,6 +39,13 @@ BASE_MODEL=${POSITIONAL[0]}
 MODEL_ABBR=${POSITIONAL[1]}
 VALIDITY_RZERO_ENABLED=${VALIDITY_RZERO_ENABLED:-0}
 export SOLVER_NEGATIVE_ONLY=${SOLVER_NEGATIVE_ONLY:-0}
+# Evaluation is opt-in and does not change the training/resume fingerprint.
+# This also lets an already-started run enable benchmark evaluation on resume.
+export SOLVER_EVAL_DUAL=${SOLVER_EVAL_DUAL:-0}
+case "$SOLVER_EVAL_DUAL" in
+    0|1) ;;
+    *) echo "SOLVER_EVAL_DUAL must be 0 or 1" >&2; exit 2 ;;
+esac
 case "$SOLVER_NEGATIVE_ONLY" in
     0) ;;
     1)
@@ -528,7 +535,35 @@ for ((round=1; round<=NUM_ROUNDS; round++)); do
     fi
     CURRENT_SOLVER=$SOLVER_HF
 
-    if [ "$NO_EVAL" != "1" ]; then
+    if [ "$SOLVER_EVAL_DUAL" = "1" ]; then
+        # This explicit opt-in also applies to validity runs using --no-eval
+        # to disable the legacy evaluator. Each mode has its own completion mark.
+        for EVAL_MODE in rzero-original corrected; do
+            EVAL_STAGE=round_${round}/evaluation_math_${EVAL_MODE}_v1
+            if stage_done "$EVAL_STAGE"; then
+                echo "[resume] skip completed stage $EVAL_STAGE"
+                continue
+            fi
+            EVAL_DIR=$RUN_ROOT/evaluations/solver_v${round}/${EVAL_MODE}
+            mkdir -p "$EVAL_DIR"
+            # evaluate_models requires a new directory. Preserve failed attempts;
+            # unique basenames also prevent checkpoint-side result-copy collisions.
+            EVAL_BATCH=$EVAL_DIR/math_${EVAL_MODE}_$(python3 -c 'import uuid; print(uuid.uuid4().hex)')
+            echo "Evaluating Solver round $round: $EVAL_MODE; results: $EVAL_BATCH"
+            RECHECK_LOCAL_TMP_ROOT="${RECHECK_LOCAL_TMP_ROOT:-/tmp}" \
+            RECHECK_STARTUP_TIMEOUT="${RECHECK_STARTUP_TIMEOUT:-3600}" \
+                python3 evaluation/evaluate_models.py --suite math \
+                    --gpu-ids "$QUESTION_GPU_IDS" --judge-prompt-mode "$EVAL_MODE" \
+                    --storage-path "$STORAGE_PATH" --batch-dir "$EVAL_BATCH" \
+                    "$CURRENT_SOLVER" 2>&1 | tee "${EVAL_BATCH}.log"
+            cp "$EVAL_BATCH/summary.csv" "$EVAL_DIR/summary.csv"
+            cp "$EVAL_BATCH/summary.md" "$EVAL_DIR/summary.md"
+            complete_stage "$EVAL_STAGE" "$EVAL_BATCH/manifest.json" \
+                "$EVAL_BATCH/001/final_results.jsonl" \
+                "$EVAL_BATCH/summary.csv" "$EVAL_BATCH/summary.md" \
+                "$EVAL_DIR/summary.csv" "$EVAL_DIR/summary.md"
+        done
+    elif [ "$NO_EVAL" != "1" ]; then
         EVAL_STAGE=round_${round}/evaluation
         EVAL_DIR=$RUN_ROOT/evaluations/solver_v${round}
         if stage_done "$EVAL_STAGE" "$EVAL_DIR"; then
