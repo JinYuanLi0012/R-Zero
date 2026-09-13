@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "${BASH_SOURCE[0]}")/../.."
+# Source env_rzero.sh first. Fresh experiment; --resume resumes only this run.
+unset RZERO_RUN_ROOT VALIDITY_RZERO_ARTIFACT_DIR
+unset QUESTIONER_OUTPUT_DIR QUESTIONER_LOAD_CHECKPOINT SOLVER_LOAD_CHECKPOINT
+unset VALIDITY_RZERO_DIVERSITY_LAMBDA VALIDITY_RZERO_SEMANTIC_PANEL_SIZE VALIDITY_RZERO_SEMANTIC_PANEL_SEED
+export BASE_MODEL=Qwen/Qwen3-4B-Base
+export MODEL_ABBR=qwen3_4b_validity_rzero_semantic_novelty_gate_k8_solver_negative_4gpu_v1
+export VALIDITY_RZERO_INITIAL_SOLVER=/engrfs/project/jiaxinh/jinyuan/R-zero-storage/models/qwen3_4b_validity_rl_terra_clean_v1/global_step_15/actor/huggingface
+export TERRA_REPLAY_DATASET=jinyuan222/rzero-validity-rl-terra-v1-clean-v1
+export TERRA_REPLAY_CONFIG=default
+export TERRA_REPLAY_RATIO=0.1
+export TERRA_REPLAY_SEED=1
+
+# Exact original Questioner treatment, including INVALID = 0.5 - votes/9.
+export VALIDITY_RZERO_VALIDITY_JUDGE_MODE=current_solver
+export VALIDITY_RZERO_DOMAIN_MODE=none
+export RZERO_QUESTION_BOX_FILTER=legacy
+export VALIDITY_RZERO_DIVERSITY_MODE=semantic_novelty_gate
+export VALIDITY_RZERO_NOVELTY_SCOPE=global
+export VALIDITY_RZERO_NOVELTY_K=8
+export VALIDITY_RZERO_NOVELTY_MIN_SAME_HITS=1
+export VALIDITY_RZERO_NOVELTY_SEED=43
+export VALIDITY_RZERO_NOVELTY_INVALID_REWARD=legacy
+export VALIDITY_RZERO_SEMANTIC_MODEL=Qwen/Qwen3-4B-Base
+export VALIDITY_RZERO_SEMANTIC_LOCAL_FILES_ONLY=1
+export VALIDITY_RZERO_SEMANTIC_GPU_IDS=0,1,2,3
+export VALIDITY_RZERO_SEMANTIC_GPU_MEMORY_UTILIZATION=0.80
+export VALIDITY_RZERO_SEMANTIC_WORKER_BATCH_SIZE=8192
+export QUESTIONER_TRAIN_GPU_IDS=0,1
+export VLLM_GPU_IDS=2,3
+export QUESTION_GPU_IDS=0,1,2,3
+
+export RZERO_NUM_ROUNDS=5
+export QUESTIONER_MAX_STEPS=5 QUESTIONER_MERGE_STEP=5
+export QUESTIONER_ROLLOUT_BATCH_SIZE=512 QUESTIONER_ROLLOUT_N=4
+export QUESTIONER_GLOBAL_BATCH_SIZE=4 QUESTIONER_MAX_RESPONSE_LENGTH=4096
+export SOLVER_MAX_STEPS=15 SOLVER_MERGE_STEP=15
+export SOLVER_ROLLOUT_BATCH_SIZE=512 SOLVER_MAX_RESPONSE_LENGTH=4096
+export SOLVER_GENERATE_SAMPLES=2500
+export SOLVER_TOTAL_EPOCHS=100 SOLVER_VAL_FREQ=4
+export SOLVER_UPLOAD_MIN_SCORE=0.3 SOLVER_UPLOAD_MAX_SCORE=0.8
+
+# Only this flag changes Solver optimization; examples/config.yaml retains
+# rollout.n=5 and the original separate low_var_kl loss with coefficient 0.01.
+export SOLVER_NEGATIVE_ONLY=1
+bash methods/validity_rzero/run.sh "$@"

@@ -38,6 +38,16 @@ fi
 BASE_MODEL=${POSITIONAL[0]}
 MODEL_ABBR=${POSITIONAL[1]}
 VALIDITY_RZERO_ENABLED=${VALIDITY_RZERO_ENABLED:-0}
+export SOLVER_NEGATIVE_ONLY=${SOLVER_NEGATIVE_ONLY:-0}
+case "$SOLVER_NEGATIVE_ONLY" in
+    0) ;;
+    1)
+        if [ "$VALIDITY_RZERO_ENABLED" != "1" ]; then
+            echo "SOLVER_NEGATIVE_ONLY=1 requires validity-RZero mixed Solver rewards" >&2; exit 2
+        fi
+        ;;
+    *) echo "SOLVER_NEGATIVE_ONLY must be 0 or 1" >&2; exit 2 ;;
+esac
 if [ "$VALIDITY_RZERO_ENABLED" = "1" ]; then
     NO_EVAL=1
     : "${VALIDITY_RZERO_INITIAL_SOLVER:?set VALIDITY_RZERO_INITIAL_SOLVER}"
@@ -180,6 +190,9 @@ STATE_FILE=$STATE_DIR/run_state.json
 SUMMARY_FILE=$RUN_ROOT/summary.json
 
 FINGERPRINT_EXTRA=()
+if [ "$SOLVER_NEGATIVE_ONLY" = "1" ]; then
+    FINGERPRINT_EXTRA+=(--field "solver_gradient_policy=negative_only_zero_agree_skip_full_kl_v1")
+fi
 export RZERO_QUESTION_BOX_FILTER=${RZERO_QUESTION_BOX_FILTER:-legacy}
 case "$RZERO_QUESTION_BOX_FILTER" in
     legacy) ;;

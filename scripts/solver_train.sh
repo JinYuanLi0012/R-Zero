@@ -1,6 +1,17 @@
 #!/bin/bash
 set -e
 
+SOLVER_NEGATIVE_ONLY=${SOLVER_NEGATIVE_ONLY:-0}
+case "$SOLVER_NEGATIVE_ONLY" in
+    0) ;;
+    1)
+        if [ "${VALIDITY_RZERO_ENABLED:-0}" != "1" ]; then
+            echo "SOLVER_NEGATIVE_ONLY=1 requires validity-RZero mixed Solver rewards" >&2; exit 2
+        fi
+        ;;
+    *) echo "SOLVER_NEGATIVE_ONLY must be 0 or 1" >&2; exit 2 ;;
+esac
+
 solver_model_path=$1
 questioner_model_path=$2
 experiment_name=$3
@@ -96,6 +107,10 @@ if [ -n "$SOLVER_LOAD_CHECKPOINT" ]; then
 fi
 
 EXTRA_TRAIN_ARGS=()
+if [ "$SOLVER_NEGATIVE_ONLY" = "1" ]; then
+    EXTRA_TRAIN_ARGS+=(algorithm.solver_negative_only=true)
+    echo "Solver task gradients: unmatched AND original advantage<0; zero-agree groups skip task loss; full-sample KL unchanged; Terra full GRPO"
+fi
 if [ "$VALIDITY_RZERO_ENABLED" = "1" ]; then
     EXTRA_TRAIN_ARGS+=(
         data.format_prompt_source_key=source

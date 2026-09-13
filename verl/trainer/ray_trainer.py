@@ -613,8 +613,9 @@ class RayPPOTrainer:
 
                                 cleanup_barrier(semantic_barrier)
                         batch.batch["token_level_scores"] = reward_tensor
-                        reward_metrics = {f"reward/{k}": v for k, v in reduce_metrics(reward_metrics).items()}
-                        metrics.update(reward_metrics)
+                        # Keep per-rollout metadata until Solver gradient routing
+                        # is complete. Reduction discards the sample alignment.
+                        metrics.update({f"reward/{k}": v for k, v in reduce_metrics(reward_metrics).items()})
 
                         # apply kl penalty if available
                         if not self.config.algorithm.use_kl_loss and self.use_reference_policy:
@@ -631,6 +632,10 @@ class RayPPOTrainer:
                             gamma=self.config.algorithm.gamma,
                             lam=self.config.algorithm.lam,
                         )
+                        if self.config.algorithm.solver_negative_only:
+                            from methods.validity_rzero.solver_negative_only import apply_solver_negative_only
+
+                            metrics.update(apply_solver_negative_only(batch, reward_metrics))
 
                     # update critic
                     if self.use_critic:

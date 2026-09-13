@@ -15,6 +15,7 @@
 PPO config
 """
 
+import math
 import os
 from dataclasses import asdict, dataclass, field, fields, is_dataclass
 from typing import Dict, Optional, Tuple
@@ -80,6 +81,19 @@ class AlgorithmConfig:
     kl_horizon: float = 0.0
     kl_target: float = 0.0
     mock_data: str = ""
+    # Opt-in Solver treatment; Questioner and legacy runs retain full GRPO.
+    solver_negative_only: bool = False
+
+    def post_init(self):
+        if self.solver_negative_only:
+            if self.adv_estimator != "grpo":
+                raise ValueError("solver_negative_only requires GRPO")
+            if (
+                self.disable_kl or not self.use_kl_loss
+                or not math.isfinite(self.kl_coef) or self.kl_coef <= 0
+            ):
+                raise ValueError("solver_negative_only requires a separate, positive full-sample KL loss")
+
 
 @dataclass
 class TrainerConfig:

@@ -49,6 +49,9 @@ def compute_score(
     for score, name in zip(resolved, source):
         output.append({
             **score,
+            # Every row must emit this key: accuracy/correct individually form
+            # shorter, source-specific lists in the reward manager.
+            "solver_answer_match": float(score["accuracy"] if name == "rzero" else score["correct"]),
             "source_rzero": float(name == "rzero"),
             "source_terra": float(name == "terra"),
             **diagnostics,

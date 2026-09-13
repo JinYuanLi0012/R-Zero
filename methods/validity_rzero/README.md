@@ -33,6 +33,70 @@ bash methods/validity_rzero/run.sh
 The initial Solver defaults to the requested clean-validity Step-10 checkpoint
 and can be overridden with `VALIDITY_RZERO_INITIAL_SOLVER`.
 
+### Solver negative-only GRPO on the original K8 baseline
+
+`run_solver_negative_k8.sh` starts a separate experiment named
+`qwen3_4b_validity_rzero_semantic_novelty_gate_k8_solver_negative_4gpu_v1`.
+It fixes the original K8 Questioner settings: 512 prompts x 4 rollouts,
+global nonself K=8 references, rejection after one SAME_TYPE hit,
+VALID reward `novelty * frontier`, and INVALID reward `0.5 - invalid_votes / 9`.
+It uses the clean-validity Step-15 initial Solver and 10% Terra replay.
+The candidate pool and Questioner reward implementation are unchanged.
+
+Only Solver task-gradient routing changes, via `SOLVER_NEGATIVE_ONLY=1`:
+
+1. Compute the original full-group GRPO advantages from unchanged rewards.
+2. For each `source=rzero` group (identified by uid after token balancing),
+   count current rollouts mathematically matching the stored pseudo-answer.
+3. If none match, set the entire group's task advantages to zero, including
+   any advantages arising from the 10% format reward.
+4. Otherwise, keep only unmatched rollouts with **original advantage < 0**.
+   All-matching groups consequently have zero task advantages as well.
+5. Leave Terra advantages unchanged. Do not re-normalize advantages or change
+   response masks, batch size, PPO clipping, or loss denominators.
+
+All samples retain the existing separate reference `low_var_kl` loss with
+coefficient **0.01**. Zero task advantage does not imply zero KL gradient or
+that the model's probabilities stay fixed. This is not a TTPO reproduction:
+there is no OPD/OPSD teacher, token selection, new vote, or replacement label.
+Phase B currently stores labels from **nine** pure-math votes; training still
+draws **five** new rollouts per question. Both counts remain unchanged.
+
+The flag defaults to zero and is passed only by `scripts/solver_train.sh`.
+When enabled, the pipeline fingerprint adds
+`solver_gradient_policy=negative_only_zero_agree_skip_full_kl_v1`.
+Legacy fingerprints are unchanged; switching treatment when resuming is rejected.
+
+In a fresh Linux shell, with the usual credentials and environment:
+
+```bash
+cd /storage1/jiaxinh/Active/jinyuan/R-zero
+git pull --ff-only
+source env_rzero.sh
+bash methods/validity_rzero/run_solver_negative_k8.sh
+```
+
+For an interrupted run, use the same script with `--resume`. The script pins
+the experiment settings and clears inherited checkpoint/artifact paths; it
+does not continue the old K8 experiment. It uses the usual five-round pipeline
+and leaves benchmark evaluation to the existing separate evaluation workflow.
+
+Useful per-step metrics (rates below are over R-Zero samples/groups only):
+
+- `solver_negative_only/zero_agree_group_rate`
+- `solver_negative_only/all_agree_group_rate`
+- `solver_negative_only/kept_negative_rollout_rate`
+- `solver_negative_only/kept_negative_rollout_count`
+- `actor/kl_loss` and `actor/kl_coef`
+
+Focused CPU verification, without launching GPU training:
+
+```bash
+python -m pytest -q methods/validity_rzero/tests/test_solver_negative_only.py \
+  methods/validity_rzero/tests/test_solver_negative_launch.py \
+  methods/validity_rzero/tests/test_mixed_reward.py
+```
+
 ### Frozen history-context Questioner prompt pilot
 
 `incontext_pilot/run_prompt_pilot.py` provides a generation-only matched P0/P1
