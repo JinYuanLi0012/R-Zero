@@ -1,5 +1,8 @@
 # *R-Zero*: Self-Evolving Reasoning LLM from Zero Data
 
+Independent [HumanEval+, MBPP+, and LiveCodeBench evaluation](evaluation/code_eval/README.md)
+supports merged Solver checkpoints with batched vLLM generation and pinned official CPU scorers.
+
 An independent [minimal OCNR reproduction](methods/ocnr/README.md) adds the
 paper-described one-class novelty reward to the original R-Zero path on four
 GPUs, with no validity-aware or other experimental treatments enabled.
