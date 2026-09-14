@@ -1,5 +1,54 @@
 # Validity-aware GRPO mid-training
 
+## OctoThinker-3B-Hybrid-Base on two A100 GPUs
+
+From an activated Linux R-Zero environment, run:
+
+```bash
+# Use the two GPU IDs allocated to you. This overrides env_rzero.sh's four-GPU setting.
+VALIDITY_GPU_IDS=0,1 bash methods/validity_rl/train_octothinker_grpo.sh --smoke
+# After the smoke exits successfully and saves global_step_1:
+VALIDITY_GPU_IDS=0,1 bash methods/validity_rl/train_octothinker_grpo.sh
+```
+
+The entry selects `OctoThinker/OctoThinker-3B-Hybrid-Base` and
+`jinyuan222/rzero-validity-rl-terra-v1-clean-v1`. This is our chosen backbone;
+the original R-Zero publication does not identify its exact OctoThinker variant.
+The clean repository's `train.jsonl` and `validation.jsonl` are selected explicitly,
+audited, and exported to `<run>/data/{train,validation}.parquet` with `audit.json`.
+Other JSON files and excluded examples are not selected. Private/gated dataset
+access, if applicable, requires your normal Hugging Face login or `HF_TOKEN`.
+
+`octothinker_chat.jinja` supplies a plain-text Base-model prompt: BOS once,
+`user: <full validity prompt>`, then `assistant:`. This is an experiment-defined
+template, not a claimed official OctoThinker chat protocol. The trainer's existing
+`data.override_chat_template` handles both prompt token counting and rendering;
+no change to the generic dataset loader is needed. EOS comes from the model
+tokenizer; existing tokenizer handling sets missing PAD to EOS.
+
+Formal defaults: two GPUs, tensor parallel 2, rollout batch 512, n=8, response
+cap 4096, actor global batch 128, update/experience microbatch 1, lr=1e-6,
+KL loss coefficient 1e-2, 15 steps, saves at 5/10/15. vLLM memory utilization is
+0.6 and validation batch is 16. Actor global batch is multiplied by rollout.n
+inside the existing worker. Console logging is default; set
+`VALIDITY_LOGGER='["console","wandb"]'` to enable W&B. A100 40GB and 80GB have
+different memory headroom; a tiny smoke does not certify full-batch capacity.
+
+Formal checkpoints:
+`${STORAGE_PATH}/models/octothinker_3b_hybrid_validity_rl_terra_clean_v1/global_step_{5,10,15}`.
+Smoke uses a separate `_smoke` run directory, 2 train prompts, n=2, response cap
+256, 1 step and 1 validation example. The final reward-only validation inherited
+from the trainer still runs. A 256-token truncation is acceptable for plumbing
+verification and is not a quality measurement.
+
+Use `VALIDITY_EXPERIMENT_NAME` for a new run name or `VALIDITY_SAVE_PATH` for
+an explicit destination. The entry refuses an existing checkpoint tracker to
+avoid overwriting a completed run. It does not resume previous training.
+`VALIDITY_DRY_RUN=1` prints the full command without data/model downloads.
+CPU tests: `python3 -m pytest -q methods/validity_rl/tests/test_octothinker_entry.py methods/validity_rl/tests/test_validity_reward.py`.
+
+## Original Qwen entry
+
 This method gives `Qwen/Qwen3-4B-Base` the option to finish normal mathematical
 solutions with `\boxed{answer}` and genuinely invalid problems with
 `\boxed{INVALID}`. It reuses R-Zero's existing dataset loader, rollout workers,

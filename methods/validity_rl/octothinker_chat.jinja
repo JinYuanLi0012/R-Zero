@@ -1,0 +1,7 @@
+{{- bos_token -}}
+{%- for message in messages -%}
+{{- message['role'] ~ ': ' ~ message['content'] ~ '\n' -}}
+{%- endfor -%}
+{%- if add_generation_prompt -%}
+{{- 'assistant:\n' -}}
+{%- endif -%}

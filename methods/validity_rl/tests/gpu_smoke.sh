@@ -7,6 +7,7 @@ SMOKE_DIR=${VALIDITY_SMOKE_DATA_DIR:-${REPO_ROOT}/work/validity_rl_smoke_data}
 
 cd "${REPO_ROOT}"
 python3 "${METHOD_DIR}/prepare_dataset.py" \
+    --dataset "${VALIDITY_DATASET:-jinyuan222/rzero-validity-rl-terra-v1}" \
     --output-dir "${SMOKE_DIR}" \
     --train-limit 2 \
     --validation-limit 1

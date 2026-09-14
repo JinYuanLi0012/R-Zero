@@ -69,6 +69,9 @@ COMMAND=(
     "worker.actor.micro_batch_size_per_device_for_experience=${EXPERIENCE_MICRO_BATCH_SIZE}"
     worker.actor.optim.lr=1.0e-6
     "worker.rollout.n=${ROLLOUT_N}"
+    "worker.rollout.tensor_parallel_size=${VALIDITY_TENSOR_PARALLEL_SIZE:-2}"
+    "worker.rollout.gpu_memory_utilization=${VALIDITY_GPU_MEMORY_UTILIZATION:-0.7}"
+    "data.val_batch_size=${VALIDITY_VAL_BATCH_SIZE:-1024}"
     worker.rollout.temperature=1.0
     worker.rollout.top_p=0.99
     "worker.reward.reward_function=${METHOD_DIR}/validity_reward.py:compute_score"
@@ -84,6 +87,16 @@ COMMAND=(
     trainer.val_freq=-1
     "trainer.val_generations_to_log=${VAL_GENERATIONS_TO_LOG}"
 )
+
+# This configuration field takes template text, not a filename. Pass the whole
+# value as one argv element so Jinja braces and newlines survive shell parsing.
+if [[ -n "${VALIDITY_CHAT_TEMPLATE_FILE:-}" ]]; then
+    [[ -f "${VALIDITY_CHAT_TEMPLATE_FILE}" ]] || { echo "Missing chat template" >&2; exit 2; }
+    # OmegaConf parses values as YAML: a literal block prevents leading {{
+    # from being interpreted as a mapping and preserves Jinja newlines.
+    COMMAND+=("data.override_chat_template=|
+$(sed 's/^/  /' "${VALIDITY_CHAT_TEMPLATE_FILE}")")
+fi
 
 echo "Validity-RL experiment: ${EXPERIMENT_NAME}"
 echo "Train data: ${TRAIN_FILES}"

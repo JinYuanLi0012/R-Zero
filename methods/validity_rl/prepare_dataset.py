@@ -10,6 +10,7 @@ from datasets import DatasetDict, get_dataset_config_names, load_dataset
 
 
 DEFAULT_DATASET = "jinyuan222/rzero-validity-rl-terra-v1"
+CLEAN_DATASET = "jinyuan222/rzero-validity-rl-terra-v1-clean-v1"
 REQUIRED_COLUMNS = {
     "id",
     "round",
@@ -31,6 +32,10 @@ def _validate_split(name: str, split: Any) -> Dict[str, int]:
     for index, row in enumerate(split):
         validity = row["terra_validity"]
         target = row["validity_rl_target"]
+        if not isinstance(row["question"], str) or not row["question"].strip():
+            raise ValueError(f"{name}[{index}] has no question")
+        if not isinstance(target, str) or not target.strip():
+            raise ValueError(f"{name}[{index}] has no target")
         if validity not in counts:
             raise ValueError(f"{name}[{index}] has unknown terra_validity={validity!r}")
         counts[validity] += 1
@@ -50,18 +55,34 @@ def _validate_split(name: str, split: Any) -> Dict[str, int]:
 
 
 def audit_dataset(dataset_name: str) -> tuple[DatasetDict, Dict[str, Any]]:
-    configs = get_dataset_config_names(dataset_name)
-    dataset = load_dataset(dataset_name, "default")
+    if dataset_name == CLEAN_DATASET:
+        # The clean repository also contains manifests and excluded_valid.jsonl.
+        # Select only the two intended files; never infer splits from all JSON.
+        dataset = load_dataset(dataset_name, data_files={
+            "train": "train.jsonl", "validation": "validation.jsonl",
+        })
+        configs = ["default"]
+    else:
+        configs = get_dataset_config_names(dataset_name)
+        dataset = load_dataset(dataset_name, "default")
     if set(dataset) != {"train", "validation"}:
         raise ValueError(f"expected train/validation splits, got {sorted(dataset)}")
 
     report: Dict[str, Any] = {"dataset": dataset_name, "configs": configs, "splits": {}}
     for name, split in dataset.items():
+        if not len(split):
+            raise ValueError(f"{name} is empty")
         report["splits"][name] = {
             "rows": len(split),
             "columns": split.column_names,
             "validity_counts": _validate_split(name, split),
         }
+    train_ids = list(dataset["train"]["id"])
+    val_ids = list(dataset["validation"]["id"])
+    if len(set(train_ids)) != len(train_ids) or len(set(val_ids)) != len(val_ids):
+        raise ValueError("Duplicate IDs within a split")
+    if set(train_ids).intersection(val_ids):
+        raise ValueError("Train and validation IDs overlap")
     return dataset, report
 
 
@@ -71,6 +92,7 @@ def main() -> None:
     parser.add_argument("--output-dir", type=Path)
     parser.add_argument("--train-limit", type=int, default=0)
     parser.add_argument("--validation-limit", type=int, default=0)
+    parser.add_argument("--full", action="store_true", help="Export both complete audited splits")
     args = parser.parse_args()
 
     dataset, report = audit_dataset(args.dataset)
@@ -91,17 +113,18 @@ def main() -> None:
         )
 
     if args.output_dir:
-        if args.train_limit <= 0 or args.validation_limit <= 0:
+        if not args.full and (args.train_limit <= 0 or args.validation_limit <= 0):
             parser.error("--output-dir requires positive --train-limit and --validation-limit")
         args.output_dir.mkdir(parents=True, exist_ok=True)
         for split_name, limit in (
             ("train", args.train_limit),
             ("validation", args.validation_limit),
         ):
-            selected = dataset[split_name].select(range(min(limit, len(dataset[split_name]))))
+            selected = dataset[split_name] if args.full else dataset[split_name].select(range(min(limit, len(dataset[split_name]))))
             destination = args.output_dir / f"{split_name}.parquet"
             selected.to_parquet(destination)
             print(f"wrote {len(selected)} rows to {destination}")
+        (args.output_dir / "audit.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
 
 
 if __name__ == "__main__":
