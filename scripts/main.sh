@@ -18,6 +18,7 @@ EOF
 RESUME=0
 NO_EVAL=0
 NUM_ROUNDS=${RZERO_NUM_ROUNDS:-5}
+FIRST_ROUND=${RZERO_FIRST_ROUND:-1}
 POSITIONAL=()
 while [ "$#" -gt 0 ]; do
     case "$1" in
@@ -108,12 +109,26 @@ if ! [[ "$NUM_ROUNDS" =~ ^[1-9][0-9]*$ ]]; then
     echo "--rounds must be a positive integer" >&2
     exit 2
 fi
+if ! [[ "$FIRST_ROUND" =~ ^[1-9][0-9]*$ ]] || [ "$FIRST_ROUND" -gt "$NUM_ROUNDS" ]; then
+    echo "RZERO_FIRST_ROUND must be between 1 and the final round number" >&2
+    exit 2
+fi
+if [ "$FIRST_ROUND" -gt 1 ]; then
+    : "${RZERO_INITIAL_QUESTIONER:?continuation requires the preceding Questioner checkpoint}"
+    : "${VALIDITY_RZERO_INITIAL_SOLVER:?continuation requires the preceding Solver checkpoint}"
+    if [ "$VALIDITY_RZERO_ENABLED" != "1" ]; then
+        echo "Round continuation currently requires the validity-RZero pipeline" >&2; exit 2
+    fi
+fi
 : "${STORAGE_PATH:?source env_rzero.sh or export STORAGE_PATH first}"
 : "${HUGGINGFACENAME:?export HUGGINGFACENAME first}"
 
 REPO_ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 cd "$REPO_ROOT"
 export PYTHONPATH="$REPO_ROOT:${PYTHONPATH:-}"
+if [ -n "${RZERO_INITIAL_QUESTIONER:-}" ]; then
+    python3 scripts/validate_hf_checkpoint.py "$RZERO_INITIAL_QUESTIONER" >/dev/null
+fi
 
 if [ "$VALIDITY_RZERO_ENABLED" = "1" ]; then
     python3 scripts/validate_hf_checkpoint.py "$VALIDITY_RZERO_INITIAL_SOLVER" >/dev/null
@@ -197,6 +212,12 @@ STATE_FILE=$STATE_DIR/run_state.json
 SUMMARY_FILE=$RUN_ROOT/summary.json
 
 FINGERPRINT_EXTRA=()
+if [ "$FIRST_ROUND" != "1" ]; then
+    FINGERPRINT_EXTRA+=(--field "first_round=$FIRST_ROUND")
+fi
+if [ -n "${RZERO_INITIAL_QUESTIONER:-}" ]; then
+    FINGERPRINT_EXTRA+=(--field "initial_questioner=$RZERO_INITIAL_QUESTIONER")
+fi
 if [ "$SOLVER_NEGATIVE_ONLY" = "1" ]; then
     FINGERPRINT_EXTRA+=(--field "solver_gradient_policy=negative_only_zero_agree_skip_full_kl_v1")
 fi
@@ -412,6 +433,9 @@ PY
 
 # BEGIN initial model selection
 CURRENT_QUESTIONER=$BASE_MODEL
+if [ -n "${RZERO_INITIAL_QUESTIONER:-}" ]; then
+    CURRENT_QUESTIONER=$RZERO_INITIAL_QUESTIONER
+fi
 CURRENT_SOLVER=$BASE_MODEL
 if [ "$VALIDITY_RZERO_ENABLED" = "1" ]; then
     CURRENT_SOLVER=$VALIDITY_RZERO_INITIAL_SOLVER
@@ -436,7 +460,7 @@ if [ "$NO_EVAL" != "1" ]; then
     fi
 fi
 
-for ((round=1; round<=NUM_ROUNDS; round++)); do
+for ((round=FIRST_ROUND; round<=NUM_ROUNDS; round++)); do
     echo "================ round $round / $NUM_ROUNDS ================"
 
     QUESTIONER_NAME=${MODEL_ABBR}_questioner_v${round}
@@ -583,7 +607,7 @@ for ((round=1; round<=NUM_ROUNDS; round++)); do
     fi
 done
 
-python3 - "$SUMMARY_FILE" "$BASE_MODEL" "$CURRENT_QUESTIONER" "$CURRENT_SOLVER" "$NUM_ROUNDS" "$VALIDITY_RZERO_ENABLED" "${VALIDITY_RZERO_INITIAL_SOLVER:-$BASE_MODEL}" <<'PY'
+python3 - "$SUMMARY_FILE" "$BASE_MODEL" "$CURRENT_QUESTIONER" "$CURRENT_SOLVER" "$NUM_ROUNDS" "$VALIDITY_RZERO_ENABLED" "${VALIDITY_RZERO_INITIAL_SOLVER:-$BASE_MODEL}" "$FIRST_ROUND" "${RZERO_INITIAL_QUESTIONER:-$BASE_MODEL}" <<'PY'
 import json
 import os
 import sys
@@ -599,6 +623,9 @@ payload = {
 }
 if sys.argv[6] == "1":
     payload["initial_solver"] = sys.argv[7]
+if int(sys.argv[8]) != 1:
+    payload.update(first_round=int(sys.argv[8]), executed_rounds=int(sys.argv[5]) - int(sys.argv[8]) + 1,
+                   initial_questioner=sys.argv[9])
 temporary.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
 os.replace(temporary, path)
 PY

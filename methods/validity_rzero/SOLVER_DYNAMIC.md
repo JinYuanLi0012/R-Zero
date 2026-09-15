@@ -1,6 +1,6 @@
 # Solver-only dynamic voting and TTPO token masking
 
-This experiment starts the Solver from `qwen3_4b_validity_rl_terra_clean_v1/global_step_15/actor/huggingface`
+The first-round launcher starts the Solver from `qwen3_4b_validity_rl_terra_clean_v1/global_step_15/actor/huggingface`
 and reuses the existing mixed dataset
 `$HUGGINGFACENAME/qwen3_4b_validity_rzero_semantic_novelty_gate_k8_solver_negative_4gpu_v1_solver_v1@train`.
 It keeps the original first-round questions and Terra rows. It never runs the
@@ -34,6 +34,45 @@ run configuration. If training has completed, it only retries unfinished
 evaluation modes. Failed evaluation attempt directories are retained. A fresh
 invocation refuses an existing model directory. For another fresh experiment,
 set `SOLVER_DYNAMIC_RUN_NAME` to a new name.
+
+## Continue rounds 2–5 after a successful first round
+
+```bash
+git pull --ff-only
+source env_rzero.sh
+bash methods/validity_rzero/continue_solver_dynamic_k8.sh
+```
+
+This continues the same experiment name and run directory. Round 2 starts from:
+
+- Solver: `$STORAGE_PATH/models/${RUN}_solver_v1/global_step_15/actor/huggingface`,
+  where `RUN` is the dynamic experiment name above.
+- Questioner: `$STORAGE_PATH/models/qwen3_4b_validity_rzero_semantic_novelty_gate_k8_solver_negative_4gpu_v1_questioner_v1/global_step_5/actor/huggingface`,
+  which generated the questions reused for the first dynamic Solver round.
+
+Each round trains the Questioner using the preceding Solver, prepares a fresh
+mixed dataset, trains the Solver from its preceding checkpoint, and evaluates
+with both judge modes before advancing. Models are numbered v2 through v5;
+round 1 is not repeated. Questioner validity rewards and global novelty K=8
+(one matching hit rejects) are unchanged. Solver dynamic voting, negative token
+masking, Terra replay, and steps/checkpoint cadence match the first round.
+
+If this continuation is interrupted, use:
+
+```bash
+bash methods/validity_rzero/continue_solver_dynamic_k8.sh --resume
+```
+
+The continuation has its own pipeline state under the existing run directory;
+the first-round launcher's `--resume` only handles round 1. Completed stages
+are skipped, interrupted training uses its latest complete checkpoint, and
+failed evaluation modes are retried before the next round. For a custom first
+round name, set the same `SOLVER_DYNAMIC_RUN_NAME` used for that run.
+
+Evaluation summaries are at
+`$STORAGE_PATH/rzero_runs/$RUN/evaluations/solver_v{2,3,4,5}/{rzero-original,corrected}/summary.md`
+and `summary.csv`. Logs and vote audits follow the round-1 paths below with
+`solver_v1` replaced by the corresponding round.
 
 ## Exact update rule
 
