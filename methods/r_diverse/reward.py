@@ -15,7 +15,10 @@ def compute_score(predicts, ground_truths, config_path, solver_model, memory_pat
     work = Path(tempfile.mkdtemp(prefix='reward_', dir=round_dir))
     parsed = [parse_question(text) for text in predicts]
     indices = [i for i, row in enumerate(parsed) if row['question']]
-    scores = [{'overall': -1.0, 'format': 0.0, 'accuracy': 0.0,
+    # Paper does not specify malformed-output rewards. With its fixed coefficients,
+    # parseable rewards are >= -1 - (0.5 * 0.5 + 0.5 * 0.75) = -1.625.
+    # Keep this fallback strictly lower; leave equation (11) unchanged below.
+    scores = [{'overall': -2.0, 'format': 0.0, 'accuracy': 0.0,
                'frontier': 0.0, 'batch_penalty': 0.0, 'map_penalty': 0.0,
                'history_max': 0.0, 'history_mean': 0.0} for _ in parsed]
     if indices:

@@ -37,18 +37,20 @@ bash methods/r_diverse/run.sh
 
 ```bash
 bash methods/r_diverse/run.sh \
-  --run-name qwen3_4b_r_diverse_10000_v1 \
+  --run-name qwen3_4b_r_diverse_10000_v2 \
   --questions-per-gpu 2500
 ```
 
 所有选项用 `bash methods/r_diverse/run.sh --help` 查看。`--gpu-ids 0,1,2,3` 的前两卡用于 Q，后两卡用于反馈。
 模型已缓存时可加 `--local-files-only`；也可通过 `--base-model`、`--coder-model`、`--embedding-model` 指定本地路径。
-采用 Base Coder 是对论文未写 Instruct 后缀的字面选择，不自动换模型；显式指定 Instruct 则算一个不同配置。
+采用 Base Coder 是对论文未写 Instruct 后缀的字面选择，不自动换模型。默认 `--coder-prompt-mode completion`，
+无论 tokenizer 是否自带 chat template，均使用原文 few-shot prompt 并以 `Output:\n<CODE>\n` 作为续写起点。
+若显式选择 Instruct，需同时传 `--coder-prompt-mode chat`，作为不同配置记录。
 
 结果默认保存在：
 
 ```text
-${STORAGE_PATH}/rzero_runs/qwen3_4b_r_diverse_minimal_v1/
+${STORAGE_PATH}/rzero_runs/qwen3_4b_r_diverse_minimal_v2/
   requested_config.json / config.json / provenance.json
   latest.json                         # 最新已完成轮次的 Q/S 路径
   sam_cache/                          # 每个 exact question 的代码和向量
@@ -94,8 +96,10 @@ R_Q   = min(majority_score, 1 - majority_score) - P_rep - P_MAP
 - Replay 从所有历史行均匀抽样；数量 `floor(current_count * 0.3 / 0.7)`；历史不足时有放回抽样。
   直接使用历史伪标签，不重标注、不追加 verified answer。
 - 完整 code prompt 按论文附录转录；不加 AST 改写、常数删除、实体分类或额外 prompt 修复。
-  优先截取 `<CODE>` 内容，缺失标签则直接嵌入原输出；语法错误和长度截断记录但不 gate。
-  空输出无法产生表示时清楚报错，不伪造零向量或 novelty 满分；没有额外 retry。
+  Base 的起始 `<CODE>` 已在输入中，响应必须以 `</CODE>` 完整结束；仅接收目标代码块。
+  缺失/嵌套标签、提示词回显、空块会保存 `code_*.output.failure.json` 并中止当前 batch，
+  不再回退到嵌入原始文本，不丢弃题目、不制造奖励、不做额外 retry。
+  完整代码块中的语法错误仍仅记录，不执行代码，也不新增数学有效性筛选。
 - 代码不执行；SAM 不判断数学有效性。论文中对 flawed input 推断合理含义的指令原样保留。
 - Embedding 候选/历史采用完全相同的无前缀表示，无 query/document 不对称检索。
   不缩减1536维向量；mean 使用单位向量均值的点积，**均值不再归一化**；max 分块精确计算。
@@ -112,7 +116,10 @@ R_Q   = min(majority_score, 1 - majority_score) - P_rep - P_MAP
 - Phase-B labels：9 samples，相同 decoding；去掉空答案后算多数比例。
 - 答案等价沿用 mathruler、双向判断、原有 `no ` 字符串特例、10秒 grader timeout。
 - Phase-B 原有 `证明`、question 含 `box`、answer 含 `text` 排除规则保留。
-- Q 输出缺失 question/box 时设 reward=-1；不送 SAM、不参与簇分母。这是简单的格式失败处理。
+- Q 输出无法提取非空 question/boxed answer 时设 reward=-2；不送 SAM、不参与簇分母。
+  论文未披露格式失败奖励；这是本复现补充的固定设置，不是作者报告的超参数。
+  按论文固定系数，正常题奖励下界为 `0 - 1 - (0.5*0.5 + 0.5*0.75) = -1.625`，
+  因此 -2 避免坏格式通过绕过惩罚获得更高奖励；正常题的式(11)、解析规则及数据过滤不变。
 - 修正上游 Q parser 对已提取答案字符串再 `[-1]` 的切字问题：保留完整 boxed 内容；
   Q 自报答案仅用于非空格式检查，不用于奖励正确性或 Solver 标签。
 - Solver reward 保留上游 `0.9 * answer-match + 0.1 * format`，而非额外 judge。
@@ -137,7 +144,7 @@ Q reward 每步依次启动并退出 Solver、Coder、Encoder 进程，释放GPU
 训练后用与其他基线相同的评测流程。现有七数学任务脚本可这样调用（它可能使用现有 API recheck 配置）：
 
 ```bash
-RUN_ROOT="$STORAGE_PATH/rzero_runs/qwen3_4b_r_diverse_minimal_v1"
+RUN_ROOT="$STORAGE_PATH/rzero_runs/qwen3_4b_r_diverse_minimal_v2"
 MODEL_PATH=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["solver"])' "$RUN_ROOT/latest.json")
 export EVAL_ARTIFACT_DIR="$RUN_ROOT/evaluation_final"
 export EVAL_GPU_IDS=0,1,2,3
@@ -147,7 +154,34 @@ bash evaluation/evaluate.bash "$MODEL_PATH"
 各轮 `round_N/state.json` 也记录 solver 路径，可逐轮评测。不要把这份最小实现的结果标为作者官方结果；
 建议论文描述为 “our implementation of R-Diverse based on the published method, with four-GPU engineering adaptations”。
 
+## SAM 输出修复（v2）
+
+v1 的实测输出发现 Base Coder 大量复述 prompt 及第一个苹果示例；旧正则又从说明文字中的
+`<CODE> tags.` 开始匹配。这会造成假性的巨大相似簇。v2 为 Base 增加与 few-shot 一致的
+`Output:` / `<CODE>` 续写前缀，并严格提取单一目标块。论文提示词正文、模型、SAM/MAP 公式、replay 和四卡设置不变。
+
+缓存键包含代码协议版本和 prompt mode，旧异常缓存不会命中。请使用新 run name 从 Base 重跑，
+不要 `--resume` 已受异常奖励影响的 v1 训练。默认名称已变为 `qwen3_4b_r_diverse_minimal_v2`。
+
+如需先确认真实 Coder 输出，可直接复用已有 reward 目录中的 8 道题，仅运行 SAM：
+
+```bash
+python -m methods.r_diverse.inspect_sam \
+  --reward-dir "$STORAGE_PATH/rzero_runs/qwen3_4b_r_diverse_10000_v1/round_1/reward_0xtax347" \
+  --gpu-ids 2,3
+```
+
+该命令需在对应 GPU 空闲时运行；使用原记录中的模型路径，在 `round_1/sam_inspect_v2_*/` 新建结果和缓存，
+不修改旧训练历史，不训练 Q/S。输出题目、对应代码和余弦矩阵，并保存 `summary.json`。
+检查不同题目是否得到相应代码，不能仅凭语法通过或 unique 数量认定 SAM 语义正确。
+这是可选的定位工具，不加入正式训练前置流程。CPU 回归检查已覆盖提供的错误输出形态；
+真实 Base 模型在修正前缀后的生成质量仍需 Linux 推理确认。
+
 ## 本地 CPU 检查
+
+格式奖励修复之前启动的运行（包括已使用 SAM v2 的运行）不要直接 `--resume`。
+请从 Base 使用新 run name，例如 `--run-name qwen3_4b_r_diverse_10000_v3 --questions-per-gpu 2500`。
+已有方法哈希检查会拒绝用修改后的代码恢复旧运行；不需要删除旧实验。
 
 ```bash
 python3 -m unittest discover -s methods/r_diverse/tests -v

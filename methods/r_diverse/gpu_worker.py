@@ -1,12 +1,11 @@
 """Short-lived single-GPU inference: original Q/S sampling, SAM code or embedding."""
 import argparse
 import ast
-import json
-import re
 from pathlib import Path
 
 from methods.r_diverse.core import parse_question, read_json, write_json
 from methods.r_diverse.prompts import QUESTIONER_MESSAGES, SOLVER_SYSTEM
+from methods.r_diverse.sam_protocol import CODE_PROTOCOL, code_prompt, extract_code
 
 
 def render(tokenizer, messages):
@@ -79,37 +78,38 @@ def generate(job):
                                      max_tokens=cfg['response_tokens'], temperature=1.0,
                                      top_p=1.0, top_k=40)
     else:
-        template = Path(__file__).with_name('code_prompt.txt').read_text()
-        # Base Coder receives the literal few-shot completion prompt. An explicitly
-        # selected instruction model uses its own chat template, never a Qwen3 one.
-        texts = [template.replace('{question}', row['question']) for row in rows]
-        prompts = [render(tokenizer, [{'role': 'user', 'content': text}])
-                   if tokenizer.chat_template else text for text in texts]
+        prompt_mode = cfg.get('coder_prompt_mode', 'completion')
+        prompts = [code_prompt(row['question'], tokenizer, prompt_mode) for row in rows]
         params = vllm.SamplingParams(n=1, max_tokens=cfg['code_tokens'], temperature=0.0,
                                      top_p=1.0, stop=['</CODE>'], include_stop_str_in_output=True)
     output = []
     batch_size = cfg['inference_batch']
     for begin in range(0, len(rows), batch_size):
         completions = llm.generate(prompts[begin:begin + batch_size], params, use_tqdm=False)
-        for row, completion in zip(rows[begin:begin + batch_size], completions):
+        for offset, (row, completion) in enumerate(zip(rows[begin:begin + batch_size], completions)):
             texts = [o.text for o in completion.outputs]
             if mode == 'generate':
                 item = dict(row, **parse_question(texts[0]), raw_output=texts[0])
             elif mode == 'solve':
                 item = dict(row, **majority(texts, job['phase']))
             else:
-                matches = re.findall(r'<CODE>(.*?)</CODE>', texts[0], re.S)
-                # No expensive repair or retry: missing tags use the raw completion.
-                code = matches[-1].strip() if matches else texts[0].strip()
-                if not code:
-                    raise RuntimeError(f"Empty SAM code for row {row['id']}; see worker input")
+                try:
+                    code = extract_code(texts[0], prompt_mode)
+                except ValueError as error:
+                    # Do not turn a format failure into a novelty reward or drop the row.
+                    failure = Path(job['failure_path'])
+                    write_json(failure, dict(row, raw_code_output=texts[0],
+                               rendered_prompt=prompts[begin + offset],
+                               code_protocol=CODE_PROTOCOL, error=str(error)))
+                    raise RuntimeError(f'SAM output framing failed; raw response: {failure}') from error
                 try:
                     ast.parse(code)
                     syntax_ok = True
                 except SyntaxError:
                     syntax_ok = False
                 item = dict(row, code=code, raw_code_output=texts[0],
-                            code_tags_ok=bool(matches), code_syntax_ok=syntax_ok,
+                            code_protocol=CODE_PROTOCOL, coder_prompt_mode=prompt_mode,
+                            code_tags_ok=True, code_syntax_ok=syntax_ok,
                             code_truncated=completion.outputs[0].finish_reason == 'length')
             output.append(item)
     return output
@@ -144,6 +144,7 @@ def main():
     parser.add_argument('--output', required=True)
     args = parser.parse_args()
     job = read_json(args.input)
+    job['failure_path'] = str(Path(args.output).with_suffix('.failure.json'))
     rows = embed(job) if job['mode'] == 'embed' else generate(job)
     if len(rows) != len(job['rows']):
         raise RuntimeError('GPU worker lost rows')

@@ -11,6 +11,7 @@ import time
 import numpy as np
 
 from methods.r_diverse.core import read_json, write_json
+from methods.r_diverse.sam_protocol import CODE_PROTOCOL
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -84,6 +85,8 @@ def sam(questions, config, gpu_ids, work):
     template = Path(__file__).with_name('code_prompt.txt').read_text()
     context = {k: config[k] for k in ['coder_model', 'embedding_model', 'code_tokens', 'embedding_tokens']}
     context['prompt'] = template
+    context['code_protocol'] = CODE_PROTOCOL
+    context['coder_prompt_mode'] = config.get('coder_prompt_mode', 'completion')
     context['embedding_protocol'] = 'raw-code-last-token-l2-v1'
     prefix = json.dumps(context, sort_keys=True)
     cache = Path(config['run_root']) / 'sam_cache'
