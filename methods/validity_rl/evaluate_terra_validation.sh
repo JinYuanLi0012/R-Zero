@@ -11,6 +11,7 @@ if [[ -z "${STORAGE_PATH:-}" ]]; then
 fi
 
 RUN_ROOT=${VALIDITY_RUN_ROOT:-${STORAGE_PATH}/models/qwen3_4b_validity_rl_terra_v1}
+MODEL_ROOT=${VALIDITY_TERRA_MODEL_ROOT:-${RUN_ROOT}}
 BASE_MODEL=${VALIDITY_TERRA_BASE_MODEL:-Qwen/Qwen3-4B-Base}
 MODELS_STRING=${VALIDITY_TERRA_MODELS:-"base 5 10 15"}
 GPU_IDS=${VALIDITY_TERRA_GPU_IDS:-${CUDA_VISIBLE_DEVICES:-0,1,2,3}}
@@ -46,7 +47,7 @@ for key in "${MODEL_KEYS[@]}"; do
         MODEL_PATHS+=("${BASE_MODEL}")
     elif [[ "${key}" =~ ^(5|10|15)$ ]]; then
         MODEL_LABELS+=("step_${key}")
-        MODEL_PATH="${RUN_ROOT}/global_step_${key}/actor/huggingface"
+        MODEL_PATH="${MODEL_ROOT}/global_step_${key}/actor/huggingface"
         if [[ ! -s "${MODEL_PATH}/config.json" ]]; then
             echo "Missing merged config: ${MODEL_PATH}/config.json" >&2
             exit 1
@@ -86,6 +87,9 @@ for index in "${!MODEL_LABELS[@]}"; do
     )
     if [[ "${SKIP_API_RECHECK}" == "1" ]]; then
         COMMAND+=(--skip-api-recheck)
+    fi
+    if [[ -n "${VALIDITY_TERRA_CHAT_TEMPLATE_FILE:-}" ]]; then
+        COMMAND+=(--chat-template "${VALIDITY_TERRA_CHAT_TEMPLATE_FILE}")
     fi
     if [[ "${VALIDITY_TERRA_ALLOW_EXISTING:-0}" == "1" ]]; then
         COMMAND+=(--allow-existing)

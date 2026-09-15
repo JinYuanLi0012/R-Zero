@@ -51,6 +51,7 @@ def parse_args() -> argparse.Namespace:
         default=Path(__file__).with_name("validity_solver.jinja"),
     )
     parser.add_argument("--tensor-parallel-size", type=int, default=1)
+    parser.add_argument("--chat-template", type=Path, help="Override tokenizer chat template to match training")
     parser.add_argument("--gpu-memory-utilization", type=float, default=0.85)
     parser.add_argument("--judge-model", default=os.getenv("RECHECK_JUDGE_MODEL", DEFAULT_JUDGE_MODEL))
     parser.add_argument(
@@ -148,7 +149,14 @@ def generate_responses(args: argparse.Namespace, rows: Any) -> list[str]:
     import vllm
 
     tokenizer = AutoTokenizer.from_pretrained(args.model)
+    if args.chat_template is not None:
+        tokenizer.chat_template = args.chat_template.read_text(encoding="utf-8")
     prompts = build_prompts(rows, tokenizer, args.prompt_template)
+    # Rendered templates already include BOS. Match training's tokenization;
+    # passing strings to vLLM may otherwise insert a second BOS for Llama.
+    inputs = prompts
+    if args.chat_template is not None:
+        inputs = [{"prompt_token_ids": tokenizer.encode(prompt, add_special_tokens=False)} for prompt in prompts]
     model = vllm.LLM(
         model=args.model,
         tokenizer=args.model,
@@ -161,7 +169,10 @@ def generate_responses(args: argparse.Namespace, rows: Any) -> list[str]:
         temperature=0.0,
         stop_token_ids=[tokenizer.eos_token_id],
     )
-    outputs = model.generate(prompts, sampling_params=sampling_params, use_tqdm=True)
+    outputs = model.generate(
+        inputs,
+        sampling_params=sampling_params, use_tqdm=True,
+    )
     responses = [output.outputs[0].text for output in outputs]
     if len(responses) != len(rows):
         raise RuntimeError(f"generated {len(responses)} responses for {len(rows)} rows")
@@ -328,6 +339,7 @@ def build_summary(args: argparse.Namespace, results: list[dict[str, Any]]) -> di
         "model_label": args.model_label,
         "dataset": args.dataset,
         "split": args.split,
+        "chat_template": args.chat_template.read_text(encoding="utf-8") if args.chat_template else None,
         "generation": {
             "n": 1,
             "temperature": 0.0,
