@@ -275,6 +275,7 @@ def hello():
 
     results_all = [None] * len(questions)
     if VALIDITY_RZERO_ENABLED and valid_questions:
+        phase_started = time.monotonic()
         validity_chats = [[{
             'role': 'user',
             'content': VALIDITY_TEMPLATE.render(content=question).strip(),
@@ -289,10 +290,12 @@ def hello():
                 for response in validity_responses
             ]
             del validity_responses
+        validity_finished = time.monotonic()
         math_positions = valid_positions(gates)
         math_responses = generate(
             render_prompts([valid_chats[position] for position in math_positions]), math_sample_params
         ) if math_positions else []
+        math_finished = time.monotonic()
         math_by_position = dict(zip(math_positions, math_responses))
         for position, original_index in enumerate(valid_indices):
             gate = gates[position]
@@ -325,6 +328,13 @@ def hello():
                 )
             }))
             results_all[original_index] = item
+        print('[validity_rzero][phase_a_timing] ' + json.dumps({
+            'gpu': os.getenv('CUDA_VISIBLE_DEVICES'), 'port': args.port,
+            'questions': len(valid_questions), 'math_questions': len(math_positions),
+            'validity_seconds': validity_finished - phase_started,
+            'math_generation_seconds': math_finished - validity_finished,
+            'answer_clustering_seconds': time.monotonic() - math_finished,
+        }), flush=True)
     elif valid_questions:
         responses = generate(render_prompts(valid_chats), math_sample_params)
         for position, original_index in enumerate(valid_indices):

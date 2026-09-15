@@ -146,7 +146,14 @@ def compute_score(
             and os.getenv("VALIDITY_RZERO_VALIDITY_JUDGE_MODE", "current_solver") == "frozen"):
         from methods.validity_rzero.frozen_validity import annotate_phase_a
         results = annotate_phase_a(results)
-    final_results = generate_results(results, num_services=num_services, port_base=port_base)
+    if (os.getenv("VALIDITY_RZERO_ENABLED", "0") == "1"
+            and os.getenv("VALIDITY_RZERO_REWARD_BORROW_GPUS", "0") == "1"):
+        from methods.validity_rzero.reward_gpu_borrow import generate_with_borrowed_gpus
+        final_results = generate_with_borrowed_gpus(
+            results, validity_rzero_semantic_gpu_ready_file, num_services, port_base
+        )
+    else:
+        final_results = generate_results(results, num_services=num_services, port_base=port_base)
     validity_rzero_enabled = os.getenv("VALIDITY_RZERO_ENABLED", "0") == "1"
     diversity_mode = (
         os.getenv("VALIDITY_RZERO_DIVERSITY_MODE", "bleu_lambda5")

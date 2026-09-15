@@ -141,10 +141,16 @@ def gpu_compute_pids(gpu_ids: tuple[str, ...]) -> dict[str, list[int]]:
     return result
 
 
-def wait_gpus_released(gpu_ids: tuple[str, ...], timeout_seconds: int) -> None:
+def wait_gpus_released(
+    gpu_ids: tuple[str, ...], timeout_seconds: int,
+    allowed_pids: dict[str, list[int]] | None = None,
+) -> None:
     deadline = time.monotonic() + timeout_seconds
     while time.monotonic() < deadline:
         active = gpu_compute_pids(gpu_ids)
+        if allowed_pids is not None:
+            active = {gpu: [pid for pid in pids if pid not in allowed_pids.get(gpu, [])]
+                      for gpu, pids in active.items()}
         if not any(active.values()):
             return
         time.sleep(1)
@@ -195,7 +201,12 @@ def start_solver_services(config: SolverServiceConfig) -> None:
         "bash", str(config.repo_root / "vllm_service_init" / "start.sh"),
         config.model_path, config.run_id,
     ]
-    subprocess.run(command, cwd=config.repo_root, env=os.environ.copy(), check=True)
+    # The temporary reward pool has different GPUs, ports and PID ownership
+    # from the permanent Solver pool. Do not inherit the latter accidentally.
+    env = os.environ.copy()
+    env.update(VLLM_GPU_IDS=",".join(config.gpu_ids), VLLM_PORT_BASE=str(config.port_base),
+               QUESTIONER_VLLM_PID_FILE=str(config.pid_file))
+    subprocess.run(command, cwd=config.repo_root, env=env, check=True)
     try:
         wait_services_healthy(config)
     except BaseException:

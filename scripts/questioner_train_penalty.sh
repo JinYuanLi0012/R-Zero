@@ -33,6 +33,21 @@ export VLLM_SERVICE_COUNT
 export QUESTIONER_VLLM_PID_FILE=${QUESTIONER_VLLM_PID_FILE:-${STORAGE_PATH}/temp_results/questioner_vllm_${RUN_ID}.pids}
 export VLLM_LOG_DIR=${VLLM_LOG_DIR:-logs}
 export VALIDITY_RZERO_DIVERSITY_MODE=${VALIDITY_RZERO_DIVERSITY_MODE:-bleu_lambda5}
+export VALIDITY_RZERO_REWARD_BORROW_GPUS=${VALIDITY_RZERO_REWARD_BORROW_GPUS:-0}
+case "$VALIDITY_RZERO_REWARD_BORROW_GPUS" in
+    0) ;;
+    1)
+        if [ "${VALIDITY_RZERO_ENABLED:-0}" != "1" ] || \
+           [ "${VALIDITY_RZERO_VALIDITY_JUDGE_MODE:-current_solver}" != "current_solver" ] || \
+           { [ "$VALIDITY_RZERO_DIVERSITY_MODE" != "semantic_mc" ] && [ "$VALIDITY_RZERO_DIVERSITY_MODE" != "semantic_novelty_gate" ]; }; then
+            echo "Reward GPU borrowing requires current-Solver validity and semantic GPU barriers." >&2
+            exit 2
+        fi
+        export VALIDITY_RZERO_REWARD_PID_FILE=${STORAGE_PATH}/temp_results/questioner_reward_${RUN_ID}.pids
+        echo "Reward GPU borrowing enabled: GPUs $QUESTIONER_TRAIN_GPU_IDS join $VLLM_GPU_IDS after Questioner log-probs/offload"
+        ;;
+    *) echo "VALIDITY_RZERO_REWARD_BORROW_GPUS must be 0 or 1" >&2; exit 2 ;;
+esac
 if [ "${VALIDITY_RZERO_ENABLED:-0}" = "1" ] && [ "${VALIDITY_RZERO_VALIDITY_JUDGE_MODE:-current_solver}" = "frozen" ]; then
     export VALIDITY_RZERO_REPO_ROOT="$(pwd)"
     export VALIDITY_RZERO_SOLVER_MODEL_PATH=$solver_model_path
@@ -116,6 +131,9 @@ cleanup_pid_file() {
     fi
 }
 cleanup_vllm() {
+    if [ -n "${VALIDITY_RZERO_REWARD_PID_FILE:-}" ]; then
+        cleanup_pid_file "$VALIDITY_RZERO_REWARD_PID_FILE"
+    fi
     if [ "${VALIDITY_RZERO_ENABLED:-0}" = "1" ] && [ "${VALIDITY_RZERO_VALIDITY_JUDGE_MODE:-current_solver}" = "frozen" ] && [ -n "${VALIDITY_RZERO_FROZEN_PID_FILE:-}" ]; then
         cleanup_pid_file "$VALIDITY_RZERO_FROZEN_PID_FILE"
     fi

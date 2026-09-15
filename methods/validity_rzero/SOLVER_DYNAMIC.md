@@ -74,6 +74,46 @@ Evaluation summaries are at
 and `summary.csv`. Logs and vote audits follow the round-1 paths below with
 `solver_v1` replaced by the corresponding round.
 
+### Four-GPU Questioner reward generation
+
+The continuation launcher now defaults `VALIDITY_RZERO_REWARD_BORROW_GPUS=1`.
+After Questioner generation and old/reference log-prob computation have finished
+and its models have been offloaded, two temporary single-GPU Solver services
+join the permanent GPU 2,3 services on the Questioner's GPU 0,1. The batch is
+split into four ordered shards. Each shard uses the same nine validity samples,
+ten fresh math samples for valid questions, prompts, sampling parameters, and
+reward aggregation as before. This changes scheduling, not the reward rule;
+individual stochastic samples need not be identical to the two-GPU run.
+
+Temporary services use separate ports (by default 5002,5003) and a separate PID
+file. They are stopped before the existing four-GPU semantic judge phase, and
+the Questioner processes remain alive. The implementation waits for all four
+reward shards before semantic judging and for semantic completion before the
+Questioner update. It deliberately waits for the Questioner-ready barrier
+before submitting any phase-A reward requests, trading the earlier two-GPU
+overlap for a simpler four-GPU phase. Other launchers retain the old behavior
+unless the flag is explicitly enabled, and frozen-validity mode is unsupported.
+
+Questioner logs include `[reward_gpu_borrow]` wait/startup/reward/release timing;
+each Solver-service log includes `[phase_a_timing]` validity, math generation,
+and CPU answer-clustering timing. The temporary service logs contain
+`_reward_gpu0_port5002` or `_reward_gpu1_port5003` in their filenames. Failed
+reward shard files are retained under `$STORAGE_PATH/temp_results/reward_gpu_borrow_*`.
+
+The scheduling flag is excluded from the training configuration fingerprint,
+so an existing continuation can resume with it enabled. To disable it:
+
+```bash
+VALIDITY_RZERO_REWARD_BORROW_GPUS=0 bash methods/validity_rzero/continue_solver_dynamic_k8.sh --resume
+```
+
+Pull the update when the training pipeline is stopped, then run the continuation
+with `--resume`. It skips committed stages and resumes Questioner training from
+the latest saved checkpoint, not from a partially computed reward batch. The
+Questioner still saves every five steps by default: if interrupted before its
+first checkpoint, the current five-step Questioner stage starts again. This
+change does not alter the checkpoint cadence.
+
 ## Exact update rule
 
 1. Generate 16 responses for each R-Zero question and 5 for each Terra question
