@@ -167,7 +167,12 @@ def main() -> None:
         result_paths.append(path)
         evaluated.extend(json.loads(path.read_text(encoding="utf-8")))
 
-    terra_train = load_dataset(args.terra_dataset, args.terra_config, split="train") if args.replay_ratio != 0 else []
+    if args.replay_ratio == 0:
+        terra_train = []
+    elif args.terra_dataset == "jinyuan222/rzero-validity-rl-terra-v1-clean-v1":
+        terra_train = load_dataset(args.terra_dataset, data_files={"train": "train.jsonl"}, split="train")
+    else:
+        terra_train = load_dataset(args.terra_dataset, args.terra_config, split="train")
     mixed, stats = build_mixed_rows(
         evaluated, terra_train, args.min_score, args.max_score, args.replay_ratio, args.seed
     )

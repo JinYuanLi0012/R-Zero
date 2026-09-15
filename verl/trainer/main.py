@@ -141,6 +141,10 @@ def main():
                 "PYTHONUNBUFFERED": "1",
             }
         }
+        # Explicitly propagate the opt-in tokenizer contract to all Ray workers.
+        import os
+        if os.getenv("VALIDITY_RZERO_MODEL_FAMILY"):
+            runtime_env["env_vars"]["VALIDITY_RZERO_MODEL_FAMILY"] = os.environ["VALIDITY_RZERO_MODEL_FAMILY"]
         ray.init(runtime_env=runtime_env,num_cpus=16)
 
     runner = Runner.remote()

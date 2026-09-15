@@ -212,6 +212,10 @@ STATE_FILE=$STATE_DIR/run_state.json
 SUMMARY_FILE=$RUN_ROOT/summary.json
 
 FINGERPRINT_EXTRA=()
+if [ "${VALIDITY_RZERO_MODEL_FAMILY:-}" = "octothinker" ]; then
+    OCTO_TEMPLATE_HASH=$(python3 -c 'import hashlib,pathlib; print(hashlib.sha256(pathlib.Path("methods/validity_rl/octothinker_chat.jinja").read_bytes()).hexdigest())')
+    FINGERPRINT_EXTRA+=(--field "model_family=octothinker" --field "octothinker_template_sha256=$OCTO_TEMPLATE_HASH")
+fi
 if [ "$FIRST_ROUND" != "1" ]; then
     FINGERPRINT_EXTRA+=(--field "first_round=$FIRST_ROUND")
 fi

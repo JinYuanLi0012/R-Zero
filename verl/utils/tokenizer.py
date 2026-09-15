@@ -21,6 +21,8 @@ from transformers import AutoProcessor, AutoTokenizer, PreTrainedTokenizer, Proc
 def get_tokenizer(model_path: str, override_chat_template: Optional[str] = None, **kwargs) -> PreTrainedTokenizer:
     """Create a huggingface pretrained tokenizer."""
     tokenizer = AutoTokenizer.from_pretrained(model_path, **kwargs)
+    from methods.validity_rzero.octothinker import configure_tokenizer
+    tokenizer = configure_tokenizer(tokenizer)
     if override_chat_template is not None:
         tokenizer.chat_template = override_chat_template
 

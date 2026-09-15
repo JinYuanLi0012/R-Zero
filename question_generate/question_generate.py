@@ -46,6 +46,8 @@ def get_response_mask(response_ids, eos_token_id, dtype):
 
 def main(args):
     tokenizer = AutoTokenizer.from_pretrained(args.model)
+    from methods.validity_rzero.octothinker import configure_tokenizer, generation_inputs
+    configure_tokenizer(tokenizer)
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
     if tokenizer.pad_token_id is None:
@@ -118,7 +120,7 @@ def main(args):
                     add_generation_prompt=True, add_special_tokens=True))
             else:
                 prompts.append("system: " + domain_chat[0]["content"] + '\n' + "user: " + domain_chat[1]["content"])
-    completions: List[RequestOutput] = model.generate(prompts, sampling_params=sample_params)
+    completions: List[RequestOutput] = model.generate(generation_inputs(prompts, tokenizer), sampling_params=sample_params)
     results=[]
     for completion in completions:
         response = completion.outputs[0].text
@@ -149,4 +151,4 @@ if __name__ == "__main__":
     parser.add_argument("--save_name", type=str, default="", help="")
     args = parser.parse_args()
 
-    main(args) 
+    main(args)

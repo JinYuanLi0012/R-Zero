@@ -87,6 +87,8 @@ print(f"[{args.suffix}] Found {len(questions)} questions to process.")
 # 2. Initialize Model and Tokenizer
 print(f"[{args.suffix}] Initializing vLLM for model: {args.model}")
 tokenizer = AutoTokenizer.from_pretrained(args.model)
+from methods.validity_rzero.octothinker import configure_tokenizer, generation_inputs
+configure_tokenizer(tokenizer)
 model = vllm.LLM(
     model=args.model,
     tokenizer=args.model,
@@ -145,7 +147,7 @@ if validity_rzero_enabled:
         from methods.validity_rzero.frozen_validity import checked_gate
         gates = [checked_gate(row) for row in correct_data]
     else:
-        validity_responses = model.generate(validity_prompts, sampling_params=validity_params, use_tqdm=True)
+        validity_responses = model.generate(generation_inputs(validity_prompts, tokenizer), sampling_params=validity_params, use_tqdm=True)
         gates = [
             evaluate_validity_responses([output.text for output in response.outputs])
             for response in validity_responses
@@ -153,11 +155,11 @@ if validity_rzero_enabled:
         del validity_responses
     valid_indices = valid_positions(gates)
     math_responses = model.generate(
-        [prompts[index] for index in valid_indices], sampling_params=math_sample_params, use_tqdm=True
+        generation_inputs([prompts[index] for index in valid_indices], tokenizer), sampling_params=math_sample_params, use_tqdm=True
     ) if valid_indices else []
     math_response_by_index = dict(zip(valid_indices, math_responses))
 else:
-    responses = model.generate(prompts, sampling_params=math_sample_params, use_tqdm=True)
+    responses = model.generate(generation_inputs(prompts, tokenizer), sampling_params=math_sample_params, use_tqdm=True)
 print(f"[{args.suffix}] Generation complete.")
 
 # 4. Process and Grade Responses

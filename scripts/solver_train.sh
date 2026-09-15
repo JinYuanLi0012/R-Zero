@@ -145,6 +145,7 @@ CUDA_VISIBLE_DEVICES=${QUESTION_GPU_IDS} python3 -m verl.trainer.main \
     data.max_response_length=${SOLVER_MAX_RESPONSE_LENGTH} \
     worker.actor.model.model_path=$solver_model_path \
     trainer.experiment_name=${experiment_name} \
+    trainer.logger="${SOLVER_LOGGER:-[\"console\",\"wandb\"]}" \
     trainer.save_checkpoint_path=${STORAGE_PATH}/models/${experiment_name}/ \
     data.train_files="${SOLVER_TRAIN_FILES}" \
     trainer.total_epochs=${SOLVER_TOTAL_EPOCHS} \

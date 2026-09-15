@@ -46,6 +46,8 @@ args = parser.parse_args()
 print('[init] Loading model...')
 
 tokenizer = AutoTokenizer.from_pretrained(args.model_path)
+from methods.validity_rzero.octothinker import configure_tokenizer, generation_inputs
+configure_tokenizer(tokenizer)
 model = vllm.LLM(
     model=args.model_path,
     tokenizer=args.model_path,
@@ -181,6 +183,7 @@ def hello():
         return ['\n'.join(f"{message['role']}: {message['content']}" for message in chat) for chat in chats]
 
     def generate(prompts, sampling_params):
+        prompts = generation_inputs(prompts, tokenizer)
         chunk_size = int(os.getenv("VLLM_SERVER_BATCH_SIZE", "0"))
         if chunk_size > 0:
             generated = []
