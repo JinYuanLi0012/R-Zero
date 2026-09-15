@@ -17,6 +17,7 @@ This trainer supports model-agonistic model initialization with huggingface
 """
 
 import os
+import json
 import uuid
 from collections import defaultdict
 from copy import deepcopy
@@ -517,7 +518,15 @@ class RayPPOTrainer:
                 with timer("step", timing_raw):
                     # generate a batch
                     with timer("gen", timing_raw):  # wg: worker group
-                        gen_batch_output = self.actor_rollout_wg.generate_sequences(gen_batch)
+                        if self.config.algorithm.solver_dynamic_vote:
+                            from methods.validity_rzero.solver_dynamic import generate_mixed_rollouts
+
+                            batch = generate_mixed_rollouts(
+                                batch, gen_batch, self.actor_rollout_wg.generate_sequences,
+                                self.actor_rollout_wg.world_size,
+                            )
+                        else:
+                            gen_batch_output = self.actor_rollout_wg.generate_sequences(gen_batch)
 
                     if self.config.algorithm.adv_estimator == "remax":
                         with timer("gen_max", timing_raw):
@@ -534,12 +543,29 @@ class RayPPOTrainer:
                             batch.batch["reward_baselines"] = reward_baseline_tensor
                             del gen_baseline_batch, gen_baseline_output
 
-                    batch.non_tensor_batch["uid"] = np.array(
-                        [str(uuid.uuid4()) for _ in range(len(batch.batch))], dtype=object
-                    )
-                    # repeat to align with repeated responses in rollout
-                    batch = batch.repeat(repeat_times=self.config.worker.rollout.n, interleave=True)
-                    batch = batch.union(gen_batch_output)
+                    if self.config.algorithm.solver_dynamic_vote:
+                        from methods.validity_rzero.solver_dynamic import prepare_update
+
+                        with timer("dynamic_vote", timing_raw):
+                            batch, vote_metrics, selected_rewards, vote_audit = prepare_update(
+                                batch, self.tokenizer,
+                                lambda data: ray.get(self.reward_fn.compute_reward.remote(data)),
+                                seed=self.config.data.seed + self.global_step,
+                            )
+                            metrics.update(vote_metrics)
+                            metrics.update({f"reward/{k}": v for k, v in reduce_metrics(selected_rewards).items()})
+                            audit_dir = os.path.join(self.config.trainer.save_checkpoint_path, "solver_vote_audit")
+                            os.makedirs(audit_dir, exist_ok=True)
+                            with open(os.path.join(audit_dir, f"step_{self.global_step:04d}.jsonl"), "w") as stream:
+                                for row in vote_audit:
+                                    stream.write(json.dumps(row, ensure_ascii=False) + "\n")
+                    else:
+                        batch.non_tensor_batch["uid"] = np.array(
+                            [str(uuid.uuid4()) for _ in range(len(batch.batch))], dtype=object
+                        )
+                        # repeat to align with repeated responses in rollout
+                        batch = batch.repeat(repeat_times=self.config.worker.rollout.n, interleave=True)
+                        batch = batch.union(gen_batch_output)
 
                     # balance the number of valid tokens on each dp rank.
                     # Note that this breaks the order of data inside the batch.
@@ -552,7 +578,8 @@ class RayPPOTrainer:
                     # compute reward
                     semantic_barrier = None
                     if (
-                        os.getenv("VALIDITY_RZERO_ENABLED", "0") == "1"
+                        not self.config.algorithm.solver_dynamic_vote
+                        and os.getenv("VALIDITY_RZERO_ENABLED", "0") == "1"
                         and os.getenv("VALIDITY_RZERO_DIVERSITY_MODE", "bleu_lambda5")
                         in {"semantic_mc", "semantic_novelty_gate"}
                     ):
@@ -565,8 +592,9 @@ class RayPPOTrainer:
                         batch.non_tensor_batch[BARRIER_DATA_KEY] = np.full(
                             len(batch), str(semantic_barrier), dtype=object
                         )
-                    with timer("reward", timing_raw):
-                        reward_ref = self.reward_fn.compute_reward.remote(batch)
+                    if not self.config.algorithm.solver_dynamic_vote:
+                        with timer("reward", timing_raw):
+                            reward_ref = self.reward_fn.compute_reward.remote(batch)
 
                     try:
                         # recompute old_log_probs
@@ -603,39 +631,40 @@ class RayPPOTrainer:
                                 cleanup_barrier(semantic_barrier)
                                 raise
 
-                    with timer("adv", timing_raw):
-                        # get token level scores
-                        try:
-                            reward_tensor, reward_metrics = ray.get(reward_ref)
-                        finally:
-                            if semantic_barrier is not None:
-                                from methods.validity_rzero.semantic_gpu_barrier import cleanup_barrier
+                    if not self.config.algorithm.solver_dynamic_vote:
+                        with timer("adv", timing_raw):
+                            # get token level scores
+                            try:
+                                reward_tensor, reward_metrics = ray.get(reward_ref)
+                            finally:
+                                if semantic_barrier is not None:
+                                    from methods.validity_rzero.semantic_gpu_barrier import cleanup_barrier
 
-                                cleanup_barrier(semantic_barrier)
-                        batch.batch["token_level_scores"] = reward_tensor
-                        # Keep per-rollout metadata until Solver gradient routing
-                        # is complete. Reduction discards the sample alignment.
-                        metrics.update({f"reward/{k}": v for k, v in reduce_metrics(reward_metrics).items()})
+                                    cleanup_barrier(semantic_barrier)
+                            batch.batch["token_level_scores"] = reward_tensor
+                            # Keep per-rollout metadata until Solver gradient routing
+                            # is complete. Reduction discards the sample alignment.
+                            metrics.update({f"reward/{k}": v for k, v in reduce_metrics(reward_metrics).items()})
 
-                        # apply kl penalty if available
-                        if not self.config.algorithm.use_kl_loss and self.use_reference_policy:
-                            # apply kl penalty to reward
-                            batch, kl_metrics = apply_kl_penalty(batch, self.kl_ctrl, self.config.algorithm.kl_penalty)
-                            metrics.update(kl_metrics)
-                        else:
-                            batch.batch["token_level_rewards"] = batch.batch["token_level_scores"]
+                            # apply kl penalty if available
+                            if not self.config.algorithm.use_kl_loss and self.use_reference_policy:
+                                # apply kl penalty to reward
+                                batch, kl_metrics = apply_kl_penalty(batch, self.kl_ctrl, self.config.algorithm.kl_penalty)
+                                metrics.update(kl_metrics)
+                            else:
+                                batch.batch["token_level_rewards"] = batch.batch["token_level_scores"]
 
-                        # compute advantages, executed on the driver process
-                        batch = compute_advantage(
-                            batch,
-                            adv_estimator=self.config.algorithm.adv_estimator,
-                            gamma=self.config.algorithm.gamma,
-                            lam=self.config.algorithm.lam,
-                        )
-                        if self.config.algorithm.solver_negative_only:
-                            from methods.validity_rzero.solver_negative_only import apply_solver_negative_only
+                            # compute advantages, executed on the driver process
+                            batch = compute_advantage(
+                                batch,
+                                adv_estimator=self.config.algorithm.adv_estimator,
+                                gamma=self.config.algorithm.gamma,
+                                lam=self.config.algorithm.lam,
+                            )
+                            if self.config.algorithm.solver_negative_only:
+                                from methods.validity_rzero.solver_negative_only import apply_solver_negative_only
 
-                            metrics.update(apply_solver_negative_only(batch, reward_metrics))
+                                metrics.update(apply_solver_negative_only(batch, reward_metrics))
 
                     # update critic
                     if self.use_critic:
@@ -651,6 +680,10 @@ class RayPPOTrainer:
                             actor_output = self.actor_rollout_wg.update_actor(batch)
 
                         actor_metrics = reduce_metrics(actor_output.non_tensor_batch)
+                        if self.config.algorithm.solver_token_masking:
+                            actor_metrics["actor/negative_mask_retained_fraction"] = (
+                                actor_metrics["actor/negative_mask_kept_tokens"]
+                                / max(actor_metrics["actor/negative_mask_eligible_tokens"], 1))
                         metrics.update(actor_metrics)
 
                     # validate

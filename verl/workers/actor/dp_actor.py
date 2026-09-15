@@ -57,11 +57,14 @@ class DataParallelPPOActor(BasePPOActor):
         else:
             self.log_probs_from_logits = VF.log_probs_from_logits
 
-    def _forward_micro_batch(self, micro_batch: Dict[str, torch.Tensor], temperature: float) -> torch.Tensor:
+    def _forward_micro_batch(self, micro_batch: Dict[str, torch.Tensor], temperature: float, return_entropy: bool = False):
         """
         Returns:
             log_probs: # (bs, response_len)
         """
+        if return_entropy:
+            from methods.validity_rzero.solver_token_mask import full_vocab_entropy
+        entropy = None
         input_ids = micro_batch["input_ids"]
         batch_size, seqlen = input_ids.shape
         attention_mask = micro_batch["attention_mask"]
@@ -123,16 +126,24 @@ class DataParallelPPOActor(BasePPOActor):
             # ((total_nnz / sp) + pad)
             log_probs = self.log_probs_from_logits(logits=logits_rmpad, labels=input_ids_rmpad_rolled)
 
+            if return_entropy:
+                entropy = full_vocab_entropy(logits_rmpad)
+
             # gather log_prob if sp > 1
             if self.config.ulysses_sequence_parallel_size > 1:
                 # gather and unpad for the ulysses sp
                 log_probs = gather_outputs_and_unpad(log_probs, gather_dim=0, unpad_dim=0, padding_size=pad_size)
+                if return_entropy:
+                    entropy = gather_outputs_and_unpad(entropy, gather_dim=0, unpad_dim=0, padding_size=pad_size)
 
             # pad back to (bsz, seqlen)
             full_log_probs = pad_input(
                 hidden_states=log_probs.unsqueeze(-1), indices=indices, batch=batch_size, seqlen=seqlen
             )
             log_probs = full_log_probs.squeeze(-1)[:, -response_length - 1 : -1]  # (bsz, response_length)
+            if return_entropy:
+                entropy = pad_input(entropy.unsqueeze(-1), indices, batch_size, seqlen)
+                entropy = entropy.squeeze(-1)[:, -response_length - 1 : -1]
         else:
             output = self.actor_module(
                 input_ids=input_ids,
@@ -145,8 +156,10 @@ class DataParallelPPOActor(BasePPOActor):
             logits.div_(temperature)
             logits = logits[:, -response_length - 1 : -1, :]  # (bsz, response_length, vocab_size)
             log_probs = self.log_probs_from_logits(logits, responses)  # (bsz, response_length)
+            if return_entropy:
+                entropy = full_vocab_entropy(logits)
 
-        return log_probs
+        return (log_probs, entropy) if return_entropy else log_probs
 
     def _optimizer_step(self) -> torch.Tensor:
         if isinstance(self.actor_module, FSDP):
@@ -210,6 +223,8 @@ class DataParallelPPOActor(BasePPOActor):
 
         temperature = data.meta_info["temperature"]  # temperature must be in the data.meta_info to avoid slient error
         select_keys = ["responses", "input_ids", "attention_mask", "position_ids", "old_log_probs", "advantages"]
+        if self.config.solver_token_masking:
+            select_keys.append("solver_negative_token_mask")
         if self.config.use_kl_loss and not self.config.disable_kl:
             select_keys.append("ref_log_probs")
 
@@ -223,6 +238,7 @@ class DataParallelPPOActor(BasePPOActor):
         mini_batches = data.select(select_keys, non_tensor_select_keys).split(self.config.global_batch_size_per_device)
 
         metrics = defaultdict(list)
+        mask_kept = mask_total = 0
         for _ in range(self.config.ppo_epochs):
             if self.rank == 0:
                 mini_batches = tqdm(mini_batches, desc="Train mini-batches", position=2)
@@ -245,7 +261,19 @@ class DataParallelPPOActor(BasePPOActor):
                     advantages = model_inputs["advantages"]
 
                     # all return: (bsz, response_length)
-                    log_probs = self._forward_micro_batch(model_inputs, temperature=temperature)
+                    if self.config.solver_token_masking:
+                        from methods.validity_rzero.solver_token_mask import mask_negative_advantages
+
+                        log_probs, full_entropy = self._forward_micro_batch(
+                            model_inputs, temperature=temperature, return_entropy=True)
+                        eligible = model_inputs["solver_negative_token_mask"]
+                        active = eligible[:, None] & (advantages < 0) & response_mask.bool()
+                        advantages, token_mask = mask_negative_advantages(
+                            advantages, log_probs, full_entropy, response_mask, eligible)
+                        mask_kept += int((token_mask & active).sum().item())
+                        mask_total += int(active.sum().item())
+                    else:
+                        log_probs = self._forward_micro_batch(model_inputs, temperature=temperature)
                     entropy_loss = -VF.masked_mean(log_probs, response_mask)  # estimator of entropy loss
 
                     pg_loss, pg_clipfrac_higher, pg_clipfrac_lower, ppo_kl = core_algos.compute_policy_loss(
@@ -285,4 +313,9 @@ class DataParallelPPOActor(BasePPOActor):
                 grad_norm = self._optimizer_step()
                 append_to_dict(metrics, {"actor/grad_norm": grad_norm.detach().item()})
 
+        if self.config.solver_token_masking:
+            # Equal-size DP partitions: reducing these counts by mean still
+            # permits an exact global retention ratio on the controller.
+            metrics["actor/negative_mask_kept_tokens"] = [mask_kept]
+            metrics["actor/negative_mask_eligible_tokens"] = [mask_total]
         return metrics

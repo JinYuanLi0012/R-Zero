@@ -200,6 +200,12 @@ FINGERPRINT_EXTRA=()
 if [ "$SOLVER_NEGATIVE_ONLY" = "1" ]; then
     FINGERPRINT_EXTRA+=(--field "solver_gradient_policy=negative_only_zero_agree_skip_full_kl_v1")
 fi
+if [ "${SOLVER_DYNAMIC_VOTE:-0}" = "1" ]; then
+    FINGERPRINT_EXTRA+=(--field "solver_dynamic_vote=unique_min2_16vote_2pos3neg_v1")
+fi
+if [ "${SOLVER_TOKEN_MASKING:-0}" = "1" ]; then
+    FINGERPRINT_EXTRA+=(--field "solver_token_mask=full_entropy_per_response_q98_median_v1")
+fi
 export RZERO_QUESTION_BOX_FILTER=${RZERO_QUESTION_BOX_FILTER:-legacy}
 case "$RZERO_QUESTION_BOX_FILTER" in
     legacy) ;;

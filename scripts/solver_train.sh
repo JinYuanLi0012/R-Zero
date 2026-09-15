@@ -2,6 +2,14 @@
 set -e
 
 SOLVER_NEGATIVE_ONLY=${SOLVER_NEGATIVE_ONLY:-0}
+SOLVER_DYNAMIC_VOTE=${SOLVER_DYNAMIC_VOTE:-0}
+SOLVER_TOKEN_MASKING=${SOLVER_TOKEN_MASKING:-0}
+for option in "$SOLVER_DYNAMIC_VOTE" "$SOLVER_TOKEN_MASKING"; do
+    case "$option" in 0|1) ;; *) echo "Solver dynamic/masking flags must be 0 or 1" >&2; exit 2 ;; esac
+    if [ "$option" = "1" ] && [ "$SOLVER_NEGATIVE_ONLY" != "1" ]; then
+        echo "Solver dynamic/masking requires SOLVER_NEGATIVE_ONLY=1" >&2; exit 2
+    fi
+done
 case "$SOLVER_NEGATIVE_ONLY" in
     0) ;;
     1)
@@ -15,6 +23,7 @@ esac
 solver_model_path=$1
 questioner_model_path=$2
 experiment_name=$3
+SOLVER_TRAIN_FILES=${SOLVER_TRAIN_FILES:-${HUGGINGFACENAME}/${experiment_name}@train}
 
 mkdir -p logs
 if [ "${VALIDITY_RZERO_ENABLED:-0}" = "1" ] && [ -n "${VALIDITY_RZERO_ARTIFACT_DIR:-}" ]; then
@@ -90,7 +99,7 @@ if [ "$SOLVER_DATASET_READY" != "1" ]; then
         python question_evaluate/upload.py "${UPLOAD_ARGS[@]}"
     fi
 else
-    echo "dataset already prepared: ${HUGGINGFACENAME}/${experiment_name}"
+    echo "dataset already prepared: ${SOLVER_TRAIN_FILES}"
 fi
 
 if [ "$SOLVER_PREPARE_ONLY" = "1" ]; then
@@ -107,6 +116,14 @@ if [ -n "$SOLVER_LOAD_CHECKPOINT" ]; then
 fi
 
 EXTRA_TRAIN_ARGS=()
+if [ "$SOLVER_DYNAMIC_VOTE" = "1" ]; then
+    EXTRA_TRAIN_ARGS+=(algorithm.solver_dynamic_vote=true)
+    echo "Dynamic R-Zero: 16 votes, unique largest cluster >=2, 2 positive + 3 negative update slots; Terra remains 5"
+fi
+if [ "$SOLVER_TOKEN_MASKING" = "1" ]; then
+    EXTRA_TRAIN_ARGS+=(algorithm.solver_token_masking=true)
+    echo "Negative token mask: full-vocab entropy; per-response q98 normalization and median; original denominator and KL"
+fi
 if [ "$SOLVER_NEGATIVE_ONLY" = "1" ]; then
     EXTRA_TRAIN_ARGS+=(algorithm.solver_negative_only=true)
     echo "Solver task gradients: unmatched AND original advantage<0; zero-agree groups skip task loss; full-sample KL unchanged; Terra full GRPO"
@@ -129,7 +146,7 @@ CUDA_VISIBLE_DEVICES=${QUESTION_GPU_IDS} python3 -m verl.trainer.main \
     worker.actor.model.model_path=$solver_model_path \
     trainer.experiment_name=${experiment_name} \
     trainer.save_checkpoint_path=${STORAGE_PATH}/models/${experiment_name}/ \
-    data.train_files=${HUGGINGFACENAME}/${experiment_name}@train \
+    data.train_files="${SOLVER_TRAIN_FILES}" \
     trainer.total_epochs=${SOLVER_TOTAL_EPOCHS} \
     trainer.max_steps=${SOLVER_MAX_STEPS} \
     trainer.save_freq=${SOLVER_SAVE_FREQ} \

@@ -35,6 +35,11 @@ and can be overridden with `VALIDITY_RZERO_INITIAL_SOLVER`.
 
 ### Solver negative-only GRPO on the original K8 baseline
 
+For the subsequent **Solver-only dynamic voting + full-entropy token masking**
+experiment, see [SOLVER_DYNAMIC.md](SOLVER_DYNAMIC.md). It reuses the first-round
+dataset and does not run the Questioner. The static-label experiment below
+remains available with its original treatment.
+
 `run_solver_negative_k8.sh` starts a separate experiment named
 `qwen3_4b_validity_rzero_semantic_novelty_gate_k8_solver_negative_4gpu_v1`.
 It fixes the original K8 Questioner settings: 512 prompts x 4 rollouts,

@@ -86,6 +86,7 @@ class ActorConfig:
     padding_free: bool = False
     ulysses_sequence_parallel_size: int = 1
     use_torch_compile: bool = True
+    solver_token_masking: bool = False
     model: ModelConfig = field(default_factory=ModelConfig)
     optim: OptimConfig = field(default_factory=OptimConfig)
     fsdp: FSDPConfig = field(default_factory=FSDPConfig)

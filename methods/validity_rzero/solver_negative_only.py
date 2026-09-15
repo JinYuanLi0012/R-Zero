@@ -15,6 +15,7 @@ def apply_solver_negative_only(data, reward_metrics):
     sources = data.non_tensor_batch["source"]
     group_ids = data.non_tensor_batch["uid"]
     matches = reward_metrics["solver_answer_match"]
+    vote_valid = data.non_tensor_batch.get("solver_vote_valid")
     size = advantages.shape[0]
     if not (len(sources) == len(group_ids) == len(matches) == size):
         raise ValueError("Solver source, uid and answer-match metadata must align with every rollout")
@@ -36,11 +37,13 @@ def apply_solver_negative_only(data, reward_metrics):
             raise ValueError("A Solver rollout group cannot mix rzero and terra sources")
         if source == "terra":
             continue
+        if vote_valid is not None and any(vote_valid[i] != vote_valid[indices[0]] for i in indices):
+            raise ValueError("Full-group vote eligibility must agree within each uid")
         rzero_groups += 1
         n_agree = sum(matches[i] for i in indices)
         zero_agree_groups += int(n_agree == 0)
         all_agree_groups += int(n_agree == len(indices))
-        if n_agree > 0:
+        if n_agree > 0 and (vote_valid is None or vote_valid[indices[0]]):
             for i in indices:
                 eligible[i] = matches[i] == 0
 
@@ -52,6 +55,7 @@ def apply_solver_negative_only(data, reward_metrics):
     # Out-of-place: GRPO returns may alias the original advantages.
     # Do not recenter, rescale, drop rows or alter the actor's loss denominator.
     data.batch["advantages"] = torch.where(keep, advantages, torch.zeros_like(advantages))
+    data.batch["solver_negative_token_mask"] = keep_negative.any(dim=-1)
 
     rzero_count = int(rzero.sum().item())
     kept_count = int(keep_negative.any(dim=-1).sum().item())

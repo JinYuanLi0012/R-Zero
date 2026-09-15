@@ -83,8 +83,12 @@ class AlgorithmConfig:
     mock_data: str = ""
     # Opt-in Solver treatment; Questioner and legacy runs retain full GRPO.
     solver_negative_only: bool = False
+    solver_dynamic_vote: bool = False
+    solver_token_masking: bool = False
 
     def post_init(self):
+        if (self.solver_dynamic_vote or self.solver_token_masking) and not self.solver_negative_only:
+            raise ValueError("Solver dynamic voting/token masking requires solver_negative_only")
         if self.solver_negative_only:
             if self.adv_estimator != "grpo":
                 raise ValueError("solver_negative_only requires GRPO")
@@ -139,6 +143,9 @@ class PPOConfig:
         self.worker.actor.use_kl_loss = self.algorithm.use_kl_loss
         self.worker.actor.kl_penalty = self.algorithm.kl_penalty
         self.worker.actor.kl_coef = self.algorithm.kl_coef
+        self.worker.actor.solver_token_masking = self.algorithm.solver_token_masking
+        if self.algorithm.solver_dynamic_vote and self.worker.rollout.n != 5:
+            raise ValueError("Dynamic Solver uses 16 R-Zero votes and 5 updates; Terra rollout.n must stay 5")
 
     def deep_post_init(self):
         recursive_post_init(self)
