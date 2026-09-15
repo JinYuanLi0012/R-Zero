@@ -126,10 +126,12 @@ def prepare_dataset(directory, config, current, history, history_vectors):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--run-name', default='qwen3_4b_r_diverse_minimal_v1')
+    parser.add_argument('--run-name', default='qwen3_4b_r_diverse_minimal_v2')
     parser.add_argument('--output-dir')
     parser.add_argument('--base-model', default='Qwen/Qwen3-4B-Base')
     parser.add_argument('--coder-model', default='Qwen/Qwen2.5-Coder-7B')
+    parser.add_argument('--coder-prompt-mode', choices=['completion', 'chat'], default='completion',
+                        help='Base: Output/CODE prefill; chat: explicitly selected Instruct model')
     parser.add_argument('--embedding-model', default='jinaai/jina-code-embeddings-1.5b')
     parser.add_argument('--rounds', type=int, default=5)
     parser.add_argument('--gpu-ids', default='0,1,2,3')
