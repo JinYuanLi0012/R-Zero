@@ -116,7 +116,10 @@ R_Q   = min(majority_score, 1 - majority_score) - P_rep - P_MAP
 - Phase-B labels：9 samples，相同 decoding；去掉空答案后算多数比例。
 - 答案等价沿用 mathruler、双向判断、原有 `no ` 字符串特例、10秒 grader timeout。
 - Phase-B 原有 `证明`、question 含 `box`、answer 含 `text` 排除规则保留。
-- Q 输出缺失 question/box 时设 reward=-1；不送 SAM、不参与簇分母。这是简单的格式失败处理。
+- Q 输出无法提取非空 question/boxed answer 时设 reward=-2；不送 SAM、不参与簇分母。
+  论文未披露格式失败奖励；这是本复现补充的固定设置，不是作者报告的超参数。
+  按论文固定系数，正常题奖励下界为 `0 - 1 - (0.5*0.5 + 0.5*0.75) = -1.625`，
+  因此 -2 避免坏格式通过绕过惩罚获得更高奖励；正常题的式(11)、解析规则及数据过滤不变。
 - 修正上游 Q parser 对已提取答案字符串再 `[-1]` 的切字问题：保留完整 boxed 内容；
   Q 自报答案仅用于非空格式检查，不用于奖励正确性或 Solver 标签。
 - Solver reward 保留上游 `0.9 * answer-match + 0.1 * format`，而非额外 judge。
@@ -175,6 +178,10 @@ python -m methods.r_diverse.inspect_sam \
 真实 Base 模型在修正前缀后的生成质量仍需 Linux 推理确认。
 
 ## 本地 CPU 检查
+
+格式奖励修复之前启动的运行（包括已使用 SAM v2 的运行）不要直接 `--resume`。
+请从 Base 使用新 run name，例如 `--run-name qwen3_4b_r_diverse_10000_v3 --questions-per-gpu 2500`。
+已有方法哈希检查会拒绝用修改后的代码恢复旧运行；不需要删除旧实验。
 
 ```bash
 python3 -m unittest discover -s methods/r_diverse/tests -v
