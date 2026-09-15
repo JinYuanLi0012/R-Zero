@@ -4,8 +4,8 @@ set -euo pipefail
 METHOD_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 cd "${METHOD_DIR}/../.."
 MODE=${1:-train}
-[[ "$#" -le 1 && ( "$MODE" == train || "$MODE" == --smoke ) ]] || {
-    echo "Usage: bash $0 [--smoke]" >&2; exit 2;
+[[ "$#" -le 1 && ( "$MODE" == train || "$MODE" == --smoke || "$MODE" == --resume ) ]] || {
+    echo "Usage: bash $0 [--smoke|--resume]" >&2; exit 2;
 }
 : "${STORAGE_PATH:?Source env_rzero.sh or set STORAGE_PATH first}"
 export VALIDITY_GPU_IDS=${VALIDITY_GPU_IDS:-${CUDA_VISIBLE_DEVICES:-0,1}}
@@ -38,7 +38,16 @@ DATA_DIR="${VALIDITY_SAVE_PATH}/data"
 # the shell from another experiment.
 export VALIDITY_TRAIN_FILES="${DATA_DIR}/train.parquet"
 export VALIDITY_VAL_FILES="${DATA_DIR}/validation.parquet"
-if [[ "${VALIDITY_DRY_RUN:-0}" != 1 ]]; then
+unset VALIDITY_LOAD_CHECKPOINT
+if [[ "$MODE" == --resume ]]; then
+    # Validate the committed recovery point, not the highest directory name.
+    # Reuse the original parquet files so dataloader state remains meaningful.
+    VALIDITY_LOAD_CHECKPOINT=$(python3 "${METHOD_DIR}/resume_checkpoint.py" \
+        --root "$VALIDITY_SAVE_PATH" --dataset "$VALIDITY_DATASET" \
+        --max-steps "${VALIDITY_MAX_STEPS:-15}")
+    export VALIDITY_LOAD_CHECKPOINT
+    echo "Resuming from ${VALIDITY_LOAD_CHECKPOINT}; target step ${VALIDITY_MAX_STEPS:-15}"
+elif [[ "${VALIDITY_DRY_RUN:-0}" != 1 ]]; then
     if [[ -e "${VALIDITY_SAVE_PATH}/latest_global_step.txt" ]]; then
         echo "Run already has a checkpoint: ${VALIDITY_SAVE_PATH}. Choose a new experiment name." >&2
         exit 2

@@ -98,6 +98,10 @@ if [[ -n "${VALIDITY_CHAT_TEMPLATE_FILE:-}" ]]; then
 $(sed 's/^/  /' "${VALIDITY_CHAT_TEMPLATE_FILE}")")
 fi
 
+if [[ -n "${VALIDITY_LOAD_CHECKPOINT:-}" ]]; then
+    COMMAND+=("trainer.load_checkpoint_path=${VALIDITY_LOAD_CHECKPOINT}")
+fi
+
 echo "Validity-RL experiment: ${EXPERIMENT_NAME}"
 echo "Train data: ${TRAIN_FILES}"
 echo "Validation data (reward-only, never used for gradients): ${VAL_FILES}"

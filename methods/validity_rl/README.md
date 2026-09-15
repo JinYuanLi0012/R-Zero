@@ -43,7 +43,26 @@ verification and is not a quality measurement.
 
 Use `VALIDITY_EXPERIMENT_NAME` for a new run name or `VALIDITY_SAVE_PATH` for
 an explicit destination. The entry refuses an existing checkpoint tracker to
-avoid overwriting a completed run. It does not resume previous training.
+avoid overwriting a completed run. To recover an interrupted formal run:
+
+```bash
+VALIDITY_GPU_IDS=0,3 bash methods/validity_rl/train_octothinker_grpo.sh --resume
+```
+
+Resume reads `latest_global_step.txt`, checks both ranks' model/optimizer/extra
+state and dataloader files, and reuses the original audited parquet files.
+It does not download or regenerate the dataset. Keep model, batch, sampling,
+prompt and total-step settings identical to the original run; this restores
+the training state, not just model weights. With a committed step 10 and target
+15, it reruns steps 11–15. An incomplete step 15 directory is not selected;
+the trainer rewrites it when reaching step 15 again. No checkpoint is deleted
+by the resume preflight. Use the same save path as before. `--resume` also
+validates the checkpoint during `VALIDITY_DRY_RUN=1`.
+
+If a shared filesystem returns `Required key not available`, restore access
+before launching (for example, renew the site's Kerberos credentials with
+`kinit` and check their lifetime with `klist`). Successful data reads alone do
+not establish that checkpoint writes will succeed throughout a long run.
 `VALIDITY_DRY_RUN=1` prints the full command without data/model downloads.
 CPU tests: `python3 -m pytest -q methods/validity_rl/tests/test_octothinker_entry.py methods/validity_rl/tests/test_validity_reward.py`.
 

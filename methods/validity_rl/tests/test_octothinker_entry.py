@@ -21,7 +21,12 @@ def run_entry(tmp_path, mode=None, gpus="0,1"):
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()
     fake = bin_dir / "python3"
-    fake.write_text(f"#!{sys.executable}\nimport json,sys\nprint('ARGV:'+json.dumps(sys.argv[1:]))\n")
+    fake.write_text(
+        f"#!{sys.executable}\nimport json,sys,os\n"
+        "if sys.argv[1].endswith('resume_checkpoint.py'):\n"
+        f"    os.execv({sys.executable!r}, [{sys.executable!r}] + sys.argv[1:])\n"
+        "print('ARGV:'+json.dumps(sys.argv[1:]))\n"
+    )
     fake.chmod(0o755)
     env = {k: v for k, v in os.environ.items() if not k.startswith("VALIDITY_")}
     env.update(PATH=str(bin_dir) + os.pathsep + env["PATH"],
@@ -89,3 +94,50 @@ def test_audit_rejects_split_leakage(monkeypatch):
         validation=Dataset.from_list([row("a","validation")])) )
     with pytest.raises(ValueError, match="overlap"):
         prepare.audit_dataset(prepare.CLEAN_DATASET)
+
+
+def recovery_fixture(tmp_path):
+    root = tmp_path / "storage/models/octothinker_3b_hybrid_validity_rl_terra_clean_v1"
+    actor = root / "global_step_10/actor"
+    actor.mkdir(parents=True)
+    for rank in range(2):
+        for kind in ("model", "optim", "extra_state"):
+            (actor / f"{kind}_world_size_2_rank_{rank}.pt").write_bytes(b"fixture")
+    (actor.parent / "dataloader.pt").write_bytes(b"fixture")
+    (root / "latest_global_step.txt").write_text("10")
+    (root / "data").mkdir()
+    for name in ("train.parquet", "validation.parquet"):
+        (root / "data" / name).write_bytes(b"original dataset fixture")
+    (root / "data/audit.json").write_text(json.dumps({"dataset":prepare.CLEAN_DATASET}))
+    (root / "global_step_15/actor").mkdir(parents=True)
+    (root / "global_step_15/actor/model_world_size_2_rank_0.pt").write_bytes(b"partial")
+    return root
+
+
+def test_resume_uses_committed_10_skips_dataset_preparation(tmp_path):
+    root = recovery_fixture(tmp_path)
+    result = run_entry(tmp_path, "--resume", "0,3")
+    assert result.returncode == 0, result.stderr
+    calls = [json.loads(line[5:]) for line in result.stdout.splitlines() if line.startswith("ARGV:")]
+    assert len(calls) == 1  # trainer only; original dataset never regenerated
+    cfg = OmegaConf.from_cli(calls[0][2:])
+    assert cfg.trainer.load_checkpoint_path == str(root / "global_step_10")
+    assert cfg.trainer.max_steps == 15
+    assert (root / "global_step_15/actor/model_world_size_2_rank_0.pt").read_bytes() == b"partial"
+
+
+@pytest.mark.parametrize("missing", ["global_step_10/actor/optim_world_size_2_rank_1.pt", "data/train.parquet"])
+def test_resume_rejects_missing_state_or_data(tmp_path, missing):
+    root = recovery_fixture(tmp_path)
+    (root / missing).unlink()
+    result = run_entry(tmp_path, "--resume")
+    assert result.returncode != 0
+    assert "ARGV:" not in result.stdout
+
+
+def test_resume_rejects_wrong_dataset(tmp_path):
+    root = recovery_fixture(tmp_path)
+    (root / "data/audit.json").write_text(json.dumps({"dataset":"different"}))
+    result = run_entry(tmp_path, "--resume")
+    assert result.returncode != 0
+    assert "Dataset differs" in result.stderr
