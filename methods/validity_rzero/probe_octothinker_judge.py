@@ -9,6 +9,13 @@ import random
 
 from .semantic_judge_offline.semantic_pair_prompt_formal import build_prompt, PROMPT_VERSION
 from .semantic_judge_offline.run_pair_judge_v3_vllm import parse_response_v3, sampling_options
+from .octothinker_judge_fewshot import build_fewshot_prompt, controls, VERSION as FEWSHOT_VERSION
+
+
+def condition_prompt(pair, condition):
+    if condition == "fewshot":
+        return build_fewshot_prompt(pair["a"]["question"], pair["b"]["question"])
+    return pair.get("prompt") or build_prompt(pair["a"]["question"], pair["b"]["question"])
 
 
 def select_pairs(rows, questions, seed):
@@ -35,7 +42,7 @@ def options(condition, max_tokens, seed):
     result = sampling_options(max_tokens, seed)
     if condition == "no-box-stop":
         result["stop"] = []  # EOS and length limits remain active.
-    elif condition != "current":
+    elif condition not in {"current", "fewshot"}:
         raise ValueError(condition)
     return result
 
@@ -52,6 +59,12 @@ def summarize(records):
             "labels": dict(Counter(r["parse"]["predicted_label"] for r in group)),
             "errors": dict(Counter(r["parse"]["format_error_reason"] for r in group if r["parse"]["format_error_reason"])),
         }
+        for name, subset in (("terra_pairs", [r for r in group if "expected_label" not in r]),
+                             ("controls", [r for r in group if "expected_label" in r])):
+            if subset:
+                summary[condition][name] = {"n": len(subset), "parse_ok": sum(r["parse"]["format_status"] == "ok" for r in subset)}
+                if name == "controls":
+                    summary[condition][name]["correct"] = sum(r["parse"]["parsed_label"] == r["expected_label"] for r in subset)
     return summary
 
 
@@ -60,6 +73,8 @@ def main():
     parser.add_argument("--model", default="OctoThinker/OctoThinker-3B-Hybrid-Base")
     parser.add_argument("--dataset", default="jinyuan222/rzero-validity-rl-terra-v1-clean-v1")
     parser.add_argument("--train-parquet", type=Path, help="Optional original Terra train parquet, no HF download")
+    parser.add_argument("--pairs-file", type=Path, help="Reuse a previous probe's exact pairs.jsonl")
+    parser.add_argument("--add-controls", action="store_true", help="Append four disjoint manually specified control pairs")
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--questions", type=int, default=20, help="20 questions = 10 disjoint pairs")
     parser.add_argument("--seed", type=int, default=43, help="Question selection seed")
@@ -68,7 +83,7 @@ def main():
     parser.add_argument("--max-model-len", type=int, default=8192, help="Bound KV cache; never truncate prompts")
     parser.add_argument("--batch-size", type=int, default=4)
     parser.add_argument("--gpu-memory-utilization", type=float, default=0.6)
-    parser.add_argument("--conditions", nargs="+", choices=["current", "no-box-stop"], default=["current"])
+    parser.add_argument("--conditions", nargs="+", choices=["current", "no-box-stop", "fewshot"], default=["current"])
     args = parser.parse_args()
     if args.questions < 2 or args.questions % 2 or args.max_tokens < 1 or args.batch_size < 1:
         parser.error("Use an even --questions >=2 and positive token/batch limits")
@@ -84,21 +99,39 @@ def main():
         parser.error("Expose exactly one allocated GPU using CUDA_VISIBLE_DEVICES")
     # Refuse any existing directory, preserving old/partial diagnostics.
     args.output_dir.mkdir(parents=True, exist_ok=False)
-    if args.train_parquet:
+    dataset_fingerprint = None
+    if args.pairs_file:
+        pairs = [json.loads(line) for line in args.pairs_file.read_text().splitlines() if line.strip()]
+        if not pairs or len({p["pair_id"] for p in pairs}) != len(pairs):
+            raise ValueError("Empty or duplicate pair IDs")
+        for p in pairs:
+            if not all(isinstance(p[k]["question"], str) and p[k]["question"].strip() for k in ("a", "b")):
+                raise ValueError("Pair is missing question text")
+    elif args.train_parquet:
         rows = load_dataset("parquet", data_files={"train": str(args.train_parquet)}, split="train")
     else:
         rows = load_dataset(args.dataset, data_files={"train": "train.jsonl"}, split="train")
-    pairs = select_pairs(rows, args.questions, args.seed)
+    if not args.pairs_file:
+        pairs = select_pairs(rows, args.questions, args.seed)
+        dataset_fingerprint = rows._fingerprint
+    if args.add_controls:
+        if any(p["pair_id"] in {c["pair_id"] for c in controls()} for p in pairs):
+            raise ValueError("Input already contains control IDs")
+        pairs += controls()
     pair_text = "".join(json.dumps(p, ensure_ascii=False) + "\n" for p in pairs)
     (args.output_dir / "pairs.jsonl").write_text(pair_text, encoding="utf-8")
 
     # Deliberately no chat-template override: reproduce the online semantic worker.
     tokenizer = AutoTokenizer.from_pretrained(args.model)
-    if any(len(tokenizer.encode(p["prompt"])) + args.max_tokens > args.max_model_len for p in pairs):
+    if any(len(tokenizer.encode(condition_prompt(p, c))) + args.max_tokens > args.max_model_len for p in pairs for c in args.conditions):
         raise ValueError("A prompt plus response exceeds --max-model-len; increase it explicitly")
     manifest = {"model": args.model, "dataset": args.dataset if not args.train_parquet else None,
         "train_parquet": str(args.train_parquet) if args.train_parquet else None,
-        "split": "train", "dataset_fingerprint": rows._fingerprint,
+        "split": "train", "dataset_fingerprint": dataset_fingerprint,
+        "pairs_file": str(args.pairs_file) if args.pairs_file else None,
+        "input_pairs_sha256": hashlib.sha256(args.pairs_file.read_bytes()).hexdigest() if args.pairs_file else None,
+        "fewshot_prompt_version": FEWSHOT_VERSION if "fewshot" in args.conditions else None,
+        "add_controls": args.add_controls,
         "pair_sha256": hashlib.sha256(pair_text.encode()).hexdigest(),
         "prompt_version": PROMPT_VERSION, "selection_seed": args.seed,
         "bos_token": tokenizer.bos_token, "bos_token_id": tokenizer.bos_token_id,
@@ -120,7 +153,7 @@ def main():
         for condition in dict.fromkeys(args.conditions):
             sampling = SamplingParams(**options(condition, args.max_tokens, args.generation_seed))
             for start in range(0, len(pairs), args.batch_size):
-                batch = pairs[start:start + args.batch_size]
+                batch = [{**p, "prompt": condition_prompt(p, condition)} for p in pairs[start:start + args.batch_size]]
                 outputs = model.generate([p["prompt"] for p in batch], sampling_params=sampling, use_tqdm=True)
                 if len(outputs) != len(batch):
                     raise RuntimeError("Wrong number of generated responses")

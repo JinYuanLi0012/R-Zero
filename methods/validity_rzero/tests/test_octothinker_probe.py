@@ -1,6 +1,21 @@
 import pytest
 from methods.validity_rzero.probe_octothinker_judge import select_pairs, options, summarize
 from methods.validity_rzero.semantic_judge_offline.run_pair_judge_v3_vllm import sampling_options, parse_response_v3
+from methods.validity_rzero.probe_octothinker_judge import condition_prompt
+from methods.validity_rzero.octothinker_judge_fewshot import controls, EXAMPLES
+
+
+def test_fewshot_and_controls_are_disjoint_and_sampling_unchanged():
+    assert options("fewshot", 1024, 42) == options("current", 1024, 42)
+    control = controls()
+    assert [c["expected_label"] for c in control].count("SAME_TYPE") == 2
+    examples = {q for e in EXAMPLES for q in e[:2]}
+    assert all(c[k]["question"] not in examples for c in control for k in ("a", "b"))
+    text = condition_prompt(control[0], "fewshot")
+    assert text.endswith("Classification:")
+    assert "NOT solving" in text
+    assert text.count(r"\boxed{SAME_TYPE}") == text.count(r"\boxed{DIFFERENT}") == 3
+    assert condition_prompt({"prompt": "original exact prompt"}, "current") == "original exact prompt"
 
 
 def test_train_sampling_and_no_labels_in_prompt():
