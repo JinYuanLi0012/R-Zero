@@ -11,6 +11,7 @@ from typing import Callable
 
 from .semantic_judge_offline.run_pair_judge import atomic_json, atomic_jsonl
 from .semantic_judge_offline.run_pair_judge_v3_vllm import parse_response_v3, sampling_options
+from .frozen_judge import load_protocol, judge_sampling
 
 
 def read_tasks(path: Path) -> list[dict]:
@@ -130,7 +131,8 @@ def main() -> None:
     import vllm.envs as vllm_envs
     from vllm import LLM, SamplingParams
 
-    sampling = SamplingParams(**sampling_options(args.max_tokens, args.seed))
+    protocol = load_protocol(args.model)
+    sampling = SamplingParams(**judge_sampling(args.model, args.max_tokens, args.seed))
     load_start = time.perf_counter()
     model = LLM(
         model=args.model,
@@ -153,7 +155,15 @@ def main() -> None:
         nonlocal prefix_cache_observed_request_count
         nonlocal prefix_cache_observed_prompt_tokens, prefix_cache_hit_tokens
         generation_start = time.perf_counter()
-        generated = model.generate(prompts, sampling_params=sampling, use_tqdm=False)
+        if protocol:
+            tokenizer = model.get_tokenizer()
+            encoded = [tokenizer.encode(prompt, add_special_tokens=False) for prompt in prompts]
+            if any(ids[0] != tokenizer.bos_token_id or ids.count(tokenizer.bos_token_id) != 1 for ids in encoded):
+                raise ValueError("Frozen SFT judge requires exactly one initial BOS")
+            inputs = [{"prompt_token_ids": ids} for ids in encoded]
+        else:
+            inputs = prompts
+        generated = model.generate(inputs, sampling_params=sampling, use_tqdm=False)
         generation_seconds += time.perf_counter() - generation_start
         generated_request_count += len(generated)
         observation = prefix_cache_observation(generated)
@@ -172,6 +182,8 @@ def main() -> None:
         "model_load_seconds": model_load_seconds,
         "generation_seconds": generation_seconds,
         "vllm_version": vllm.__version__,
+        "judge_protocol": protocol["version"] if protocol else "legacy",
+        "sampling": judge_sampling(args.model, args.max_tokens, args.seed),
         "vllm_use_v1": bool(vllm_envs.VLLM_USE_V1),
         "enable_prefix_caching": True,
         "generated_request_count": generated_request_count,

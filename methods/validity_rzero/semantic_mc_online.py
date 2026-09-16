@@ -16,6 +16,7 @@ from .semantic_judge_offline.semantic_pair_prompt_formal import (
 from .semantic_mc import aggregate_semantic_penalties, build_pair_plan, cache_context
 from .semantic_mc_gpu import run_gpu_tasks
 from .semantic_gpu_barrier import wait_until_ready
+from .frozen_judge import online_protocol, judge_sampling
 from .service_handoff import SolverServiceConfig, semantic_gpu_handoff
 
 
@@ -62,12 +63,15 @@ def compute_online_semantic_penalties(
     import random
     panel_indices = random.Random(panel_seed).sample(valid_indices, panel_size)
     resolved_model, _ = resolve_frozen_model()
+    prompt_builder, prompt_version, prompt_template, max_tokens = online_protocol(
+        resolved_model, build_prompt, PROMPT_VERSION, PROMPT_TEMPLATE)
     context = cache_context(
         resolved_model,
-        1024,
+        max_tokens,
         42,
-        prompt_version=PROMPT_VERSION,
-        prompt_template=PROMPT_TEMPLATE,
+        prompt_version=prompt_version,
+        prompt_template=prompt_template,
+        sampling_override=judge_sampling(resolved_model, max_tokens, 42),
         orientation="candidate_then_reference_v1",
     )
     question_map = {index: questions[index] for index in valid_indices}
@@ -76,7 +80,7 @@ def compute_online_semantic_penalties(
         valid_indices,
         panel_indices,
         context,
-        prompt_builder=build_prompt,
+        prompt_builder=prompt_builder,
     )
     service = SolverServiceConfig.from_environment()
     semantic_gpu_ids = _semantic_gpu_ids(service)
@@ -94,7 +98,7 @@ def compute_online_semantic_penalties(
         with semantic_gpu_handoff(service):
             judgments, runtime = run_gpu_tasks(
                 list(tasks.values()), resolved_model, semantic_gpu_ids, work_dir,
-                max_tokens=1024, seed=42,
+                max_tokens=max_tokens, seed=42,
                 gpu_memory_utilization=float(os.getenv("VALIDITY_RZERO_SEMANTIC_GPU_MEMORY_UTILIZATION", "0.80")),
                 batch_size=int(os.getenv("VALIDITY_RZERO_SEMANTIC_WORKER_BATCH_SIZE", "8192")),
             )
@@ -110,7 +114,7 @@ def compute_online_semantic_penalties(
         prefix_hit_rate = prefix_cache["token_hit_rate"]
         print(
             "[validity_rzero][semantic_mc] "
-            f"prompt_version={PROMPT_VERSION} worker_batch_size="
+            f"prompt_version={prompt_version} worker_batch_size="
             f"{int(os.getenv('VALIDITY_RZERO_SEMANTIC_WORKER_BATCH_SIZE', '8192'))} "
             f"semantic_gpus={','.join(semantic_gpu_ids)} barrier_wait_seconds={barrier_wait_seconds:.3f} "
             f"pair_instances={len(instances)} unique_pairs={len(tasks)} "

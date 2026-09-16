@@ -62,6 +62,7 @@ def cache_context(
     prompt_version: str = PROMPT_VERSION,
     prompt_template: str = PROMPT_TEMPLATE,
     orientation: str = "lexicographic_question_text_v1",
+    sampling_override: dict | None = None,
 ) -> dict[str, Any]:
     if orientation not in {
         "lexicographic_question_text_v1",
@@ -72,7 +73,7 @@ def cache_context(
         "model_identity": model_identity,
         "prompt_version": prompt_version,
         "prompt_template": prompt_template,
-        "sampling": sampling_options(max_tokens, seed),
+        "sampling": sampling_override if sampling_override is not None else sampling_options(max_tokens, seed),
         "orientation": orientation,
     }
 

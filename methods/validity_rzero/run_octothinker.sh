@@ -78,8 +78,19 @@ print(path.resolve())
 PY
 )
 export BASE_MODEL
-export VALIDITY_RZERO_SEMANTIC_MODEL="$BASE_MODEL"
-echo "OctoThinker Questioner / frozen semantic judge: $BASE_MODEL"
+if [[ -n "${OCTO_FROZEN_JUDGE_MODEL:-}" ]]; then
+    export VALIDITY_RZERO_SEMANTIC_MODEL="$OCTO_FROZEN_JUDGE_MODEL"
+    VALIDITY_RZERO_SEMANTIC_FROZEN_SHA256=$(python3 -m methods.validity_rzero.export_frozen_judge \
+        --verify-only --output-dir "$OCTO_FROZEN_JUDGE_MODEL")
+    export VALIDITY_RZERO_SEMANTIC_FROZEN_SHA256
+    export VALIDITY_RZERO_SEMANTIC_PROMPT_PROTOCOL=octo-judge-sft-v2-clear-eos-v1
+    export VALIDITY_RZERO_SEMANTIC_SAMPLING_PROTOCOL=greedy_max256_eos_seed42
+else
+    export VALIDITY_RZERO_SEMANTIC_MODEL="$BASE_MODEL"
+    unset VALIDITY_RZERO_SEMANTIC_FROZEN_SHA256 VALIDITY_RZERO_SEMANTIC_PROMPT_PROTOCOL VALIDITY_RZERO_SEMANTIC_SAMPLING_PROTOCOL
+fi
+echo "OctoThinker Questioner: $BASE_MODEL"
+echo "Frozen semantic judge: $VALIDITY_RZERO_SEMANTIC_MODEL"
 echo "OctoThinker initial Solver: $VALIDITY_RZERO_INITIAL_SOLVER"
 echo "New experiment: $MODEL_ABBR; rounds=$RZERO_NUM_ROUNDS; W&B=online"
 bash methods/validity_rzero/run.sh "$@"

@@ -8,6 +8,7 @@ import shutil
 import tempfile
 
 from .semantic_gpu_barrier import wait_until_ready
+from .frozen_judge import online_protocol, judge_sampling
 from .semantic_judge_offline.semantic_pair_prompt_formal import (
     PROMPT_TEMPLATE,
     PROMPT_VERSION,
@@ -52,12 +53,15 @@ def compute_online_novelty(
             "VALIDITY_RZERO_NOVELTY_K"
         )
     resolved_model, _ = resolve_frozen_model()
+    prompt_builder, prompt_version, prompt_template, max_tokens = online_protocol(
+        resolved_model, build_prompt, PROMPT_VERSION, PROMPT_TEMPLATE)
     context = cache_context(
         resolved_model,
-        1024,
+        max_tokens,
         42,
-        prompt_version=PROMPT_VERSION,
-        prompt_template=PROMPT_TEMPLATE,
+        prompt_version=prompt_version,
+        prompt_template=prompt_template,
+        sampling_override=judge_sampling(resolved_model, max_tokens, 42),
         orientation="candidate_then_reference_v1",
     )
     question_map = {index: questions[index] for index in candidate_indices}
@@ -67,7 +71,7 @@ def compute_online_novelty(
         novelty_k,
         novelty_seed,
         context,
-        prompt_builder=build_prompt,
+        prompt_builder=prompt_builder,
         parent_domains=parent_domains,
     )
     service = SolverServiceConfig.from_environment()
@@ -90,7 +94,7 @@ def compute_online_novelty(
                 resolved_model,
                 semantic_gpu_ids,
                 work_dir,
-                max_tokens=1024,
+                max_tokens=max_tokens,
                 seed=42,
                 gpu_memory_utilization=float(
                     os.getenv("VALIDITY_RZERO_SEMANTIC_GPU_MEMORY_UTILIZATION", "0.80")
@@ -114,7 +118,7 @@ def compute_online_novelty(
         sampled_counts = [len(references[index]) for index in candidate_indices]
         print(
             "[validity_rzero][semantic_novelty_gate] "
-            f"prompt_version={PROMPT_VERSION} novelty_k={novelty_k} scope={scope} "
+            f"prompt_version={prompt_version} novelty_k={novelty_k} scope={scope} "
             f"novelty_min_same_hits={min_same_hits} novelty_seed={novelty_seed} "
             f"references_per_candidate_min={min(sampled_counts)} "
             f"references_per_candidate_max={max(sampled_counts)} "

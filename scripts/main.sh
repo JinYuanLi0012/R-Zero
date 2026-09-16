@@ -291,8 +291,8 @@ if [ "$VALIDITY_RZERO_ENABLED" = "1" ]; then
             --field "semantic_model=${VALIDITY_RZERO_SEMANTIC_MODEL:-Qwen/Qwen3-4B-Base}"
             --field "semantic_panel_size=${VALIDITY_RZERO_SEMANTIC_PANEL_SIZE:-128}"
             --field "semantic_panel_seed=${VALIDITY_RZERO_SEMANTIC_PANEL_SEED:-43}"
-            --field "semantic_prompt_protocol=semantic-pair-formal-recurring-exercise-v1"
-            --field "semantic_sampling_protocol=generative_v3_max1024_seed42"
+            --field "semantic_prompt_protocol=${VALIDITY_RZERO_SEMANTIC_PROMPT_PROTOCOL:-semantic-pair-formal-recurring-exercise-v1}"
+            --field "semantic_sampling_protocol=${VALIDITY_RZERO_SEMANTIC_SAMPLING_PROTOCOL:-generative_v3_max1024_seed42}"
             --field "semantic_pair_orientation=candidate_then_reference_v1"
             --field "semantic_worker_batch_size=${VALIDITY_RZERO_SEMANTIC_WORKER_BATCH_SIZE}"
             --field "semantic_gpu_ids=${VALIDITY_RZERO_SEMANTIC_GPU_IDS}"
@@ -310,8 +310,8 @@ if [ "$VALIDITY_RZERO_ENABLED" = "1" ]; then
             --field "semantic_model=${VALIDITY_RZERO_SEMANTIC_MODEL:-Qwen/Qwen3-4B-Base}"
             --field "semantic_novelty_k=${VALIDITY_RZERO_NOVELTY_K}"
             --field "semantic_novelty_seed=${VALIDITY_RZERO_NOVELTY_SEED}"
-            --field "semantic_prompt_protocol=semantic-pair-formal-recurring-exercise-v1"
-            --field "semantic_sampling_protocol=generative_v3_max1024_seed42"
+            --field "semantic_prompt_protocol=${VALIDITY_RZERO_SEMANTIC_PROMPT_PROTOCOL:-semantic-pair-formal-recurring-exercise-v1}"
+            --field "semantic_sampling_protocol=${VALIDITY_RZERO_SEMANTIC_SAMPLING_PROTOCOL:-generative_v3_max1024_seed42}"
             --field "semantic_pair_orientation=candidate_then_reference_v1"
             --field "semantic_worker_batch_size=${VALIDITY_RZERO_SEMANTIC_WORKER_BATCH_SIZE}"
             --field "semantic_gpu_ids=${VALIDITY_RZERO_SEMANTIC_GPU_IDS}"
@@ -321,6 +321,9 @@ if [ "$VALIDITY_RZERO_ENABLED" = "1" ]; then
             --field "semantic_prefix_cache=enabled"
             --field "semantic_novelty_treatment=${NOVELTY_TREATMENT}"
         )
+        if [[ -n "${VALIDITY_RZERO_SEMANTIC_FROZEN_SHA256:-}" ]]; then
+            FINGERPRINT_EXTRA+=(--field "semantic_frozen_sha256=$VALIDITY_RZERO_SEMANTIC_FROZEN_SHA256")
+        fi
         if [ "$VALIDITY_RZERO_NOVELTY_MIN_SAME_HITS" -ne 1 ]; then
             FINGERPRINT_EXTRA+=(
                 --field "semantic_novelty_min_same_hits=${VALIDITY_RZERO_NOVELTY_MIN_SAME_HITS}"
