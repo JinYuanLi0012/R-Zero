@@ -12,9 +12,12 @@ from .semantic_judge_offline.run_pair_judge_v3_vllm import parse_response_v3, sa
 from .octothinker_judge_fewshot import build_fewshot_prompt, controls, VERSION as FEWSHOT_VERSION
 from .octothinker_judge_three_shot import build_three_shot_prompt, expanded_controls, VERSION as THREE_SHOT_VERSION
 from .octothinker_judge_balanced import build_balanced_prompt, sanity_checks, VERSION as BALANCED_VERSION
+from .octothinker_judge_invariant import build_invariant_prompt, VERSION as INVARIANT_VERSION
 
 
 def condition_prompt(pair, condition):
+    if condition == "invariant-greedy":
+        return build_invariant_prompt(pair["a"]["question"], pair["b"]["question"])
     if condition == "balanced-greedy":
         return build_balanced_prompt(pair["a"]["question"], pair["b"]["question"])
     if condition == "three-shot":
@@ -48,7 +51,7 @@ def options(condition, max_tokens, seed):
     result = sampling_options(max_tokens, seed)
     if condition == "no-box-stop":
         result["stop"] = []  # EOS and length limits remain active.
-    elif condition in {"fewshot-greedy", "balanced-greedy"}:
+    elif condition in {"fewshot-greedy", "balanced-greedy", "invariant-greedy"}:
         result.update(temperature=0.0, presence_penalty=0.0, top_p=1.0, top_k=-1, min_p=0.0)
     elif condition not in {"current", "fewshot", "three-shot"}:
         raise ValueError(condition)
@@ -98,7 +101,7 @@ def main():
     parser.add_argument("--max-model-len", type=int, default=8192, help="Bound KV cache; never truncate prompts")
     parser.add_argument("--batch-size", type=int, default=4)
     parser.add_argument("--gpu-memory-utilization", type=float, default=0.6)
-    parser.add_argument("--conditions", nargs="+", choices=["current", "no-box-stop", "fewshot", "three-shot", "fewshot-greedy", "balanced-greedy"], default=["current"])
+    parser.add_argument("--conditions", nargs="+", choices=["current", "no-box-stop", "fewshot", "three-shot", "fewshot-greedy", "balanced-greedy", "invariant-greedy"], default=["current"])
     args = parser.parse_args()
     if args.questions < 2 or args.questions % 2 or args.max_tokens < 1 or args.batch_size < 1:
         parser.error("Use an even --questions >=2 and positive token/batch limits")
@@ -153,6 +156,7 @@ def main():
         "input_pairs_sha256": hashlib.sha256(args.pairs_file.read_bytes()).hexdigest() if args.pairs_file else None,
         "fewshot_prompt_version": FEWSHOT_VERSION if {"fewshot", "fewshot-greedy"}.intersection(args.conditions) else None,
         "balanced_prompt_version": BALANCED_VERSION if "balanced-greedy" in args.conditions else None,
+        "invariant_prompt_version": INVARIANT_VERSION if "invariant-greedy" in args.conditions else None,
         "add_sanity_checks": args.add_sanity_checks,
         "three_shot_prompt_version": THREE_SHOT_VERSION if "three-shot" in args.conditions else None,
         "expanded_controls": args.expanded_controls,

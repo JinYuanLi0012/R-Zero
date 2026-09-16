@@ -7,6 +7,16 @@ from methods.validity_rzero.octothinker_judge_three_shot import expanded_control
 from methods.validity_rzero.octothinker_judge_balanced import sanity_checks, EXAMPLES as BALANCED_EXAMPLES
 
 
+def test_invariant_revision_preserves_b_examples_sampling_and_suffix():
+    pair = controls()[0]
+    old = condition_prompt(pair, "fewshot-greedy")
+    new = condition_prompt(pair, "invariant-greedy")
+    assert old[old.index("Example 1"):] == new[new.index("Example 1"):]
+    assert "replaceable slots" in new
+    assert "Do not invent" in new
+    assert options("invariant-greedy", 1024, 42) == options("fewshot-greedy", 1024, 42)
+
+
 def test_greedy_changes_sampling_not_old_prompt():
     pair = controls()[0]
     assert condition_prompt(pair, "fewshot") == condition_prompt(pair, "fewshot-greedy")
