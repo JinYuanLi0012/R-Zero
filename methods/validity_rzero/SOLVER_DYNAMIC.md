@@ -114,6 +114,46 @@ Questioner still saves every five steps by default: if interrupted before its
 first checkpoint, the current five-step Questioner stage starts again. This
 change does not alter the checkpoint cadence.
 
+### Dataset annotation timeout and safe retry
+
+Phase-B annotation (after generating each round's candidate dataset, before
+Solver GRPO) now defaults to 43,200 seconds / 12 hours in the continuation
+launcher, pipeline, Solver script, and annotation entry point. An explicit
+`QUESTION_EVAL_TIMEOUT_SECONDS` overrides this value. The limit covers model
+startup, validity sampling, math sampling, and answer grading for the worker
+batch. This is separate from benchmark evaluation and Questioner reward timing.
+
+Each annotation worker starts in its own session/process group. The supervisor
+cleans these recorded groups on success, timeout, worker failure, launch failure,
+SIGINT, or SIGTERM, including descendants left after the Python parent exits.
+It sends TERM, allows ten seconds for shutdown, then sends KILL. It does not
+search for or kill other GPU processes. There is no background watchdog. Logs
+record each worker's GPU, PID, process group, and exit status; timeout exits 124.
+
+Generated input files remain available throughout annotation. A complete result
+shard is atomically installed before its input is deleted. Missing input now
+fails instead of reporting success. This does not introduce partial-generation
+checkpointing: interrupted annotation cannot resume at its progress-bar position.
+The pipeline's existing dataset-stage retry regenerates and relabels candidates.
+
+For a failed round-2 annotation run, first inspect GPU processes and confirm
+ownership of any leftovers from the old launcher before cleaning them up. The
+new supervisor cannot identify or remove already-orphaned processes from an old
+run. Once the previous pipeline is stopped and the intended GPUs are available:
+
+```bash
+git pull --ff-only
+source env_rzero.sh
+export QUESTION_EVAL_TIMEOUT_SECONDS=43200
+bash methods/validity_rzero/continue_solver_dynamic_k8.sh --resume
+```
+
+The timeout is not part of the training fingerprint. A committed Questioner v2
+stage is skipped; a valid merged checkpoint can also be recovered without
+retraining it. The failed round-2 dataset stage is retried, then Solver v2 training
+and dual-mode benchmark evaluation proceed normally. Old GPU memory exhaustion
+alone does not establish which process owns the memory; inspect PIDs first.
+
 ## Exact update rule
 
 1. Generate 16 responses for each R-Zero question and 5 for each Terra question

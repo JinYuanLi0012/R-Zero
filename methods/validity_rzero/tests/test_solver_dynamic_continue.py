@@ -50,6 +50,8 @@ record = dict(kind=kind, solver=solver, questioner=questioner, name=name,
 with Path('calls.jsonl').open('a') as f:
     f.write(json.dumps(record) + '\\n')
 if kind == 'dataset':
+    if Path('fail_dataset').exists():
+        sys.exit(124)
     receipt = Path(os.environ['SOLVER_DATASET_RECEIPT'])
     receipt.parent.mkdir(parents=True, exist_ok=True)
     audit = receipt.with_name(receipt.stem + '_phase_b.jsonl')
@@ -157,3 +159,19 @@ def test_continuation_origin_is_part_of_resume_fingerprint(tmp_path):
     result, _ = pipeline_init(tmp_path, dict(env, RZERO_FIRST_ROUND='3'), resume=True)
     assert result.returncode != 0
     assert 'run configuration changed' in result.stderr
+
+
+def test_label_timeout_change_resumes_dataset_without_retraining_questioner(tmp_path):
+    env = setup(tmp_path)
+    env['QUESTION_EVAL_TIMEOUT_SECONDS'] = '14400'
+    (tmp_path / 'fail_dataset').touch()
+    result = run(tmp_path, env)
+    assert result.returncode != 0
+    assert [row['kind'] for row in calls(tmp_path)] == ['questioner', 'dataset']
+    (tmp_path / 'fail_dataset').unlink()
+    env['QUESTION_EVAL_TIMEOUT_SECONDS'] = '43200'
+    result = run(tmp_path, env, resume=True)
+    assert result.returncode == 0, result.stdout + result.stderr
+    history = calls(tmp_path)
+    assert len([row for row in history if row['kind'] == 'questioner']) == 4
+    assert history[2]['kind'] == 'dataset'  # Q2 is already committed, no new Q2 training

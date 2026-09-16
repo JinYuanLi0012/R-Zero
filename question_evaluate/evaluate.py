@@ -30,6 +30,7 @@ import os
 import stopit  # Use the robust, thread-safe stopit library for timeouts
 from jinja2 import Template
 from mathruler.grader import extract_boxed_content, grade_answer
+from question_evaluate.result_io import save_results
 
 validity_rzero_enabled = os.getenv("VALIDITY_RZERO_ENABLED", "0") == "1"
 if validity_rzero_enabled:
@@ -65,19 +66,16 @@ print(f"[{args.suffix}] Loading data from: {INPUT_FILE}")
 try:
     with open(INPUT_FILE, "r") as f:
         data = json.load(f)
-    # Clean up the input file immediately after loading to save space
-    os.remove(INPUT_FILE)
 except FileNotFoundError:
     print(f"[{args.suffix}] ERROR: Input file not found. Exiting.")
-    exit()
+    raise SystemExit(1)
 
 # Filter data into questions that need processing
 correct_data = [item for item in data if item.get('score') == 0]
 if not correct_data:
     print(f"[{args.suffix}] No new questions to process (score=0). Exiting.")
     # Create an empty results file to signal completion
-    with open(OUTPUT_FILE, "w") as f:
-        json.dump([], f)
+    save_results([], OUTPUT_FILE, INPUT_FILE)
     exit()
 
 questions = [item["question"] for item in correct_data]
@@ -297,7 +295,6 @@ if box_filter != "legacy":
 
 # 5. Save Final Results
 print(f"[{args.suffix}] Processed {len(results_all)} questions. Saving results to: {OUTPUT_FILE}")
-with open(OUTPUT_FILE, "w") as f:
-    json.dump(results_all, f, indent=4)
+save_results(results_all, OUTPUT_FILE, INPUT_FILE)
 
 print(f"[{args.suffix}] Script finished.")
