@@ -4,6 +4,33 @@ from methods.validity_rzero.semantic_judge_offline.run_pair_judge_v3_vllm import
 from methods.validity_rzero.probe_octothinker_judge import condition_prompt
 from methods.validity_rzero.octothinker_judge_fewshot import controls, EXAMPLES
 from methods.validity_rzero.octothinker_judge_three_shot import expanded_controls, EXAMPLES as THREE_EXAMPLES
+from methods.validity_rzero.octothinker_judge_balanced import sanity_checks, EXAMPLES as BALANCED_EXAMPLES
+
+
+def test_greedy_changes_sampling_not_old_prompt():
+    pair = controls()[0]
+    assert condition_prompt(pair, "fewshot") == condition_prompt(pair, "fewshot-greedy")
+    greedy = options("fewshot-greedy", 1024, 42)
+    assert greedy == options("balanced-greedy", 1024, 42)
+    assert greedy["temperature"] == greedy["presence_penalty"] == 0
+    assert greedy["top_k"] == -1 and greedy["top_p"] == 1
+    expected = options("fewshot", 1024, 42)
+    expected.update(temperature=0.0, presence_penalty=0.0, top_p=1.0, top_k=-1, min_p=0.0)
+    assert greedy == expected
+
+
+def test_balanced_examples_and_sanity_separate_summary():
+    assert sum(e[2] == "SAME_TYPE" for e in BALANCED_EXAMPLES) == 2
+    examples = {q for e in BALANCED_EXAMPLES for q in e[:2]}
+    checks = sanity_checks()
+    assert len(checks) == 8
+    assert all(p[k]["question"] not in examples for p in expanded_controls() + checks for k in ("a", "b"))
+    rows = [{**p, "condition": "balanced-greedy", "parse": parse_response_v3(r"\boxed{SAME_TYPE}"),
+             "finish_reason": "stop", "output_tokens": 10} for p in expanded_controls() + checks]
+    metrics = summarize(rows)["balanced-greedy"]
+    assert metrics["controls"]["n"] == 12
+    assert metrics["sanity_checks"]["n"] == 8
+    assert metrics["sanity_checks"]["SAME_TYPE"] == {"n": 6, "correct": 6}
 
 
 def test_three_shot_balanced_controls_and_sampling():

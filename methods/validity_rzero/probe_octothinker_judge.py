@@ -11,12 +11,15 @@ from .semantic_judge_offline.semantic_pair_prompt_formal import build_prompt, PR
 from .semantic_judge_offline.run_pair_judge_v3_vllm import parse_response_v3, sampling_options
 from .octothinker_judge_fewshot import build_fewshot_prompt, controls, VERSION as FEWSHOT_VERSION
 from .octothinker_judge_three_shot import build_three_shot_prompt, expanded_controls, VERSION as THREE_SHOT_VERSION
+from .octothinker_judge_balanced import build_balanced_prompt, sanity_checks, VERSION as BALANCED_VERSION
 
 
 def condition_prompt(pair, condition):
+    if condition == "balanced-greedy":
+        return build_balanced_prompt(pair["a"]["question"], pair["b"]["question"])
     if condition == "three-shot":
         return build_three_shot_prompt(pair["a"]["question"], pair["b"]["question"])
-    if condition == "fewshot":
+    if condition in {"fewshot", "fewshot-greedy"}:
         return build_fewshot_prompt(pair["a"]["question"], pair["b"]["question"])
     return pair.get("prompt") or build_prompt(pair["a"]["question"], pair["b"]["question"])
 
@@ -45,6 +48,8 @@ def options(condition, max_tokens, seed):
     result = sampling_options(max_tokens, seed)
     if condition == "no-box-stop":
         result["stop"] = []  # EOS and length limits remain active.
+    elif condition in {"fewshot-greedy", "balanced-greedy"}:
+        result.update(temperature=0.0, presence_penalty=0.0, top_p=1.0, top_k=-1, min_p=0.0)
     elif condition not in {"current", "fewshot", "three-shot"}:
         raise ValueError(condition)
     return result
@@ -63,11 +68,16 @@ def summarize(records):
             "errors": dict(Counter(r["parse"]["format_error_reason"] for r in group if r["parse"]["format_error_reason"])),
         }
         for name, subset in (("terra_pairs", [r for r in group if "expected_label" not in r]),
-                             ("controls", [r for r in group if "expected_label" in r])):
+                             ("controls", [r for r in group if "expected_label" in r and r.get("source") != "sanity_check"]),
+                             ("sanity_checks", [r for r in group if r.get("source") == "sanity_check"])):
             if subset:
                 summary[condition][name] = {"n": len(subset), "parse_ok": sum(r["parse"]["format_status"] == "ok" for r in subset)}
-                if name == "controls":
-                    summary[condition][name]["correct"] = sum(r["parse"]["parsed_label"] == r["expected_label"] for r in subset)
+                if name != "terra_pairs":
+                    metrics = summary[condition][name]
+                    metrics["correct"] = sum(r["parse"]["parsed_label"] == r["expected_label"] for r in subset)
+                    for label in ("SAME_TYPE", "DIFFERENT"):
+                        labeled = [r for r in subset if r["expected_label"] == label]
+                        metrics[label] = {"n": len(labeled), "correct": sum(r["parse"]["parsed_label"] == label for r in labeled)}
     return summary
 
 
@@ -79,6 +89,7 @@ def main():
     parser.add_argument("--pairs-file", type=Path, help="Reuse a previous probe's exact pairs.jsonl")
     parser.add_argument("--add-controls", action="store_true", help="Append four disjoint manually specified control pairs")
     parser.add_argument("--expanded-controls", action="store_true", help="Append 12 balanced labeled controls instead of four")
+    parser.add_argument("--add-sanity-checks", action="store_true", help="Append 8 elementary checks; report separately")
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--questions", type=int, default=20, help="20 questions = 10 disjoint pairs")
     parser.add_argument("--seed", type=int, default=43, help="Question selection seed")
@@ -87,7 +98,7 @@ def main():
     parser.add_argument("--max-model-len", type=int, default=8192, help="Bound KV cache; never truncate prompts")
     parser.add_argument("--batch-size", type=int, default=4)
     parser.add_argument("--gpu-memory-utilization", type=float, default=0.6)
-    parser.add_argument("--conditions", nargs="+", choices=["current", "no-box-stop", "fewshot", "three-shot"], default=["current"])
+    parser.add_argument("--conditions", nargs="+", choices=["current", "no-box-stop", "fewshot", "three-shot", "fewshot-greedy", "balanced-greedy"], default=["current"])
     args = parser.parse_args()
     if args.questions < 2 or args.questions % 2 or args.max_tokens < 1 or args.batch_size < 1:
         parser.error("Use an even --questions >=2 and positive token/batch limits")
@@ -123,6 +134,11 @@ def main():
         if any(p["pair_id"] in {c["pair_id"] for c in extra} for p in pairs):
             raise ValueError("Input already contains control IDs")
         pairs += extra
+    if args.add_sanity_checks:
+        extra = sanity_checks()
+        if any(p["pair_id"] in {c["pair_id"] for c in extra} for p in pairs):
+            raise ValueError("Input already contains sanity check IDs")
+        pairs += extra
     pair_text = "".join(json.dumps(p, ensure_ascii=False) + "\n" for p in pairs)
     (args.output_dir / "pairs.jsonl").write_text(pair_text, encoding="utf-8")
 
@@ -135,7 +151,9 @@ def main():
         "split": "train", "dataset_fingerprint": dataset_fingerprint,
         "pairs_file": str(args.pairs_file) if args.pairs_file else None,
         "input_pairs_sha256": hashlib.sha256(args.pairs_file.read_bytes()).hexdigest() if args.pairs_file else None,
-        "fewshot_prompt_version": FEWSHOT_VERSION if "fewshot" in args.conditions else None,
+        "fewshot_prompt_version": FEWSHOT_VERSION if {"fewshot", "fewshot-greedy"}.intersection(args.conditions) else None,
+        "balanced_prompt_version": BALANCED_VERSION if "balanced-greedy" in args.conditions else None,
+        "add_sanity_checks": args.add_sanity_checks,
         "three_shot_prompt_version": THREE_SHOT_VERSION if "three-shot" in args.conditions else None,
         "expanded_controls": args.expanded_controls,
         "add_controls": args.add_controls,
