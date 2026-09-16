@@ -10,9 +10,12 @@ import random
 from .semantic_judge_offline.semantic_pair_prompt_formal import build_prompt, PROMPT_VERSION
 from .semantic_judge_offline.run_pair_judge_v3_vllm import parse_response_v3, sampling_options
 from .octothinker_judge_fewshot import build_fewshot_prompt, controls, VERSION as FEWSHOT_VERSION
+from .octothinker_judge_three_shot import build_three_shot_prompt, expanded_controls, VERSION as THREE_SHOT_VERSION
 
 
 def condition_prompt(pair, condition):
+    if condition == "three-shot":
+        return build_three_shot_prompt(pair["a"]["question"], pair["b"]["question"])
     if condition == "fewshot":
         return build_fewshot_prompt(pair["a"]["question"], pair["b"]["question"])
     return pair.get("prompt") or build_prompt(pair["a"]["question"], pair["b"]["question"])
@@ -42,7 +45,7 @@ def options(condition, max_tokens, seed):
     result = sampling_options(max_tokens, seed)
     if condition == "no-box-stop":
         result["stop"] = []  # EOS and length limits remain active.
-    elif condition not in {"current", "fewshot"}:
+    elif condition not in {"current", "fewshot", "three-shot"}:
         raise ValueError(condition)
     return result
 
@@ -75,6 +78,7 @@ def main():
     parser.add_argument("--train-parquet", type=Path, help="Optional original Terra train parquet, no HF download")
     parser.add_argument("--pairs-file", type=Path, help="Reuse a previous probe's exact pairs.jsonl")
     parser.add_argument("--add-controls", action="store_true", help="Append four disjoint manually specified control pairs")
+    parser.add_argument("--expanded-controls", action="store_true", help="Append 12 balanced labeled controls instead of four")
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--questions", type=int, default=20, help="20 questions = 10 disjoint pairs")
     parser.add_argument("--seed", type=int, default=43, help="Question selection seed")
@@ -83,7 +87,7 @@ def main():
     parser.add_argument("--max-model-len", type=int, default=8192, help="Bound KV cache; never truncate prompts")
     parser.add_argument("--batch-size", type=int, default=4)
     parser.add_argument("--gpu-memory-utilization", type=float, default=0.6)
-    parser.add_argument("--conditions", nargs="+", choices=["current", "no-box-stop", "fewshot"], default=["current"])
+    parser.add_argument("--conditions", nargs="+", choices=["current", "no-box-stop", "fewshot", "three-shot"], default=["current"])
     args = parser.parse_args()
     if args.questions < 2 or args.questions % 2 or args.max_tokens < 1 or args.batch_size < 1:
         parser.error("Use an even --questions >=2 and positive token/batch limits")
@@ -114,10 +118,11 @@ def main():
     if not args.pairs_file:
         pairs = select_pairs(rows, args.questions, args.seed)
         dataset_fingerprint = rows._fingerprint
-    if args.add_controls:
-        if any(p["pair_id"] in {c["pair_id"] for c in controls()} for p in pairs):
+    if args.add_controls or args.expanded_controls:
+        extra = expanded_controls() if args.expanded_controls else controls()
+        if any(p["pair_id"] in {c["pair_id"] for c in extra} for p in pairs):
             raise ValueError("Input already contains control IDs")
-        pairs += controls()
+        pairs += extra
     pair_text = "".join(json.dumps(p, ensure_ascii=False) + "\n" for p in pairs)
     (args.output_dir / "pairs.jsonl").write_text(pair_text, encoding="utf-8")
 
@@ -131,6 +136,8 @@ def main():
         "pairs_file": str(args.pairs_file) if args.pairs_file else None,
         "input_pairs_sha256": hashlib.sha256(args.pairs_file.read_bytes()).hexdigest() if args.pairs_file else None,
         "fewshot_prompt_version": FEWSHOT_VERSION if "fewshot" in args.conditions else None,
+        "three_shot_prompt_version": THREE_SHOT_VERSION if "three-shot" in args.conditions else None,
+        "expanded_controls": args.expanded_controls,
         "add_controls": args.add_controls,
         "pair_sha256": hashlib.sha256(pair_text.encode()).hexdigest(),
         "prompt_version": PROMPT_VERSION, "selection_seed": args.seed,

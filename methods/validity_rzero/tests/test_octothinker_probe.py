@@ -3,6 +3,20 @@ from methods.validity_rzero.probe_octothinker_judge import select_pairs, options
 from methods.validity_rzero.semantic_judge_offline.run_pair_judge_v3_vllm import sampling_options, parse_response_v3
 from methods.validity_rzero.probe_octothinker_judge import condition_prompt
 from methods.validity_rzero.octothinker_judge_fewshot import controls, EXAMPLES
+from methods.validity_rzero.octothinker_judge_three_shot import expanded_controls, EXAMPLES as THREE_EXAMPLES
+
+
+def test_three_shot_balanced_controls_and_sampling():
+    pairs = expanded_controls()
+    assert len(pairs) == len({p["pair_id"] for p in pairs}) == 12
+    assert sum(p["expected_label"] == "SAME_TYPE" for p in pairs) == 6
+    examples = {q for e in EXAMPLES + THREE_EXAMPLES for q in e[:2]}
+    assert all(p[k]["question"] not in examples for p in pairs for k in ("a", "b"))
+    text = condition_prompt(pairs[0], "three-shot")
+    assert text.count("Example ") == 3
+    assert "2-4 concise sentences" in text
+    assert text.endswith("Comparison:")
+    assert options("three-shot", 1024, 42) == options("fewshot", 1024, 42)
 
 
 def test_fewshot_and_controls_are_disjoint_and_sampling_unchanged():
