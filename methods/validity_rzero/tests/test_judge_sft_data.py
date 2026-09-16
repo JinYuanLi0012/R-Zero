@@ -2,6 +2,14 @@ import pytest
 from methods.validity_rzero.judge_sft_data import encode_example, metrics
 
 
+def test_pair_inference_does_not_include_gold_or_demonstrations():
+    from methods.validity_rzero.eval_judge_sft_pairs import pair_messages
+    pair = {"a": {"question": "A text"}, "b": {"question": "B text"}, "expected_label": "SAME_TYPE"}
+    messages = pair_messages(pair, "rules")
+    assert messages == [{"role": "system", "content": "rules"},
+                        {"role": "user", "content": "Question A:\nA text\n\nQuestion B:\nB text"}]
+
+
 class Tokenizer:
     bos_token_id = 1
     eos_token_id = 2
