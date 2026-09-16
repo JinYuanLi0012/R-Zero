@@ -5,6 +5,12 @@ import random
 import argparse
 import os
 from transformers import AutoTokenizer
+
+try:
+    from evaluation.prompt_inputs import generation_inputs, validate_checkpoint_template
+except ModuleNotFoundError:  # Direct script invocation from evaluation/.
+    from prompt_inputs import generation_inputs, validate_checkpoint_template
+
 from vllm import LLM, SamplingParams
 
 def batched_generate(llm, prompts, sampling_params, chunk_size):
@@ -146,6 +152,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
     tokenizer = AutoTokenizer.from_pretrained(args.model_path)
+    validate_checkpoint_template(tokenizer)
     llm = LLM(model=args.model_path, tensor_parallel_size=int(os.getenv("EVAL_TENSOR_PARALLEL_SIZE", "4")), gpu_memory_utilization=float(os.getenv("EVAL_GPU_MEMORY_UTILIZATION", "0.85")))
     dataset = datasets.load_dataset('MrLight/bbeh-eval')
     categories = sorted(list(set(dataset['train']['task'])))
@@ -172,7 +179,7 @@ if __name__ == "__main__":
             prompts.append(prompt)
         
         sampling_params = SamplingParams(temperature=0, top_p=1, max_tokens=int(os.getenv("EVAL_MAX_TOKENS", "8192")))
-        outputs = batched_generate(llm, prompts, sampling_params, int(os.getenv("EVAL_CHUNK_SIZE", "512")))
+        outputs = batched_generate(llm, generation_inputs(prompts, tokenizer), sampling_params, int(os.getenv("EVAL_CHUNK_SIZE", "512")))
         
         for entry, output in zip(category_entries, outputs):
             answer = output.outputs[0].text

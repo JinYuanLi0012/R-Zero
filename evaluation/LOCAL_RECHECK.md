@@ -278,3 +278,22 @@ bash -n evaluation/evaluate.bash
 
 参考：[Qwen3-32B 模型卡](https://huggingface.co/Qwen/Qwen3-32B)、
 [vLLM thinking 参数说明](https://docs.vllm.ai/en/v0.14.1/features/reasoning_outputs/)。
+
+## OctoThinker 已训练 checkpoint
+
+七项数学与三项非数学评估直接读取 checkpoint 保存的 tokenizer/chat_template，
+不注入训练环境变量指定的模板，也不替换聊天模板或 benchmark 任务提示。
+遇到 Octo/Llama 的 `<|begin_of_text|>` BOS 时，已渲染输入用
+`encode(add_special_tokens=False)` 转成 `prompt_token_ids` 后交给 vLLM，
+与 Octo 训练端相同，避免再次插入 BOS。缺失模板、缺失起始 BOS 或重复起始 BOS 会报错，
+不静默改用别的提示格式。此入口针对已训练并合并的 checkpoint；原始无聊天模板的 Base
+不自动套用训练模板。Qwen 原有输入路径不变。数学答案裁判仍固定 Qwen3-32B。
+
+调用方式不变，传 Octo Solver 的运行目录或完整已合并 checkpoint 路径即可：
+
+```bash
+python evaluation/evaluate_models.py --suite math --gpu-ids 0,1,2,3 \
+  --judge-prompt-mode corrected /你的Octo_Solver目录1 /你的Octo_Solver目录2
+```
+
+无需额外的 GPU 小测试；直接运行正式评估并检查其日志和汇总。

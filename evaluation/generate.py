@@ -2,6 +2,12 @@ import vllm
 import argparse
 import  evaluation.datasets_loader as datasets_loader
 from transformers import AutoTokenizer
+
+try:
+    from evaluation.prompt_inputs import generation_inputs, validate_checkpoint_template
+except ModuleNotFoundError:  # Direct script invocation from evaluation/.
+    from prompt_inputs import generation_inputs, validate_checkpoint_template
+
 import json
 import os
 
@@ -14,6 +20,7 @@ def main(args):
         tokens = json.load(f)
     print(args.model, args.dataset)
     tokenizer = AutoTokenizer.from_pretrained(args.model)
+    validate_checkpoint_template(tokenizer)
     model = vllm.LLM(
         model=args.model,
         tokenizer=args.model,
@@ -31,7 +38,7 @@ def main(args):
         prompts = [tokenizer.apply_chat_template(chat, tokenize=False,add_generation_prompt=True, add_special_tokens=True) for chat in chats]
     else:
         prompts = ["system: " + chat[0]["content"] + '\n' + "user: " + chat[1]["content"] + '\nPlease reason step by step, and put your final answer within \\boxed{}.' for chat in chats]
-    responses = model.generate(prompts, sampling_params=sample_params,use_tqdm=True)
+    responses = model.generate(generation_inputs(prompts, tokenizer), sampling_params=sample_params,use_tqdm=True)
     responses = [response.outputs[0].text for response in responses]
     scores,average_score = handler.get_score(responses, answers)
     results = [{"question": question, "answer": answer, "response": response, "score": score} for question, answer, response, score in zip(questions, answers, responses, scores)]
