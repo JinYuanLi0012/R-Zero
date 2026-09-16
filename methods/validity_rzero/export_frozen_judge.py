@@ -41,7 +41,9 @@ def main():
     model.generation_config.do_sample = False
     model.generation_config.temperature = 1.0
     model.generation_config.top_p = 1.0
-    model.generation_config.top_k = 0
+    # Transformers 4.52 validates even inactive sampling-only fields on save.
+    # Keep its neutral/default top_k=50; actual worker decoding is explicitly greedy.
+    model.generation_config.top_k = 50
     model.save_pretrained(staging, safe_serialization=True, max_shard_size="4GB")
     tokenizer = AutoTokenizer.from_pretrained(args.adapter, local_files_only=True)
     tokenizer.save_pretrained(staging)
