@@ -7,6 +7,19 @@ from methods.validity_rzero.octothinker_judge_three_shot import expanded_control
 from methods.validity_rzero.octothinker_judge_balanced import sanity_checks, EXAMPLES as BALANCED_EXAMPLES
 
 
+def test_open_analysis_preserves_b_cases_and_sampling():
+    from methods.validity_rzero.octothinker_judge_open_analysis import ANALYSES
+    text = condition_prompt(controls()[0], "open-analysis-greedy")
+    assert len(ANALYSES) == len(EXAMPLES) == 4
+    for qa, qb, label, _ in EXAMPLES:
+        assert qa in text and qb in text
+    assert text.count("Conclusion: \\boxed{SAME_TYPE}") == 2
+    assert text.count("Conclusion: \\boxed{DIFFERENT}") == 2
+    assert "no required number of sentences" in text
+    assert text.endswith("Analysis:")
+    assert options("open-analysis-greedy", 1024, 42) == options("fewshot-greedy", 1024, 42)
+
+
 def test_invariant_revision_preserves_b_examples_sampling_and_suffix():
     pair = controls()[0]
     old = condition_prompt(pair, "fewshot-greedy")
