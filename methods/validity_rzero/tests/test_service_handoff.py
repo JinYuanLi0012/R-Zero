@@ -148,4 +148,4 @@ def test_semantic_worker_disables_per_request_tqdm_logging():
     source = (Path(__file__).parents[1] / "semantic_mc_worker.py").read_text(
         encoding="utf-8"
     )
-    assert "model.generate(prompts, sampling_params=sampling, use_tqdm=False)" in source
+    assert "model.generate(inputs, sampling_params=sampling, use_tqdm=False)" in source
