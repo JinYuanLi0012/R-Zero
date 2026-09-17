@@ -96,10 +96,10 @@ R_Q   = min(majority_score, 1 - majority_score) - P_rep - P_MAP
 - Replay 从所有历史行均匀抽样；数量 `floor(current_count * 0.3 / 0.7)`；历史不足时有放回抽样。
   直接使用历史伪标签，不重标注、不追加 verified answer。
 - 完整 code prompt 按论文附录转录；不加 AST 改写、常数删除、实体分类或额外 prompt 修复。
-  Base 的起始 `<CODE>` 已在输入中，响应必须以 `</CODE>` 完整结束；仅接收目标代码块。
-  缺失/嵌套标签、提示词回显、空块会保存 `code_*.output.failure.json` 并中止当前 batch，
-  不再回退到嵌入原始文本，不丢弃题目、不制造奖励、不做额外 retry。
-  完整代码块中的语法错误仍仅记录，不执行代码，也不新增数学有效性筛选。
+  Base 的起始 `<CODE>` 已在输入中；若仅缺少标签，但输出是可解析、包含单一 `solver` 函数及 return 的完整 Python 模块，则接受。
+  已触及长度限制的输出、空块、嵌套标签和提示词回显记为逐条 SAM 失败，不嵌入原始垃圾文本。
+  完整标签内的代码仍不做数学正确性检查，语法错误只记录；代码始终不执行。
+  重试和少量失败处理见下文，均是论文未披露的工程补充。
 - 代码不执行；SAM 不判断数学有效性。论文中对 flawed input 推断合理含义的指令原样保留。
 - Embedding 候选/历史采用完全相同的无前缀表示，无 query/document 不对称检索。
   不缩减1536维向量；mean 使用单位向量均值的点积，**均值不再归一化**；max 分块精确计算。
@@ -176,6 +176,29 @@ python -m methods.r_diverse.inspect_sam \
 检查不同题目是否得到相应代码，不能仅凭语法通过或 unique 数量认定 SAM 语义正确。
 这是可选的定位工具，不加入正式训练前置流程。CPU 回归检查已覆盖提供的错误输出形态；
 真实 Base 模型在修正前缀后的生成质量仍需 Linux 推理确认。
+
+## SAM 重试及少量失败容忍
+
+默认 `--sam-code-retries 1`：仅对失败的不同题目重试一次，成功题不重跑。
+重试增加生成长度预算（默认2048到4096，受实际剩余context限制）；Base模式将续写前缀加强到
+`<CODE>\ndef solver(`，提取时拼回此前缀；显式chat模式追加完整代码输出要求。
+这避免 temperature=0 时原样重复同一次失败。可设0禁用，最多3次；不换模型，不执行或修正数学代码。
+
+重试后默认允许 `--sam-max-failure-ratio 0.05` 的失败行，按原始输入行数计算，重复题也计数。
+小批次至少允许1条，但全部失败仍中止；设0表示不允许最终失败。超过阈值会保存诊断再报错，
+避免苹果示例那类全局表示故障被静默接受。GPU OOM、模型加载失败等进程级错误仍报错。
+
+- Q reward：仅成功题参与SAM聚类；失败题保留Solver难度奖励，使用批内惩罚上界1，
+  MAP使用上界0.625（历史为空时为0），并标记 `sam_failed=1`。这是保守的缺测回退值，不是测得的相似度。
+  因此无法编码不会被当成“全新题”；题目格式成功仍记 `format=1`，与格式错误的-2分开。
+- 正式Phase-B：跳过最终SAM失败的新题，不进入当前Solver训练集或memory；之后按成功新题数量混入30%历史回放。
+  保持memory_rows和memory.npy逐行对应；`dataset_summary.json`记录SAM前数量和失败数量。
+- 每次SAM调用保存 `sam_summary.json`、`sam_failures.json`。每次重试的原始输入输出和日志位于
+  `code_retry_1/` 等子目录；`code_*.output.json`逐条记录成功/失败、原始输出、finish_reason及token预算。
+  只缓存成功表示；最终失败不会变成零向量，也不写入表示缓存。代码协议版本已更新，旧缓存不会命中。
+
+本次属于采样/奖励行为变化。正式重跑使用新run name，例如
+`--run-name qwen3_4b_r_diverse_10000_v4 --questions-per-gpu 2500`，不要用旧配置强行resume。
 
 ## 本地 CPU 检查
 

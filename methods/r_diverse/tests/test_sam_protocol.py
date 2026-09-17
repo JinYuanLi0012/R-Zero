@@ -4,7 +4,6 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from methods.r_diverse.core import read_json
 from methods.r_diverse.gpu_worker import generate
 from methods.r_diverse.inference import sam
 from methods.r_diverse.sam_protocol import code_prompt, extract_code
@@ -31,11 +30,21 @@ class SamProtocolTests(unittest.TestCase):
                 extract_code(echo, mode)
 
     def test_no_raw_output_fallback_or_nested_block(self):
-        for raw in ['def solver(): return 1', '<CODE></CODE>',
+        for raw in ['Some prose', '<CODE></CODE>',
                     '<CODE>instructions <CODE>def solver(): return 8</CODE>',
                     '<CODE>def solver(): return 1</CODE>\nextra prose']:
             with self.subTest(raw=raw), self.assertRaises(ValueError):
                 extract_code(raw)
+
+    def test_missing_closer_recovers_only_complete_solver_and_never_truncation(self):
+        body = 'import math\ndef solver(n1=2):\n    return math.sqrt(n1)'
+        self.assertEqual(extract_code(body), body)
+        self.assertEqual(extract_code('<CODE>\n' + body), body)
+        for raw in ['def solver():', 'print(8)', 'def other(): return 8']:
+            with self.subTest(raw=raw), self.assertRaises(ValueError):
+                extract_code(raw)
+        with self.assertRaises(ValueError):
+            extract_code(body, truncated=True)
 
     def test_syntax_is_not_a_math_validity_gate(self):
         # Framed but syntactically incorrect code is still represented, as documented.
@@ -46,7 +55,7 @@ class SamProtocolTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             code_prompt('question', SimpleNamespace(chat_template=None), 'chat')
 
-    def test_worker_uses_prefill_and_saves_bad_response_with_its_prompt(self):
+    def test_worker_preserves_failed_row_and_continues(self):
         prompts = []
         template = Path(__file__).parents[1].joinpath('code_prompt.txt').read_text()
         echo = template[:template.index('</CODE>') + len('</CODE>')]
@@ -61,15 +70,16 @@ class SamProtocolTests(unittest.TestCase):
         tokenizer = SimpleNamespace(chat_template='present but unused in Base mode')
         fake_transformers = SimpleNamespace(AutoTokenizer=SimpleNamespace(from_pretrained=lambda *a: tokenizer))
         with tempfile.TemporaryDirectory() as tmp:
-            failure = Path(tmp) / 'failure.json'
-            job = dict(mode='code', model='coder', seed=1, failure_path=str(failure),
+            job = dict(mode='code', model='coder', seed=1,
                        rows=[dict(id=0, question='first'), dict(id=1, question='second')],
                        config=dict(inference_memory=.8, inference_context=8192,
                                    code_tokens=2048, inference_batch=1))
             with patch.dict('sys.modules', vllm=fake_vllm, transformers=fake_transformers):
-                with self.assertRaisesRegex(RuntimeError, 'SAM output framing failed'):
-                    generate(job)
-            saved = read_json(failure)
+                result = generate(job)
+            self.assertEqual(len(result), 2)
+            self.assertTrue(result[0]['sam_ok'])
+            saved = result[1]
+            self.assertFalse(saved['sam_ok'])
             self.assertEqual(saved['question'], 'second')
             self.assertEqual(saved['raw_code_output'], echo)
             self.assertTrue(saved['rendered_prompt'].endswith('second\nOutput:\n<CODE>\n'))

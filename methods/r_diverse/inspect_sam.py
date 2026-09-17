@@ -7,7 +7,7 @@ import tempfile
 import numpy as np
 
 from methods.r_diverse.core import read_json, write_json
-from methods.r_diverse.inference import sam
+from methods.r_diverse.inference import sam, sam_success_indices
 from methods.r_diverse.run import clean_environment
 from methods.r_diverse.sam_protocol import CODE_PROTOCOL
 
@@ -34,15 +34,17 @@ def main():
     write_json(directory / 'config.json', config)
     print(f'SAM artifacts: {directory}', flush=True)
     vectors, records = sam(questions, config, gpus, directory)
-    counts = Counter(row['code'] for row in records)
+    keep = sam_success_indices(records)
+    counts = Counter(records[i]['code'] for i in keep)
     summary = {'code_protocol': CODE_PROTOCOL, 'questions': len(questions),
                'unique_code': len(counts), 'most_common_code_count': max(counts.values()),
                'syntax_ok': sum(r['code_syntax_ok'] for r in records),
+               'sam_failed': len(records) - len(keep), 'cosine_original_indices': keep,
                'cosine_matrix': (vectors @ vectors.T).tolist()}
     write_json(directory / 'summary.json', summary)
     for i, row in enumerate(records):
-        print(f'\n[{i}] {row["question"]}\n{row["code"]}', flush=True)
-    print('\nCosines (same row order):\n', np.round(vectors @ vectors.T, 3), flush=True)
+        print(f'\n[{i}] {row["question"]}\n{row.get("sam_error") or row["code"]}', flush=True)
+    print(f'\nCosines (successful original indices {keep}):\n', np.round(vectors @ vectors.T, 3), flush=True)
     print(f'Unique code: {len(counts)}/{len(questions)}; syntax OK: {summary["syntax_ok"]}; '
           f'review question/code correspondence in {directory}', flush=True)
 

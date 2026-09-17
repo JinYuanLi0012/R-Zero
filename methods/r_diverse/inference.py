@@ -81,12 +81,18 @@ def run_workers(mode, rows, model, gpu_ids, config, work, phase='reward', seed=1
 
 
 def sam(questions, config, gpu_ids, work):
-    """Exact-text computational cache; restore duplicate multiplicity on return."""
+    """Return success-only vectors and ALL records, both in original row order.
+
+    Select successful records with sam_success_indices before pairing with vectors.
+    Failures are not cached and never receive placeholder embeddings.
+    """
     template = Path(__file__).with_name('code_prompt.txt').read_text()
     context = {k: config[k] for k in ['coder_model', 'embedding_model', 'code_tokens', 'embedding_tokens']}
     context['prompt'] = template
     context['code_protocol'] = CODE_PROTOCOL
     context['coder_prompt_mode'] = config.get('coder_prompt_mode', 'completion')
+    context['code_retries'] = config.get('sam_code_retries', 1)
+    context['inference_context'] = config.get('inference_context', 8192)
     context['embedding_protocol'] = 'raw-code-last-token-l2-v1'
     prefix = json.dumps(context, sort_keys=True)
     cache = Path(config['run_root']) / 'sam_cache'
@@ -95,10 +101,46 @@ def sam(questions, config, gpu_ids, work):
     unique = dict(zip(keys, questions))
     missing = [{'key': key, 'question': q} for key, q in unique.items()
                if not (cache / f'{key}.json').is_file()]
+    failures = {}
+    codes = []
     if missing:
         codes = run_workers('code', missing, config['coder_model'], gpu_ids, config, work)
-        embedded = run_workers('embed', codes, config['embedding_model'], gpu_ids, config, work)
+        for attempt in range(1, config.get('sam_code_retries', 1) + 1):
+            retry_rows = [dict(key=row['key'], question=row['question']) for row in codes
+                          if not row.get('sam_ok', True)]
+            if not retry_rows:
+                break
+            retried = run_workers('code', retry_rows, config['coder_model'], gpu_ids,
+                                  dict(config, sam_retry_attempt=attempt),
+                                  Path(work) / f'code_retry_{attempt}')
+            replacements = {row['key']: row for row in retried}
+            codes = [replacements.get(row['key'], row) for row in codes]
+        failures = {row['key']: row for row in codes if not row.get('sam_ok', True)}
+    failed_rows = sum(key in failures for key in keys)
+    ratio = config.get('sam_max_failure_ratio', 0.05)
+    if not 0 <= ratio < 1:
+        raise ValueError('sam_max_failure_ratio must be in [0, 1)')
+    allowed = max(1, int(len(keys) * ratio)) if ratio > 0 else 0
+    write_json(Path(work) / 'sam_summary.json', {
+        'rows': len(keys), 'failed_rows': failed_rows, 'successful_rows': len(keys) - failed_rows,
+        'max_failure_ratio': ratio, 'allowed_failed_rows': allowed,
+        'unique_failed_questions': len(failures), 'code_protocol': CODE_PROTOCOL,
+        'retried_unique_questions': sum(row.get('retry_attempt', 0) > 0 for row in codes),
+    })
+    write_json(Path(work) / 'sam_failures.json', [dict(row, original_index=i)
+               for i, key in enumerate(keys) if (row := failures.get(key)) is not None])
+    if failed_rows and (failed_rows == len(keys) or failed_rows > allowed):
+        raise RuntimeError(f'SAM failed for {failed_rows}/{len(keys)} rows (allowed {allowed}); '
+                           f'see {Path(work) / "sam_failures.json"}')
+    if codes:
+        good_codes = [row for row in codes if row.get('sam_ok', True)]
+        embedded = run_workers('embed', good_codes, config['embedding_model'], gpu_ids, config, work)
         for row in embedded:
             write_json(cache / f"{row['key']}.json", row)
-    records = [read_json(cache / f'{key}.json') for key in keys]
-    return np.asarray([row['embedding'] for row in records], dtype=np.float32), records
+    records = [failures[key] if key in failures else read_json(cache / f'{key}.json') for key in keys]
+    vectors = [records[i]['embedding'] for i in sam_success_indices(records)]
+    return (np.asarray(vectors, dtype=np.float32) if vectors else np.empty((0, 1536), dtype=np.float32)), records
+
+
+def sam_success_indices(records):
+    return [i for i, row in enumerate(records) if row.get('sam_ok', True)]

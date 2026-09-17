@@ -1,7 +1,6 @@
 """Short-lived single-GPU inference: original Q/S sampling, SAM code or embedding."""
 import argparse
 import ast
-from pathlib import Path
 
 from methods.r_diverse.core import parse_question, read_json, write_json
 from methods.r_diverse.prompts import QUESTIONER_MESSAGES, SOLVER_SYSTEM
@@ -79,8 +78,15 @@ def generate(job):
                                      top_p=1.0, top_k=40)
     else:
         prompt_mode = cfg.get('coder_prompt_mode', 'completion')
-        prompts = [code_prompt(row['question'], tokenizer, prompt_mode) for row in rows]
-        params = vllm.SamplingParams(n=1, max_tokens=cfg['code_tokens'], temperature=0.0,
+        retry = cfg.get('sam_retry_attempt', 0)
+        prompts = [code_prompt(row['question'], tokenizer, prompt_mode, retry=bool(retry)) for row in rows]
+        token_budget = cfg['code_tokens']
+        if retry:
+            prompt_length = max(len(tokenizer.encode(p, add_special_tokens=False)) for p in prompts)
+            token_budget = min(cfg['code_tokens'] * (2 ** retry), cfg['inference_context'] - prompt_length)
+            if token_budget <= 0:
+                raise ValueError('SAM retry prompt exceeds inference context')
+        params = vllm.SamplingParams(n=1, max_tokens=token_budget, temperature=0.0,
                                      top_p=1.0, stop=['</CODE>'], include_stop_str_in_output=True)
     output = []
     batch_size = cfg['inference_batch']
@@ -93,24 +99,29 @@ def generate(job):
             elif mode == 'solve':
                 item = dict(row, **majority(texts, job['phase']))
             else:
+                truncated = completion.outputs[0].finish_reason == 'length'
+                framed = ('def solver(' if retry and prompt_mode == 'completion' else '') + texts[0]
                 try:
-                    code = extract_code(texts[0], prompt_mode)
+                    code = extract_code(framed, prompt_mode, truncated=truncated)
                 except ValueError as error:
-                    # Do not turn a format failure into a novelty reward or drop the row.
-                    failure = Path(job['failure_path'])
-                    write_json(failure, dict(row, raw_code_output=texts[0],
-                               rendered_prompt=prompts[begin + offset],
-                               code_protocol=CODE_PROTOCOL, error=str(error)))
-                    raise RuntimeError(f'SAM output framing failed; raw response: {failure}') from error
+                    output.append(dict(row, sam_ok=False, code='', raw_code_output=texts[0],
+                                       rendered_prompt=prompts[begin + offset],
+                                       code_protocol=CODE_PROTOCOL, sam_error=str(error),
+                                       retry_attempt=retry, code_token_budget=token_budget,
+                                       finish_reason=completion.outputs[0].finish_reason,
+                                       code_tags_ok=False, code_syntax_ok=False,
+                                       code_truncated=truncated))
+                    continue
                 try:
                     ast.parse(code)
                     syntax_ok = True
                 except SyntaxError:
                     syntax_ok = False
-                item = dict(row, code=code, raw_code_output=texts[0],
+                item = dict(row, sam_ok=True, code=code, raw_code_output=texts[0],
+                            retry_attempt=retry, code_token_budget=token_budget,
                             code_protocol=CODE_PROTOCOL, coder_prompt_mode=prompt_mode,
-                            code_tags_ok=True, code_syntax_ok=syntax_ok,
-                            code_truncated=completion.outputs[0].finish_reason == 'length')
+                            code_tags_ok=texts[0].strip().endswith('</CODE>'), code_syntax_ok=syntax_ok,
+                            finish_reason=completion.outputs[0].finish_reason, code_truncated=truncated)
             output.append(item)
     return output
 
@@ -144,7 +155,6 @@ def main():
     parser.add_argument('--output', required=True)
     args = parser.parse_args()
     job = read_json(args.input)
-    job['failure_path'] = str(Path(args.output).with_suffix('.failure.json'))
     rows = embed(job) if job['mode'] == 'embed' else generate(job)
     if len(rows) != len(job['rows']):
         raise RuntimeError('GPU worker lost rows')

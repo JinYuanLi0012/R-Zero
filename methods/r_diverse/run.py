@@ -11,7 +11,7 @@ import sys
 import numpy as np
 
 from methods.r_diverse.core import read_json, replay_rows, retained, write_json
-from methods.r_diverse.inference import ROOT, run_workers, sam
+from methods.r_diverse.inference import ROOT, run_workers, sam, sam_success_indices
 
 
 METHOD = Path(__file__).resolve().parent
@@ -98,6 +98,10 @@ def train(role, model, dataset, config, config_path, directory, memory_path, sol
 def prepare_dataset(directory, config, current, history, history_vectors):
     from datasets import Dataset
     vectors, records = sam([r['question'] for r in current], config, config['all_gpus'], directory / 'sam')
+    current_before_sam = len(current)
+    keep = sam_success_indices(records)
+    current = [current[i] for i in keep]
+    records = [records[i] for i in keep]
     annotated = [dict(row, sam_key=record['key']) for row, record in zip(current, records)]
     mixed = replay_rows(annotated, history, ratio=0.3, seed=config['seed'] + int(directory.name.split('_')[-1]))
     if len(mixed) < config['rollout_batch']:
@@ -112,6 +116,8 @@ def prepare_dataset(directory, config, current, history, history_vectors):
     np.save(directory / 'memory.npy', np.concatenate([history_vectors, vectors])
             if len(history_vectors) else vectors)
     write_json(directory / 'dataset_summary.json', {
+        'current_rows_before_sam': current_before_sam,
+        'sam_failed_rows': current_before_sam - len(current),
         'current_rows': len(current), 'historical_rows_before': len(history),
         'replay_rows': len(mixed) - len(current), 'total_rows': len(mixed),
         'actual_replay_ratio': (len(mixed) - len(current)) / len(mixed),
@@ -132,6 +138,10 @@ def main():
     parser.add_argument('--coder-model', default='Qwen/Qwen2.5-Coder-7B')
     parser.add_argument('--coder-prompt-mode', choices=['completion', 'chat'], default='completion',
                         help='Base: Output/CODE prefill; chat: explicitly selected Instruct model')
+    parser.add_argument('--sam-max-failure-ratio', type=float, default=0.05,
+                        help='Allowed failed SAM rows per call; at least one if >0, never all rows')
+    parser.add_argument('--sam-code-retries', type=int, default=1,
+                        help='Retry only failed code rows with stronger framing and more tokens')
     parser.add_argument('--embedding-model', default='jinaai/jina-code-embeddings-1.5b')
     parser.add_argument('--rounds', type=int, default=5)
     parser.add_argument('--gpu-ids', default='0,1,2,3')
@@ -165,6 +175,10 @@ def main():
         parser.error('rollout_batch * 5 must be divisible by Solver global batch 128')
     if not 0 < args.inference_memory < 1:
         parser.error('--inference-memory must be in (0, 1)')
+    if not 0 <= args.sam_max_failure_ratio < 1:
+        parser.error('--sam-max-failure-ratio must be in [0, 1)')
+    if not 0 <= args.sam_code_retries <= 3:
+        parser.error('--sam-code-retries must be between 0 and 3')
     storage = os.environ.get('STORAGE_PATH')
     if not args.output_dir and not storage:
         parser.error('Source env_rzero.sh or provide --output-dir')
