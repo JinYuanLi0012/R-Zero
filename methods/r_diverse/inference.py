@@ -121,17 +121,23 @@ def sam(questions, config, gpu_ids, work):
     if not 0 <= ratio < 1:
         raise ValueError('sam_max_failure_ratio must be in [0, 1)')
     allowed = max(1, int(len(keys) * ratio)) if ratio > 0 else 0
+    over_limit = failed_rows > allowed
+    strict = config.get('sam_strict_failures', False)
     write_json(Path(work) / 'sam_summary.json', {
         'rows': len(keys), 'failed_rows': failed_rows, 'successful_rows': len(keys) - failed_rows,
         'max_failure_ratio': ratio, 'allowed_failed_rows': allowed,
+        'failure_threshold_exceeded': over_limit, 'strict_failures': strict,
         'unique_failed_questions': len(failures), 'code_protocol': CODE_PROTOCOL,
         'retried_unique_questions': sum(row.get('retry_attempt', 0) > 0 for row in codes),
     })
     write_json(Path(work) / 'sam_failures.json', [dict(row, original_index=i)
                for i, key in enumerate(keys) if (row := failures.get(key)) is not None])
-    if failed_rows and (failed_rows == len(keys) or failed_rows > allowed):
+    if failed_rows and (failed_rows == len(keys) or (strict and over_limit)):
         raise RuntimeError(f'SAM failed for {failed_rows}/{len(keys)} rows (allowed {allowed}); '
                            f'see {Path(work) / "sam_failures.json"}')
+    if over_limit:
+        print(f'[r_diverse] WARNING: SAM failed for {failed_rows}/{len(keys)} rows after retries; '
+              f'continuing with conservative fallback. See {Path(work) / "sam_summary.json"}', flush=True)
     if codes:
         good_codes = [row for row in codes if row.get('sam_ok', True)]
         embedded = run_workers('embed', good_codes, config['embedding_model'], gpu_ids, config, work)

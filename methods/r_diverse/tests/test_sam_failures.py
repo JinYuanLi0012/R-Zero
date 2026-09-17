@@ -37,8 +37,14 @@ class SamFailureTests(unittest.TestCase):
                 calls.clear()
                 sam(['good', 'retry'], cfg, ['0'], tmp)
                 self.assertEqual(calls, [])
+                vectors, records = sam(['fail', 'fail', 'good'], cfg, ['0'], tmp)
+                self.assertEqual(vectors.shape, (1, 2))
+                self.assertEqual([r['sam_ok'] for r in records], [False, False, True])
+                summary = read_json(Path(tmp) / 'sam_summary.json')
+                self.assertTrue(summary['failure_threshold_exceeded'])
+                self.assertFalse(summary['strict_failures'])
                 with self.assertRaisesRegex(RuntimeError, '2/3'):
-                    sam(['fail', 'fail', 'good'], cfg, ['0'], tmp)
+                    sam(['fail', 'fail', 'good'], dict(cfg, sam_strict_failures=True), ['0'], tmp)
                 with self.assertRaisesRegex(RuntimeError, '1/1'):
                     sam(['fail'], cfg, ['0'], tmp)
 

@@ -139,7 +139,9 @@ def main():
     parser.add_argument('--coder-prompt-mode', choices=['completion', 'chat'], default='completion',
                         help='Base: Output/CODE prefill; chat: explicitly selected Instruct model')
     parser.add_argument('--sam-max-failure-ratio', type=float, default=0.05,
-                        help='Allowed failed SAM rows per call; at least one if >0, never all rows')
+                        help='SAM failure warning threshold; only a hard limit with --sam-strict-failures')
+    parser.add_argument('--sam-strict-failures', action='store_true',
+                        help='Opt in to stopping above the SAM failure threshold; default warns and continues')
     parser.add_argument('--sam-code-retries', type=int, default=1,
                         help='Retry only failed code rows with stronger framing and more tokens')
     parser.add_argument('--embedding-model', default='jinaai/jina-code-embeddings-1.5b')
