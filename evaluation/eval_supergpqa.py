@@ -7,8 +7,10 @@ import os
 from transformers import AutoTokenizer
 
 try:
+    from evaluation.supergpqa_shards import partition
     from evaluation.prompt_inputs import generation_inputs, validate_checkpoint_template
 except ModuleNotFoundError:  # Direct script invocation from evaluation/.
+    from supergpqa_shards import partition
     from prompt_inputs import generation_inputs, validate_checkpoint_template
 
 from vllm import LLM, SamplingParams
@@ -79,7 +81,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--model_path", type=str, required=True, help="Path to the model directory")
     parser.add_argument("--output_file", type=str, default="outputs.json", help="File to save results")
+    parser.add_argument('--shard-index', type=int, default=0)
+    parser.add_argument('--num-shards', type=int, default=1)
     args = parser.parse_args()
+    if args.num_shards < 1 or not 0 <= args.shard_index < args.num_shards:
+        parser.error('Invalid shard index/count')
     
     tokenizer = AutoTokenizer.from_pretrained(args.model_path)
     validate_checkpoint_template(tokenizer)
@@ -87,6 +93,9 @@ if __name__ == "__main__":
     print('start loading dataset')
     dataset = datasets.load_dataset('m-a-p/SuperGPQA')
     categories = ['Engineering', 'Medicine', 'Science', 'Philosophy', 'Military Science', 'Economics', 'Management', 'Sociology', 'Literature and Arts', 'History', 'Agronomy', 'Law', 'Education']
+    selected, expected_total, fingerprint = partition(
+        dataset['train'], categories, args.shard_index, args.num_shards)
+    print(f'SuperGPQA shard {args.shard_index}/{args.num_shards}: {len(selected)}/{expected_total} questions', flush=True)
     per_category_accuracy = {c: [0, 0] for c in categories}
     success, fail = 0, 0
     answers = []
@@ -94,7 +103,9 @@ if __name__ == "__main__":
     print('----------------- Start Answering -------------------')
     
     for category in categories:
-        category_entries = [entry for entry in dataset['train'] if entry['discipline'] == category]
+        category_entries = [entry for entry in selected if entry['discipline'] == category]
+        if not category_entries:
+            continue
         prompts = []
         for entry in category_entries:
             query = entry['question'] + '\n' + form_options(entry['options']) + '\n'
@@ -111,6 +122,8 @@ if __name__ == "__main__":
         sampling_params = SamplingParams(temperature=0, top_p=1, max_tokens=int(os.getenv("EVAL_MAX_TOKENS", "8192")))
         outputs = batched_generate(llm, generation_inputs(prompts, tokenizer), sampling_params, int(os.getenv("EVAL_CHUNK_SIZE", "512")))
         
+        if len(outputs) != len(category_entries):
+            raise RuntimeError('SuperGPQA generation returned an incomplete batch')
         for entry, output in zip(category_entries, outputs):
             answer = output.outputs[0].text
             entry['solution'] = answer
@@ -129,5 +142,8 @@ if __name__ == "__main__":
     with open(args.output_file, 'w') as f:
         json.dump(answers, f, indent=2)
     with open(os.getenv('FINAL_RESULTS_FILE', 'final_results.jsonl'), 'a') as f:
-        json.dump({"dataset": "supergpqa", "model": args.model_path, "accuracy": round(success / (success + fail)*100, 2)}, f, indent=2)
+        json.dump({"dataset": "supergpqa", "model": args.model_path, "accuracy": round(success / (success + fail)*100, 2),
+                   "correct": success, "total": success + fail,
+                   "shard_index": args.shard_index, "num_shards": args.num_shards,
+                   "expected_total": expected_total, "dataset_fingerprint": fingerprint}, f, indent=2)
     print("Overall Accuracy:", success / (success + fail))

@@ -12,9 +12,26 @@ Accepts any number of run directories or merged Hugging Face checkpoint director
 Run directories select `global_step_15/actor/huggingface`, as in the math mode.
 Add `--dry-run` to validate paths without launching models or writing outputs.
 
+With exactly four GPU IDs (`--gpu-ids 0,1,2,3`), the first two GPUs run
+independent TP=1 SuperGPQA replicas, each processing half the questions. The third
+GPU runs BBEH and the fourth runs MMLU-Pro concurrently, also TP=1. Questions are
+ordered by discipline then alternated across the two shards, balancing both total
+question counts and the large Science/Engineering categories. This is data
+parallel generation, not a TP=2 model. Prompts, token budgets, and scoring rules
+stay unchanged; altered batching can still introduce normal numerical differences.
+SuperGPQA's existing random fallback for unparseable answers also remains unchanged.
+
+Shard records include question indices, counts, and a dataset fingerprint. Merging
+requires matching fingerprints and complete, disjoint coverage, and computes
+`100 * sum(correct) / sum(total)`, not the mean of rounded shard percentages.
+A failed shard never produces a complete SuperGPQA score. Full responses are merged
+in the original category/question order into `supergpqa_outputs.json`;
+per-shard logs/responses are retained in `supergpqa_shard_0/` and
+`supergpqa_shard_1/`. BBEH/MMLU-Pro retain their existing filenames.
+
 With exactly three GPU IDs (for example `--gpu-ids 1,2,3`), each model runs
 SuperGPQA on the first GPU, BBEH on the second, and MMLU-Pro on the third
-concurrently, with TP=1 each. With other GPU counts, benchmarks run sequentially
+concurrently, with TP=1 each. With GPU counts other than three or four, benchmarks run sequentially
 using all selected GPUs for tensor parallelism. Models always run sequentially. This mode directly invokes the existing benchmark scripts;
 it does not run the math evaluations or launch the Qwen3-32B judge.
 The existing benchmark prompts and accuracy scoring are unchanged.
@@ -39,3 +56,8 @@ python evaluation/evaluate_models.py --summary-only /path/to/nonmath_batch
 ```
 
 Omitting `--suite` preserves the original math-only behavior.
+
+The new topology applies only to new launches. Do not pull/update code midway through
+an older running batch: it starts fresh Python workers for subsequent checkpoints.
+An existing three-GPU process does not automatically acquire the fourth GPU.
+Start a new batch with four allocated, idle GPUs and only the checkpoints still needed.

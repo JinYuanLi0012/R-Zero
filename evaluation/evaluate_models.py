@@ -14,8 +14,10 @@ import sys
 import tempfile
 
 try:
+    from evaluation.supergpqa_shards import merge_shards
     from evaluation.judge_prompts import MODES, prompt_metadata, normalized_metadata
 except ModuleNotFoundError:
+    from supergpqa_shards import merge_shards
     from judge_prompts import MODES, prompt_metadata, normalized_metadata
 
 DATASETS = ['math', 'gsm8k', 'amc', 'minerva', 'olympiad', 'aime2024', 'aime2025']
@@ -42,9 +44,53 @@ def layout(manifest):
     return datasets, ['id', 'name', 'status'] + datasets + [average, 'model', 'results_file']
 
 
+def run_nonmath_four_gpus(root, model, output, env):
+    """Two independent SuperGPQA replicas, plus one BBEH and one MMLU-Pro."""
+    jobs = [('supergpqa', 0), ('supergpqa', 1), ('bbeh', None), ('mmlupro', None)]
+    codes = {}
+    private_outputs = {}
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        futures = {}
+        for slot, ((dataset, shard), gpu) in enumerate(zip(jobs, env['EVAL_GPU_IDS'].split(','))):
+            child = dict(env, EVAL_GPU_IDS=gpu)
+            child.pop('SUPERGPQA_SHARD_INDEX', None)
+            child.pop('SUPERGPQA_NUM_SHARDS', None)
+            if env.get('RZERO_NONMATH_VLLM_PORT_BASE'):
+                child['VLLM_PORT'] = str(int(env['RZERO_NONMATH_VLLM_PORT_BASE']) + 256 * slot)
+            folder = output.parent
+            if shard is not None:
+                folder = folder / f'supergpqa_shard_{shard}'
+                child.update(SUPERGPQA_SHARD_INDEX=str(shard), SUPERGPQA_NUM_SHARDS='2')
+            folder.mkdir(parents=True, exist_ok=True)
+            private = folder / f'{dataset}_normalized.jsonl'
+            private_outputs[slot] = private
+            print(f'  ASSIGN {dataset} shard={shard}: GPU {gpu}, TP=1', flush=True)
+            futures[pool.submit(run_nonmath, root, model, private, child, [dataset])] = slot
+        for future in as_completed(futures):
+            slot = futures[future]
+            codes[slot] = future.result()
+            if slot >= 2 and codes[slot] == 0:
+                with output.open('a') as stream:
+                    stream.write(private_outputs[slot].read_text())
+    # All workers have exited. Never publish a partial SuperGPQA aggregate.
+    if codes[0] == codes[1] == 0:
+        try:
+            record = merge_shards([private_outputs[i].parent for i in (0, 1)], model, output.parent)
+        except (OSError, ValueError, KeyError, TypeError) as exc:
+            print(f'Invalid SuperGPQA shards: {exc}', file=sys.stderr)
+            return 1
+        with output.open('a') as stream:
+            stream.write(json.dumps(dict(model=model, dataset='supergpqa', score=record['accuracy'],
+                                         evaluator=NONMATH_EVALUATOR)) + '\n')
+        print(f"  DONE supergpqa (2 shards): {record['accuracy']}; {record['correct']}/{record['total']}", flush=True)
+    return int(any(codes.values()))
+
+
 def run_nonmath(root, model, output, env, datasets=None):
-    """With three GPUs, run one benchmark per GPU; otherwise use sequential TP."""
+    """Four GPUs: 2+1+1 replicas; three GPUs: 1+1+1; otherwise sequential TP."""
     gpu_ids = env['EVAL_GPU_IDS'].split(',')
+    if datasets is None and len(gpu_ids) == 4:
+        return run_nonmath_four_gpus(root, model, output, env)
     if datasets is None and len(gpu_ids) == 3:
         # Each worker writes a private JSONL; only this thread merges final scores.
         # Await all workers before returning, so the next model cannot overlap.
@@ -90,10 +136,14 @@ def run_nonmath(root, model, output, env, datasets=None):
         child['FINAL_RESULTS_FILE'] = str(score_file)
         log = logs / f'{dataset}.log'
         print(f'  START {dataset}; log: {log}', flush=True)
+        shard_args = []
+        if dataset == 'supergpqa' and child.get('SUPERGPQA_NUM_SHARDS'):
+            shard_args = ['--shard-index', child['SUPERGPQA_SHARD_INDEX'],
+                          '--num-shards', child['SUPERGPQA_NUM_SHARDS']]
         with log.open('w') as stream:
             code = subprocess.call(
                 [sys.executable, str(root / 'evaluation' / f'eval_{dataset}.py'),
-                 '--model_path', model, '--output_file', str(output.parent / f'{dataset}_outputs.json')],
+                 '--model_path', model, '--output_file', str(output.parent / f'{dataset}_outputs.json')] + shard_args,
                 cwd=root, env=child, stdout=stream, stderr=subprocess.STDOUT)
         if code:
             return code
