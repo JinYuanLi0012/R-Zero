@@ -12,6 +12,7 @@ import numpy as np
 
 from methods.r_diverse.core import read_json, replay_rows, retained, write_json
 from methods.r_diverse.inference import ROOT, run_workers, sam, sam_success_indices
+from methods.r_diverse.backbone import prepare_backbone_tokenizer
 
 
 METHOD = Path(__file__).resolve().parent
@@ -78,6 +79,8 @@ def train(role, model, dataset, config, config_path, directory, memory_path, sol
             f'worker.actor.micro_batch_size_per_device_for_update={2 if questioner else 1}',
             f'worker.actor.micro_batch_size_per_device_for_experience={8 if questioner else 1}',
             'worker.reward.num_cpus=1']
+    if config.get('backbone_prompt') == 'octothinker':
+        args += [f'worker.actor.model.tokenizer_path={config["backbone_tokenizer"]}']
     if questioner:
         args += [f'worker.reward.reward_function={METHOD / "reward.py"}:compute_score',
                  f'worker.reward.reward_function_kwargs.config_path={config_path}',
@@ -135,6 +138,8 @@ def main():
     parser.add_argument('--run-name', default='qwen3_4b_r_diverse_minimal_v2')
     parser.add_argument('--output-dir')
     parser.add_argument('--base-model', default='Qwen/Qwen3-4B-Base')
+    parser.add_argument('--backbone-prompt', choices=['native', 'octothinker'], default='native',
+                        help='Q/S only: native tokenizer or explicit OctoThinker Base BOS/role template')
     parser.add_argument('--coder-model', default='Qwen/Qwen2.5-Coder-7B')
     parser.add_argument('--coder-prompt-mode', choices=['completion', 'chat'], default='completion',
                         help='Base: Output/CODE prefill; chat: explicitly selected Instruct model')
@@ -206,6 +211,8 @@ def main():
         # Freeze HF snapshots once. Resume reuses these local resolved paths.
         for key in ['base_model', 'coder_model', 'embedding_model']:
             config[key] = resolve_model(config[key], args.local_files_only)
+        config['backbone_tokenizer'] = prepare_backbone_tokenizer(
+            config['base_model'], run_root / 'backbone_tokenizer', config['backbone_prompt'])
         write_json(config_path, config)
         write_json(run_root / 'provenance.json', {
             'upstream': 'Chengsong-Huang/R-Zero@5699329',

@@ -76,6 +76,49 @@ bash methods/r_diverse/run.sh --resume
 必须保留原命令的全部参数。恢复会跳过完成阶段；未完成训练阶段从该轮输入模型重新训练，保留旧 attempt，
 不承诺从某个训练 step 恢复。配置或方法代码改变则需要新 run name。初始化模型下载中断也可用同命令 `--resume`。
 
+## OctoThinker Hybrid 3B Base
+
+在同一 Linux 环境中，更新 `main` 并 `source env_rzero.sh` 后直接运行：
+
+```bash
+bash methods/r_diverse/run_octothinker.sh
+```
+
+默认新目录为 `${STORAGE_PATH}/rzero_runs/octothinker_3b_hybrid_r_diverse_v1`。
+Questioner 和 Solver **都从原始 `OctoThinker/OctoThinker-3B-Hybrid-Base` 初始化**，
+各自逐轮继承自己的 checkpoint；不加载 validity 训练后的 Solver。
+仍为五轮 Q5/S15、现有四卡设置，SAM Coder/Encoder、奖励、replay、retry 与失败容忍策略不变。
+
+入口等价于以下显式参数；`run_octothinker.sh` 后面的参数可以覆盖模型路径、运行名及其他设置：
+
+```bash
+bash methods/r_diverse/run.sh \
+  --base-model OctoThinker/OctoThinker-3B-Hybrid-Base \
+  --backbone-prompt octothinker \
+  --run-name octothinker_3b_hybrid_r_diverse_v1
+
+# 模型已下载到本地：
+bash methods/r_diverse/run_octothinker.sh --base-model /path/to/OctoThinker-3B-Hybrid-Base
+
+# 恢复：保留首次运行的全部参数，另加 --resume。
+bash methods/r_diverse/run_octothinker.sh --resume
+```
+
+Octo Base 没有官方 chat template。本实现选择与现有 Octo 实验相同的简单文本边界，
+仅包装原来的 Q/S messages：BOS 一次、逐条 `role: content`、最后 `assistant:\n`。
+这不是官方 Octo 聊天协议，也没有增加 few-shot 示例或修改题目指令。
+
+运行初始化时在 `backbone_tokenizer/` 保存模板及 tokenizer 配置，不复制权重、不修改 HF 缓存。
+训练的数据处理和 FSDP worker 都使用该 tokenizer；出题、奖励解题、正式标注使用同一 tokenizer，
+并向 vLLM 传入 `add_special_tokens=False` 的 token IDs，避免重复 BOS。
+PAD 缺失时设为 EOS (`128001`)，保留原始 EOS。FSDP 保存的每个 checkpoint 会包含模板，
+后续轮次及现有 `evaluation/evaluate.bash` 可保持同一输入格式。
+SAM 的 Coder 和 Encoder 始终使用自己的 tokenizer，不应用这个包装。
+
+通用入口的 `--backbone-prompt` 默认仍是 `native`，保留原来的 Qwen 路径。
+单独更改 `--base-model` 不会猜测模型家族；Octo 请使用专用入口或显式加 `--backbone-prompt octothinker`。
+新 backbone 需要新运行目录，不从旧 Qwen 运行 `--resume`。
+
 ## 方法与最简单的未披露项选择
 
 ```text

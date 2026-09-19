@@ -5,6 +5,7 @@ import ast
 from methods.r_diverse.core import parse_question, read_json, write_json
 from methods.r_diverse.prompts import QUESTIONER_MESSAGES, SOLVER_SYSTEM
 from methods.r_diverse.sam_protocol import CODE_PROTOCOL, code_prompt, extract_code
+from methods.r_diverse.backbone import generation_inputs, inference_tokenizer_path
 
 
 def render(tokenizer, messages):
@@ -58,9 +59,10 @@ def generate(job):
     import vllm
     from transformers import AutoTokenizer
     cfg, mode, rows = job['config'], job['mode'], job['rows']
-    tokenizer = AutoTokenizer.from_pretrained(job['model'])
+    tokenizer_path = inference_tokenizer_path(job['model'], cfg, mode)
+    tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
     llm = vllm.LLM(
-        model=job['model'], tokenizer=job['model'], tensor_parallel_size=1,
+        model=job['model'], tokenizer=tokenizer_path, tensor_parallel_size=1,
         distributed_executor_backend='mp', dtype='bfloat16',
         gpu_memory_utilization=cfg['inference_memory'],
         max_model_len=cfg['inference_context'], seed=job['seed'],
@@ -91,7 +93,8 @@ def generate(job):
     output = []
     batch_size = cfg['inference_batch']
     for begin in range(0, len(rows), batch_size):
-        completions = llm.generate(prompts[begin:begin + batch_size], params, use_tqdm=False)
+        inputs = generation_inputs(prompts[begin:begin + batch_size], tokenizer, cfg, mode)
+        completions = llm.generate(inputs, params, use_tqdm=False)
         for offset, (row, completion) in enumerate(zip(rows[begin:begin + batch_size], completions)):
             texts = [o.text for o in completion.outputs]
             if mode == 'generate':

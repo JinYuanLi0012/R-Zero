@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Standard EasyR1 runner; only adaptation is val_reward_fn=None.
+# Standard EasyR1 runner with no validation reward and an explicit tokenizer path.
 import json
 import os
 import ray
@@ -59,13 +59,13 @@ class Runner:
 
         # instantiate tokenizer
         tokenizer = get_tokenizer(
-            config.worker.actor.model.model_path,
+            config.worker.actor.model.tokenizer_path,
             override_chat_template=config.data.override_chat_template,
             trust_remote_code=config.worker.actor.model.trust_remote_code,
             use_fast=True,
         )
         processor = get_processor(
-            config.worker.actor.model.model_path,
+            config.worker.actor.model.tokenizer_path,
             override_chat_template=config.data.override_chat_template,
             trust_remote_code=config.worker.actor.model.trust_remote_code,
             use_fast=True,
