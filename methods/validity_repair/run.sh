@@ -3,6 +3,8 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$REPO_ROOT"
 args=(
+  --annotation-mode "${ANNOTATION_MODE:-sync}"
+  --concurrency "${CONCURRENCY:-16}"
   --input "${INPUT_JSONL:-analysis_results/validity_rl_terra_dataset_v1/train.jsonl}"
   --output-dir "${OUTPUT_DIR:-analysis_results/validity_repair_v1}"
   --model "${REPAIR_MODEL:-gpt-5.6-sol}"

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Stage 1 only: Batch repair, independent review, and paired question-only exports."""
+"""Stage 1 only: concurrent or Batch repair, independent review, paired question-only exports."""
 from __future__ import annotations
 
 import argparse
@@ -9,6 +9,7 @@ import os
 import random
 import re
 import sys
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from collections import Counter
 from pathlib import Path
 
@@ -138,6 +139,54 @@ def run_stage(client, items, stage, out, model, effort, max_tokens, poll):
     return artifacts
 
 
+def run_sync_stage(client, items, stage, out, model, effort, max_tokens, concurrency):
+    """Identical request bodies and parsing, with per-item persistent results."""
+    config = {'mode': 'sync', 'pass': stage, 'protocol': VERSION, 'model': model,
+              'reasoning_effort': effort, 'max_output_tokens': max_tokens,
+              'prompt_schema_hash': digest(SETTINGS[stage]), 'input_hash': digest(items)}
+    state_path = out / 'sync' / stage / 'state.json'
+    load_state(state_path, config)
+    directory = out / 'artifacts' / stage
+    directory.mkdir(parents=True, exist_ok=True)
+    artifacts, pending = {}, []
+    for item in items:
+        path = directory / f'{item["id"]}.json'
+        if path.exists():
+            artifact = json.loads(path.read_text())
+            if (artifact.get('input_sha256') != digest(item) or artifact.get('stage') != stage
+                    or artifact.get('id') != item['id'] or artifact.get('mode') != 'sync'):
+                raise ValueError(f'cached artifact mismatch: {path}')
+            artifacts[item['id']] = artifact
+        else:
+            pending.append(item)
+
+    def execute(item):
+        body = request(item, stage, model, effort, max_tokens)['body']
+        artifact = {'id': item['id'], 'stage': stage, 'mode': 'sync',
+                    'input_sha256': digest(item), 'request_body': body}
+        # Only request/API exceptions become failed items; local disk errors stop the run.
+        try:
+            response = client.responses.create(**body)
+            raw = response.model_dump(mode='json')
+            artifact['raw_response'] = raw
+            line = {'response': {'status_code': 200, 'body': raw}}
+            artifact.update(status='complete', result=parse_line(line, item, stage))
+        except Exception as error:
+            artifact.update(status='failed', result=None, error_type=type(error).__name__, error=str(error))
+        atomic_json(directory / f'{item["id"]}.json', artifact)
+        return artifact
+
+    print(f'[sync:{stage}] total={len(items)} cached={len(artifacts)} pending={len(pending)} concurrency={concurrency}', flush=True)
+    with ThreadPoolExecutor(max_workers=concurrency) as pool:
+        futures = [pool.submit(execute, item) for item in pending]
+        for future in as_completed(futures):
+            artifact = future.result()
+            artifacts[artifact['id']] = artifact
+            counts = dict(Counter(a['status'] for a in artifacts.values()))
+            print(f'[sync:{stage}] {len(artifacts)}/{len(items)} {counts}', flush=True)
+    return artifacts
+
+
 def proposals(items, repairs):
     return [{'id': i['id'], 'original_question': i['question'],
              'repaired_question': apply_edits(i['question'], repairs[i['id']]['result'])}
@@ -222,9 +271,11 @@ def main():
     parser.add_argument('--max-output-tokens', type=int, default=16384)
     parser.add_argument('--min-review-confidence', type=float, default=0.8)
     parser.add_argument('--poll-seconds', type=int, default=60)
+    parser.add_argument('--annotation-mode', choices=['sync', 'batch'], default='sync')
+    parser.add_argument('--concurrency', type=int, default=16)
     parser.add_argument('--prepare-only', action='store_true')
     args = parser.parse_args()
-    if args.repair_limit < 0 or args.expected_count < 1 or args.poll_seconds < 5 or args.max_output_tokens < 1 or not 0 <= args.min_review_confidence <= 1:
+    if args.concurrency < 1 or args.repair_limit < 0 or args.expected_count < 1 or args.poll_seconds < 5 or args.max_output_tokens < 1 or not 0 <= args.min_review_confidence <= 1:
         parser.error('invalid numeric setting')
     out = args.output_dir.resolve()
     # One process owns a run directory; OS releases this lock after interruption.
@@ -233,25 +284,30 @@ def main():
     with (out / '.run.lock').open('w') as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         rows, items, prepared = prepare(args.input, out, args.repair_limit, args.seed, args.expected_count)
-        run_config = {**prepared, 'model': args.model, 'effort': args.reasoning_effort,
+        run_config = {**prepared, 'annotation_mode': args.annotation_mode, 'model': args.model, 'effort': args.reasoning_effort,
                       'max_output_tokens': args.max_output_tokens, 'min_review_confidence': args.min_review_confidence,
                       'prompts_and_schemas': SETTINGS, 'semantic_attempts_per_stage': 1}
         config_path = out / 'manifest.json'
-        if config_path.exists() and json.loads(config_path.read_text()) != json.loads(json.dumps(run_config)):
-            raise ValueError('run settings changed; use a new OUTPUT_DIR')
+        if config_path.exists():
+            cached_config = json.loads(config_path.read_text())
+            cached_config.setdefault('annotation_mode', 'batch')  # old release used only Batch
+            if cached_config != json.loads(json.dumps(run_config)):
+                raise ValueError('run settings changed; use a new OUTPUT_DIR')
         atomic_json(config_path, run_config)
         print(f'[prepare] {len(rows)} questions; {len(items)} INVALID selected; output={out}', flush=True)
         if args.prepare_only:
             print('[prepare] no API requests submitted', flush=True)
             return
         if not os.environ.get('OPENAI_API_KEY'):
-            raise RuntimeError('export OPENAI_API_KEY before running live Batch calls')
+            raise RuntimeError('export OPENAI_API_KEY before running live API calls')
         from openai import OpenAI
         client = OpenAI()
-        repairs = run_stage(client, items, 'repair', out, args.model, args.reasoning_effort, args.max_output_tokens, args.poll_seconds)
+        stage_runner = run_sync_stage if args.annotation_mode == 'sync' else run_stage
+        scheduling = args.concurrency if args.annotation_mode == 'sync' else args.poll_seconds
+        repairs = stage_runner(client, items, 'repair', out, args.model, args.reasoning_effort, args.max_output_tokens, scheduling)
         review_items = proposals(items, repairs)
         write_jsonl(out / 'review_input.jsonl', review_items)
-        reviews = run_stage(client, review_items, 'review', out, args.model, args.reasoning_effort, args.max_output_tokens, args.poll_seconds)
+        reviews = stage_runner(client, review_items, 'review', out, args.model, args.reasoning_effort, args.max_output_tokens, scheduling)
         stats = finalize(rows, items, repairs, reviews, out, args.min_review_confidence)
         print(f'[complete] accepted={stats["accepted_repairs"]}; report={out / "analysis/report.md"}', flush=True)
 

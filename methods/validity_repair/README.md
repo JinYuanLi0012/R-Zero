@@ -31,15 +31,15 @@ recovering the seven or adding validation rows.
 - One semantic proposal and one review at most per selected question. Rejections
   are not repeatedly regenerated until they pass. Request-level failed/missing
   outputs are recorded and retained unchanged rather than silently resampled.
-- Defaults: **gpt-5.6-sol**, **high**, **16,384 max output tokens**, **Batch**
-  `/v1/responses`. Both stages use the same model; the review is a separate call,
+- Defaults: **gpt-5.6-sol**, **high**, **16,384 max output tokens**, **synchronous concurrent Responses API**
+  (default concurrency 16). Batch remains available with `ANNOTATION_MODE=batch`. Both stages use the same model; the review is a separate call,
   not an independent model family. This does not guarantee mathematical correctness.
 
 `protocol.py` contains the fixed prompts and strict schemas. Raw Responses outputs
 and Batch inputs/outputs are retained for inspection. API mathematical checks are
 stored only in audit files and never exported as training answers.
 
-## Linux smoke (10 INVALID questions)
+## Linux smoke (10 INVALID questions, synchronous mode)
 
 Activate the existing R-Zero Python environment (with the `openai` package), then:
 
@@ -50,7 +50,9 @@ git rev-parse --short HEAD
 
 export OPENAI_API_KEY="your-key"
 export INPUT_JSONL=analysis_results/validity_rl_terra_dataset_v1/train.jsonl
-export OUTPUT_DIR=analysis_results/validity_repair_sol_smoke10_v1
+export OUTPUT_DIR=analysis_results/validity_repair_sol_sync_smoke10_v1
+export ANNOTATION_MODE=sync
+export CONCURRENCY=16
 export REPAIR_MODEL=gpt-5.6-sol
 export REPAIR_REASONING_EFFORT=high
 export REPAIR_MAX_OUTPUT_TOKENS=16384
@@ -60,7 +62,7 @@ export BATCH_POLL_SECONDS=60
 # Optional: validate source and selection without any API requests.
 bash methods/validity_repair/run.sh --prepare-only
 
-# Real smoke: repair Batch, then review Batch, then paired exports.
+# Real smoke: concurrent repair calls, then concurrent review calls, then paired exports.
 bash methods/validity_repair/run.sh
 ```
 
@@ -71,8 +73,8 @@ For the locally downloaded file, upload `train (2).jsonl` to Linux and point
 The smoke selects 10 INVALID IDs with seed 42; it still exports all 1,993 rows
 in each arm. Other INVALID rows have `not_selected` status. Smoke valid-rate
 changes therefore use the whole dataset denominator; see acceptance rate among
-selected questions to evaluate repair quality. Batch queuing can take time even
-for ten questions. Run in tmux if convenient.
+selected questions to evaluate repair quality. Each completed sync call is saved
+and progress is printed. Run in tmux if convenient.
 
 ## Full run (after reviewing smoke)
 
@@ -80,19 +82,33 @@ Keep the same input/model settings, use a fresh output directory, and remove the
 smoke limit:
 
 ```bash
-export OUTPUT_DIR=analysis_results/validity_repair_sol_full_v1
+export OUTPUT_DIR=analysis_results/validity_repair_sol_sync_full_v1
 export REPAIR_LIMIT=0
 bash methods/validity_repair/run.sh
 ```
 
-`0` processes all 1,141 INVALID questions. The review Batch contains only
+`0` processes all 1,141 INVALID questions. The review stage contains only
 successfully parsed proposals, so its request count can be smaller. The separate
 full run includes the smoke questions again; it does not splice pilot artifacts
 into the final run. If the protocol is changed after smoke, use a new directory.
 
 ## Resume and output
 
-Re-run the same command with the same input, model, protocol and output directory
+Synchronous mode is now the default. It sends ordinary `responses.create` calls
+through a bounded thread pool (default 16). You may lower `CONCURRENCY` for rate
+limits; concurrency can change on resume. The SDK's default transport retries
+apply to transient API failures. A completed semantic rejection is never retried.
+Every response, including failed requests, is persisted per item. A rerun skips
+all persisted outcomes, including failures. A request interrupted before its
+artifact is saved can be submitted again; already saved items are not resampled.
+
+Use a **new output directory when switching between Batch and sync**. If an old
+Batch was already submitted, switching modes does not cancel that remote Batch.
+For the old behavior explicitly set `ANNOTATION_MODE=batch`; existing Batch
+manifests from the first release remain resumable in that mode.
+
+
+In Batch mode, re-run the same command with the same input, model, protocol and output directory
 to resume a submitted Batch. Saved Batch IDs are reused. One process may own an
 output directory at a time. Changed settings/input are rejected to avoid mixing
 results. A failed/cancelled whole Batch stops the run for inspection; the script
@@ -114,7 +130,7 @@ cat "$OUTPUT_DIR/analysis/statistics.json"
 | `unresolved.jsonl` | Originally INVALID rows not replaced, including smoke-unselected rows |
 | `analysis/report.md`, `statistics.json` | Counts, acceptance rate, nominal validity, per-round counts, exact uniqueness |
 | `manifest.json`, `prepare_manifest.json` | Source/selection hashes, selected IDs, settings, prompts/schemas |
-| `batch/`, `artifacts/` | Persisted Batch state, raw requests/responses, parsed per-question artifacts |
+| `sync/` or `batch/`, `artifacts/` | Persisted mode-specific state, raw requests/responses, parsed per-question artifacts |
 
 The reported repaired validity rate is **nominal**: inherited original VALID
 labels plus accepted repairs, divided by all rows. It is not a new independent

@@ -177,7 +177,7 @@ class Tests(unittest.TestCase):
                     self.results = {'q1': proposal() if stage == 'repair' else review()}
                     return super().content(key)
             client = Router({})
-            argv = ['pipeline.py', '--input', str(source), '--output-dir', str(directory / 'run'), '--expected-count', '2']
+            argv = ['pipeline.py', '--input', str(source), '--output-dir', str(directory / 'run'), '--expected-count', '2', '--annotation-mode', 'batch']
             with patch.object(sys, 'argv', argv), patch.dict(p.os.environ, {'OPENAI_API_KEY': 'fake'}), patch.dict(sys.modules, {'openai': SimpleNamespace(OpenAI=lambda: client)}):
                 p.main()
                 p.main()
@@ -185,6 +185,47 @@ class Tests(unittest.TestCase):
             stats = json.loads((directory / 'run/analysis/statistics.json').read_text())
             self.assertEqual(stats['accepted_repairs'], 1)
             self.assertFalse(stats['training_labels_generated'])
+
+    def test_sync_caches_failures_and_resumes_without_resampling(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp)
+            calls = []
+            def create(**body):
+                item = json.loads(body['input'][1]['content'])
+                calls.append(item['id'])
+                if item['id'] == 'q2':
+                    raise RuntimeError('request unavailable')
+                raw = response('unused', proposal())['response']['body']
+                return SimpleNamespace(model_dump=lambda **kw: raw)
+            client = SimpleNamespace(responses=SimpleNamespace(create=create))
+            items = [{'id': 'q1', 'question': '3'}, {'id': 'q2', 'question': '5'}]
+            args = (client, items, 'repair', out, 'gpt-5.6-sol', 'high', 16384)
+            first = p.run_sync_stage(*args, 2)
+            self.assertEqual(first['q1']['status'], 'complete')
+            self.assertEqual(first['q2']['status'], 'failed')
+            self.assertEqual(p.run_sync_stage(*args, 1), first)
+            self.assertEqual(sorted(calls), ['q1', 'q2'])
+            with self.assertRaises(RuntimeError):
+                p.run_sync_stage(client, items, 'repair', out, 'other', 'high', 16384, 2)
+
+    def test_sync_full_cli(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp)
+            src = out / 'input.jsonl'
+            p.write_jsonl(src, [{'id': 'q1', 'question': '3', 'round': 'v1', 'split': 'train', 'terra_validity': 'INVALID'}])
+            calls = []
+            def create(**body):
+                stage = body['text']['format']['name']
+                calls.append(stage)
+                raw = response('unused', proposal() if stage == 'rzero_repair' else review())['response']['body']
+                return SimpleNamespace(model_dump=lambda **kw: raw)
+            client = SimpleNamespace(responses=SimpleNamespace(create=create))
+            argv = ['pipeline.py', '--input', str(src), '--output-dir', str(out / 'run'), '--expected-count', '1', '--concurrency', '2']
+            with patch.object(sys, 'argv', argv), patch.dict(p.os.environ, {'OPENAI_API_KEY': 'fake'}), patch.dict(sys.modules, {'openai': SimpleNamespace(OpenAI=lambda: client)}):
+                p.main()
+                p.main()
+            self.assertEqual(calls, ['rzero_repair', 'rzero_review'])
+            self.assertEqual(p.read_jsonl(out / 'run/repaired_questions.jsonl')[0]['question'], '4')
 
     def test_smoke_is_deterministic_and_retains_unselected(self):
         with tempfile.TemporaryDirectory() as tmp:
