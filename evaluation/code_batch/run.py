@@ -49,7 +49,7 @@ def read_records(args):
     return records
 
 
-def plan(records, output, qwen_style, validate=True):
+def plan(records, output, qwen_style, validate=True, protocol_mode="legacy"):
     jobs, seen = [], set()
     for record in records:
         value = record["model"].strip()
@@ -65,6 +65,8 @@ def plan(records, output, qwen_style, validate=True):
             model, error = value, str(exc)
         family = record["family"]
         protocol = "octo-training-chat" if family == "octo" else "qwen-" + qwen_style
+        if protocol_mode == "matched":
+            protocol = family + "-matched-code-v1"
         key = job_key(family + ":" + protocol + ":" + model, base)
         if key in seen:
             continue
@@ -77,10 +79,16 @@ def plan(records, output, qwen_style, validate=True):
 
 
 def command_for(args, job):
-    command = [sys.executable, "-u", str(ENTRIES[job["family"]]), "--model", job["model"],
+    matched = job["protocol"].endswith("-matched-code-v1")
+    entry = ROOT / "evaluation/matched_code_eval/run.py" if matched else ENTRIES[job["family"]]
+    command = [sys.executable, "-u", str(entry), "--model", job["model"],
                "--output", job["output"], "--tools", str(args.tools),
                "--datasets", "humaneval", "mbpp", "--tp", "1"]
-    if job["family"] == "octo":
+    if matched:
+        command += ["--family", job["family"]]
+        if job["base_model"]:
+            command.append("--base-model")
+    elif job["family"] == "octo":
         if job["base_model"]:
             command.append("--base-model")
     else:
@@ -172,7 +180,8 @@ def main():
     parser.add_argument("--manifest", type=Path, help="JSON list of {family, model, label, base_model}")
     parser.add_argument("--models-file", type=Path)
     parser.add_argument("--base-model", action="append", default=[])
-    parser.add_argument("--qwen-prompt-style", choices=["base", "chat"], default="base")
+    parser.add_argument("--protocol", choices=["legacy", "matched"], default="legacy")
+    parser.add_argument("--qwen-prompt-style", choices=["base", "chat"], default=None)
     parser.add_argument("--gpus", default="0,1,2,3")
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--tools", type=Path, default=os.environ.get("CODE_EVAL_TOOLS") or
@@ -187,6 +196,9 @@ def main():
     parser.add_argument("--job-timeout-hours", type=float, default=0)
     parser.add_argument("--dry-run", action="store_true", help="Show family/protocol/input paths without loading models or checking remote filesystem")
     args = parser.parse_args()
+    if args.protocol == "matched" and args.qwen_prompt_style is not None:
+        parser.error("--qwen-prompt-style applies only to --protocol legacy")
+    args.qwen_prompt_style = args.qwen_prompt_style or "base"
     args.output = args.output.expanduser().resolve()
     args.gpus = [g.strip() for g in args.gpus.split(",")]
     if not all(re.fullmatch(r"\d+|GPU-[\w-]+|MIG-[\w./-]+", g) for g in args.gpus) or len(set(args.gpus)) != len(args.gpus):
@@ -196,7 +208,7 @@ def main():
     if args.max_model_len <= args.max_new_tokens or not 0 < args.gpu_memory_utilization < 1 or not math.isfinite(args.job_timeout_hours) or args.job_timeout_hours < 0:
         parser.error("Invalid context length, GPU utilization or timeout")
     try:
-        jobs = plan(read_records(args), args.output, args.qwen_prompt_style, validate=not args.dry_run)
+        jobs = plan(read_records(args), args.output, args.qwen_prompt_style, validate=not args.dry_run, protocol_mode=args.protocol)
     except (OSError, ValueError) as exc:
         parser.error(str(exc))
     if args.dry_run:

@@ -116,3 +116,29 @@ bash evaluation/code_batch/run.sh \
 
 Tests: `python -m unittest discover -s evaluation/code_batch/tests -v`.
 These validate routing/queue behavior on CPU, not model inference or Linux mounts.
+
+## Recommended: matched Base/Solver code protocol
+
+Use the new `run_matched.sh` entry for comparable Qwen and Octo runs. It selects
+`--protocol matched` and the shared `evaluation/matched_code_eval` evaluator.
+Within each family, original Base and trained Solver receive identical formatting.
+Both families receive the same code instructions; only training templates/tokens
+vary. Do not pass `--qwen-prompt-style` to this entry. Existing `run.sh` defaults
+remain legacy for compatibility. Old scores must not be mixed with matched scores.
+
+```bash
+export STORAGE_PATH=/storage1/jiaxinh/Active/jinyuan/R-zero-storage
+EVAL_BATCH_DIR="$STORAGE_PATH/code_eval/qwen_octo_31_matched_v1"
+mkdir -p "$EVAL_BATCH_DIR"
+nohup bash evaluation/code_batch/run_matched.sh \
+  --manifest evaluation/code_batch/manifests/qwen_octo_31.json \
+  --gpus 0,1,2,3 --workers 4 --output "$EVAL_BATCH_DIR" \
+  > "$EVAL_BATCH_DIR/console.log" 2>&1 &
+# Optional: add --family qwen or --family octo to select one family.
+cat "$EVAL_BATCH_DIR/summary.txt"
+```
+
+See `evaluation/matched_code_eval/README.md` for exact role organization, thinking,
+BOS/EOS, tokenization and training-source audit. GPU scheduling, failure continuation
+and summaries remain the same. The 31-model manifest includes Octo Base but no Qwen
+Base; a Qwen-only run can add `--base-model Qwen/Qwen3-4B-Base --family qwen`.
