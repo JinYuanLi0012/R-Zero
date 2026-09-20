@@ -198,12 +198,32 @@ def train(role, model, output, data, config, env, log, resume, services=0, novel
     return str(hf)
 
 
+def build_environment(config, inherited):
+    """Select the backbone prompt without enabling other experiment methods."""
+    prompt = config.get("backbone_prompt", "native")
+    if prompt not in {"native", "octothinker"}:
+        raise ValueError("backbone_prompt must be native or octothinker")
+    env = {key: value for key, value in inherited.items()
+           if not key.startswith(("VALIDITY_RZERO_", "TERRA_REPLAY_", "OCNR_"))}
+    env.update(VALIDITY_RZERO_ENABLED="0", RZERO_QUESTION_BOX_FILTER="legacy",
+               VLLM_SERVER_N="10", VLLM_SERVER_MAX_TOKENS=str(config["max_response_length"]),
+               VLLM_DISABLE_COMPILE_CACHE="1", PYTHONPATH=str(ROOT) + os.pathsep + env.get("PYTHONPATH", ""),
+               PYTHONUNBUFFERED="1", QUESTION_GPU_IDS=",".join(map(str, config["gpu_ids"])),
+               QUESTION_NUM_SHARDS="4")
+    if prompt == "octothinker":
+        # Shared tokenizer/vLLM hooks and Ray propagation already honor this.
+        # Restore ONLY the input-format switch after clearing inherited flags.
+        env["VALIDITY_RZERO_MODEL_FAMILY"] = "octothinker"
+    return env
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", type=Path, default=ROOT / "methods/ocnr/config.json")
     parser.add_argument("--resume", action="store_true")
     args = parser.parse_args()
     config = json.loads(args.config.read_text())
+    env = build_environment(config, os.environ)
     if len(config["gpu_ids"]) != 4 or len(set(config["gpu_ids"])) != 4:
         raise ValueError("this minimal runner needs exactly four distinct GPUs")
     if config["votes"] != 10 or config["overgeneration_factor"] != 2:
@@ -232,13 +252,6 @@ def main():
     if config_file.exists() and json.loads(config_file.read_text()) != config:
         raise ValueError("resume config differs from saved config; use a new run_name")
     write_json(config_file, config)
-    env = {key: value for key, value in os.environ.items()
-           if not key.startswith(("VALIDITY_RZERO_", "TERRA_REPLAY_", "OCNR_"))}
-    env.update(VALIDITY_RZERO_ENABLED="0", RZERO_QUESTION_BOX_FILTER="legacy",
-               VLLM_SERVER_N="10", VLLM_SERVER_MAX_TOKENS=str(config["max_response_length"]),
-               VLLM_DISABLE_COMPILE_CACHE="1", PYTHONPATH=str(ROOT) + os.pathsep + env.get("PYTHONPATH", ""),
-               PYTHONUNBUFFERED="1", QUESTION_GPU_IDS=",".join(map(str, config["gpu_ids"])),
-               QUESTION_NUM_SHARDS="4")
     for name in ["generated_question", "temp_results", "models"]:
         (storage / name).mkdir(parents=True, exist_ok=True)
     # Constant Questioner prompts do not consume math12k question/answer content.
@@ -261,6 +274,11 @@ def main():
             "examples/config.yaml", "verl/utils/dataset.py", "verl/trainer/core_algos.py",
             "examples/reward_function/math.py", "question_generate/question_generate.py",
             "question_evaluate/evaluate.py", "vllm_service_init/start_vllm_server.py"]]
+        if config.get("backbone_prompt") == "octothinker":
+            sources += [ROOT / name for name in [
+                "methods/validity_rzero/octothinker.py",
+                "methods/validity_rl/octothinker_chat.jinja",
+                "verl/utils/tokenizer.py", "verl/trainer/main.py"]]
         hashes = {str(path.relative_to(ROOT)): hashlib.sha256(path.read_bytes()).hexdigest() for path in sources}
         write_json(manifest_path, {"resolved_base_model": base, "method": "OCNR minimal paper reproduction",
                                   "git_commit": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(),

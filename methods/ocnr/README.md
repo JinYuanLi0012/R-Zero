@@ -12,6 +12,8 @@ frozen validity/semantic judges, domain prompts, history-context prompts,
 Gaussian populations, task vectors and novelty gates are not enabled.** The
 runner removes inherited `VALIDITY_RZERO_*` / `TERRA_REPLAY_*` settings, explicitly
 sets `VALIDITY_RZERO_ENABLED=0` and selects the legacy question-format filter.
+The Octo configuration restores only `VALIDITY_RZERO_MODEL_FAMILY=octothinker`
+for tokenizer formatting; validity rewards remain disabled.
 It does not invoke `scripts/main.sh` or `methods/validity_rzero/run.sh`.
 
 ## Run on Linux
@@ -46,6 +48,41 @@ a fresh experiment. Logs live inside the run, not only in the terminal.
 To change a setting, copy `methods/ocnr/config.json`, give it a **new run_name**,
 edit the relevant explicit fields, and use `--config /path/to/config.json`.
 Inherited experiment flags do not override these OCNR settings.
+
+## OctoThinker Hybrid 3B Base
+
+```bash
+source env_rzero.sh
+bash methods/ocnr/run_octothinker.sh
+# Resume this same Octo experiment:
+bash methods/ocnr/run_octothinker.sh --resume
+```
+
+`config_octothinker.json` initializes **both Q0 and S0** from
+`OctoThinker/OctoThinker-3B-Hybrid-Base`, under the separate run name
+`octothinker_3b_hybrid_ocnr_minimal_v1`. All training, candidate, reward and SD
+hyperparameters match the Qwen default. Start a new run; Qwen checkpoints and
+SD prototypes cannot be reused.
+
+`backbone_prompt: octothinker` selects the same BOS + plain role labels +
+`assistant:\n` template used by the repository's Octo Base R-Zero. The official
+Base has no chat template. The runner restores the model-family switch **after**
+clearing inherited experiment variables, so Q/S training (including Ray workers),
+question generation, online Solver feedback and offline voting all use the
+shared Octo tokenizer hooks. vLLM receives explicit token IDs to avoid duplicate
+BOS. Checkpoints save the adapted tokenizer. This uses no validity judge or
+validity reward. SD features still pool bare task tokens with no chat wrappers.
+The manifest also records hashes of the shared Octo template and tokenizer hooks.
+
+Omitting `backbone_prompt` keeps the existing Qwen/native behavior and allows
+old Qwen configurations to resume unchanged. For custom Octo model paths or ports,
+copy `config_octothinker.json` and use `bash methods/ocnr/run.sh --config PATH`
+(with `--resume` only for that same saved configuration). Default ports remain
+5200–5202; concurrent runs need different ports and appropriate GPU allocation.
+
+Changing backbone does not establish that the SD can distinguish seen/unseen
+or resolve novelty saturation. No normalization, tau tuning or other SD changes
+are introduced by this adapter.
 
 ## Exact loop and reward
 
