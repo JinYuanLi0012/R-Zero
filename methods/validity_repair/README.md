@@ -151,3 +151,94 @@ the real source data without importing OpenAI.
 
 Batch transport/atomic IO helpers are reused from `methods/validity_rl_terra_dataset/`.
 API format reference: https://developers.openai.com/api/docs/guides/batch
+
+## Stage 2: matched arms and base-Solver majority labels
+
+`label_pairs.sh` consumes the completed stage-1 output. It retains **all**
+`accepted` repairs and `unchanged_valid` rows, without new manual selection.
+Every other original INVALID ID is removed from both arms. For the supplied
+full run this is **1,546 pairs = 852 shared + 694 changed**, requiring **2,240
+question-version generations** (20,160 completions at nine samples each).
+
+The default model is **Qwen/Qwen3-4B-Base**, not a Terra mid-trained checkpoint.
+Set `LABEL_MODEL` to the unchanged base model's local Linux directory if desired.
+Do not use a fine-tuned Solver checkpoint. For a Hub model, `--revision COMMIT`
+can pin its version; a local model directory should remain immutable during a run.
+
+We extracted the existing ordered answer clustering from
+`question_evaluate/evaluate.py` into `question_evaluate/majority.py`, which is now
+shared by both entry points. This preserves mathruler boxed extraction, exact
+matching, the historical `no ` shortcut, bidirectional mathematical equivalence
+with a 10-second comparison timeout, first-group tie breaking, and agreement
+score over nonempty extracted answers. “Majority” means the largest answer group;
+it need not exceed 50%. Scores are agreement, not correctness.
+
+Generation matches the ordinary R-Zero base-Solver prompt and sampling defaults:
+9 completions, temperature 1.0, top_p 1.0, top_k 40, max response 4096 tokens,
+EOS stop. It directly calls vLLM without validity prompts/gates or Terra answers.
+Each job gets a deterministic seed derived from its ID and seed 42. The two
+unchanged-arm entries reuse a single saved job. Changed versions have separate
+jobs. No API key is needed in stage 2.
+
+No [0.3,0.8] score filter or legacy question-type filter is applied. Score=1 and
+low-agreement questions are retained. If either version has no usable majority
+answer (empty / mathruler `None` sentinel / literal `INVALID`), the ID is excluded
+from **both** arms and recorded. “No solution” remains a possible mathematical
+pseudo-answer. Generation/grader execution errors stop the script so they cannot
+silently cause content-dependent deletions; fix the environment and resume.
+
+Run in a GPU allocation with the existing R-Zero environment. Single-GPU smoke:
+
+```bash
+cd /storage1/jiaxinh/Active/jinyuan/R-zero
+git pull --ff-only
+export REPAIR_DIR=analysis_results/validity_repair_sol_sync_full_v1
+export LABEL_MODEL=Qwen/Qwen3-4B-Base
+export LABEL_OUTPUT_DIR=analysis_results/validity_repair_labels_smoke8_v1
+export PAIR_LIMIT=8
+export LABEL_BATCH_SIZE=16
+export LABEL_TP_SIZE=1
+
+# CPU-only source validation; no model download or GPU initialization:
+bash methods/validity_repair/label_pairs.sh --prepare-only
+
+# Use a GPU assigned to your job (this example uses visible device 0):
+CUDA_VISIBLE_DEVICES=0 bash methods/validity_repair/label_pairs.sh
+cat "$LABEL_OUTPUT_DIR/analysis/report.md"
+```
+
+After smoke, full labeling:
+
+```bash
+export PAIR_LIMIT=0
+export LABEL_OUTPUT_DIR=analysis_results/validity_repair_labels_full_v1
+CUDA_VISIBLE_DEVICES=0 bash methods/validity_repair/label_pairs.sh
+```
+
+If allocating four GPUs for one tensor-parallel model, explicitly set
+`LABEL_TP_SIZE=4` and `CUDA_VISIBLE_DEVICES=0,1,2,3`. This is optional, not required.
+Default context length is 8192. Overlong prompts cause an error rather than silent
+truncation. Tune memory/batch settings after smoke if needed; use a fresh directory
+when changing saved generation settings. Completed runs can be finalized again
+without initializing a GPU model. Partial runs resume saved per-job artifacts;
+in-flight unsaved chunks may be regenerated. Same seeds do not guarantee bitwise
+identical GPU results across environments.
+
+Main outputs:
+
+- `original_train.jsonl`, `repaired_train.jsonl`: identical retained IDs/order;
+  fields include `problem`, `answer`, `score`, and audit identifiers. Shared rows
+  have exactly the same answers and scores. No HF upload or GRPO run occurs here.
+- `pairs.jsonl`, `label_jobs.jsonl`: paired selection and deduplicated shared work.
+- `excluded_repair_ids.jsonl`: 447 IDs excluded by the agreed stage-1 status rule.
+- `excluded_label_ids.jsonl`: additional paired exclusions due to unusable labels.
+- `artifacts/`: raw nine completions, extracted answers, vote groups, finish
+  reasons, and input/configuration hashes for every job.
+- `label_results.jsonl`, `analysis/report.md`, `analysis/statistics.json`:
+  label outputs and retained counts/score summaries.
+- `pair_manifest.json`, `label_manifest.json`: selection and generation settings.
+
+Send back the report, both `*_train.jsonl`, and `excluded_label_ids.jsonl` to
+check the labeling result before implementing the two 10-step GRPO runs.
+Local tests use fake vLLM/tokenizer/grader modules. Real GPU generation must be
+validated by the Linux smoke; it has not been run on the Mac.
