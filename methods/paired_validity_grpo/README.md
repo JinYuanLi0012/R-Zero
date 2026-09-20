@@ -1,9 +1,9 @@
 # Independent paired validity GRPO pilot
 
-Branch: `experiment/paired-validity-grpo`. All changes are new files in this
+Available on `main`. All changes are new files in this
 directory relative to `4ab22dc`; no original R-Zero source is modified.
 Existing `verl.trainer.main`, Solver prompt, math reward, and checkpoint merger
-are called read-only. Do not merge this branch into main for this pilot.
+are called read-only. The experiment has its own entry point and output directory.
 
 Two independent Qwen3-4B-Base runs, original then repaired, each using all four
 allocated GPUs. This is not two simultaneous two-GPU runs. Both start from the
@@ -37,13 +37,11 @@ launcher writes fully resolved per-arm configs before training. Key settings:
 
 ## Linux
 
-Use a separate worktree, leaving the current main checkout and running tasks alone:
+Run from the existing main checkout; no separate branch or worktree is required:
 
 ```bash
 cd /storage1/jiaxinh/Active/jinyuan/R-zero
-git fetch origin
-git worktree add --detach ../R-zero-paired-validity-grpo origin/experiment/paired-validity-grpo
-cd ../R-zero-paired-validity-grpo
+git pull --ff-only origin main
 
 # Activate the same working rzero-py310 environment as the labeling run.
 export LABELS_DIR=/storage1/jiaxinh/Active/jinyuan/R-zero/analysis_results/validity_repair_labels_4gpu_full_b64_v1
