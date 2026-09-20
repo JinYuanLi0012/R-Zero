@@ -165,9 +165,10 @@ Set `LABEL_MODEL` to the unchanged base model's local Linux directory if desired
 Do not use a fine-tuned Solver checkpoint. For a Hub model, `--revision COMMIT`
 can pin its version; a local model directory should remain immutable during a run.
 
-We extracted the existing ordered answer clustering from
-`question_evaluate/evaluate.py` into `question_evaluate/majority.py`, which is now
-shared by both entry points. This preserves mathruler boxed extraction, exact
+The independent experiment copies the ordered answer-clustering logic from
+`question_evaluate/evaluate.py` into `methods/validity_repair/majority.py`.
+The original R-Zero evaluator is unchanged and does not import this module.
+This preserves mathruler boxed extraction, exact
 matching, the historical `no ` shortcut, bidirectional mathematical equivalence
 with a 10-second comparison timeout, first-group tie breaking, and agreement
 score over nonempty extracted answers. “Majority” means the largest answer group;
@@ -286,3 +287,14 @@ tail -f "$LABEL_OUTPUT_DIR"/logs/worker_*.log
 Sampling parameters, prompts, majority logic, pair filtering, and final filenames
 are the same as the single-worker entry point. The coordinator does not submit a
 Slurm allocation; start it inside your existing GPU allocation.
+
+
+## Isolation from existing R-Zero code
+
+All net changes for this experiment are new files under `methods/validity_repair/`.
+The temporary shared-code refactor in commit `3e7f734` was reversed by its exact
+patch, including restoration of the original per-comparison timeout logging.
+No existing R-Zero file is changed relative to the implementation baseline
+`c149ad8`. Existing Terra IO/Batch utilities are imported read-only.
+The experiment-local majority module retains identical contents on relocation,
+so its stored code hash and existing label-run manifests remain compatible.

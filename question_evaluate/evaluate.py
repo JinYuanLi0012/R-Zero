@@ -199,13 +199,48 @@ for index, (golden_answer, question) in enumerate(zip(answers, questions)):
             print(f"[{args.suffix}] WARNING: No valid boxed answers found for question: '{question[:50]}...'")
             continue
 
-        from question_evaluate.majority import majority_vote
-        vote = majority_vote(
-            results, lambda a, b: grade_answer_with_timeout(a, b, timeout=10)
-        )
-        majority_answer, score = vote["answer"], vote["score"]
-        if majority_answer is None:
+        answer_counts = {}
+        for result in results:
+            matched = False
+            for existing_answer in answer_counts:
+                # OPTIMIZATION: Perform cheap string comparisons first.
+                if result == existing_answer or ('no ' in result.lower() and 'no ' in existing_answer.lower()):
+                    answer_counts[existing_answer] += 1
+                    matched = True
+                    break
+                
+                # If cheap checks fail, use the expensive, timed grader.
+                # Check both directions (A vs B and B vs A).
+                match_1 = grade_answer_with_timeout(result, existing_answer, timeout=10)
+                if match_1 == 'TIMED_OUT':
+                    print(f"[{args.suffix}] GRADER TIMEOUT on: '{result[:30]}...' vs '{existing_answer[:30]}...'")
+                    continue # Skip to the next existing_answer
+                
+                if match_1:
+                    answer_counts[existing_answer] += 1
+                    matched = True
+                    break
+
+                match_2 = grade_answer_with_timeout(existing_answer, result, timeout=10)
+                if match_2 == 'TIMED_OUT':
+                    print(f"[{args.suffix}] GRADER TIMEOUT on: '{existing_answer[:30]}...' vs '{result[:30]}...'")
+                    continue
+
+                if match_2:
+                    answer_counts[existing_answer] += 1
+                    matched = True
+                    break
+
+            if not matched:
+                answer_counts[result] = 1
+
+        if not answer_counts:
             continue
+
+        # Determine the majority answer and its score
+        majority_answer = max(answer_counts, key=answer_counts.get)
+        max_count = answer_counts[majority_answer]
+        score = max_count / len(results)
 
         # Skip certain question types that are hard to grade automatically
         if box_filter == "legacy":

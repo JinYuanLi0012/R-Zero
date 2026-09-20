@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / 'methods/validity_rl_terra_dataset'))
 from common import atomic_json, read_jsonl, write_jsonl
-from question_evaluate.majority import majority_vote, render_prompt
+from methods.validity_repair.majority import majority_vote, render_prompt
 
 VERSION = 'paired-base-majority-v1'
 
@@ -161,7 +161,7 @@ def main():
                   'max_tokens': args.max_tokens, 'temperature': 1.0, 'top_p': 1.0, 'top_k': 40,
                   'seed': args.seed, 'tensor_parallel_size': args.tensor_parallel_size,
                   'max_model_len': args.max_model_len, 'batch_size': args.batch_size,
-                  'majority_code_sha256': hashlib.sha256((ROOT/'question_evaluate/majority.py').read_bytes()).hexdigest()}
+                  'majority_code_sha256': hashlib.sha256((ROOT/'methods/validity_repair/majority.py').read_bytes()).hexdigest()}
         if args.num_shards > 1:
             config['num_shards'] = args.num_shards
         path = out / 'label_manifest.json'
