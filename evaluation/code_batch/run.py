@@ -67,6 +67,8 @@ def plan(records, output, qwen_style, validate=True, protocol_mode="legacy"):
         protocol = "octo-training-chat" if family == "octo" else "qwen-" + qwen_style
         if protocol_mode == "matched":
             protocol = family + "-matched-code-v1"
+        if protocol_mode == "final":
+            protocol = "code-eval-final-v1"
         key = job_key(family + ":" + protocol + ":" + model, base)
         if key in seen:
             continue
@@ -79,12 +81,17 @@ def plan(records, output, qwen_style, validate=True, protocol_mode="legacy"):
 
 
 def command_for(args, job):
+    final = job["protocol"] == "code-eval-final-v1"
     matched = job["protocol"].endswith("-matched-code-v1")
     entry = ROOT / "evaluation/matched_code_eval/run.py" if matched else ENTRIES[job["family"]]
+    if final:
+        entry = ROOT / "evaluation/final_code_eval/run.py"
     command = [sys.executable, "-u", str(entry), "--model", job["model"],
                "--output", job["output"], "--tools", str(args.tools),
                "--datasets", "humaneval", "mbpp", "--tp", "1"]
-    if matched:
+    if final:
+        command += ["--family", job["family"]]
+    elif matched:
         command += ["--family", job["family"]]
         if job["base_model"]:
             command.append("--base-model")
@@ -180,7 +187,7 @@ def main():
     parser.add_argument("--manifest", type=Path, help="JSON list of {family, model, label, base_model}")
     parser.add_argument("--models-file", type=Path)
     parser.add_argument("--base-model", action="append", default=[])
-    parser.add_argument("--protocol", choices=["legacy", "matched"], default="legacy")
+    parser.add_argument("--protocol", choices=["legacy", "matched", "final"], default="final")
     parser.add_argument("--qwen-prompt-style", choices=["base", "chat"], default=None)
     parser.add_argument("--gpus", default="0,1,2,3")
     parser.add_argument("--output", required=True, type=Path)
@@ -196,7 +203,7 @@ def main():
     parser.add_argument("--job-timeout-hours", type=float, default=0)
     parser.add_argument("--dry-run", action="store_true", help="Show family/protocol/input paths without loading models or checking remote filesystem")
     args = parser.parse_args()
-    if args.protocol == "matched" and args.qwen_prompt_style is not None:
+    if args.protocol != "legacy" and args.qwen_prompt_style is not None:
         parser.error("--qwen-prompt-style applies only to --protocol legacy")
     args.qwen_prompt_style = args.qwen_prompt_style or "base"
     args.output = args.output.expanduser().resolve()

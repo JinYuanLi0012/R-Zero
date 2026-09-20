@@ -1,0 +1,214 @@
+[
+  {
+    "label": "qwen_base（重新评）",
+    "family": "qwen",
+    "model": "Qwen/Qwen3-4B-Base",
+    "base_model": true
+  },
+  {
+    "label": "qwen_rzero_v2（重新评）",
+    "family": "qwen",
+    "model": "/engrfs/project/jiaxinh/jinyuan/R-zero-storage/models/qwen3_4b_rzero_8k_5round_solver_v2"
+  },
+  {
+    "label": "qwen_semantic_novelty_v2（重新评）",
+    "family": "qwen",
+    "model": "/engrfs/project/jiaxinh/jinyuan/R-zero-storage/models/qwen3_4b_validity_rzero_semantic_novelty_gate_k8_4gpu_v1_solver_v2"
+  },
+  {
+    "label": "qwen_rzero_v1（重新评）",
+    "family": "qwen",
+    "model": "/engrfs/project/jiaxinh/jinyuan/R-zero-storage/models/qwen3_4b_rzero_8k_5round_solver_v1"
+  },
+  {
+    "label": "qwen_rzero_v3（重新评）",
+    "family": "qwen",
+    "model": "/engrfs/project/jiaxinh/jinyuan/R-zero-storage/models/qwen3_4b_rzero_8k_5round_solver_v3"
+  },
+  {
+    "label": "qwen_rzero_v4（重新评）",
+    "family": "qwen",
+    "model": "/engrfs/project/jiaxinh/jinyuan/R-zero-storage/models/qwen3_4b_rzero_8k_5round_solver_v4"
+  },
+  {
+    "label": "qwen_rzero_v5（重新评）",
+    "family": "qwen",
+    "model": "/engrfs/project/jiaxinh/jinyuan/R-zero-storage/models/qwen3_4b_rzero_8k_5round_solver_v5"
+  },
+  {
+    "label": "qwen_semantic_novelty_v1（重新评）",
+    "family": "qwen",
+    "model": "/engrfs/project/jiaxinh/jinyuan/R-zero-storage/models/qwen3_4b_validity_rzero_semantic_novelty_gate_k8_4gpu_v1_solver_v1"
+  },
+  {
+    "label": "qwen_semantic_novelty_v3（重新评）",
+    "family": "qwen",
+    "model": "/engrfs/project/jiaxinh/jinyuan/R-zero-storage/models/qwen3_4b_validity_rzero_semantic_novelty_gate_k8_4gpu_v1_solver_v3"
+  },
+  {
+    "label": "qwen_semantic_novelty_v4（重新评）",
+    "family": "qwen",
+    "model": "/engrfs/project/jiaxinh/jinyuan/R-zero-storage/models/qwen3_4b_validity_rzero_semantic_novelty_gate_k8_4gpu_v1_solver_v4"
+  },
+  {
+    "label": "qwen_semantic_novelty_v5（重新评）",
+    "family": "qwen",
+    "model": "/engrfs/project/jiaxinh/jinyuan/R-zero-storage/models/qwen3_4b_validity_rzero_semantic_novelty_gate_k8_4gpu_v1_solver_v5"
+  },
+  {
+    "label": "qwen_ocnr_v1",
+    "family": "qwen",
+    "model": "/storage1/jiaxinh/Active/jinyuan/R-zero-storage/models/qwen3_4b_ocnr_minimal_v1_solver_v1"
+  },
+  {
+    "label": "qwen_ocnr_v2",
+    "family": "qwen",
+    "model": "/storage1/jiaxinh/Active/jinyuan/R-zero-storage/models/qwen3_4b_ocnr_minimal_v1_solver_v2"
+  },
+  {
+    "label": "qwen_ocnr_v3",
+    "family": "qwen",
+    "model": "/storage1/jiaxinh/Active/jinyuan/R-zero-storage/models/qwen3_4b_ocnr_minimal_v1_solver_v3"
+  },
+  {
+    "label": "qwen_ocnr_v4",
+    "family": "qwen",
+    "model": "/storage1/jiaxinh/Active/jinyuan/R-zero-storage/models/qwen3_4b_ocnr_minimal_v1_solver_v4"
+  },
+  {
+    "label": "qwen_ocnr_v5",
+    "family": "qwen",
+    "model": "/storage1/jiaxinh/Active/jinyuan/R-zero-storage/models/qwen3_4b_ocnr_minimal_v1_solver_v5"
+  },
+  {
+    "label": "qwen_rdiverse_round1",
+    "family": "qwen",
+    "model": "/storage1/jiaxinh/Active/jinyuan/R-zero-storage/rzero_runs/qwen3_4b_r_diverse_10000_v4/round_1/solver/attempt_1/global_step_15/actor/huggingface"
+  },
+  {
+    "label": "qwen_rdiverse_round2",
+    "family": "qwen",
+    "model": "/storage1/jiaxinh/Active/jinyuan/R-zero-storage/rzero_runs/qwen3_4b_r_diverse_10000_v4/round_2/solver/attempt_1/global_step_15/actor/huggingface"
+  },
+  {
+    "label": "qwen_rdiverse_round3",
+    "family": "qwen",
+    "model": "/storage1/jiaxinh/Active/jinyuan/R-zero-storage/rzero_runs/qwen3_4b_r_diverse_10000_v4/round_3/solver/attempt_1/global_step_15/actor/huggingface"
+  },
+  {
+    "label": "qwen_rdiverse_round4",
+    "family": "qwen",
+    "model": "/storage1/jiaxinh/Active/jinyuan/R-zero-storage/rzero_runs/qwen3_4b_r_diverse_10000_v4/round_4/solver/attempt_1/global_step_15/actor/huggingface"
+  },
+  {
+    "label": "qwen_rdiverse_round5",
+    "family": "qwen",
+    "model": "/storage1/jiaxinh/Active/jinyuan/R-zero-storage/rzero_runs/qwen3_4b_r_diverse_10000_v4/round_5/solver/attempt_1/global_step_15/actor/huggingface"
+  },
+  {
+    "label": "qwen_validity_r10_v1",
+    "family": "qwen",
+    "model": "/engrfs/project/jiaxinh/jinyuan/R-zero-storage/models/qwen3_4b_validity_rzero_clean_formal_r10_initstep15_v1_solver_v1"
+  },
+  {
+    "label": "qwen_validity_r10_v2",
+    "family": "qwen",
+    "model": "/engrfs/project/jiaxinh/jinyuan/R-zero-storage/models/qwen3_4b_validity_rzero_clean_formal_r10_initstep15_v1_solver_v2"
+  },
+  {
+    "label": "qwen_validity_r10_v3",
+    "family": "qwen",
+    "model": "/engrfs/project/jiaxinh/jinyuan/R-zero-storage/models/qwen3_4b_validity_rzero_clean_formal_r10_initstep15_v1_solver_v3"
+  },
+  {
+    "label": "qwen_validity_r10_v4",
+    "family": "qwen",
+    "model": "/engrfs/project/jiaxinh/jinyuan/R-zero-storage/models/qwen3_4b_validity_rzero_clean_formal_r10_initstep15_v1_solver_v4"
+  },
+  {
+    "label": "qwen_validity_r10_v5",
+    "family": "qwen",
+    "model": "/engrfs/project/jiaxinh/jinyuan/R-zero-storage/models/qwen3_4b_validity_rzero_clean_formal_r10_initstep15_v1_solver_v5"
+  },
+  {
+    "label": "qwen_frozen_noreplay_v1",
+    "family": "qwen",
+    "model": "/engrfs/project/jiaxinh/jinyuan/R-zero-storage/models/qwen3_4b_validity_rzero_k8_frozenstep15_noreplay_v1_solver_v1"
+  },
+  {
+    "label": "qwen_frozen_noreplay_v2",
+    "family": "qwen",
+    "model": "/engrfs/project/jiaxinh/jinyuan/R-zero-storage/models/qwen3_4b_validity_rzero_k8_frozenstep15_noreplay_v1_solver_v2"
+  },
+  {
+    "label": "qwen_frozen_noreplay_v3",
+    "family": "qwen",
+    "model": "/engrfs/project/jiaxinh/jinyuan/R-zero-storage/models/qwen3_4b_validity_rzero_k8_frozenstep15_noreplay_v1_solver_v3"
+  },
+  {
+    "label": "qwen_frozen_noreplay_v4",
+    "family": "qwen",
+    "model": "/engrfs/project/jiaxinh/jinyuan/R-zero-storage/models/qwen3_4b_validity_rzero_k8_frozenstep15_noreplay_v1_solver_v4"
+  },
+  {
+    "label": "qwen_frozen_noreplay_v5",
+    "family": "qwen",
+    "model": "/engrfs/project/jiaxinh/jinyuan/R-zero-storage/models/qwen3_4b_validity_rzero_k8_frozenstep15_noreplay_v1_solver_v5"
+  },
+  {
+    "label": "octo_base",
+    "family": "octo",
+    "base_model": true,
+    "model": "OctoThinker/OctoThinker-3B-Hybrid-Base"
+  },
+  {
+    "label": "octo_rzero_v1",
+    "family": "octo",
+    "model": "/storage1/jiaxinh/Active/jinyuan/R-zero-storage/models/octothinker_3b_hybrid_base_rzero_8k_5round_v1_solver_v1"
+  },
+  {
+    "label": "octo_rzero_v2",
+    "family": "octo",
+    "model": "/storage1/jiaxinh/Active/jinyuan/R-zero-storage/models/octothinker_3b_hybrid_base_rzero_8k_5round_v1_solver_v2"
+  },
+  {
+    "label": "octo_rzero_v3",
+    "family": "octo",
+    "model": "/storage1/jiaxinh/Active/jinyuan/R-zero-storage/models/octothinker_3b_hybrid_base_rzero_8k_5round_v1_solver_v3"
+  },
+  {
+    "label": "octo_rzero_v4",
+    "family": "octo",
+    "model": "/storage1/jiaxinh/Active/jinyuan/R-zero-storage/models/octothinker_3b_hybrid_base_rzero_8k_5round_v1_solver_v4"
+  },
+  {
+    "label": "octo_rzero_v5",
+    "family": "octo",
+    "model": "/storage1/jiaxinh/Active/jinyuan/R-zero-storage/models/octothinker_3b_hybrid_base_rzero_8k_5round_v1_solver_v5"
+  },
+  {
+    "label": "octo_sftjudge_v1",
+    "family": "octo",
+    "model": "/storage1/jiaxinh/Active/jinyuan/R-zero-storage/models/octothinker_3b_hybrid_validity_rzero_semantic_novelty_gate_k8_4gpu_sftjudge_v1_solver_v1"
+  },
+  {
+    "label": "octo_sftjudge_v2",
+    "family": "octo",
+    "model": "/storage1/jiaxinh/Active/jinyuan/R-zero-storage/models/octothinker_3b_hybrid_validity_rzero_semantic_novelty_gate_k8_4gpu_sftjudge_v1_solver_v2"
+  },
+  {
+    "label": "octo_sftjudge_v3",
+    "family": "octo",
+    "model": "/storage1/jiaxinh/Active/jinyuan/R-zero-storage/models/octothinker_3b_hybrid_validity_rzero_semantic_novelty_gate_k8_4gpu_sftjudge_v1_solver_v3"
+  },
+  {
+    "label": "octo_sftjudge_v4",
+    "family": "octo",
+    "model": "/storage1/jiaxinh/Active/jinyuan/R-zero-storage/models/octothinker_3b_hybrid_validity_rzero_semantic_novelty_gate_k8_4gpu_sftjudge_v1_solver_v4"
+  },
+  {
+    "label": "octo_sftjudge_v5",
+    "family": "octo",
+    "model": "/storage1/jiaxinh/Active/jinyuan/R-zero-storage/models/octothinker_3b_hybrid_validity_rzero_semantic_novelty_gate_k8_4gpu_sftjudge_v1_solver_v5"
+  }
+]
