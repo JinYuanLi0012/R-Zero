@@ -142,3 +142,38 @@ See `evaluation/matched_code_eval/README.md` for exact role organization, thinki
 BOS/EOS, tokenization and training-source audit. GPU scheduling, failure continuation
 and summaries remain the same. The 31-model manifest includes Octo Base but no Qwen
 Base; a Qwen-only run can add `--base-model Qwen/Qwen3-4B-Base --family qwen`.
+
+## Expanded 42-model matched rerun
+
+`manifests/qwen_octo_42.json` preserves all 31 original entries and appends:
+Qwen/Qwen3-4B-Base, five Qwen R-Zero 8k Solver rounds, and five Qwen semantic
+novelty gate Solver rounds. Total: 31 Qwen + 11 Octo, including both original
+Base models. The 11 appended labels end in `（重新评）`; this appears in the
+terminal table and summary.txt / summary.csv / summary.json. It is a display
+annotation, not a different evaluation protocol.
+
+From the Linux repository root, with the R-Zero environment active and four GPUs:
+
+```bash
+git pull --ff-only origin main
+export STORAGE_PATH=/storage1/jiaxinh/Active/jinyuan/R-zero-storage
+if [[ ! -f "${CODE_EVAL_TOOLS:-$STORAGE_PATH/code_eval_tools}/environment.json" ]]; then
+  bash evaluation/code_eval/setup.sh
+fi
+EVAL_BATCH_DIR="$STORAGE_PATH/code_eval/qwen_octo_42_matched_v1"
+mkdir -p "$EVAL_BATCH_DIR"
+nohup bash evaluation/code_batch/run_matched.sh \
+  --manifest evaluation/code_batch/manifests/qwen_octo_42.json \
+  --gpus 0,1,2,3 --workers 4 --output "$EVAL_BATCH_DIR" \
+  > "$EVAL_BATCH_DIR/console.log" 2>&1 &
+echo "PID: $!"
+# Progress:
+tail -f "$EVAL_BATCH_DIR/console.log"
+# Final table (also updated while running):
+cat "$EVAL_BATCH_DIR/summary.txt"
+```
+
+Use this new output directory to rerun every model under the matched protocol.
+Optional `--family qwen` selects 31 models; `--family octo` selects 11. Both
+/storage1 and /engrfs checkpoint locations must be accessible on the Linux host.
+The R-diverse entries point at complete huggingface directories, not one shard.
