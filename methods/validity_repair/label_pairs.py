@@ -123,6 +123,9 @@ def main():
     parser.add_argument('--revision', default=None)
     parser.add_argument('--pair-limit', type=int, default=0)
     parser.add_argument('--prepare-only', action='store_true')
+    parser.add_argument('--finalize-only', action='store_true')
+    parser.add_argument('--num-shards', type=int, default=1)
+    parser.add_argument('--shard-index', type=int)
     parser.add_argument('--num-samples', type=int, default=9)
     parser.add_argument('--batch-size', type=int, default=16)
     parser.add_argument('--tensor-parallel-size', type=int, default=1)
@@ -133,24 +136,46 @@ def main():
     args = parser.parse_args()
     if args.pair_limit < 0 or min(args.num_samples,args.batch_size,args.tensor_parallel_size,args.max_tokens) < 1 or args.max_model_len <= args.max_tokens or not 0 < args.gpu_memory_utilization < 1:
         parser.error('invalid numeric configuration')
+    if args.num_shards < 1 or (args.shard_index is not None and not 0 <= args.shard_index < args.num_shards):
+        parser.error('invalid shard configuration')
+    if args.num_shards > 1 and args.shard_index is None and not (args.prepare_only or args.finalize_only):
+        parser.error('multi-shard generation requires a worker shard-index')
+    if args.shard_index is not None and (args.prepare_only or args.finalize_only):
+        parser.error('workers cannot prepare or finalize')
     out = args.output_dir.resolve()
     out.mkdir(parents=True, exist_ok=True)
     import fcntl
-    with (out / '.label.lock').open('w') as lock:
+    lock_name = '.label.lock' if args.shard_index is None else f'.worker_{args.shard_index}.lock'
+    with (out / lock_name).open('w') as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        pairs, jobs, prep = prepare(args.repair_dir, out, args.pair_limit)
+        if args.shard_index is None:
+            pairs, jobs, prep = prepare(args.repair_dir, out, args.pair_limit)
+        else:
+            pairs = read_jsonl(out / 'pairs.jsonl')
+            jobs = read_jsonl(out / 'label_jobs.jsonl')
+            prep = json.loads((out / 'pair_manifest.json').read_text())
+            if digest(jobs) != prep['jobs_hash'] or args.pair_limit != prep['pair_limit']:
+                raise ValueError('worker input manifest mismatch')
         print(f'[prepare] pairs={len(pairs)} shared={sum(not p["changed"] for p in pairs)} jobs={len(jobs)}', flush=True)
         config = {**prep, 'model': args.model, 'revision': args.revision, 'samples': args.num_samples,
                   'max_tokens': args.max_tokens, 'temperature': 1.0, 'top_p': 1.0, 'top_k': 40,
                   'seed': args.seed, 'tensor_parallel_size': args.tensor_parallel_size,
                   'max_model_len': args.max_model_len, 'batch_size': args.batch_size,
                   'majority_code_sha256': hashlib.sha256((ROOT/'question_evaluate/majority.py').read_bytes()).hexdigest()}
+        if args.num_shards > 1:
+            config['num_shards'] = args.num_shards
         path = out / 'label_manifest.json'
         if path.exists() and json.loads(path.read_text()) != config:
             raise ValueError('generation configuration changed: use a new output directory')
-        atomic_json(path, config)
+        if args.shard_index is None:
+            atomic_json(path, config)
+        elif not path.exists():
+            raise ValueError('coordinator must prepare before workers start')
         if args.prepare_only:
             return
+        if args.shard_index is not None:
+            jobs = [j for i,j in enumerate(jobs) if i % args.num_shards == args.shard_index]
+            print(f'[shard {args.shard_index}] jobs={len(jobs)}', flush=True)
         artifacts, pending = {}, []
         config_hash = digest(config)
         for job in jobs:
@@ -162,6 +187,8 @@ def main():
                 artifacts[job['job_id']] = a
             else:
                 pending.append(job)
+        if args.finalize_only and pending:
+            raise RuntimeError(f'cannot finalize: {len(pending)} missing label artifacts')
         if pending:
             import vllm
             import stopit
@@ -198,6 +225,9 @@ def main():
                     atomic_json(out/'artifacts'/(job['job_id']+'.json'), artifact)
                     artifacts[job['job_id']] = artifact
                 print(f'[label] {len(artifacts)}/{len(jobs)} saved',flush=True)
+        if args.shard_index is not None:
+            print(f'[shard {args.shard_index}] complete: {len(jobs)} jobs', flush=True)
+            return
         # Restore deterministic source-job order even after a partially completed run.
         stats = finalize(pairs,{j['job_id']:artifacts[j['job_id']] for j in jobs},out)
         print(f'[complete] {stats["kept_pairs"]} rows per arm; report={out / "analysis/report.md"}',flush=True)

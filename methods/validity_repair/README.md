@@ -242,3 +242,47 @@ Send back the report, both `*_train.jsonl`, and `excluded_label_ids.jsonl` to
 check the labeling result before implementing the two 10-step GRPO runs.
 Local tests use fake vLLM/tokenizer/grader modules. Real GPU generation must be
 validated by the Linux smoke; it has not been run on the Mac.
+
+### Four GPU data parallel labeling (recommended)
+
+Use `label_pairs_4gpu.sh` for four independent base-model replicas, each TP=1.
+The coordinator prepares paired inputs once, partitions the 2,240 jobs by fixed
+index modulo four (**560 jobs per GPU**), then merges only after all workers
+succeed. Shared questions still have exactly one job. Each worker writes disjoint
+per-job artifacts. Interrupted runs reuse completed artifacts; a worker failure
+stops the remaining workers and prevents an incomplete final export.
+
+Within an allocation containing four GPUs:
+
+```bash
+git pull --ff-only
+export REPAIR_DIR=analysis_results/validity_repair_sol_sync_full_v1
+export LABEL_MODEL=Qwen/Qwen3-4B-Base
+export LABEL_BATCH_SIZE=16
+export PAIR_LIMIT=8
+export LABEL_OUTPUT_DIR=analysis_results/validity_repair_labels_4gpu_smoke8_v1
+bash methods/validity_repair/label_pairs_4gpu.sh --gpus 0,1,2,3
+cat "$LABEL_OUTPUT_DIR/analysis/report.md"
+
+# Full run after smoke:
+export PAIR_LIMIT=0
+export LABEL_OUTPUT_DIR=analysis_results/validity_repair_labels_4gpu_full_v1
+bash methods/validity_repair/label_pairs_4gpu.sh --gpus 0,1,2,3
+```
+
+Use your allocation's actual device IDs. Without `--gpus`, the launcher uses
+`LABEL_GPU_IDS`, then inherited `CUDA_VISIBLE_DEVICES`, then `0,1,2,3`. GPU UUIDs
+are accepted. Each worker sees only its assigned device. `LABEL_TP_SIZE` is ignored
+by this entry point because each replica always uses one GPU. You may run
+`--prepare-only` to check input without loading models. Use a new output directory
+when switching between single-worker and four-worker execution.
+
+Progress is saved separately in `logs/worker_0.log` through `worker_3.log`:
+
+```bash
+tail -f "$LABEL_OUTPUT_DIR"/logs/worker_*.log
+```
+
+Sampling parameters, prompts, majority logic, pair filtering, and final filenames
+are the same as the single-worker entry point. The coordinator does not submit a
+Slurm allocation; start it inside your existing GPU allocation.

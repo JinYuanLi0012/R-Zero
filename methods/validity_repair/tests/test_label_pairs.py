@@ -71,5 +71,21 @@ class Tests(unittest.TestCase):
             self.assertEqual(len(samplings),3)
             self.assertTrue(all((s.n,s.temperature,s.top_p,s.top_k,s.max_tokens)==(9,1.0,1.0,40,4096) for s in samplings))
             self.assertEqual(len(p.read_jsonl(d/'out/original_train.jsonl')),2)
+            # Four disjoint shards, including an empty shard, then CPU-only merge.
+            base=['label_pairs.py','--repair-dir',str(d),'--output-dir',str(d/'four'),'--num-shards','4']
+            with patch.dict(sys.modules,mods):
+                with patch.object(sys,'argv',base+['--prepare-only']):p.main()
+                with patch.object(sys,'argv',base+['--finalize-only']):
+                    with self.assertRaises(RuntimeError):p.main()
+                for rank in range(4):
+                    with patch.object(sys,'argv',base+['--shard-index',str(rank)]):p.main()
+                before=len(calls)
+                with patch.object(sys,'argv',base+['--finalize-only']):p.main()
+                for rank in range(4):
+                    with patch.object(sys,'argv',base+['--shard-index',str(rank)]):p.main()
+                self.assertEqual(len(calls),before)
+            self.assertEqual(len(list((d/'four/artifacts').glob('*.json'))),3)
+            self.assertEqual(p.read_jsonl(d/'out/original_train.jsonl'),p.read_jsonl(d/'four/original_train.jsonl'))
+
 
 if __name__=='__main__':unittest.main()
