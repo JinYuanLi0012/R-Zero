@@ -1,0 +1,118 @@
+# Explicit Qwen / Octo multi-model code evaluation
+
+An additive mixed-family queue. Existing single-model and Octo-only entries are
+unchanged. Default: GPUs 0,1,2,3, TP=1, one model per GPU, HumanEval+ and MBPP+ only.
+Each lane completes generation and CPU scoring, then takes another model. Failures
+are reported and the queue continues. The existing official CPU environment is reused.
+
+## Ready-to-run user list: 31 models
+
+`manifests/qwen_octo_31.json` contains the requested exact groups:
+
+| Family | Group | Count |
+|---|---|---:|
+| Qwen | OCNR Solver v1–v5 | 5 |
+| Qwen | R-Diverse rounds 1–5, attempt_1/global_step_15 | 5 |
+| Qwen | validity clean formal r10 initstep15, Solver v1–v5 | 5 |
+| Qwen | K8 frozenstep15 noreplay, Solver v1–v5 | 5 |
+| Octo | original Hybrid Base | 1 |
+| Octo | pure R-Zero 8k five-round Solver v1–v5 | 5 |
+| Octo | semantic novelty gate K8 SFT judge Solver v1–v5 | 5 |
+
+R-Diverse entries name the complete `actor/huggingface` directory, not an individual
+weight shard. `/storage1/...` and `/engrfs/...` are preserved exactly as provided.
+Both mounts must be accessible on the execution node. The Mac implementation does
+not establish that the Linux files exist or contain merged weights.
+
+From an activated R-Zero environment in the repository root:
+
+```bash
+git pull --ff-only origin main
+export STORAGE_PATH=/storage1/jiaxinh/Active/jinyuan/R-zero-storage
+# First installation only; skip if this CPU evaluator is already installed:
+bash evaluation/code_eval/setup.sh
+
+EVAL_BATCH_DIR="$STORAGE_PATH/code_eval/qwen_octo_31_v1"
+mkdir -p "$EVAL_BATCH_DIR"
+nohup bash evaluation/code_batch/run.sh \
+  --manifest evaluation/code_batch/manifests/qwen_octo_31.json \
+  --qwen-prompt-style base \
+  --gpus 0,1,2,3 --workers 4 \
+  --output "$EVAL_BATCH_DIR" \
+  > "$EVAL_BATCH_DIR/console.log" 2>&1 &
+
+tail -f "$EVAL_BATCH_DIR/console.log"
+# Final table (also printed at completion):
+cat "$EVAL_BATCH_DIR/summary.txt"
+```
+
+Use a GPU allocation that lasts long enough; nohup does not extend scheduler time.
+The GPUs are literal CUDA_VISIBLE_DEVICES values for your allocation. Model jobs
+share the same four lanes; this does not launch four Qwen plus four Octo jobs.
+Inference defaults: BF16, greedy, one sample, 4096 output tokens, 16384 context,
+batch size 32, seed 42 and GPU utilization 0.85. CPU judge workers default to 4 per
+model. Optional `--job-timeout-hours 4` marks an overlong model FAILED and continues.
+
+## Select a family
+
+With a manifest, `--family` filters the list:
+
+```bash
+# Only the 20 Qwen models:
+bash evaluation/code_batch/run.sh --family qwen \
+  --manifest evaluation/code_batch/manifests/qwen_octo_31.json \
+  --output "$STORAGE_PATH/code_eval/qwen_20_v1"
+
+# Only the 11 Octo models, including Base:
+bash evaluation/code_batch/run.sh --family octo \
+  --manifest evaluation/code_batch/manifests/qwen_octo_31.json \
+  --output "$STORAGE_PATH/code_eval/octo_11_v1"
+```
+
+Without a manifest, explicitly specify the family for your paths:
+
+```bash
+bash evaluation/code_batch/run.sh --family qwen --output /output/qwen \
+  /path/to/solver_v1 /path/to/solver_v2
+bash evaluation/code_batch/run.sh --family octo --output /output/octo \
+  --base-model OctoThinker/OctoThinker-3B-Hybrid-Base \
+  /path/to/octo_solver_v1 /path/to/octo_solver_v2
+```
+
+`--models-file FILE` accepts one path per line; use `--family` with it. A manifest
+is a JSON list with explicit `family`, `model`, optional `label` and boolean
+`base_model`. No family is guessed from checkpoint names. Paths may name a merged
+model, a global_step directory, or a run root; the latest numeric step must have
+complete merged weights. A pasted `.safetensors`/`.bin` path is normalized to its
+parent model directory. No automatic weight merging is performed.
+
+## Protocols and results
+
+- `qwen` calls the original `evaluation/code_eval/run.py`. Default
+  `--qwen-prompt-style base` preserves its original benchmark-completion protocol.
+  Set `--qwen-prompt-style chat` explicitly if using saved Qwen chat templates;
+  this changes the evaluation protocol and requires matching comparisons.
+- `octo` calls `evaluation/octo_code_eval/run.py`, using the matched training
+  role template and explicit single-BOS token inputs for Base and trained Solver.
+  The Qwen prompt-style option has no effect on Octo.
+- The manifest contains only the requested Octo Base, not an additional Qwen Base.
+  All Qwen checkpoints in one invocation share the chosen Qwen mode. The summary
+  records family/protocol and does not combine scores across model families.
+
+Each model prints scores when finished. `summary.txt`, `summary.csv`, `summary.json`
+are refreshed as jobs finish; `logs/` and `models/` preserve detailed per-model
+artifacts. Stable hashed paths include family/protocol to prevent collisions.
+Rerun the same command/output directory to reuse completed generations and scores
+after the child evaluator validates its configuration. Failures have no scores and
+produce a nonzero final exit code. Ctrl-C/SIGTERM stops child process groups.
+
+Preview selections without loading models, creating outputs or checking remote paths:
+
+```bash
+bash evaluation/code_batch/run.sh \
+  --manifest evaluation/code_batch/manifests/qwen_octo_31.json \
+  --output /tmp/preview --dry-run
+```
+
+Tests: `python -m unittest discover -s evaluation/code_batch/tests -v`.
+These validate routing/queue behavior on CPU, not model inference or Linux mounts.
