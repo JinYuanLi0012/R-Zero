@@ -1,0 +1,12 @@
+{
+  "input": "${RZERO_SOURCE}",
+  "output": "${STORAGE_PATH}/novelty_pairs_v1",
+  "expected_questions": 2000,
+  "seed": 42,
+  "pairs_per_round": 200,
+  "calibration_fraction": 0.2,
+  "base": {"model": "Qwen/Qwen3-4B-Base", "revision": null},
+  "api": {"model": "gpt-5.6-sol", "effort": "high", "concurrency": 8, "max_output_tokens": 16384},
+  "embedding": {"batch_size": 8, "max_length": 8192, "device": "cuda", "dtype": "bfloat16"},
+  "judge": {"batch_size": 32, "max_model_len": 8192, "max_tokens": 1024, "tensor_parallel_size": 1}
+}
