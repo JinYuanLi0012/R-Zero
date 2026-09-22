@@ -3,6 +3,8 @@
 本入口只做推理并保存分析数据。它不会调用训练、Hugging Face 上传、
 validity gate 或 novelty，也不修改任何现有训练文件。
 
+采样完成后，可用独立的 [API validity 入口](API_VALIDITY.md) 为全部 1000 条记录追加有效性标签，保留所有多数投票结果。
+
 目标实验：`qwen3_4b_rzero_8k_5round`。
 按原始 Phase-B 时序，Questioner r 的问题由尚未在本轮更新的 Solver r-1 标注：
 
