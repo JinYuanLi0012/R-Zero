@@ -1,0 +1,15 @@
+{
+  "source_text_path": "/Users/jinyuan/Documents/Codex/2026-09-22/rzero-five-round-diversity-analysis/outputs/v9_top5_original_questions.txt",
+  "source_text_sha256": "ec50682a79b22729c34e8283490d4f693b67b9d0407f3d7f4654fc4670612f2e",
+  "parquet_path": "/Users/jinyuan/Downloads/train-00000-of-00001v9.parquet",
+  "parquet_sha256": "2bac12b4fa0c949a6c13e91f150bcb3a34b3a28dff8e69810683ad6233158026",
+  "full_dataset_rows": 5922,
+  "source_cluster_name": "贪心递推：下一项取满足条件的最小整数",
+  "source_cluster_id": 1,
+  "source_cluster_rows": 1874,
+  "all_1874_texts_match_parquet": true,
+  "selection": "Use existing file membership markers ONLY; no new question-string matching or reclassification",
+  "scaled_n": 63,
+  "scaled_formula": "round(200*1874/5922)",
+  "seed": 20260922
+}

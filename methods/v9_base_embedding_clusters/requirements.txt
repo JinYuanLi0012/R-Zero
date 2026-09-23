@@ -1,0 +1,7 @@
+# Python 3.10+ recommended. Install a CUDA-compatible PyTorch first if needed.
+torch>=2.6,<3
+transformers>=4.51.0,<5
+huggingface-hub>=0.30,<1
+numpy>=1.26,<3
+scikit-learn>=1.4,<2
+scipy>=1.11,<2
