@@ -68,13 +68,27 @@ SOLVER_LOAD_CHECKPOINT=${SOLVER_LOAD_CHECKPOINT:-}
 SOLVER_DATASET_RECEIPT=${SOLVER_DATASET_RECEIPT:-}
 SOLVER_ROLLOUT_BATCH_SIZE=${SOLVER_ROLLOUT_BATCH_SIZE:-512}
 VALIDITY_RZERO_ENABLED=${VALIDITY_RZERO_ENABLED:-0}
+# Opt-in control: keep Base R-Zero feedback while sharing initialization/replay.
+RZERO_INIT_REPLAY_ONLY=${RZERO_INIT_REPLAY_ONLY:-0}
+case "$RZERO_INIT_REPLAY_ONLY" in
+    0) ;;
+    1)
+        if [ "$VALIDITY_RZERO_ENABLED" != "0" ]; then
+            echo "RZERO_INIT_REPLAY_ONLY=1 requires VALIDITY_RZERO_ENABLED=0" >&2; exit 2
+        fi
+        : "${VALIDITY_RZERO_INITIAL_SOLVER:?set the matched initial Solver checkpoint}"
+        : "${TERRA_REPLAY_RATIO:?set the matched replay ratio}"
+        export RZERO_INIT_REPLAY_ONLY
+        ;;
+    *) echo "RZERO_INIT_REPLAY_ONLY must be 0 or 1" >&2; exit 2 ;;
+esac
 echo "solver config: samples=$SOLVER_GENERATE_SAMPLES label_timeout=${QUESTION_EVAL_TIMEOUT_SECONDS}s max_steps=$SOLVER_MAX_STEPS val_freq=$SOLVER_VAL_FREQ merge_step=$SOLVER_MERGE_STEP"
 if [ "$SOLVER_DATASET_READY" != "1" ]; then
     echo 'start generate question'
     bash question_generate/question_generate.bash $questioner_model_path $SOLVER_GENERATE_SAMPLES $experiment_name
     echo 'start evaluate generated question'
     bash question_evaluate/evaluate.sh $solver_model_path $experiment_name
-    if [ "$VALIDITY_RZERO_ENABLED" = "1" ]; then
+    if [ "$VALIDITY_RZERO_ENABLED" = "1" ] || [ "$RZERO_INIT_REPLAY_ONLY" = "1" ]; then
         : "${TERRA_REPLAY_RATIO:?set TERRA_REPLAY_RATIO for validity-RZero}"
         : "${SOLVER_DATASET_RECEIPT:?set SOLVER_DATASET_RECEIPT for validity-RZero}"
         echo 'start validity-RZero dataset mixing and upload'
@@ -128,7 +142,7 @@ if [ "$SOLVER_NEGATIVE_ONLY" = "1" ]; then
     EXTRA_TRAIN_ARGS+=(algorithm.solver_negative_only=true)
     echo "Solver task gradients: unmatched AND original advantage<0; zero-agree groups skip task loss; full-sample KL unchanged; Terra full GRPO"
 fi
-if [ "$VALIDITY_RZERO_ENABLED" = "1" ]; then
+if [ "$VALIDITY_RZERO_ENABLED" = "1" ] || [ "$RZERO_INIT_REPLAY_ONLY" = "1" ]; then
     EXTRA_TRAIN_ARGS+=(
         data.format_prompt_source_key=source
         data.default_source=rzero

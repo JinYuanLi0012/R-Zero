@@ -39,6 +39,20 @@ fi
 BASE_MODEL=${POSITIONAL[0]}
 MODEL_ABBR=${POSITIONAL[1]}
 VALIDITY_RZERO_ENABLED=${VALIDITY_RZERO_ENABLED:-0}
+# Opt-in control: keep Base R-Zero feedback while sharing initialization/replay.
+RZERO_INIT_REPLAY_ONLY=${RZERO_INIT_REPLAY_ONLY:-0}
+case "$RZERO_INIT_REPLAY_ONLY" in
+    0) ;;
+    1)
+        if [ "$VALIDITY_RZERO_ENABLED" != "0" ]; then
+            echo "RZERO_INIT_REPLAY_ONLY=1 requires VALIDITY_RZERO_ENABLED=0" >&2; exit 2
+        fi
+        : "${VALIDITY_RZERO_INITIAL_SOLVER:?set the matched initial Solver checkpoint}"
+        : "${TERRA_REPLAY_RATIO:?set the matched replay ratio}"
+        export RZERO_INIT_REPLAY_ONLY
+        ;;
+    *) echo "RZERO_INIT_REPLAY_ONLY must be 0 or 1" >&2; exit 2 ;;
+esac
 export SOLVER_NEGATIVE_ONLY=${SOLVER_NEGATIVE_ONLY:-0}
 # Evaluation is opt-in and does not change the training/resume fingerprint.
 # This also lets an already-started run enable benchmark evaluation on resume.
@@ -116,8 +130,8 @@ fi
 if [ "$FIRST_ROUND" -gt 1 ]; then
     : "${RZERO_INITIAL_QUESTIONER:?continuation requires the preceding Questioner checkpoint}"
     : "${VALIDITY_RZERO_INITIAL_SOLVER:?continuation requires the preceding Solver checkpoint}"
-    if [ "$VALIDITY_RZERO_ENABLED" != "1" ]; then
-        echo "Round continuation currently requires the validity-RZero pipeline" >&2; exit 2
+    if [ "$VALIDITY_RZERO_ENABLED" != "1" ] && [ "$RZERO_INIT_REPLAY_ONLY" != "1" ]; then
+        echo "Round continuation requires validity-RZero or the init/replay control" >&2; exit 2
     fi
 fi
 : "${STORAGE_PATH:?source env_rzero.sh or export STORAGE_PATH first}"
@@ -130,7 +144,7 @@ if [ -n "${RZERO_INITIAL_QUESTIONER:-}" ]; then
     python3 scripts/validate_hf_checkpoint.py "$RZERO_INITIAL_QUESTIONER" >/dev/null
 fi
 
-if [ "$VALIDITY_RZERO_ENABLED" = "1" ]; then
+if [ "$VALIDITY_RZERO_ENABLED" = "1" ] || [ "$RZERO_INIT_REPLAY_ONLY" = "1" ]; then
     python3 scripts/validate_hf_checkpoint.py "$VALIDITY_RZERO_INITIAL_SOLVER" >/dev/null
     python3 - "$TERRA_REPLAY_RATIO" <<'PY'
 import sys
@@ -144,7 +158,7 @@ PY
     else
         : "${TERRA_REPLAY_DATASET:?set TERRA_REPLAY_DATASET for nonzero replay}"
     fi
-    if [ "$VALIDITY_RZERO_VALIDITY_JUDGE_MODE" = "frozen" ]; then
+    if [ "${VALIDITY_RZERO_VALIDITY_JUDGE_MODE:-current_solver}" = "frozen" ] && [ "$VALIDITY_RZERO_ENABLED" = "1" ]; then
         python3 scripts/validate_hf_checkpoint.py "$VALIDITY_RZERO_VALIDITY_JUDGE_MODEL" >/dev/null
         VALIDITY_RZERO_VALIDITY_JUDGE_MODEL=$(python3 -c 'import pathlib,sys; print(pathlib.Path(sys.argv[1]).resolve())' "$VALIDITY_RZERO_VALIDITY_JUDGE_MODEL")
         export VALIDITY_RZERO_VALIDITY_JUDGE_MODEL
@@ -204,7 +218,7 @@ fi
 QUESTIONER_GPU_COUNT=$(awk -F',' '{print NF}' <<< "$QUESTIONER_TRAIN_GPU_IDS")
 SOLVER_GPU_COUNT=$(awk -F',' '{print NF}' <<< "$QUESTION_GPU_IDS")
 RUN_ROOT=${RZERO_RUN_ROOT:-$STORAGE_PATH/rzero_runs/$MODEL_ABBR}
-if [ "$VALIDITY_RZERO_ENABLED" = "1" ]; then
+if [ "$VALIDITY_RZERO_ENABLED" = "1" ] || [ "$RZERO_INIT_REPLAY_ONLY" = "1" ]; then
     export VALIDITY_RZERO_ARTIFACT_DIR=${VALIDITY_RZERO_ARTIFACT_DIR:-$RUN_ROOT/artifacts}
 fi
 STATE_DIR=$RUN_ROOT/state
@@ -212,6 +226,20 @@ STATE_FILE=$STATE_DIR/run_state.json
 SUMMARY_FILE=$RUN_ROOT/summary.json
 
 FINGERPRINT_EXTRA=()
+# Add no fields when disabled: existing R-Quest resume fingerprints stay identical.
+if [ "$RZERO_INIT_REPLAY_ONLY" = "1" ]; then
+    FINGERPRINT_EXTRA+=(
+        --field "rzero_init_replay_only=1"
+        --field "validity_rzero_enabled=0"
+        --field "initial_solver=${VALIDITY_RZERO_INITIAL_SOLVER}"
+        --field "terra_replay_dataset=${TERRA_REPLAY_DATASET}"
+        --field "terra_replay_config=${TERRA_REPLAY_CONFIG:-default}"
+        --field "terra_replay_ratio=${TERRA_REPLAY_RATIO}"
+        --field "terra_replay_seed=${TERRA_REPLAY_SEED:-1}"
+        --field "solver_rollout_batch_size=${SOLVER_ROLLOUT_BATCH_SIZE}"
+        --field "feedback_protocol=base_rzero_with_matched_init_replay_v1"
+    )
+fi
 if [ "${VALIDITY_RZERO_MODEL_FAMILY:-}" = "octothinker" ]; then
     OCTO_TEMPLATE_HASH=$(python3 -c 'import hashlib,pathlib; print(hashlib.sha256(pathlib.Path("methods/validity_rl/octothinker_chat.jinja").read_bytes()).hexdigest())')
     FINGERPRINT_EXTRA+=(--field "model_family=octothinker" --field "octothinker_template_sha256=$OCTO_TEMPLATE_HASH")
@@ -431,7 +459,7 @@ receipt = Path(sys.argv[1])
 payload = json.loads(receipt.read_text(encoding="utf-8"))
 if payload.get("dataset_id") != sys.argv[2] or int(payload.get("filtered_count", 0)) <= 0:
     raise SystemExit(1)
-if os.environ.get("VALIDITY_RZERO_ENABLED") == "1":
+if os.environ.get("VALIDITY_RZERO_ENABLED") == "1" or os.environ.get("RZERO_INIT_REPLAY_ONLY") == "1":
     required = {"rzero_sample_count", "terra_replay_sample_count", "actual_replay_ratio", "phase_b_audit"}
     if required.difference(payload) or not Path(payload["phase_b_audit"]).is_file():
         raise SystemExit(1)
@@ -444,7 +472,7 @@ if [ -n "${RZERO_INITIAL_QUESTIONER:-}" ]; then
     CURRENT_QUESTIONER=$RZERO_INITIAL_QUESTIONER
 fi
 CURRENT_SOLVER=$BASE_MODEL
-if [ "$VALIDITY_RZERO_ENABLED" = "1" ]; then
+if [ "$VALIDITY_RZERO_ENABLED" = "1" ] || [ "$RZERO_INIT_REPLAY_ONLY" = "1" ]; then
     CURRENT_SOLVER=$VALIDITY_RZERO_INITIAL_SOLVER
 fi
 # END initial model selection
@@ -453,6 +481,9 @@ if [ "$VALIDITY_RZERO_ENABLED" = "1" ]; then
     echo "Validity R-Zero: run=$MODEL_ABBR rounds=$NUM_ROUNDS initial_solver=$CURRENT_SOLVER candidates_per_round=$((SOLVER_GENERATE_SAMPLES * SOLVER_GPU_COUNT))"
 else
     echo "Base R-Zero: run=$MODEL_ABBR rounds=$NUM_ROUNDS candidates_per_round=$((SOLVER_GENERATE_SAMPLES * SOLVER_GPU_COUNT))"
+    if [ "$RZERO_INIT_REPLAY_ONLY" = "1" ]; then
+        echo "Init/replay control: initial_solver=$CURRENT_SOLVER replay=$TERRA_REPLAY_RATIO validity_gate=off novelty_gate=off; original R-Zero feedback"
+    fi
 fi
 if [ "$NO_EVAL" != "1" ]; then
     BASE_EVAL_STAGE=base/evaluation
@@ -514,7 +545,7 @@ for ((round=FIRST_ROUND; round<=NUM_ROUNDS; round++)); do
     DATASET_STAGE=round_${round}/dataset
     DATASET_RECEIPT=$RUN_ROOT/datasets/round_${round}.json
     DATASET_ARTIFACTS=("$DATASET_RECEIPT")
-    if [ "$VALIDITY_RZERO_ENABLED" = "1" ]; then
+    if [ "$VALIDITY_RZERO_ENABLED" = "1" ] || [ "$RZERO_INIT_REPLAY_ONLY" = "1" ]; then
         DATASET_ARTIFACTS+=("${DATASET_RECEIPT%.json}_phase_b.jsonl")
     fi
     if stage_done "$DATASET_STAGE" "${DATASET_ARTIFACTS[@]}"; then
@@ -628,8 +659,10 @@ payload = {
     "final_solver": sys.argv[4],
     "rounds": int(sys.argv[5]),
 }
-if sys.argv[6] == "1":
+if sys.argv[6] == "1" or os.environ.get("RZERO_INIT_REPLAY_ONLY") == "1":
     payload["initial_solver"] = sys.argv[7]
+if os.environ.get("RZERO_INIT_REPLAY_ONLY") == "1":
+    payload["rzero_init_replay_only"] = True
 if int(sys.argv[8]) != 1:
     payload.update(first_round=int(sys.argv[8]), executed_rounds=int(sys.argv[5]) - int(sys.argv[8]) + 1,
                    initial_questioner=sys.argv[9])
